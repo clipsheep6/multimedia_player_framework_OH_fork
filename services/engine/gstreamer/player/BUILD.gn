@@ -45,20 +45,18 @@ config("media_engine_gst_player_config") {
   ]
 
   include_dirs = [
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
+    "../plugins/sink/memsink",
+    "../plugins/sink/subtitlesink",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
     "//foundation/multimedia/player_framework/services/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
+    "../common/appsrc_engine",
+    "../common/message",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/audio_framework/frameworks/innerkitsimpl/common/include",
-    "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiocommon/include",
-    "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiomanager/include",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
+    "../plugins/common",
     "//drivers/peripheral/audio/interfaces/include",
     "//drivers/peripheral/display/interfaces/include",
     "//third_party/gstreamer/gstreamer",
@@ -81,19 +79,15 @@ ohos_static_library("media_engine_gst_player") {
     "player_codec_ctrl.cpp",
     "player_engine_gst_impl.cpp",
     "player_sinkprovider.cpp",
-    "player_track_parse.cpp",
   ]
 
   configs = [
     ":media_engine_gst_player_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -103,11 +97,13 @@ ohos_static_library("media_engine_gst_player") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "audio_framework:audio_client",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:surface",
+    "hilog:libhilog",
     "init:libbegetutil",
-    "multimedia_audio_framework:audio_client",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

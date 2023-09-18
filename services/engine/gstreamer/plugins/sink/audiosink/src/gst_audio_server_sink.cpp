@@ -22,6 +22,8 @@
 #include "media_log.h"
 #include "media_dfx.h"
 #include "audio_sink_factory.h"
+#include "securec.h"
+#include "audio_effect.h"
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
     GST_PAD_SINK,
@@ -37,7 +39,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "audio_server_sink"};
     constexpr float DEFAULT_VOLUME = 1.0f;
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
-    constexpr uint64_t DEFAULT_AUDIO_RENDER_DELAY = 145000; // unit us, empirical value
+    constexpr uint64_t AUDIO_EFFECT_NONE_RENDER_DELAY = 270000000; // unit ns, empirical value
+    constexpr uint64_t AUDIO_EFFECT_DEFAULT_RENDER_DELAY = 270000000; // unit ns, empirical value
 }
 
 enum {
@@ -47,6 +50,7 @@ enum {
     PROP_SAMPLE_RATE,
     PROP_APP_UID,
     PROP_APP_PID,
+    PROP_APP_TOKEN_ID,
     PROP_VOLUME,
     PROP_MAX_VOLUME,
     PROP_MIN_VOLUME,
@@ -56,6 +60,8 @@ enum {
     PROP_LAST_RENDER_PTS,
     PROP_ENABLE_OPT_RENDER_DELAY,
     PROP_LAST_RUNNING_TIME_DIFF,
+    PROP_AUDIO_EFFECT_MODE,
+    PROP_DELAY_TIME,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -75,17 +81,9 @@ static void gst_audio_server_sink_clear_cache_buffer(GstAudioServerSink *sink);
 static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
     gboolean *need_drop_this_buffer);
 
-static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
+static void gst_audio_server_sink_event_init(GstAudioServerSinkClass *klass)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GstElementClass *gstelement_class = GST_ELEMENT_CLASS(klass);
-    GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS(klass);
-    g_return_if_fail((gobject_class != nullptr) && (gstelement_class != nullptr) && (gstbasesink_class != nullptr));
-
-    gobject_class->finalize = gst_audio_server_sink_finalize;
-    gobject_class->set_property = gst_audio_server_sink_set_property;
-    gobject_class->get_property = gst_audio_server_sink_get_property;
-
+    g_return_if_fail(klass != nullptr);
     g_signal_new("interrupt-event", G_TYPE_FROM_CLASS(klass),
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT); // 3 parameters
@@ -94,6 +92,18 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT); // 1 parameters
 
+    g_signal_new("segment-updated", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 0); // no parameters
+
+    g_signal_new("audio-service-died", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 0); // no parameters
+}
+
+static void gst_audio_server_sink_property1_init(GObjectClass *gobject_class)
+{
+    g_return_if_fail(gobject_class != nullptr);
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,
@@ -119,6 +129,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
             "APP PID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_APP_TOKEN_ID,
+        g_param_spec_uint("app-token-id", "Apptokenid",
+            "APP TOKEN ID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_VOLUME,
         g_param_spec_float("volume", "Volume",
             "Volume", 0, G_MAXFLOAT, 0,
@@ -133,7 +148,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         g_param_spec_float("min-volume", "Minimum Volume",
             "Minimum Volume", 0, G_MAXFLOAT, 0,
             (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+}
 
+static void gst_audio_server_sink_property2_init(GObjectClass *gobject_class)
+{
+    g_return_if_fail(gobject_class != nullptr);
     g_object_class_install_property(gobject_class, PROP_AUDIO_RENDERER_DESC,
         g_param_spec_int("audio-renderer-desc", "Audio Renderer Desc",
             "Audio Renderer Desc", 0, G_MAXINT32, 0,
@@ -149,6 +168,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
             "Audio Interrupt Mode", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_AUDIO_EFFECT_MODE,
+        g_param_spec_int("audio-effect-mode", "Audio Effect Mode",
+            "Audio Effect Mode", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_LAST_RENDER_PTS,
         g_param_spec_uint64("last-render-pts", "last-render-pts", "last render pts", 0, G_MAXUINT64,
             0, (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
@@ -161,6 +185,26 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
     g_object_class_install_property(gobject_class, PROP_LAST_RUNNING_TIME_DIFF,
         g_param_spec_int64("last-running-time-diff", "last running time diff", "last running time diff",
             0, G_MAXINT64, 0, (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DELAY_TIME,
+        g_param_spec_uint("audio-delay-time", "audio delay time", "audio delay time", 0, G_MAXINT32,
+            0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+}
+
+static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
+{
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    GstElementClass *gstelement_class = GST_ELEMENT_CLASS(klass);
+    GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS(klass);
+    g_return_if_fail((gobject_class != nullptr) && (gstelement_class != nullptr) && (gstbasesink_class != nullptr));
+
+    gobject_class->finalize = gst_audio_server_sink_finalize;
+    gobject_class->set_property = gst_audio_server_sink_set_property;
+    gobject_class->get_property = gst_audio_server_sink_get_property;
+
+    gst_audio_server_sink_event_init(klass);
+    gst_audio_server_sink_property1_init(gobject_class);
+    gst_audio_server_sink_property2_init(gobject_class);
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio server sink", "Sink/Audio",
@@ -202,6 +246,9 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->last_render_pts = 0;
     sink->enable_opt_render_delay = FALSE;
     sink->last_running_time_diff = 0;
+    sink->pre_power_on = FALSE;
+    sink->start_first_render = FALSE;
+    sink->delay_time = AUDIO_EFFECT_DEFAULT_RENDER_DELAY;
 }
 
 static void gst_audio_server_sink_finalize(GObject *object)
@@ -218,6 +265,8 @@ static void gst_audio_server_sink_finalize(GObject *object)
         sink->audio_sink = nullptr;
     }
     gst_audio_server_sink_clear_cache_buffer(sink);
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static gboolean gst_audio_server_sink_set_volume(GstAudioServerSink *sink, gfloat volume)
@@ -258,12 +307,24 @@ static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const st
     GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
 }
 
+static void gst_audio_server_sink_segment_callback(GstBaseSink *basesink)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "segment-updated");
+}
+
+static void gst_audio_server_sink_service_died_callback(GstBaseSink *basesink)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "audio-service-died");
+}
+
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
+    MEDIA_LOGI("audiorender: gst_audio_server_sink_set_property");
     MediaTrace trace("Audio::gst_audio_server_sink_set_property");
-    g_return_if_fail(object != nullptr);
-    g_return_if_fail(value != nullptr);
+    g_return_if_fail(object != nullptr && value != nullptr);
     (void)pspec;
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(object);
     g_return_if_fail(sink != nullptr);
@@ -287,6 +348,11 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             GST_INFO_OBJECT(sink, "set app uid success!");
             g_object_notify(G_OBJECT(sink), "app-pid");
             break;
+        case PROP_APP_TOKEN_ID:
+            sink->apptokenid = g_value_get_uint(value);
+            GST_INFO_OBJECT(sink, "set app token id success!");
+            g_object_notify(G_OBJECT(sink), "app-token-id");
+            break;
         case PROP_AUDIO_RENDERER_FLAG:
             sink->renderer_flag = g_value_get_int(value);
             break;
@@ -297,6 +363,46 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
         case PROP_ENABLE_OPT_RENDER_DELAY:
             sink->enable_opt_render_delay = g_value_get_boolean(value);
             break;
+        case PROP_AUDIO_EFFECT_MODE:
+            g_return_if_fail(sink->audio_sink != nullptr);
+            (void)sink->audio_sink->SetAudioEffectMode(g_value_get_int(value));
+            break;
+        default:
+            break;
+    }
+}
+
+static void gst_audio_server_sink_get_delay(GstAudioServerSink *sink, GValue *value)
+{
+    g_return_if_fail(sink != nullptr);
+    g_return_if_fail(sink->audio_sink != nullptr);
+    g_mutex_lock(&sink->render_lock);
+    int32_t mode;
+    (void)sink->audio_sink->GetAudioEffectMode(mode);
+    sink->delay_time = mode == OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT ?
+        AUDIO_EFFECT_DEFAULT_RENDER_DELAY : AUDIO_EFFECT_NONE_RENDER_DELAY;
+    uint32_t delay_time = sink->enable_opt_render_delay ? sink->delay_time : 0;
+    g_value_set_uint(value, delay_time);
+    g_mutex_unlock(&sink->render_lock);
+}
+
+static void gst_audio_server_sink_get_property_volume(GstAudioServerSink *sink, guint prop_id, GValue *value)
+{
+    g_return_if_fail(sink != nullptr);
+    g_return_if_fail(value != nullptr);
+    switch (prop_id) {
+        case PROP_VOLUME:
+            if (sink->audio_sink != nullptr) {
+                (void)sink->audio_sink->GetVolume(sink->volume);
+            }
+            g_value_set_float(value, sink->volume);
+            break;
+        case PROP_MAX_VOLUME:
+            g_value_set_float(value, sink->max_volume);
+            break;
+        case PROP_MIN_VOLUME:
+            g_value_set_float(value, sink->min_volume);
+            break;
         default:
             break;
     }
@@ -305,6 +411,7 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
 static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
     MediaTrace trace("Audio::gst_audio_server_sink_get_property");
+    gint mode = -1;
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     (void)pspec;
@@ -321,16 +428,9 @@ static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, G
             g_value_set_uint(value, sink->sample_rate);
             break;
         case PROP_VOLUME:
-            if (sink->audio_sink != nullptr) {
-                (void)sink->audio_sink->GetVolume(sink->volume);
-            }
-            g_value_set_float(value, sink->volume);
-            break;
         case PROP_MAX_VOLUME:
-            g_value_set_float(value, sink->max_volume);
-            break;
         case PROP_MIN_VOLUME:
-            g_value_set_float(value, sink->min_volume);
+            gst_audio_server_sink_get_property_volume(sink, prop_id, value);
             break;
         case PROP_LAST_RENDER_PTS:
             g_mutex_lock(&sink->render_lock);
@@ -341,6 +441,14 @@ static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, G
             g_mutex_lock(&sink->render_lock);
             g_value_set_int64(value, static_cast<gint64>(sink->last_running_time_diff));
             g_mutex_unlock(&sink->render_lock);
+            break;
+        case PROP_AUDIO_EFFECT_MODE:
+            g_return_if_fail(sink->audio_sink != nullptr);
+            (void)sink->audio_sink->GetAudioEffectMode(mode);
+            g_value_set_int(value, mode);
+            break;
+        case PROP_DELAY_TIME:
+            gst_audio_server_sink_get_delay(sink, value);
             break;
         default:
             break;
@@ -390,7 +498,6 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
 
-    GST_INFO_OBJECT(basesink, "caps=%" GST_PTR_FORMAT, caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, FALSE);
     gint channels = 0;
@@ -410,11 +517,23 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink->audio_sink->GetMinimumBufferSize(sink->min_buffer_size) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinimumFrameCount(sink->min_frame_count) == MSERR_OK, FALSE);
 
-    if (GST_STATE(sink) == GST_STATE_PLAYING) {
-        g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
+    if (sink->pre_power_on) {
+        g_return_val_if_fail(sink->audio_sink->Pause() == MSERR_OK, FALSE);
+        sink->pre_power_on = FALSE;
     }
 
     return TRUE;
+}
+
+static gboolean gst_audio_server_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_mutex_lock(&sink->render_lock);
+    gboolean ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+    sink->frame_after_segment = TRUE;
+    gst_audio_server_sink_segment_callback(basesink);
+    g_mutex_unlock(&sink->render_lock);
+    return ret;
 }
 
 static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *event)
@@ -423,30 +542,29 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_return_val_if_fail(sink != nullptr, FALSE);
-    GstEventType type = GST_EVENT_TYPE(event);
-    switch (type) {
+    switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_EOS:
             if (sink->audio_sink == nullptr) {
                 break;
             }
+            // close audio/video sync
+            g_mutex_lock(&sink->render_lock);
+            sink->last_running_time_diff = 0;
+            g_mutex_unlock(&sink->render_lock);
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
             }
             break;
         case GST_EVENT_SEGMENT:
-            g_mutex_lock(&sink->render_lock);
-            sink->frame_after_segment = TRUE;
-            g_mutex_unlock(&sink->render_lock);
-            break;
+            return gst_audio_server_sink_handle_segment_event(basesink, event);
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
             if (sink->audio_sink == nullptr) {
                 break;
             }
-            if (sink->audio_sink->Flush() != MSERR_OK) {
-                GST_ERROR_OBJECT(basesink, "fail to call Flush when handling SEEK event");
-            }
+            (void)sink->audio_sink->Pause();
+            (void)sink->audio_sink->Flush();
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
         case GST_EVENT_FLUSH_STOP:
@@ -475,19 +593,21 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     MediaTrace trace("Audio::gst_audio_server_sink_start");
     g_return_val_if_fail(basesink != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
-    MEDIA_LOGI("uid: %{public}d, pid: %{public}d", sink->appuid, sink->apppid);
+    MEDIA_LOGI("uid: %{public}d, pid: %{public}d, tokenid: %{public}u", sink->appuid, sink->apppid, sink->apptokenid);
     g_return_val_if_fail(sink != nullptr, FALSE);
     sink->audio_sink = OHOS::Media::AudioSinkFactory::CreateAudioSink(basesink);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink->SetRendererInfo(sink->renderer_desc,
         sink->renderer_flag) == MSERR_OK, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
-                                     gst_audio_server_sink_error_callback);
+                                     gst_audio_server_sink_error_callback,
+                                     gst_audio_server_sink_service_died_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
-
+    g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
+    sink->pre_power_on = TRUE;
     return TRUE;
 }
 
@@ -524,18 +644,14 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
 
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-            MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
+            MEDIA_LOGI("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
             g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
-            if (sink->audio_sink->Start() != MSERR_OK) {
-                GST_ERROR_OBJECT(sink, "audio sink Start failed!");
-                GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Start failed!"), (NULL));
-                return GST_STATE_CHANGE_FAILURE;
+            if (sink->audio_sink->Start() == MSERR_OK) {
+                sink->start_first_render = TRUE;
             }
 
             if (sink->pause_cache_buffer != nullptr) {
-                GST_INFO_OBJECT(basesink, "pause to play");
                 if (gst_audio_server_sink_render(basesink, sink->pause_cache_buffer) != GST_FLOW_OK) {
-                    GST_ERROR_OBJECT(sink, "audio sink gst_audio_server_sink_render failed!");
                     GST_ELEMENT_ERROR(sink, STREAM, FAILED,
                         ("audio sink gst_audio_server_sink_render failed!"), (NULL));
                     return GST_STATE_CHANGE_FAILURE;
@@ -551,19 +667,20 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
 
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-            MEDIA_LOGD("GST_STATE_CHANGE_PLAYING_TO_PAUSED");
+            MEDIA_LOGI("GST_STATE_CHANGE_PLAYING_TO_PAUSED");
             {
                 std::unique_lock<std::mutex> lock(sink->mutex_);
                 g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
-                if (sink->audio_sink->Pause() != MSERR_OK) {
-                    GST_ERROR_OBJECT(sink, "audio sink Pause failed!");
-                    GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Pause failed!"), (NULL));
-                    return GST_STATE_CHANGE_FAILURE;
-                }
+                /**
+                 * When executing release task, call stop first.
+                 * if report pause fail message, it will abort stop task. Then,
+                 * release task will free resources. Due to stop failed, the plugin
+                 * not stopped will use destoryed mutex. It will lead to service crash.
+                 */
+                (void)sink->audio_sink->Pause();
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_READY");
             gst_audio_server_sink_clear_cache_buffer(sink);
             g_mutex_lock(&sink->render_lock);
             sink->last_render_pts = 0;
@@ -590,12 +707,6 @@ static void gst_audio_server_sink_get_latency(GstAudioServerSink *sink, const Gs
         } else {
             GST_INFO_OBJECT(sink, "frame render latency is (%" PRIu64 ")", latency);
         }
-        if (sink->enable_opt_render_delay) {
-            /* the latency provided by GetLatency() is not accurate.
-             * so we set DEFAULT_AUDIO_RENDER_DELAY to basesink.
-             */
-            gst_base_sink_set_render_delay(GST_BASE_SINK(sink), DEFAULT_AUDIO_RENDER_DELAY * GST_USECOND);
-        }
     }
     if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_PTS(buffer))) {
         sink->last_render_pts = GST_BUFFER_PTS(buffer);
@@ -605,6 +716,7 @@ static void gst_audio_server_sink_get_latency(GstAudioServerSink *sink, const Gs
 
 static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
+    pthread_setname_np(pthread_self(), "audioSinkRender");
     MediaTrace trace("Audio::gst_audio_server_sink_render");
     g_return_val_if_fail(basesink != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
@@ -627,6 +739,17 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
             } else {
                 GST_ERROR_OBJECT(basesink, "cache buffer is not null");
             }
+        }
+
+        if (sink->start_first_render) {
+            // 1st write prebuf and trigger audio write rebuf
+            // 2nd flush audio invalid prebuf and 3rd write valid buf
+            const int32_t bufSize = 1024; // default 1024
+            std::unique_ptr<uint8_t[]> preBuf = std::make_unique<uint8_t[]>(bufSize);
+            (void)memset_s(preBuf.get(), bufSize, 0, bufSize);
+            (void)sink->audio_sink->Write(preBuf.get(), bufSize);
+            (void)sink->audio_sink->Flush();
+            sink->start_first_render = FALSE;
         }
 
         GstMapInfo map;

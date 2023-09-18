@@ -43,16 +43,18 @@ struct OutputFormat : public RecorderParam {
 };
 
 struct AppInfo : public RecorderParam {
-    AppInfo(int32_t appUid, int32_t appPid, uint32_t appTokenId)
+    AppInfo(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
         : RecorderParam(RecorderPrivateParamType::APP_INFO),
           appUid_(appUid),
           appPid_(appPid),
-          appTokenId_(appTokenId)
+          appTokenId_(appTokenId),
+          appFullTokenId_(appFullTokenId)
     {}
     ~AppInfo() = default;
     int32_t appUid_;
     int32_t appPid_;
     uint32_t appTokenId_;
+    uint64_t appFullTokenId_;
 };
 } // namespace Media
 } // namespace OHOS

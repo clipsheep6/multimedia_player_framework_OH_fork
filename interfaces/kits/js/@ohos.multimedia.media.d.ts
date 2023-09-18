@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-import { ErrorCallback, AsyncCallback, Callback } from './basic';
+import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
 
 /**
@@ -217,6 +217,147 @@ declare namespace media {
   AVERR_UNSUPPORT_FORMAT = 5400106,
  }
 
+  enum VideoRecorderQualityLevel {
+    /**
+     * Quality level corresponding to the lowest available resolution.
+     * @since 10
+     */
+    RECORDER_QUALITY_LOW = 0,
+
+    /**
+    * Quality level corresponding to the highest available resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH = 1,
+
+    /**
+    * Quality level corresponding to the qcif (176 x 144) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_QCIF = 2,
+
+    /**
+    * Quality level corresponding to the cif (352 x 288) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_CIF = 3,
+
+    /**
+    * Quality level corresponding to the 480p (720 x 480) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_480P = 4,
+
+    /**
+    * Quality level corresponding to the 720P (1280 x 720) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_720P = 5,
+
+    /**
+    * Quality level corresponding to the 1080P (1920 x 1080) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_1080P = 6,
+
+    /**
+    * Quality level corresponding to the QVGA (320x240) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_QVGA = 7,
+
+    /**
+    * Quality level corresponding to the 2160p (3840x2160) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_2160P = 8,
+
+    /**
+    * Time lapse quality level corresponding to the lowest available resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_LOW = 100,
+
+    /**
+    * Time lapse quality level corresponding to the highest available resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_HIGH = 101,
+
+    /**
+    * Time lapse quality level corresponding to the qcif (176 x 144) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_QCIF = 102,
+
+    /**
+    * Time lapse quality level corresponding to the cif (352 x 288) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_CIF = 103,
+
+    /**
+    * Time lapse quality level corresponding to the 480p (720 x 480) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_480P = 104,
+
+    /**
+    * Time lapse quality level corresponding to the 720p (1280 x 720) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_720P = 105,
+
+    /**
+    * Time lapse quality level corresponding to the 1080p (1920 x 1088) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_1080P = 106,
+
+    /**
+    * Time lapse quality level corresponding to the QVGA (320 x 240) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_QVGA = 107,
+
+    /**
+    * Time lapse quality level corresponding to the 2160p (3840 x 2160) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_TIME_LAPSE_2160P = 108,
+
+    /**
+    * High speed ( >= 100fps) quality level corresponding to the lowest available resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH_SPEED_LOW = 200,
+
+    /**
+    * High speed ( >= 100fps) quality level corresponding to the highest available resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH_SPEED_HIGH = 201,
+
+    /**
+    * High speed ( >= 100fps) quality level corresponding to the 480p (720 x 480) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH_SPEED_480P = 202,
+
+    /**
+    * High speed ( >= 100fps) quality level corresponding to the 720p (1280 x 720) resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH_SPEED_720P = 203,
+
+    /**
+    * High speed ( >= 100fps) quality level corresponding to the 1080p (1920 x 1080 or 1920x1088)
+    * resolution.
+    * @since 10
+    */
+    RECORDER_QUALITY_HIGH_SPEED_1080P = 204,
+  }
+
   /**
    * Describes AVPlayer states.
    * @since 9
@@ -392,6 +533,13 @@ declare namespace media {
     fdSrc ?: AVFileDescriptor;
 
     /**
+     * DataSource descriptor. Mainstream media formats are supported.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    dataSrc ?: DataSrcDescriptor;
+
+    /**
      * Whether to loop media playback.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -415,6 +563,13 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
     audioRendererInfo ?: audio.AudioRendererInfo;
+
+    /**
+     * Obtains the current audio effect mode, refer to {@link #audio.AudioEffectMode}.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+     audioEffectMode ?: audio.AudioEffectMode;
 
     /**
      * Current playback position.
@@ -541,7 +696,7 @@ declare namespace media {
     on(type: 'bitrateDone', callback: Callback<number>): void;
     off(type: 'bitrateDone'): void;
     /**
-     * LRegister or unregister listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
@@ -766,6 +921,32 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.Core
      */
     length?: number
+  }
+
+  /**
+    * DataSource descriptor. The caller needs to ensure that the fileSize and 
+    * callback is valid.
+    * @since 10
+    * @syscap SystemCapability.Multimedia.Media.Core
+    */
+  interface DataSrcDescriptor {
+    /**
+     * Size of the file, -1 indicates that the file size is unknown. If the fileSize is set to -1,
+     * seek and setSpeed can't be executed, loop can't be set, and can't replay.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    fileSize: number;
+    /**
+     * Callback function implemented by users, which is used to fill data.
+     * @param buffer The buffer need to fill.
+     * @param length The stream length player want to get.
+     * @param pos The stream position player want get start.
+     * @return returns length of the data to be filled.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    callback: (buffer: ArrayBuffer, length: number, pos?: number) => int
   }
 
   /**
@@ -1183,6 +1364,52 @@ declare namespace media {
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     release(): Promise<void>;
+
+    /**
+     * getAVRecorderProfile for recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @param callback A callback instance used to return when prepare completed.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     */
+    getAVRecorderProfile(sourceId: number, qualityLevel: VideoRecorderQualityLevel): Promise<AVRecorderProfile>;
+
+    /**
+     * getAVRecorderProfile for recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @param callback A callback instance used to return when prepare completed.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     */
+    getAVRecorderProfile(sourceId: number, qualityLevel: VideoRecorderQualityLevel, callback: AsyncCallback<AVRecorderProfile>);
+
+    /**
+     * setAVRecorderConfig for recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @param callback A callback instance used to return when prepare completed.
+     * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     */
+    setAVRecorderConfig(config: AVRecorderConfig, callback: AsyncCallback<void>): void;
+
+    /**
+     * setAVRecorderConfig for recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @returns A Promise instance used to return when prepare completed.
+     * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 401 - Parameter error. Return by promise.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     */
+    setAVRecorderConfig(config: AVRecorderConfig): Promise<void>;
 
     /**
      * Recorder state.

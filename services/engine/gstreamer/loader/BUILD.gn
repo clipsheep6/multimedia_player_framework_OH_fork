@@ -70,10 +70,10 @@ ohos_static_library("media_engine_gst_loader") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

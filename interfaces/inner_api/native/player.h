@@ -17,8 +17,7 @@
 #define PLAYER_H
 
 #include <cstdint>
-#ifdef SUPPORT_AUDIO_ONLY
-#else
+#ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
 #include "format.h"
@@ -32,6 +31,7 @@ public:
     static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
+    static constexpr std::string_view PLAYER_TRACK_INFO = "track_info";
     static constexpr std::string_view PLAYER_WIDTH = "width";
     static constexpr std::string_view PLAYER_HEIGHT = "height";
     static constexpr std::string_view PLAYER_MIME = "codec_mime";
@@ -44,6 +44,9 @@ public:
     static constexpr std::string_view PLAYER_BUFFERING_END = "buffering_end";
     static constexpr std::string_view PLAYER_BUFFERING_PERCENT = "buffering_percent";
     static constexpr std::string_view PLAYER_CACHED_DURATION = "cached_duration";
+    static constexpr std::string_view PLAYER_IS_SELECT = "track_is_select";
+    static constexpr std::string_view PLAYER_ERROR_TYPE = "error_type";
+    static constexpr std::string_view PLAYER_ERROR_MSG = "error_msg";
     static constexpr std::string_view CONTENT_TYPE = "content_type";
     static constexpr std::string_view STREAM_USAGE = "stream_usage";
     static constexpr std::string_view RENDERER_FLAG = "renderer_flag";
@@ -52,6 +55,8 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+    static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
+    static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
 };
 
 enum BufferingInfoType : int32_t {
@@ -122,6 +127,24 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_EXTRA_FORMAT,
     /* return the duration of playback. */
     INFO_TYPE_DURATION_UPDATE,
+    /* return the playback is live stream. */
+    INFO_TYPE_IS_LIVE_STREAM,
+    /* return the message when track changes. */
+    INFO_TYPE_TRACKCHANGE,
+    /* return the default audio track. */
+    INFO_TYPE_DEFAULTTRACK,
+    /* Return to the end of track processing. */
+    INFO_TYPE_TRACK_DONE,
+    /* Return error message to prompt the user. */
+    INFO_TYPE_ERROR_MSG,
+    /* return the message when subtitle track num updated. */
+    INFO_TYPE_TRACK_NUM_UPDATE,
+    /* return the message when subtitle track info updated. */
+    INFO_TYPE_TRACK_INFO_UPDATE,
+    /* return the subtitle of playback. */
+    INFO_TYPE_SUBTITLE_UPDATE,
+    /* return to the end of adding subtitle processing. */
+    INFO_TYPE_ADD_SUBTITLE_DONE,
 };
 
 enum PlayerStates : int32_t {
@@ -191,18 +214,6 @@ class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
     /**
-     * Called when an error occurred for versions older than api9
-     *
-     * @param errorType Error type. For details, see {@link PlayerErrorType}.
-     * @param errorCode Error code.
-     */
-    __attribute__((deprecated)) virtual void OnError(PlayerErrorType errorType, int32_t errorCode)
-    {
-        (void)errorType;
-        (void)errorCode;
-    }
-
-    /**
      * Called when a player message or alarm is received.
      *
      * @param type Indicates the information type. For details, see {@link PlayerOnInfoType}.
@@ -217,11 +228,7 @@ public:
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
-    virtual void OnError(int32_t errorCode, const std::string &errorMsg)
-    {
-        (void)errorCode;
-        (void)errorMsg;
-    }
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
 };
 
 class Player {
@@ -264,6 +271,30 @@ public:
     virtual int32_t SetSource(int32_t fd, int64_t offset = 0, int64_t size = 0) = 0;
 
     /**
+     * @brief Add a subtitle source for the player. The corresponding source can be http url.
+     *
+     * @param url Indicates the subtitle source.
+     * @return Returns {@link MSERR_OK} if the url is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(const std::string &url) = 0;
+
+    /**
+     * @brief Add a playback subtitle file descriptor source for the player.
+     *
+     * @param fd Indicates the file descriptor of subtitle source.
+     * @param offset Indicates the offset of subtitle source in file descriptor.
+     * @param size Indicates the size of subtitle source.
+     * @return Returns {@link MSERR_OK} if the fd source is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(int32_t fd, int64_t offset = 0, int64_t size = 0) = 0;
+
+    /**
      * @brief Start playback.
      *
      * This function must be called after {@link Prepare}. If the player state is <b>Prepared</b>,
@@ -281,20 +312,20 @@ public:
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is prepared; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Prepare} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
     __attribute__((deprecated)) virtual int32_t Prepare() = 0;
 
     /**
-     * @brief Prepare the playback environment and buffers media data asynchronous.
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is preparing; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link PrepareAsync} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -303,8 +334,8 @@ public:
     /**
      * @brief Pauses playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is paused; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Pause} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -313,8 +344,8 @@ public:
     /**
      * @brief Stop playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is stopped; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Stop} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -326,8 +357,8 @@ public:
      * After the function is called, add a playback source by calling {@link SetSource},
      * call {@link Play} to start playback again after {@link Prepare} is called.
      *
-     * @return Returns {@link MSERR_OK} if the playback is reset; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Reset} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -340,8 +371,8 @@ public:
      *  but cannot ensure whether the surfacebuffer is released.
      *  The caller needs to ensure the life cycle security of the sufrace
      *
-     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Release} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -556,6 +587,58 @@ public:
      * @version 1.0
      */
     virtual int32_t ReleaseSync() = 0;
+
+    /**
+     * @brief Select audio or subtitle track.
+     * By default, the first audio stream with data is played, and the subtitle track is not played.
+     * After the settings take effect, the original track will become invalid. Please set subtitles
+     * in prepared/playing/paused/completed state and set audio tracks in prepared state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SelectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Deselect the current audio or subtitle track.
+     * After audio is deselected, the default track will be played, and after subtitles are deselected,
+     * they will not be played. Please set subtitles in prepared/playing/paused/completed state and set
+     * audio tracks in prepared state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Obtain the currently effective track index.
+     * Please get it in the prepared/playing/paused/completed state.
+     *
+     * @param trackType Media type.
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if the track index is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+
+    /**
+     * @brief Obtains the subtitle track info, contains mimeType, type, language.
+     *
+     * @param subtitle track info vec.
+     * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

@@ -129,6 +129,17 @@ int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
         (void)mediaListener->AsObject()->AddDeathRecipient(deathRecipient);
     }
 
+    sptr<MediaDeathRecipient> oldDeathRecipient =
+        deathRecipientMap_.find(pid) != deathRecipientMap_.end() ? deathRecipientMap_[pid] : nullptr;
+    sptr<IStandardMediaListener> oldMediaListener =
+        mediaListenerMap_.find(pid) != mediaListenerMap_.end() ? mediaListenerMap_[pid] : nullptr;
+    if (oldDeathRecipient != nullptr) {
+        oldDeathRecipient->SetNotifyCb(nullptr);
+    }
+    if (oldMediaListener != nullptr && oldDeathRecipient != nullptr) {
+        oldMediaListener->AsObject()->RemoveDeathRecipient(oldDeathRecipient);
+    }
+
     MEDIA_LOGD("client pid pid:%{public}d", pid);
     mediaListenerMap_[pid] = mediaListener;
     deathRecipientMap_[pid] = deathRecipient;
@@ -139,9 +150,8 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    int32_t xcollieId = PlayerXCollie::GetInstance().SetTimer("MediaServiceStub::GetSystemAbility", true);
-    (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
-    PlayerXCollie::GetInstance().CancelTimer(xcollieId);
+    LISTENER((void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
+        "MediaServiceStub::GetSystemAbility", true)
     return MSERR_OK;
 }
 } // namespace Media

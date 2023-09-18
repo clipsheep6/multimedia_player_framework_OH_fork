@@ -20,6 +20,7 @@
 #include "buffer_type_meta.h"
 #include "media_log.h"
 #include "param_wrapper.h"
+#include "player_xcollie.h"
 #include "scope_guard.h"
 #include "media_dfx.h"
 #include "av_common.h"
@@ -41,6 +42,7 @@ enum {
     PROP_PERFORMANCE_MODE,
     PROP_VIDEO_SCALE_TYPE,
     PROP_VIDEO_ROTATION,
+    PROP_IS_HARDWARE_DEC,
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -57,6 +59,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
 static void gst_surface_mem_sink_dump_from_sys_param(GstSurfaceMemSink *self);
 static void gst_surface_mem_sink_dump_buffer(GstSurfaceMemSink *self, GstBuffer *buffer);
 static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition);
+static gboolean gst_surface_mem_sink_send_event(GstElement *element, GstEvent *event);
 static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event);
 static GstFlowReturn gst_surface_mem_sink_subclass_do_app_render(GstSurfaceMemSink *sink,
     GstBuffer *buffer, bool is_preroll);
@@ -84,6 +87,7 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
     gobject_class->set_property = gst_surface_mem_sink_set_property;
     gobject_class->get_property = gst_surface_mem_sink_get_property;
     element_class->change_state = gst_surface_mem_sink_change_state;
+    element_class->send_event = gst_surface_mem_sink_send_event;
 
     gst_element_class_set_static_metadata(element_class,
         "SurfaceMemSink", "Sink/Video",
@@ -119,6 +123,10 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
             "Set video rotation for surface",
             0, G_MAXUINT, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_IS_HARDWARE_DEC,
+        g_param_spec_boolean("is-hardware-decoder", "Is Hardware Decoder", "Set Decoder Type",
+        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
     base_sink_class->event = gst_surface_mem_sink_event;
@@ -139,6 +147,8 @@ static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
     sink->priv->rotation = 0;
     sink->prerollBuffer = nullptr;
     sink->firstRenderFrame = TRUE;
+    sink->setRateEvent = FALSE;
+    sink->curRate = 1.0;
     sink->preInitPool = FALSE;
     sink->dump.enable_dump = FALSE;
     sink->dump.dump_file = nullptr;
@@ -230,6 +240,12 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
         }
         case PROP_VIDEO_ROTATION: {
             priv->rotation = g_value_get_uint(value);
+            break;
+        }
+        case PROP_IS_HARDWARE_DEC: {
+            gboolean isHardwareDec = g_value_get_boolean(value);
+            GST_INFO_OBJECT(surface_sink, "spool->isHardwareDec is %d", isHardwareDec);
+            g_object_set(G_OBJECT(priv->pool), "is-hardware-decoder", isHardwareDec, nullptr);
             break;
         }
         default:
@@ -354,8 +370,9 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
             {
                 MediaTrace trace("Surface::FlushBuffer");
                 surface_mem->need_render = TRUE;
-                OHOS::SurfaceError ret = priv->surface->FlushBuffer(surface_mem->buf, surface_mem->fence, flushConfig);
-                if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+                gboolean ret = gst_producer_surface_pool_flush_buffer(priv->pool, surface_mem->buf,
+                    surface_mem->fence, flushConfig);
+                if (ret != TRUE) {
                     surface_mem->need_render = FALSE;
                     GST_ERROR_OBJECT(surface_sink, "flush buffer to surface failed, %d", ret);
                 }
@@ -388,15 +405,17 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", surface_sink->priv->rotation);
         if (surface_sink->priv->surface) {
             MediaTrace trace("Surface::SetTransform");
-            (void)surface_sink->priv->surface->SetTransform(
-                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation));
+            LISTENER((void)surface_sink->priv->surface->SetTransform(
+                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation)),
+                "surface::SetTransform", OHOS::Media::PlayerXCollie::timerTimeout)
         }
     }
 
-    if (surface_sink->firstRenderFrame && is_preroll) {
+    if ((surface_sink->firstRenderFrame || surface_sink->setRateEvent) && is_preroll) {
         MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
-        GST_DEBUG_OBJECT(surface_sink, "first render frame");
+        GST_DEBUG_OBJECT(surface_sink, "first render frame or discard set rate preroll frame");
         surface_sink->firstRenderFrame = FALSE;
+        surface_sink->setRateEvent = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);
         return GST_FLOW_OK;
     }
@@ -421,7 +440,6 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
     GstCaps *caps = nullptr;
     gboolean needPool = FALSE;
     gst_query_parse_allocation(query, &caps, &needPool);
-    GST_DEBUG_OBJECT(surface_sink, "process allocation query, caps: %" GST_PTR_FORMAT, caps);
 
     if (!needPool) {
         GST_ERROR_OBJECT(surface_sink, "no need buffer pool, unexpected!");
@@ -498,11 +516,14 @@ static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
     g_return_val_if_fail(surface_mem_sink != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
 
-    GST_DEBUG_OBJECT(surface_mem_sink, "event->type %d", event->type);
+    GST_DEBUG_OBJECT(surface_mem_sink, "event->type %d event_name %s", event->type, GST_EVENT_TYPE_NAME(event));
     switch (event->type) {
         case GST_EVENT_CAPS: {
             GstCaps *caps;
             gst_event_parse_caps(event, &caps);
+            if (surface_mem_sink->caps != nullptr) {
+                gst_caps_unref(surface_mem_sink->caps);
+            }
             surface_mem_sink->caps = caps;
             gst_caps_ref(surface_mem_sink->caps);
             break;
@@ -578,6 +599,8 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
+            self->firstRenderFrame = TRUE;
+            self->curRate = 1.0;
             if (self->dump.enable_dump == TRUE) {
                 if (self->dump.dump_file != nullptr) {
                     fclose(self->dump.dump_file);
@@ -589,4 +612,34 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
             break;
     }
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+}
+
+static gboolean gst_surface_mem_sink_send_event(GstElement *element, GstEvent *event)
+{
+    g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
+    GstBaseSink *basesink = GST_BASE_SINK(element);
+    GstSurfaceMemSink *self = GST_SURFACE_MEM_SINK(element);
+    gdouble rate;
+    GstFormat seek_format;
+    GstSeekFlags flags;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
+    const gdouble EPS = 1e-6;
+
+    GST_DEBUG_OBJECT(basesink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
+    switch (GST_EVENT_TYPE(event)) {
+        case GST_EVENT_SEEK:
+            gst_event_parse_seek(event, &rate, &seek_format, &flags, &start_type, &start, &stop_type, &stop);
+            GST_DEBUG_OBJECT(basesink, "parse seek rate: %f curRate: %f", rate, self->curRate);
+            if (fabs(self->curRate - rate) > EPS) {
+                GST_DEBUG_OBJECT(basesink, "setRateEvent True");
+                self->setRateEvent = TRUE;
+                self->curRate = rate;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return GST_ELEMENT_CLASS(parent_class)->send_event(element, event);
 }

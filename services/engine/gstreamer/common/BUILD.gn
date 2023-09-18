@@ -59,17 +59,20 @@ config("media_engine_gst_common_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/state_machine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
+    "../player",
+    "./appsrc_engine",
+    "../plugins/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
   ]
 }
 
 ohos_static_library("media_engine_gst_common") {
   sources = [
-    "appsrc_wrap/gst_appsrc_wrap.cpp",
+    "../player/player_track_parse.cpp",
+    "appsrc_engine/appsrc_memory.cpp",
+    "appsrc_engine/gst_appsrc_engine.cpp",
     "message/gst_msg_converter.cpp",
     "message/gst_msg_processor.cpp",
     "metadata/gst_meta_parser.cpp",
@@ -82,29 +85,30 @@ ohos_static_library("media_engine_gst_common") {
   configs = [
     ":media_engine_gst_common_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
   ]
 
   deps = [
     ":media_gst_dfx",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+    "../plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
     "//third_party/gstreamer/gstplugins_base:gsttag",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "graphic_2d:surface",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 config("media_gst_dfx_config") {
@@ -171,10 +175,10 @@ ohos_static_library("media_gst_dfx") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

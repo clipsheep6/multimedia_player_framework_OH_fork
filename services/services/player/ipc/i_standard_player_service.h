@@ -31,6 +31,8 @@ public:
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
+    virtual int32_t AddSubSource(const std::string &url) = 0;
+    virtual int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) = 0;
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t PrepareAsync() = 0;
@@ -47,6 +49,7 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
@@ -62,6 +65,9 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+    virtual int32_t SelectTrack(int32_t index) = 0;
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
     /**
      * IPC code ID
      */
@@ -70,6 +76,8 @@ public:
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,
+        ADD_SUB_SOURCE,
+        ADD_SUB_FD_SOURCE,
         PLAY,
         PREPARE,
         PREPAREASYNC,
@@ -94,7 +102,12 @@ public:
         GET_AUDIO_TRACK_INFO,
         GET_VIDEO_WIDTH,
         GET_VIDEO_HEIGHT,
-        SELECT_BIT_RATE
+        SELECT_BIT_RATE,
+        SELECT_TRACK,
+        DESELECT_TRACK,
+        GET_CURRENT_TRACK,
+        GET_SUBTITLE_TRACK_INFO,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

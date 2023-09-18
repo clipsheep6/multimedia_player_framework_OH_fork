@@ -48,6 +48,7 @@ AVCodecListServiceStub::~AVCodecListServiceStub()
 
 int32_t AVCodecListServiceStub::Init()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     codecListServer_ = AVCodecListServer::Create();
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, MSERR_NO_MEMORY, "failed to create AVCodecListServer");
     codecListFuncs_[FIND_VIDEO_DECODER] = &AVCodecListServiceStub::FindVideoDecoder;
@@ -61,6 +62,7 @@ int32_t AVCodecListServiceStub::Init()
 
 int32_t AVCodecListServiceStub::DestroyStub()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     codecListServer_ = nullptr;
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVCODECLIST, AsObject());
@@ -96,30 +98,35 @@ int AVCodecListServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
 
 std::string AVCodecListServiceStub::FindVideoDecoder(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, "", "avcodeclist server is nullptr");
     return codecListServer_->FindVideoDecoder(format);
 }
 
 std::string AVCodecListServiceStub::FindVideoEncoder(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, "", "avcodeclist server is nullptr");
     return codecListServer_->FindVideoEncoder(format);
 }
 
 std::string AVCodecListServiceStub::FindAudioDecoder(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, "", "avcodeclist server is nullptr");
     return codecListServer_->FindAudioDecoder(format);
 }
 
 std::string AVCodecListServiceStub::FindAudioEncoder(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, "", "avcodeclist server is nullptr");
     return codecListServer_->FindAudioEncoder(format);
 }
 
 std::vector<CapabilityData> AVCodecListServiceStub::GetCodecCapabilityInfos()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecListServer_ != nullptr, std::vector<CapabilityData>(),
         "avcodeclist server is nullptr");
     return codecListServer_->GetCodecCapabilityInfos();

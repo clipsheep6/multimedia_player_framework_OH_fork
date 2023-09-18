@@ -43,14 +43,13 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     constexpr int32_t AV_METADATA_QUERY_OPTION_LIST = 4;
     constexpr int32_t AV_COLOR_FORMAT_LIST = 11;
 
-    avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        avmetadata->Release();
         return false;
     }
 
     const string path = "/data/test/media/H264_AAC.mp4";
-    if (MetaDataSetSource(path) != 0) {
+    if (MetaDataSetSource(path, avmetadata) != 0) {
         avmetadata->Release();
         return false;
     }

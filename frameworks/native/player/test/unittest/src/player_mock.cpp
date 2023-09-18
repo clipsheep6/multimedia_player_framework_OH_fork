@@ -14,6 +14,7 @@
  */
 
 #include "player_mock.h"
+#include <fcntl.h>
 #include <sys/stat.h>
 #include "media_errors.h"
 #include "transaction/rs_transaction.h"
@@ -42,6 +43,13 @@ void PlayerCallbackTest::SetSpeedDoneFlag(bool speedDoneFlag)
 void PlayerCallbackTest::SetSeekPosition(int32_t seekPosition)
 {
     seekPosition_ = seekPosition;
+}
+
+void PlayerCallbackTest::SetTrackDoneFlag(bool trackDoneFlag)
+{
+    std::unique_lock<std::mutex> lockSpeed(mutexCond_);
+    trackDoneFlag_ = trackDoneFlag;
+    trackChange_ = trackDoneFlag;
 }
 
 int32_t PlayerCallbackTest::PrepareSync()
@@ -128,8 +136,57 @@ int32_t PlayerCallbackTest::SpeedSync()
     return MSERR_OK;
 }
 
+int32_t PlayerCallbackTest::TrackSync(bool &trackChange)
+{
+    if (trackDoneFlag_ == false) {
+        std::unique_lock<std::mutex> lockTrackDone(mutexCond_);
+        condVarTrackDone_.wait_for(lockTrackDone, std::chrono::seconds(WAITSECOND));
+        if (trackDoneFlag_ == false) {
+            return -1;
+        }
+    }
+
+    trackChange = trackChange_;
+
+    return MSERR_OK;
+}
+
+int32_t PlayerCallbackTest::TrackInfoUpdateSync()
+{
+    if (trackInfoUpdate_ == false) {
+        std::unique_lock<std::mutex> lock(mutexCond_);
+        condVarTrackInfoUpdate_.wait_for(lock, std::chrono::seconds(WAITSECOND), [this]() {
+            return trackInfoUpdate_;
+        });
+        if (trackInfoUpdate_ == false) {
+            return -1;
+        }
+    }
+    trackInfoUpdate_ = false;
+    return MSERR_OK;
+}
+
+void PlayerCallbackTest::HandleSubtitleCallback(int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text_);
+    std::cout << "text = " << text_ << std::endl;
+    textUpdate_ = true;
+    condVarText_.notify_all();
+}
+
+void PlayerCallbackTest::HandleTrackInfoCallback(int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    std::cout << "track info update" << std::endl;
+    trackInfoUpdate_ = true;
+    condVarTrackInfoUpdate_.notify_all();
+}
+
 void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    int32_t index;
+    int32_t isSelect;
     switch (type) {
         case INFO_TYPE_SEEKDONE:
             SetSeekDoneFlag(true);
@@ -145,6 +202,7 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             condVarSpeed_.notify_all();
             break;
         case INFO_TYPE_POSITION_UPDATE:
+            std::cout << "cur position is " << static_cast<uint64_t>(extra) << std::endl;
             break;
         case INFO_TYPE_BITRATE_COLLECT:
             std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
@@ -155,14 +213,49 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_RESOLUTION_CHANGE:
             std::cout << "INFO_TYPE_RESOLUTION_CHANGE: " << extra << std::endl;
             break;
+        case INFO_TYPE_TRACKCHANGE:
+            trackChange_ = true;
+            trackDoneFlag_ = true;
+            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+            std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
+            condVarTrackDone_.notify_all();
+            break;
+        case INFO_TYPE_SUBTITLE_UPDATE: {
+            HandleSubtitleCallback(extra, infoBody);
+            break;
+        }
+        case INFO_TYPE_TRACK_INFO_UPDATE: {
+            HandleTrackInfoCallback(extra, infoBody);
+            break;
+        }
         default:
             break;
     }
 }
 
+std::string PlayerCallbackTest::SubtitleTextUpdate(std::string text)
+{
+    std::unique_lock<std::mutex> lock(subtitleMutex_);
+    std::cout << "wait for text update" <<std::endl;
+    condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [&, this]() {
+        if (text_ != text) {
+            return textUpdate_ = false;
+        }
+        return textUpdate_;
+    });
+    std::cout << "text updated" <<std::endl;
+    textUpdate_ = false;
+    return text_;
+}
+
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    std::cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << std::endl;
+    if (!trackDoneFlag_) {
+        trackDoneFlag_ = true;
+        condVarTrackDone_.notify_all();
+    }
+    std::cout << "Error received, errorCode: " << errorCode << " errorMsg: " << errorMsg << std::endl;
 }
 
 void PlayerCallbackTest::Notify(PlayerStates currentState)
@@ -244,6 +337,12 @@ int32_t PlayerMock::SetSource(const std::string url)
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->SetSource(url);
     return ret;
+}
+
+int32_t PlayerMock::SetSource(int32_t fd, int64_t offset, int64_t size)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetSource(fd, offset, size);
 }
 
 int32_t PlayerMock::SetSource(const std::string &path, int64_t offset, int64_t size)
@@ -346,7 +445,7 @@ int32_t PlayerMock::Stop()
 
 void PlayerMock::SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode)
 {
-    UNITTEST_CHECK_AND_RETURN_LOG(player_ == nullptr || callback_ == nullptr, "player or callback is nullptr");
+    UNITTEST_CHECK_AND_RETURN_LOG(player_ != nullptr && callback_ != nullptr, "player or callback is nullptr");
     int32_t duration = 0;
     int32_t seekPosition = 0;
     callback_->SetSeekDoneFlag(false);
@@ -511,6 +610,80 @@ int32_t PlayerMock::SetVideoSurface(sptr<Surface> surface)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetVideoSurface(surface);
+}
+
+int32_t PlayerMock::SelectTrack(int32_t index, bool &trackChange)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    callback_->SetTrackDoneFlag(false);
+    int32_t ret = player_->SelectTrack(index);
+    if (callback_->TrackSync(trackChange) != MSERR_OK) {
+        return -1;
+    }
+    return ret;
+}
+
+int32_t PlayerMock::DeselectTrack(int32_t index, bool &trackChange)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    callback_->SetTrackDoneFlag(false);
+    int32_t ret = player_->DeselectTrack(index);
+    if (callback_->TrackSync(trackChange) != MSERR_OK) {
+        return -1;
+    }
+    return ret;
+}
+
+int32_t PlayerMock::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->GetCurrentTrack(trackType, index);
+}
+
+int32_t PlayerMock::AddSubSource(const std::string &url)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    (void)player_->AddSubSource(url);
+    std::cout << "wait for track info callback" << std::endl;
+    return callback_->TrackInfoUpdateSync();
+}
+
+int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_t size)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::string rawFile = path.substr(strlen("file://"));
+    int32_t fileDescriptor = open(rawFile.c_str(), O_RDONLY);
+    if (fileDescriptor <= 0) {
+        std::cout << "Open file failed." << std::endl;
+        return -1;
+    }
+
+    struct stat64 st;
+    if (fstat64(fileDescriptor, &st) != 0) {
+        std::cout << "Get file state failed" << std::endl;
+        (void)close(fileDescriptor);
+        return -1;
+    }
+    int64_t stLen = static_cast<int64_t>(st.st_size);
+    if (size > 0) {
+        stLen = size;
+    }
+    int32_t ret = player_->AddSubSource(fileDescriptor, offset, stLen);
+    if (ret != 0) {
+        (void)close(fileDescriptor);
+        return -1;
+    }
+    (void)close(fileDescriptor);
+    std::cout << "wait for track info callback" << std::endl;
+    return callback_->TrackInfoUpdateSync();
+}
+
+std::string PlayerMock::GetSubtitleText(std::string text)
+{
+    return callback_->SubtitleTextUpdate(text);
 }
 } // namespace Media
 } // namespace OHOS

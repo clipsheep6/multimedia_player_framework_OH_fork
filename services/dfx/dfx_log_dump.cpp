@@ -16,6 +16,7 @@
 #include "dfx_log_dump.h"
 #include <fstream>
 #include <unistd.h>
+#include <malloc.h>
 #include <sys/time.h>
 #include "securec.h"
 
@@ -96,7 +97,7 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
 
     va_list ap;
     va_start(ap, fmt);
-    constexpr uint8_t maxLogLen = 255;
+    constexpr uint32_t maxLogLen = 1024;
     char logBuf[maxLogLen];
     auto ret = vsnprintf_s(logBuf, maxLogLen, maxLogLen - 1, temp.c_str(), ap);
     va_end(ap);
@@ -129,6 +130,8 @@ void DfxLogDump::UpdateCheckEnable()
 void DfxLogDump::TaskProcessor()
 {
     pthread_setname_np(pthread_self(), "DfxLogTask");
+    (void)mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {
         std::string temp;
         int32_t lineCount = 0;

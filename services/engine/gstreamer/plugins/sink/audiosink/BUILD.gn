@@ -46,11 +46,6 @@ config("gst_audio_server_sink_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiomanager/include",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiorenderer/include",
-    "//foundation/multimedia/audio_framework/services/audio_service/client/include",
-    "//foundation/multimedia/audio_framework/frameworks/native/audiopolicy/include",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
@@ -64,6 +59,13 @@ config("gst_audio_server_sink_config") {
 
 ohos_shared_library("gst_audio_server_sink") {
   install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../../../../cfi_blocklist.txt"
+  }
 
   sources = [
     "src/audio_sink_factory.cpp",
@@ -87,13 +89,16 @@ ohos_shared_library("gst_audio_server_sink") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
+  deps += [ "//third_party/bounds_checking_function:libsec_shared" ]
+
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
+    "hilog:libhilog",
     "init:libbegetutil",
-    "multimedia_audio_framework:audio_renderer",
   ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

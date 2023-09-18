@@ -17,7 +17,6 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "scope_guard.h"
-#include "time_perf.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaFrameExtract"};
@@ -47,10 +46,7 @@ int32_t AVMetaFrameExtractor::Init(const std::shared_ptr<IPlayBinCtrler> &playbi
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (playbin == nullptr) {
-        MEDIA_LOGE("playbin is nullptr");
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(playbin != nullptr, MSERR_INVALID_VAL, "playbin is nullptr");
     playbin_ = playbin;
     vidAppSink_ = GST_ELEMENT_CAST(gst_object_ref(&vidAppSink));
 
@@ -111,7 +107,7 @@ std::vector<std::shared_ptr<AVSharedMemory>> AVMetaFrameExtractor::ExtractIntern
     std::vector<std::shared_ptr<AVSharedMemory>> outFrames;
 
     std::unique_lock<std::mutex> lock(mutex_);
-    static constexpr int32_t timeout = 5;
+    static constexpr int32_t timeout = 3;
     cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
         return !originalFrames_.empty() || !startExtracting_;
     });
@@ -161,7 +157,7 @@ int32_t AVMetaFrameExtractor::StartExtract(
     ret = frameConverter_->Init(param);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init failed, cancel extract frames");
 
-    static constexpr int32_t timeout = 5;
+    static constexpr int32_t timeout = 3;
     cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
         return seekDone_ || !startExtracting_;
     });

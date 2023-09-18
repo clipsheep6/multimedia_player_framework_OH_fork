@@ -24,16 +24,15 @@ class AVMetadataHelperServiceProxy : public IRemoteProxy<IStandardAVMetadataHelp
 public:
     explicit AVMetadataHelperServiceProxy(const sptr<IRemoteObject> &impl);
     virtual ~AVMetadataHelperServiceProxy();
-
-    int32_t SetSource(const std::string &uri, int32_t usage) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
-    std::string ResolveMetadata(int32_t key) override;
+    int32_t SetSource(const std::string &uri, int32_t usage) override;
     std::unordered_map<int32_t, std::string> ResolveMetadataMap() override;
-    std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
+    std::string ResolveMetadata(int32_t key) override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
-    void Release() override;
+    std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t DestroyStub() override;
+    void Release() override;
 private:
     static inline BrokerDelegator<AVMetadataHelperServiceProxy> delegator_;
 };

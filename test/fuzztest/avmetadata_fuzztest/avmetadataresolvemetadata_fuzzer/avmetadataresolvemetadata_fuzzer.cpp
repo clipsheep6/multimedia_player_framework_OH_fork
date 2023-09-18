@@ -39,14 +39,13 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
 {
     constexpr int32_t AV_METADATA_CODELIST = 17;
 
-    avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        avmetadata->Release();
         return false;
     }
 
     const string path = "/data/test/media/H264_AAC.mp4";
-    int32_t retMetadataSetsource = MetaDataSetSource(path);
+    int32_t retMetadataSetsource = MetaDataSetSource(path, avmetadata);
     if (retMetadataSetsource != 0) {
         avmetadata->Release();
         return false;

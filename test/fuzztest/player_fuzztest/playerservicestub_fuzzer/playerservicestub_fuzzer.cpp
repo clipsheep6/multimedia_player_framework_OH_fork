@@ -14,21 +14,11 @@
  */
 
 #include "playerservicestub_fuzzer.h"
-#include "media_server_manager.h"
-#include "media_service_proxy.h"
-#include "media_listener_stub.h"
-#include "media_service_stub.h"
-#include "media_service_proxy.h"
-#include "media_client.h"
-#include "media_server.h"
-#include "i_media_service.h"
+#include <iostream>
+#include "i_standard_media_listener.h"
 #include "i_standard_media_service.h"
-#include "media_death_recipient.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-
-
-#include <iostream>
 
 using namespace std;
 using namespace OHOS;
@@ -36,6 +26,39 @@ using namespace OHOS::Media;
 
 namespace OHOS {
 namespace Media {
+class PlayerServiceListenerStubFuzzer : public IRemoteStub<IStandardMediaListener>, public NoCopyable {
+public:
+    PlayerServiceListenerStubFuzzer() = default;
+    ~PlayerServiceListenerStubFuzzer() = default;
+};
+
+class MediaServiceProxyFuzzer : public IRemoteProxy<IStandardMediaService>, public NoCopyable {
+public:
+    explicit MediaServiceProxyFuzzer(const sptr<IRemoteObject> &impl) : IRemoteProxy<IStandardMediaService>(impl) {}
+    virtual ~MediaServiceProxyFuzzer() {}
+
+    sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener)
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        bool token = data.WriteInterfaceToken(MediaServiceProxyFuzzer::GetDescriptor());
+        if (!token) {
+            cout << "Failed to write descriptor!" << endl;
+            return nullptr;
+        }
+        (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
+        (void)data.WriteRemoteObject(listener);
+        (void)Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
+        return reply.ReadRemoteObject();
+    }
+
+private:
+    static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
+};
+
 PlayerServiceStubFuzzer::PlayerServiceStubFuzzer()
 {
 }
@@ -49,10 +72,18 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     constexpr int32_t subSystemIdList = 8;
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+    if (object == nullptr) {
+        cout << "media object is nullptr." << endl;
+        return false;
+    }
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
+    if (mediaProxy_ == nullptr) {
+        cout << "media proxy is nullptr." << endl;
+        return false;
+    }
     sptr<IRemoteObject> listenerStub_ = nullptr;
-    listenerStub_ = new(std::nothrow) MediaListenerStub();
+    listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
 
     IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
             IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,

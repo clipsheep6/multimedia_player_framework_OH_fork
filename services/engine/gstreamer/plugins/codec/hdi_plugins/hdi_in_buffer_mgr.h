@@ -35,6 +35,7 @@ public:
 protected:
     std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers_;
     std::shared_ptr<HdiBufferWrap> GetHdiEosBuffer();
+    bool firstFramePrinted = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -61,6 +61,11 @@ void CopyFormatDataMap(const Format::FormatDataMap &from, Format::FormatDataMap 
     }
 }
 
+void CopyFormatVectorMap(const Format::FormatVectorMap &from, Format::FormatVectorMap &to)
+{
+    to = from;
+}
+
 Format::~Format()
 {
     for (auto it = formatMap_.begin(); it != formatMap_.end(); ++it) {
@@ -73,35 +78,30 @@ Format::~Format()
 
 Format::Format(const Format &rhs)
 {
-    if (&rhs == this) {
-        return;
-    }
-
+    CHECK_AND_RETURN_LOG(&rhs != this, "Copying oneself is not supported");
     CopyFormatDataMap(rhs.formatMap_, formatMap_);
+    CopyFormatVectorMap(rhs.formatVecMap_, formatVecMap_);
 }
 
 Format::Format(Format &&rhs) noexcept
 {
     std::swap(formatMap_, rhs.formatMap_);
+    std::swap(formatVecMap_, rhs.formatVecMap_);
 }
 
 Format &Format::operator=(const Format &rhs)
 {
-    if (&rhs == this) {
-        return *this;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(&rhs != this, *this, "Copying oneself is not supported");
     CopyFormatDataMap(rhs.formatMap_, this->formatMap_);
+    CopyFormatVectorMap(rhs.formatVecMap_, this->formatVecMap_);
     return *this;
 }
 
 Format &Format::operator=(Format &&rhs) noexcept
 {
-    if (&rhs == this) {
-        return *this;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(&rhs != this, *this, "Copying oneself is not supported");
     std::swap(this->formatMap_, rhs.formatMap_);
+    std::swap(this->formatVecMap_, rhs.formatVecMap_);
     return *this;
 }
 
@@ -158,10 +158,10 @@ bool Format::PutStringValue(const std::string_view &key, const std::string_view 
 bool Format::GetStringValue(const std::string_view &key, std::string &value) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_STRING) {
-        MEDIA_LOGE("Format::GetFormat failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_STRING, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     value = iter->second.stringVal;
     return true;
 }
@@ -169,10 +169,10 @@ bool Format::GetStringValue(const std::string_view &key, std::string &value) con
 bool Format::GetIntValue(const std::string_view &key, int32_t &value) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_INT32) {
-        MEDIA_LOGE("Format::GetFormat failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_INT32, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     value = iter->second.val.int32Val;
     return true;
 }
@@ -180,10 +180,10 @@ bool Format::GetIntValue(const std::string_view &key, int32_t &value) const
 bool Format::GetLongValue(const std::string_view &key, int64_t &value) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_INT64) {
-        MEDIA_LOGE("Format::GetFormat failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_INT64, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     value = iter->second.val.int64Val;
     return true;
 }
@@ -191,10 +191,10 @@ bool Format::GetLongValue(const std::string_view &key, int64_t &value) const
 bool Format::GetFloatValue(const std::string_view &key, float &value) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_FLOAT) {
-        MEDIA_LOGE("Format::GetFormat failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_FLOAT, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     value = iter->second.val.floatVal;
     return true;
 }
@@ -202,34 +202,26 @@ bool Format::GetFloatValue(const std::string_view &key, float &value) const
 bool Format::GetDoubleValue(const std::string_view &key, double &value) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_DOUBLE) {
-        MEDIA_LOGE("Format::GetFormat failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_DOUBLE, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     value = iter->second.val.doubleVal;
     return true;
 }
 
 bool Format::PutBuffer(const std::string_view &key, const uint8_t *addr, size_t size)
 {
-    if (addr == nullptr) {
-        MEDIA_LOGE("put buffer error, addr is nullptr");
-        return false;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(addr != nullptr, false, "put buffer error, addr is nullptr");
     constexpr size_t sizeMax = 1 * 1024 * 1024;
-    if (size > sizeMax) {
-        MEDIA_LOGE("PutBuffer input size failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(size <= sizeMax, false,
+        "PutBuffer input size too large. Key: %{public}s", key.data());
 
     FormatData data;
     data.type = FORMAT_TYPE_ADDR;
     data.addr = reinterpret_cast<uint8_t *>(malloc(size));
-    if (data.addr == nullptr) {
-        MEDIA_LOGE("malloc addr failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(data.addr != nullptr, false,
+        "malloc addr failed. Key: %{public}s", key.data());
 
     errno_t err = memcpy_s(reinterpret_cast<void *>(data.addr), size, reinterpret_cast<const void *>(addr), size);
     if (err != EOK) {
@@ -248,12 +240,30 @@ bool Format::PutBuffer(const std::string_view &key, const uint8_t *addr, size_t 
 bool Format::GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size) const
 {
     auto iter = formatMap_.find(key);
-    if (iter == formatMap_.end() || iter->second.type != FORMAT_TYPE_ADDR) {
-        MEDIA_LOGE("Format::GetBuffer failed. Key: %{public}s", key.data());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_ADDR, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
     *addr = iter->second.addr;
     size = iter->second.size;
+    return true;
+}
+
+bool Format::PutFormatVector(const std::string_view &key, std::vector<Format> &value)
+{
+    RemoveKey(key);
+    auto ret = formatVecMap_.insert(std::make_pair(key, value));
+    return ret.second;
+}
+
+bool Format::GetFormatVector(const std::string_view &key, std::vector<Format> &value) const
+{
+    auto iter = formatVecMap_.find(key);
+    if (iter == formatVecMap_.end()) {
+        MEDIA_LOGE("Format::GetFormatVector failed. Key: %{public}s", key.data());
+        return false;
+    }
+    value.assign(iter->second.begin(), iter->second.end());
     return true;
 }
 
@@ -287,11 +297,21 @@ void Format::RemoveKey(const std::string_view &key)
         }
         formatMap_.erase(iter);
     }
+
+    auto vecMapIter = formatVecMap_.find(key);
+    if (vecMapIter != formatVecMap_.end()) {
+        formatVecMap_.erase(vecMapIter);
+    }
 }
 
 const Format::FormatDataMap &Format::GetFormatMap() const
 {
     return formatMap_;
+}
+
+const Format::FormatVectorMap &Format::GetFormatVectorMap() const
+{
+    return formatVecMap_;
 }
 
 std::string Format::Stringify() const

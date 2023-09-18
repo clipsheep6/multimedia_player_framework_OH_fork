@@ -16,9 +16,9 @@
 #include "config.h"
 #include "gst_mem_sink.h"
 #include <cinttypes>
-#include "gst_surface_mem_sink.h"
-#include "gst_shared_mem_sink.h"
+#include "media_dfx.h"
 
+using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
@@ -281,7 +281,6 @@ static void gst_mem_sink_setcaps(GstMemSink *mem_sink, const GstCaps *caps)
     g_return_if_fail(priv != nullptr);
 
     GST_OBJECT_LOCK(mem_sink);
-    GST_INFO_OBJECT(mem_sink, "setting caps to %" GST_PTR_FORMAT, caps);
 
     GstCaps *old = priv->caps;
     if (old != caps) {
@@ -308,7 +307,6 @@ static GstCaps *gst_mem_sink_getcaps(GstMemSink *mem_sink)
     GstCaps *caps = priv->caps;
     if (caps != nullptr) {
         gst_caps_ref(caps);
-        GST_INFO_OBJECT(mem_sink, "getting caps of %" GST_PTR_FORMAT, caps);
     }
     GST_OBJECT_UNLOCK(mem_sink);
 
@@ -402,7 +400,6 @@ static gboolean gst_mem_sink_set_caps(GstBaseSink *basesink, GstCaps *caps)
     GST_OBJECT_LOCK(mem_sink);
 
     gboolean ret = FALSE;
-    GST_INFO_OBJECT(mem_sink, "receiving CAPS %" GST_PTR_FORMAT, caps);
     if (caps != nullptr && priv->caps != nullptr) {
         caps = gst_caps_intersect_full(priv->caps, caps, GST_CAPS_INTERSECT_FIRST);
         if (caps != nullptr) {
@@ -431,7 +428,6 @@ static GstCaps *gst_mem_sink_get_caps(GstBaseSink *basesink, GstCaps *filter)
         } else {
             gst_caps_ref(caps);
         }
-        GST_INFO_OBJECT(mem_sink, "got caps %" GST_PTR_FORMAT, caps);
     }
     GST_OBJECT_UNLOCK(mem_sink);
 
@@ -465,6 +461,7 @@ static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buff
 
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
+    MediaTrace trace("MemSink::stream_render");
     GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstMemSinkPrivate *priv = mem_sink->priv;

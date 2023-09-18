@@ -59,9 +59,13 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_CALLBACK] = "Player::SetPlayerCallback";
     playerFuncs_[GET_VIDEO_TRACK_INFO] = "Player::GetVideoTrackInfo";
     playerFuncs_[GET_AUDIO_TRACK_INFO] = "Player::GetAudioTrackInfo";
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = "Player::GetSubtitleTrackInfo";
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
+    playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
+    playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
+    playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -77,10 +81,8 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
         funcName = itFunc->second;
     }
     MEDIA_LOGI("Proxy: SendRequest task: %{public}s is received", funcName.c_str());
-    
-    int32_t id = PlayerXCollie::GetInstance().SetTimer(funcName);
-    int32_t error = Remote()->SendRequest(code, data, reply, option);
-    PlayerXCollie::GetInstance().CancelTimer(id);
+    int32_t error = -1;
+    LISTENER(error = Remote()->SendRequest(code, data, reply, option), funcName, false)
     return error;
 }
 
@@ -154,6 +156,43 @@ int32_t PlayerServiceProxy::SetSource(int32_t fd, int64_t offset, int64_t size)
     int32_t error = SendRequest(SET_FD_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetSource failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("binder::AddSubSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteString(url);
+    int32_t error = SendRequest(ADD_SUB_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddSubSource failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MediaTrace trace("binder::AddSubSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteFileDescriptor(fd);
+    (void)data.WriteInt64(offset);
+    (void)data.WriteInt64(size);
+    int32_t error = SendRequest(ADD_SUB_FD_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddSubSource failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
@@ -379,6 +418,29 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
 
         audioTrack.push_back(trackInfo);
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MediaTrace trace("PlayerServiceProxy::GetSubtitleTrackInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_SUBTITLE_TRACK_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetSubtitleTrackInfo failed, error: %{public}d", error);
+    int32_t trackCnt = reply.ReadInt32();
+    for (int32_t i = 0; i < trackCnt; i++) {
+        Format trackInfo;
+        (void)MediaParcel::Unmarshalling(reply, trackInfo);
+
+        subtitleTrack.push_back(trackInfo);
     }
     return reply.ReadInt32();
 }
@@ -616,6 +678,58 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlayerCallback failed, error: %{public}d", error);
 
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SelectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceProxy::SelectTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(index);
+    int32_t error = SendRequest(SELECT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SelectTrack failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::DeselectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceProxy::DeselectTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(index);
+    int32_t error = SendRequest(DESELECT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DeselectTrack failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MediaTrace trace("PlayerServiceProxy::GetCurrentTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(trackType);
+    int32_t error = SendRequest(GET_CURRENT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentTrack failed, error: %{public}d", error);
+    index = reply.ReadInt32();
     return reply.ReadInt32();
 }
 } // namespace Media

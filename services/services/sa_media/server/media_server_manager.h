@@ -46,6 +46,8 @@ public:
         AVCODECLIST,
         AVCODEC,
         RECORDERPROFILES,
+        MONITOR,
+        SCREEN_CAPTURE,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -70,6 +72,17 @@ private:
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+    sptr<IRemoteObject> CreateScreenCaptureStubObject();
+#endif
+    sptr<IRemoteObject> GetMonitorStubObject();
+
+    void DestroyAVCodecStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVCodecStubForPid(pid_t pid);
+    void DestroyAVPlayerStubForPid(pid_t pid);
+    void DestroyAVRecorderStubForPid(pid_t pid);
 
     class AsyncExecutor {
     public:
@@ -88,6 +101,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> screenCaptureStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 

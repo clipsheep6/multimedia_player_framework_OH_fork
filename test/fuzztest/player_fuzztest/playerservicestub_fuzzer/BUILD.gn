@@ -16,47 +16,19 @@ import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/media_player"
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerServiceStubFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
+      "../../../../test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
 
   include_dirs = [
-    "//foundation/window/window_manager/interfaces/innerkits/wm",
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "//graphic/graphic_2d/interfaces/innerkits/surface",
-    "//base/security/access_token/interfaces/innerkits/access_token/include",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
-    "//foundation/multimedia/player_framework/services/include",
-    "//foundation/multimedia/player_framework/services/services/factory",
-    "//foundation/multimedia/player_framework/services/services/engine_intf",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/services/services/common",
-    "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
-    "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
-    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
-    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
-    "$MEDIA_ROOT_DIR/services/services/sa_media/server",
-    "$MEDIA_ROOT_DIR/services/services/common",
-    "$MEDIA_ROOT_DIR/services/services/player/ipc",
-    "$MEDIA_ROOT_DIR/services/services/player/server",
-    "$MEDIA_ROOT_DIR/services/services/recorder/ipc",
-    "$MEDIA_ROOT_DIR/services/services/recorder/server",
-    "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server",
-    "$MEDIA_ROOT_DIR/services/services/avcodec/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avcodec/server",
-    "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avcodeclist/server",
-    "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
-    "$MEDIA_ROOT_DIR/services/services/recorder_profiles/server",
-    "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
-    "$MEDIA_ROOT_DIR/services/services/media_data_source/server",
+    "../../../../services/include",
+    "../../../../services/services/sa_media/ipc",
+    "../../../../test/fuzztest/player_fuzztest",
+    "../../../../interfaces/inner_api/native",
+    "../../../../test/fuzztest/common",
   ]
   cflags = [
     "-std=c++17",
@@ -85,24 +57,15 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     sources = [ "playerservicestub_fuzzer.cpp" ]
   }
   deps = [
-    "$MEDIA_ROOT_DIR/services/services:media_service",
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
-    "//foundation/multimedia/player_framework/services/utils:media_format",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//foundation/window/window_manager/wm:libwm",
-    "//third_party/libxml2:xml2",
+    "../../../../services/services:media_service",
+    "../../../../services/utils:media_format",
   ]
   external_deps = [
-    "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "multimedia_player_framework:media_client",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:surface",
+    "ipc:ipc_single",
+    "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

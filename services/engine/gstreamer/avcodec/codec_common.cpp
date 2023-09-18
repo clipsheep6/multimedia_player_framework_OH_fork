@@ -15,6 +15,11 @@
 
 #include "codec_common.h"
 #include "media_errors.h"
+#include "media_log.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CodecCommon"};
+}
 
 namespace OHOS {
 namespace Media {
@@ -85,42 +90,32 @@ const std::map<std::string_view, InnerCodecMimeType> MIME_TO_CODEC_NAME = {
 
 std::string PixelFormatToGst(VideoPixelFormat pixel)
 {
-    if (PIXEL_TO_STRING.count(pixel) != 0) {
-        return PIXEL_TO_STRING.at(pixel);
-    }
-    return "Invalid";
+    CHECK_AND_RETURN_RET(PIXEL_TO_STRING.count(pixel) != 0, "Invalid");
+    return PIXEL_TO_STRING.at(pixel);
 }
 
 std::string MPEG4ProfileToGst(MPEG4Profile profile)
 {
-    if (MPEG4_PROFILE_TO_STRING.count(profile) != 0) {
-        return MPEG4_PROFILE_TO_STRING.at(profile);
-    }
-    return "Invalid";
+    CHECK_AND_RETURN_RET(MPEG4_PROFILE_TO_STRING.count(profile) != 0, "Invalid");
+    return MPEG4_PROFILE_TO_STRING.at(profile);
 }
 
 std::string AVCProfileToGst(AVCProfile profile)
 {
-    if (AVC_PROFILE_TO_STRING.count(profile) != 0) {
-        return AVC_PROFILE_TO_STRING.at(profile);
-    }
-    return "Invalid";
+    CHECK_AND_RETURN_RET(AVC_PROFILE_TO_STRING.count(profile) != 0, "Invalid");
+    return AVC_PROFILE_TO_STRING.at(profile);
 }
 
 std::string HEVCProfileToGst(HEVCProfile profile)
 {
-    if (HEVC_PROFILE_TO_STRING.count(profile) != 0) {
-        return HEVC_PROFILE_TO_STRING.at(profile);
-    }
-    return "Invalid";
+    CHECK_AND_RETURN_RET(HEVC_PROFILE_TO_STRING.count(profile) != 0, "Invalid");
+    return HEVC_PROFILE_TO_STRING.at(profile);
 }
 
 std::string RawAudioFormatToGst(AudioStandard::AudioSampleFormat format)
 {
-    if (PCM_TO_STRING.count(format) != 0) {
-        return PCM_TO_STRING.at(format);
-    }
-    return "Invalid";
+    CHECK_AND_RETURN_RET(PCM_TO_STRING.count(format) != 0, "Invalid");
+    return PCM_TO_STRING.at(format);
 }
 
 int32_t MapCodecMime(const std::string &mime, InnerCodecMimeType &name)
@@ -135,9 +130,7 @@ int32_t MapCodecMime(const std::string &mime, InnerCodecMimeType &name)
 int32_t CapsToFormat(GstCaps *caps, Format &format)
 {
     GstStructure *structure = gst_caps_get_structure(caps, 0);
-    if (structure == nullptr) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET(structure != nullptr, MSERR_UNKNOWN);
     auto mediaType = gst_structure_get_name(structure);
     bool isVideo = g_str_has_prefix(mediaType, "video/");
 
@@ -159,9 +152,7 @@ int32_t CapsToFormat(GstCaps *caps, Format &format)
 uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height, uint32_t alignment)
 {
     uint32_t size = 0;
-    if (width == 0 || height == 0 || alignment == 0) {
-        return size;
-    }
+    CHECK_AND_RETURN_RET(width != 0 && height != 0 && alignment != 0, size);
 
     switch (pixel) {
         case YUVI420:

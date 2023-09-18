@@ -23,6 +23,7 @@
 #include "hdf_remote_service.h"
 #include "codec_internal.h"
 #include "servmgr_hdi.h"
+#include "player_xcollie.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiInit"};
@@ -112,9 +113,12 @@ static void HdiCodecOnRemoteDied(HdfDeathRecipient *deathRecipient, HdfRemoteSer
 
 void HdiInit::CodecComponentManagerInit()
 {
+    if (mgr_ != nullptr) {
+        return;
+    }
     MEDIA_LOGD("CodecComponentManagerInit In");
 
-    mgr_ = GetCodecComponentManager();
+    LISTENER(mgr_ = GetCodecComponentManager(), "HdiInit::GetCodecComponentManager", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_LOG(mgr_ != nullptr, "GetCodecComponentManager failed");
 
     HDIServiceManager *serviceMgr = HDIServiceManagerGet();
@@ -140,6 +144,12 @@ void HdiInit::CodecComponentManagerReset()
     std::lock_guard<std::mutex> lock(mutex_);
     CodecComponentManagerRelease();
     mgr_ = nullptr;
+    for (auto iter = handleMap_.begin(); iter != handleMap_.end(); ++iter) {
+        auto codec = iter->second.codec.lock();
+        if (codec) {
+            codec->OnCodecDied();
+        }
+    }
     handleMap_.clear();
 
     MEDIA_LOGD("CodecComponentManagerReset End");
@@ -158,9 +168,8 @@ int32_t HdiInit::GetCodecType(CodecType hdiType)
             return AVCODEC_TYPE_AUDIO_ENCODER;
         default:
             MEDIA_LOGW("Unknow codecType");
-            break;
+            return AVCODEC_TYPE_NONE;
     }
-    return AVCODEC_TYPE_NONE;
 }
 
 std::string HdiInit::GetCodecMime(AvCodecRole &role)
@@ -331,15 +340,15 @@ void HdiInit::InitCaps()
     if (!capabilitys_.empty()) {
         return;
     }
-    auto len = mgr_->GetComponentNum();
-    if (len >= MAX_COMPONENT_NUM || len <= 0) {
-        MEDIA_LOGW("Component num is %{public}d", len);
-        return;
-    }
+    int32_t len = 0;
+    LISTENER(len = mgr_->GetComponentNum(), "HdiInit::GetComponentNum", PlayerXCollie::timerTimeout)
+    CHECK_AND_RETURN_LOG(len < MAX_COMPONENT_NUM && len > 0, "Component num is %{public}d", len);
     CodecCompCapability *hdiCaps = new CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };
-    auto ret = mgr_->GetComponentCapabilityList(hdiCaps, len);
+    int32_t ret = HDF_SUCCESS;
+    LISTENER(ret = mgr_->GetComponentCapabilityList(hdiCaps, len),
+        "HdiInit::GetComponentCapabilityList", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_LOG(ret == HDF_SUCCESS, "GetComponentCapabilityList fail");
     for (auto i = 0; i < len; ++i) {
         AddHdiCap(hdiCaps[i]);
@@ -354,20 +363,18 @@ std::vector<CapabilityData> HdiInit::GetCapabilitys()
     return capabilitys_;
 }
 
-int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
-    void *appData, CodecCallbackType *callbacks)
+int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, HdiInfo info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (mgr_ == nullptr) {
-        CodecComponentManagerInit();
-        CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
-    }
-    
+    CodecComponentManagerInit();
+    CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
     CHECK_AND_RETURN_RET_LOG(component != nullptr, HDF_FAILURE, "component is nullptr");
-    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
-        reinterpret_cast<int64_t>(appData), callbacks);
+    int32_t ret = HDF_SUCCESS;
+    LISTENER(ret = mgr_->CreateComponent(component, &id, const_cast<char *>(info.name.c_str()),
+        reinterpret_cast<int64_t>(info.appData), info.callbacks),
+        "HdiInit::CreateComponent", PlayerXCollie::timerTimeout)
     if (ret == HDF_SUCCESS) {
-        handleMap_[*component] = id;
+        handleMap_[*component] = {id, info.codec};
     }
 
     return ret;
@@ -380,9 +387,10 @@ int32_t HdiInit::FreeHandle(CodecComponentType *component, uint32_t id)
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = handleMap_.find(component);
     CHECK_AND_RETURN_RET_LOG(iter != handleMap_.end(), HDF_SUCCESS, "The handle has been released!");
-    CHECK_AND_RETURN_RET_LOG(iter->second == id, HDF_FAILURE, "Handle and id do not match!");
+    CHECK_AND_RETURN_RET_LOG(iter->second.id == id, HDF_FAILURE, "Handle and id do not match!");
     
-    int32_t ret =  mgr_->DestroyComponent(id);
+    int32_t ret = HDF_SUCCESS;
+    LISTENER(mgr_->DestroyComponent(id), "HdiInit::DestroyComponent", PlayerXCollie::timerTimeout)
     if (ret == HDF_SUCCESS) {
         handleMap_.erase(iter);
     }

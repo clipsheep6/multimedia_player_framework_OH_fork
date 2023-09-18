@@ -69,6 +69,7 @@ struct _GstAudioCaptureSrc {
     gboolean is_start;
     gboolean need_caps_info;
     guint32 token_id;
+    guint64 full_token_id;
     gint32 appuid;
     gint32 apppid;
     gboolean bypass_audio;
@@ -81,6 +82,16 @@ struct _GstAudioCaptureSrcClass {
 
 using GstAudioCaptureSrc = struct _GstAudioCaptureSrc;
 using GstAudioCaptureSrcClass = struct _GstAudioCaptureSrcClass;
+
+
+#define CHECK_AND_BREAK_REP_ERR(cond, src, fmt, ...)   \
+    do {                                               \
+        if (!(cond)) {                                 \
+            GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE,         \
+                (fmt, ##__VA_ARGS__), (fmt, ##__VA_ARGS__));    \
+            break;                                     \
+        }                                              \
+    } while (0)
 
 G_GNUC_INTERNAL GType gst_audio_capture_src_get_type(void);
 

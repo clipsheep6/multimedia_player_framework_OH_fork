@@ -21,7 +21,6 @@
 #include "gst_utils.h"
 #include "gst_shmem_memory.h"
 #include "scope_guard.h"
-#include "time_perf.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaFrameConv"};
@@ -51,7 +50,6 @@ AVMetaFrameConverter::~AVMetaFrameConverter()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     (void)Reset();
-    CLEAN_PERF_RECORD(this);
 }
 
 int32_t AVMetaFrameConverter::Init(const OutputConfiguration &config)
@@ -75,8 +73,6 @@ int32_t AVMetaFrameConverter::Init(const OutputConfiguration &config)
 
 std::shared_ptr<AVSharedMemory> AVMetaFrameConverter::Convert(GstCaps &inCaps, GstBuffer &inBuf)
 {
-    AUTO_PERF(this, "ConvertFrame");
-
     std::unique_lock<std::mutex> lock(mutex_);
 
     int32_t ret = PrepareConvert(inCaps);
@@ -278,10 +274,8 @@ int32_t AVMetaFrameConverter::SetupConvSrc()
 
 int32_t AVMetaFrameConverter::SetupConvSink(const OutputConfiguration &outConfig)
 {
-    if (PIXELFORMAT_INFO.count(outConfig.colorFormat) == 0) {
-        MEDIA_LOGE("pixelformat unsupported: %{public}d", outConfig.colorFormat);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(PIXELFORMAT_INFO.count(outConfig.colorFormat) != 0, MSERR_INVALID_VAL,
+        "pixelformat unsupported: %{public}d", outConfig.colorFormat);
 
     MEDIA_LOGI("target out config: width: %{public}d, height: %{public}d, format: %{public}d",
         outConfig.dstWidth, outConfig.dstHeight, outConfig.colorFormat);
@@ -337,10 +331,8 @@ int32_t AVMetaFrameConverter::ChangeState(GstState targetState)
     MEDIA_LOGI("begin change state to %{public}s", gst_element_state_get_name(targetState));
 
     GstStateChangeReturn stateRet = gst_element_set_state(GST_ELEMENT_CAST(pipeline_), targetState);
-    if (stateRet == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("change conv pipeline to ready failed");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(stateRet != GST_STATE_CHANGE_FAILURE, MSERR_INVALID_OPERATION,
+        "change conv pipeline to ready failed");
 
     return MSERR_OK;
 }

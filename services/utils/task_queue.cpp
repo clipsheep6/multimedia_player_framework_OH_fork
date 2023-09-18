@@ -14,6 +14,7 @@
  */
 
 #include "task_queue.h"
+#include <malloc.h>
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -31,13 +32,11 @@ TaskQueue::~TaskQueue()
 int32_t TaskQueue::Start()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (thread_ != nullptr) {
-        MEDIA_LOGW("Started already, ignore ! [%{public}s]", name_.c_str());
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(thread_ == nullptr,
+        MSERR_OK, "Started already, ignore ! [%{public}s]", name_.c_str());
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
-    MEDIA_LOGI("thread started, ignore ! [%{public}s]", name_.c_str());
+    MEDIA_LOGI("thread started [%{public}s]", name_.c_str());
     return MSERR_OK;
 }
 
@@ -70,7 +69,8 @@ int32_t TaskQueue::Stop() noexcept
 }
 
 // cancelNotExecuted = false, delayUs = 0ULL.
-int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool cancelNotExecuted, uint64_t delayUs)
+__attribute__((no_sanitize("cfi"))) int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
+    bool cancelNotExecuted, uint64_t delayUs)
 {
     constexpr uint64_t MAX_DELAY_US = 10000000ULL; // max delay.
 
@@ -108,7 +108,7 @@ int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool c
     return 0;
 }
 
-void TaskQueue::CancelNotExecutedTaskLocked()
+__attribute__((no_sanitize("cfi"))) void TaskQueue::CancelNotExecutedTaskLocked()
 {
     MEDIA_LOGI("All task not executed are being cancelled..........[%{public}s]", name_.c_str());
     while (!taskList_.empty()) {
@@ -120,11 +120,12 @@ void TaskQueue::CancelNotExecutedTaskLocked()
     }
 }
 
-void TaskQueue::TaskProcessor()
+__attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
 {
     MEDIA_LOGI("Enter TaskProcessor [%{public}s]", name_.c_str());
     constexpr uint32_t nameSizeMax = 15;
     pthread_setname_np(pthread_self(), name_.substr(0, nameSizeMax).c_str());
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait(lock, [this] { return isExit_ || !taskList_.empty(); });
@@ -157,6 +158,7 @@ void TaskQueue::TaskProcessor()
             MEDIA_LOGW("enqueue periodic task failed:%d, why? [%{public}s]", res, name_.c_str());
         }
     }
+    (void)mallopt(M_FLUSH_THREAD_CACHE, 0);
     MEDIA_LOGI("Leave TaskProcessor [%{public}s]", name_.c_str());
 }
 } // namespace Media

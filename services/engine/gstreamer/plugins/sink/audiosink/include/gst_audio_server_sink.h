@@ -39,7 +39,6 @@ G_BEGIN_DECLS
 
 struct _GstAudioServerSink {
     GstBaseSink parent;
-
     /* private */
     std::unique_ptr<OHOS::Media::AudioSink> audio_sink;
     guint bits_per_sample;
@@ -47,6 +46,7 @@ struct _GstAudioServerSink {
     guint sample_rate;
     gint appuid;
     gint apppid;
+    guint apptokenid;
     gfloat volume;
     gfloat max_volume;
     gfloat min_volume;
@@ -61,6 +61,9 @@ struct _GstAudioServerSink {
     GstClockTime last_render_pts;
     gboolean enable_opt_render_delay;
     GstClockTimeDiff last_running_time_diff;
+    gboolean pre_power_on;
+    gboolean start_first_render;
+    guint delay_time;
 };
 
 struct _GstAudioServerSinkClass {

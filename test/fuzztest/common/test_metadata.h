@@ -27,8 +27,7 @@ class TestMetadata : public NoCopyable {
 public:
     TestMetadata();
     ~TestMetadata();
-    std::shared_ptr<AVMetadataHelper> avmetadata = nullptr;
-    int32_t MetaDataSetSource(const std::string &path);
+    int32_t MetaDataSetSource(const std::string &path, std::shared_ptr<AVMetadataHelper> avmetadata);
 };
 }
 }

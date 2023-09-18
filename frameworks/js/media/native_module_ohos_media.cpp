@@ -28,7 +28,6 @@ static napi_value Export(napi_env env, napi_value exports)
 {
     MEDIA_LOGD("Export() is called");
 
-    OHOS::Media::MediaCapsNapi::Init(env, exports);
     OHOS::Media::MediaEnumNapi::Init(env, exports);
 
 #ifdef SUPPORT_PLAYER
@@ -44,6 +43,9 @@ static napi_value Export(napi_env env, napi_value exports)
 #endif
 #ifdef SUPPORT_RECORDER_API9
     OHOS::Media::AVRecorderNapi::Init(env, exports);
+#endif
+#ifdef SUPPORT_SOUND_POOL
+    OHOS::Media::SoundPoolNapi::Init(env, exports);
 #endif
     return exports;
 }

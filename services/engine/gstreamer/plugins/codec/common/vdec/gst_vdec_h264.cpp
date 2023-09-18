@@ -15,7 +15,11 @@
 
 #include "gst_vdec_h264.h"
 #include "securec.h"
+#include "media_dfx.h"
+#include "scope_guard.h"
 
+using namespace OHOS;
+using namespace OHOS::Media;
 #define gst_vdec_h264_parent_class parent_class
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
@@ -26,6 +30,7 @@ static void flush_cache_slice_buffer(GstVdecBase *self);
 static GstStateChangeReturn gst_vdec_h264_change_state(GstElement *element, GstStateChange transition);
 static void gst_vdec_h264_finalize(GObject *object);
 static gboolean gst_buffer_extend(GstBuffer **buffer, gsize &size);
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame);
 
 static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
 {
@@ -35,6 +40,7 @@ static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
     GstVdecBaseClass *base_class = GST_VDEC_BASE_CLASS(klass);
     base_class->handle_slice_buffer = handle_slice_buffer;
     base_class->flush_cache_slice_buffer = flush_cache_slice_buffer;
+    base_class->bypass_frame = gst_vdec_h264_bypass_frame;
     element_class->change_state = gst_vdec_h264_change_state;
     gobject_class->finalize = gst_vdec_h264_finalize;
 
@@ -101,16 +107,17 @@ static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_
 
 static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish)
 {
+    MediaTrace trace("VdecBase::SliceBuffer");
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     GstBuffer *buf = nullptr;
     g_mutex_lock(&vdec_h264->cat_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&vdec_h264->cat_lock); };
     if (is_finish) {
         buf = vdec_h264->cache_slice_buffer;
         vdec_h264->cache_slice_buffer = nullptr;
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
         vdec_h264->is_slice_buffer = false;
         ready_push = true;
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buf;
     }
 
@@ -118,14 +125,12 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
         GST_ERROR_OBJECT(self, "map buffer fail");
         gst_buffer_ref(buffer);
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
     gboolean slice_flag = get_slice_flag(vdec_h264, &info, ready_push);
     if (ready_push) {
         gst_buffer_unmap(buffer, &info);
         gst_buffer_ref(buffer);
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
 
@@ -150,7 +155,6 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     }
 
     gst_buffer_unmap(buffer, &info);
-    g_mutex_unlock(&vdec_h264->cat_lock);
     return buf;
 }
 
@@ -270,4 +274,48 @@ static void gst_vdec_h264_finalize(GObject *object)
     }
     g_mutex_clear(&vdec_h264->cat_lock);
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame)
+{
+    if (base->idrframe) {
+        return false;
+    }
+
+    GstMapInfo info = GST_MAP_INFO_INIT;
+    g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ), false);
+    ON_SCOPE_EXIT(0) { gst_buffer_unmap(frame->input_buffer, &info); };
+
+    GstVdecH264 *vdec_h264 = GST_VDEC_H264(base);
+    guint8 offset = 2; // data[i] and data[i+1]
+    for (gsize i = 0; i < info.size - offset; i++) {
+        if (info.data[i] == 0x01) {
+            if ((info.data[i + 1] & 0x1F) == 0x05) { // 0x1F is the mask of last 5 bits, 0x05 is IDR flag
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame");
+                base->idrframe = true;
+                return false;
+            } else if ((info.data[i + 1] & 0x1F) == 0x06) {
+                // 0x1F is the mask of last 5 bits, 0x06 is SEI flag
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SEI frame");
+                return false;
+            } else if ((info.data[i + 1] & 0x1F) == 0x07 && vdec_h264->has_data_after_sps == true) {
+                // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS frame");
+                return false;
+            } else if ((info.data[i + 1] & 0x1F) == 0x07 && vdec_h264->has_data_after_sps == false) {
+                // For special packet sequences: sps frame, pps frame, sps-pps-I frame
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame which contains sps header");
+                base->idrframe = true;
+                return false;
+            } else if ((info.data[i + 1] & 0x1F) == 0x08) {
+                // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv PPS frame");
+                return false;
+            } else {
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: bypass B/P frame");
+                return true;
+            }
+        }
+    }
+    return false;
 }

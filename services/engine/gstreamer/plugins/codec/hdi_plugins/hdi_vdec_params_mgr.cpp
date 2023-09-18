@@ -63,12 +63,27 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
             return SetVideoFormat(element);
         case GST_VIDEO_SURFACE_INIT:
             return VideoSurfaceInit(element);
-        case GST_VENDOR:
-            MEDIA_LOGD("Set vendor property");
-            break;
+        case GST_METADATA_MODE:
+            return SetMetadataMode();
+        case GST_DYNAMIC_FRAME_RATE:
+            return SetFrameRate(element);
         default:
-            break;
+            return GST_CODEC_OK;
     }
+}
+
+int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
+{
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    OMX_PARAM_U32TYPE param;
+    InitParam(param, verInfo_);
+    param.nSize = sizeof(OMX_PARAM_U32TYPE);
+    param.nU32 = static_cast<uint32_t>(base->seek_frame_rate);
+    param.nPortIndex = inPortDef_.nPortIndex;
+        MEDIA_LOGI("SetFrameRate frame rate %{public}u", param.nU32);
+    param.nU32 = param.nU32 << HDI_FRAME_RATE_MOVE;
+    auto ret = HdiSetConfig(handle_, OMX_IndexCodecExtConfigOperatingRate, param);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
 }
 
@@ -112,18 +127,30 @@ int32_t HdiVdecParamsMgr::SetVideoFormat(GstElement *element)
     return GST_CODEC_OK;
 }
 
+int32_t HdiVdecParamsMgr::SetMetadataMode()
+{
+    MEDIA_LOGD("SetMetadataMode");
+    CodecEnableNativeBufferParams nativeBufferParam;
+    InitHdiParam(nativeBufferParam, verInfo_);
+    nativeBufferParam.portIndex = outPortDef_.nPortIndex;
+    nativeBufferParam.enable = OMX_FALSE;
+    auto ret = HdiSetParameter(handle_, OMX_IndexCodecExtEnableNativeBuffer, nativeBufferParam);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecParamsMgr::GetInputVideoCommon(GstElement *element)
 {
     MEDIA_LOGD("GetInputVideoCommon");
-    GstVdecBase *base = GST_VDEC_BASE(element);
+    GstVdecBase *vdecBase = GST_VDEC_BASE(element);
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, inPortDef_);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
-    base->input.min_buffer_cnt = inPortDef_.nBufferCountMin;
-    base->input.buffer_cnt = inPortDef_.nBufferCountActual;
-    base->input.buffer_size = inPortDef_.nBufferSize;
-    base->input.height = (int32_t)inPortDef_.format.video.nFrameHeight;
-    base->input.width = (int32_t)inPortDef_.format.video.nFrameWidth;
-    base->input.frame_rate = (int32_t)inPortDef_.format.video.xFramerate;
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "Vdec HdiGetParameter failed");
+    vdecBase->input.min_buffer_cnt = inPortDef_.nBufferCountMin;
+    vdecBase->input.buffer_cnt = inPortDef_.nBufferCountActual;
+    vdecBase->input.buffer_size = inPortDef_.nBufferSize;
+    vdecBase->input.height = (int32_t)inPortDef_.format.video.nFrameHeight;
+    vdecBase->input.width = (int32_t)inPortDef_.format.video.nFrameWidth;
+    vdecBase->input.frame_rate = (int32_t)inPortDef_.format.video.xFramerate;
     return GST_CODEC_OK;
 }
 
@@ -146,6 +173,18 @@ int32_t HdiVdecParamsMgr::GetOutputVideoCommon(GstElement *element)
     base->rect.width = base->output.width;
     base->rect.height = base->output.height;
 
+    OMX_CONFIG_RECTTYPE rect;
+    InitParam(rect, verInfo_);
+    rect.nPortIndex = outPortDef_.nPortIndex;
+    if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == OMX_ErrorNone) {
+        base->rect.x = rect.nLeft;
+        base->rect.y = rect.nTop;
+        base->rect.width = rect.nWidth;
+        base->rect.height = rect.nHeight;
+        MEDIA_LOGD("rect nLeft %{public}d nTop %{public}d width %{public}d height %{public}d ",
+            rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
+    }
+
     return GST_CODEC_OK;
 }
 
@@ -166,6 +205,21 @@ int32_t HdiVdecParamsMgr::GetVideoFormat(GstElement *element)
     return GST_CODEC_OK;
 }
 
+int32_t HdiVdecParamsMgr::GetBufferUsage(GstElement *element)
+{
+    MEDIA_LOGD("GetBufferUsage");
+    GetBufferHandleUsageParams usageParams;
+    InitHdiParam(usageParams, verInfo_);
+    usageParams.portIndex = outPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamGetBufferHandleUsage, usageParams);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    base->usage = usageParams.usage;
+    MEDIA_LOGD("Usage %{public}" PRIu64" ", base->usage);
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
 {
     MEDIA_LOGD("VideoSurfaceInit, inport %{public}d outport %{public}d", inPortDef_.nPortIndex, outPortDef_.nPortIndex);
@@ -174,10 +228,9 @@ int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
     supportBufferTypes.portIndex = outPortDef_.nPortIndex;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
-    if (!(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_HANDLE)) {
-        MEDIA_LOGD("No CODEC_BUFFER_TYPE_HANDLE, support bufferType %{public}d", supportBufferTypes.bufferTypes);
-        return GST_CODEC_ERROR;
-    }
+    CHECK_AND_RETURN_RET_LOG(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_HANDLE,
+        GST_CODEC_ERROR, "No CODEC_BUFFER_TYPE_HANDLE, support bufferType %{public}d",
+        supportBufferTypes.bufferTypes);
 
     UseBufferType useBufferTypes;
     InitHdiParam(useBufferTypes, verInfo_);
@@ -209,10 +262,11 @@ int32_t HdiVdecParamsMgr::GetParameter(GstCodecParamKey key, GstElement *element
             return GetOutputVideoCommon(element);
         case GST_VIDEO_FORMAT:
             return GetVideoFormat(element);
+        case GST_BUFFER_USAGE:
+            return GetBufferUsage(element);
         default:
-            break;
+            return GST_CODEC_OK;
     }
-    return GST_CODEC_OK;
 }
 }  // namespace Media
 }  // namespace OHOS

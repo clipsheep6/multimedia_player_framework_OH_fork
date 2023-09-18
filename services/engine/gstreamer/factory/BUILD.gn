@@ -55,12 +55,10 @@ config("media_engine_gst_factory_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/message",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
+    "../common/appsrc_engine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/gstreamer/gstreamer",
@@ -77,20 +75,19 @@ ohos_static_library("media_engine_gst_factory") {
 
   configs = [
     ":media_engine_gst_factory_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
-  deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-  ]
+  deps = [ "../../../dfx:media_service_log_dfx" ]
 
   external_deps = [
+    "audio_framework:audio_client",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "image_framework:image_native",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

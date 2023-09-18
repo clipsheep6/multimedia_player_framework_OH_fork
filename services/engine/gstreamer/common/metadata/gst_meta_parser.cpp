@@ -62,6 +62,7 @@ static const std::unordered_map<std::string_view, MetaParseItem> GST_TAG_PARSE_I
     { GST_TAG_IMAGE, { INNER_META_KEY_IMAGE, GST_SAMPLE_TYPE, ImageMetaSetter } },
     { GST_TAG_LANGUAGE_CODE, { INNER_META_KEY_LANGUAGE, G_TYPE_STRING, nullptr } },
     { GST_TAG_IMAGE_ORIENTATION, { INNER_META_KEY_VIDEO_ORIENTATION, G_TYPE_STRING, OrientationMetaSetter } },
+    { GST_TAG_BANDWIDTH, {INNER_META_KEY_BANDWIDTH, G_TYPE_UINT, nullptr } },
 };
 
 static const std::unordered_map<std::string_view, MetaParseItem> GST_CAPS_PARSE_ITEMS = {
@@ -73,7 +74,7 @@ static const std::unordered_map<std::string_view, MetaParseItem> GST_CAPS_PARSE_
 };
 
 static const std::unordered_map<std::string_view, std::vector<std::string_view>> STREAM_CAPS_FIELDS = {
-    { "video", { "width", "height", "framerate", "format" } },
+    { "video", { "width", "height", "framerate", "format", "bandwidth" } },
     { "audio", { "rate", "channels" } },
     { "text", { "format" } },
 };
@@ -107,7 +108,8 @@ enum AUDIO_MPEG_TYPE {
 static const std::unordered_map<std::string_view, std::vector<std::string_view>> CODEC_MIME_TYPE_MAPPING = {
     { "video/x-h264", {VIDEO_MIMETYPE_AVC} },
     { "video/mpeg", {VIDEO_MIMETYPE_MPEG4} },
-    { "audio/mpeg", {AUDIO_MIMETYPE_MPEG, AUDIO_MIMETYPE_AAC} }
+    { "audio/mpeg", {AUDIO_MIMETYPE_MPEG, AUDIO_MIMETYPE_AAC} },
+    { "text/x-raw", {SUBTITLE_MIMETYPE_SRT} }
 };
 
 static void ParseGValue(const GValue &value, const MetaParseItem &item, Format &metadata)

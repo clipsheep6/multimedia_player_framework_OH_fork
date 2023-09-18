@@ -32,6 +32,8 @@ config("gst_codec_plugins_common_config") {
     "-Wfloat-equal",
     "-Wdate-time",
     "-DOHOS_EXT_FUNC",
+    "-DOHOS_OPT_COMPAT",
+    "-DOHOS_OPT_PERFORMANCE",
     "-Werror",
     "-Wextra",
     "-Wimplicit-fallthrough",
@@ -66,8 +68,6 @@ ohos_static_library("gst_codec_plugins_common") {
     "vdec/gst_vdec_base.cpp",
     "vdec/gst_vdec_h264.cpp",
     "vdec/gst_vdec_h265.cpp",
-    "vdec/gst_vdec_mpeg2.cpp",
-    "vdec/gst_vdec_mpeg4.cpp",
     "venc/gst_venc_base.cpp",
     "venc/gst_venc_h264.cpp",
     "venc/gst_venc_h265.cpp",
@@ -77,7 +77,6 @@ ohos_static_library("gst_codec_plugins_common") {
   configs = [ ":gst_codec_plugins_common_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
@@ -88,11 +87,12 @@ ohos_static_library("gst_codec_plugins_common") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "c_utils:utils",
+    "graphic_2d:surface",
+    "hilog:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

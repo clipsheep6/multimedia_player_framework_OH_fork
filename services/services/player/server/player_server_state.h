@@ -44,6 +44,11 @@ protected:
     }
     void ReportInvalidOperation() const;
     virtual void HandleEos() {}
+    int32_t MessageSeekDone(int32_t extra);
+    int32_t MessageTrackDone(int32_t extra);
+    int32_t MessageTrackInfoUpdate();
+    int32_t MessageSpeedDone();
+    int32_t MessageStateChange(int32_t extra);
 
     PlayerServer &server_;
 };
@@ -139,6 +144,7 @@ public:
     ~PlaybackCompletedState() = default;
 
     int32_t Play() override;
+    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
 

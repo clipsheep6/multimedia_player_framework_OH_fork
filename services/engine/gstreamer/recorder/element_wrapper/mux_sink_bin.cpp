@@ -57,10 +57,8 @@ int32_t MuxSinkBin::Init()
     }
 
     gstSink_ = gst_element_factory_make("fdsink", "fdsink");
-    if (gstSink_ == nullptr) {
-        MEDIA_LOGE("Create fdsink gst element failed !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstSink_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create fdsink gst element failed !");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     g_object_set(gstElem_, "sink", gstSink_, nullptr);
@@ -97,9 +95,7 @@ int32_t MuxSinkBin::Configure(const RecorderParam &recParam)
 
 int32_t MuxSinkBin::ConfigureOutputFormat(const RecorderParam &recParam)
 {
-    if (recParam.type != RecorderPrivateParamType::OUTPUT_FORMAT) {
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET(recParam.type == RecorderPrivateParamType::OUTPUT_FORMAT, MSERR_OK);
 
     const OutputFormat &param = static_cast<const OutputFormat &>(recParam);
     if ((param.format_ == OutputFormatType::FORMAT_MPEG_4) || (param.format_ == OutputFormatType::FORMAT_M4A)) {
@@ -238,10 +234,9 @@ int32_t MuxSinkBin::SetParameter(const RecorderParam &recParam)
 int32_t MuxSinkBin::CreateMuxerElement(const std::string &name)
 {
     gstMuxer_ = gst_element_factory_make(name.c_str(), name.c_str());
-    if (gstMuxer_ == nullptr) {
-        MEDIA_LOGE("Create %{public}s gst element failed !", name.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstMuxer_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create %{public}s gst element failed !", name.c_str());
+
     g_object_set(gstElem_, "muxer", gstMuxer_, nullptr);
     return MSERR_OK;
 }

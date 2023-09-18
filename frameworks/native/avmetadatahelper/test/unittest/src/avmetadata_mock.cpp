@@ -50,30 +50,30 @@ int32_t AVMetadataMock::SetSource(const std::string &uri, int32_t usage)
 int32_t AVMetadataMock::SetSource(const std::string &path, int64_t offset, int64_t size, int32_t usage)
 {
     UNITTEST_INFO_LOG("%s %s", __FUNCTION__, path.c_str());
-    std::string rawFile = path.substr(strlen("file://"));
-    int32_t fd = open(rawFile.c_str(), O_RDONLY);
-    if (fd <= 0) {
-        std::cout << "Open file failed" << std::endl;
+    std::string file = path.substr(strlen("file://"));
+    int32_t fileDes = open(file.c_str(), O_RDONLY);
+    if (fileDes <= 0) {
+        std::cout << "Open file failed!" << std::endl;
         return -1;
     }
 
     struct stat64 st;
-    if (fstat64(fd, &st) != 0) {
+    if (fstat64(fileDes, &st) != 0) {
         std::cout << "Get file state failed" << std::endl;
-        (void)close(fd);
+        (void)close(fileDes);
         return -1;
     }
-    int64_t length = static_cast<int64_t>(st.st_size);
+    int64_t len = static_cast<int64_t>(st.st_size);
     if (size > 0) {
-        length = size;
+        len = size;
     }
-    int32_t ret = avMetadataHelper_->SetSource(fd, offset, length, usage);
+    int32_t ret = avMetadataHelper_->SetSource(fileDes, offset, len, usage);
     if (ret != 0) {
-        (void)close(fd);
+        (void)close(fileDes);
         return -1;
     }
 
-    (void)close(fd);
+    (void)close(fileDes);
     return ret;
 }
 
@@ -147,46 +147,6 @@ int32_t AVMetadataMock::RGB565ToRGB888(const unsigned short *rgb565Buf, int rgb5
         rgb888Buf[i * RGB888_PIXEL_BYTES + B_INDEX] <<= SHIFT_3_BIT;
     }
 
-    return 0;
-}
-
-int32_t AVMetadataMock::Rgb888ToJpeg(const std::string_view &filename,
-    const uint8_t *rgbData, int width, int height)
-{
-    if (rgbData == nullptr) {
-        std::cout << "rgbData is nullptr" << std::endl;
-        return -1;
-    }
-
-    jpeg.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&jpeg);
-    jpeg.image_width = width;
-    jpeg.image_height = height;
-    jpeg.input_components = RGB888_PIXEL_BYTES;
-    jpeg.in_color_space = JCS_RGB;
-    jpeg_set_defaults(&jpeg);
-
-    static const int QUALITY = 100;
-    jpeg_set_quality(&jpeg, QUALITY, TRUE);
-
-    FILE *pFile = fopen(filename.data(), "wb");
-    if (!pFile) {
-        jpeg_destroy_compress(&jpeg);
-        return 0;
-    }
-
-    jpeg_stdio_dest(&jpeg, pFile);
-    jpeg_start_compress(&jpeg, TRUE);
-    JSAMPROW row_pointer[1];
-    for (uint32_t i = 0; i < jpeg.image_height; i++) {
-        row_pointer[0] = const_cast<uint8_t *>(rgbData + i * jpeg.image_width * RGB888_PIXEL_BYTES);
-        jpeg_write_scanlines(&jpeg, row_pointer, 1);
-    }
-    jpeg_finish_compress(&jpeg);
-    (void)fclose(pFile);
-    pFile = NULL;
-
-    jpeg_destroy_compress(&jpeg);
     return 0;
 }
 
@@ -272,10 +232,9 @@ void AVMetadataMock::FrameToJpeg(std::shared_ptr<PixelMap> frame,
             delete [] rgb888;
             return;
         }
-        ret = Rgb888ToJpeg(filePath, rgb888, frame->GetWidth(), frame->GetHeight());
         delete [] rgb888;
     } else if (frame->GetPixelFormat() == PixelFormat::RGB_888) {
-        ret = Rgb888ToJpeg(filePath, frame->GetPixels(), frame->GetWidth(), frame->GetHeight());
+        return;
     } else {
         std::cout << "invalid pixel format" << std::endl;
         return;

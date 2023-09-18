@@ -44,6 +44,8 @@ namespace {
     const std::string DEFAULT_H265_CAPS = "video/x-h265,"
         "alignment=(string) nal,"
         "stream-format=(string) byte-stream";
+    const std::string DEFAULT_H265_DEC_CAPS = "video/x-h265,"
+        "stream-format=(string) { hvc1, hev1, byte-stream }";
     using namespace OHOS::Media;
     const std::unordered_map<int32_t, std::string> FORMAT_MAPPING = {
         { NV21, "NV21" },
@@ -89,6 +91,11 @@ private:
         (void)capData;
         return DEFAULT_H265_CAPS;
     }
+    static inline std::string GetH265DecCaps(CapabilityData &capData)
+    {
+        (void)capData;
+        return DEFAULT_H265_DEC_CAPS;
+    }
     static std::string GetRawCaps(CapabilityData &capData);
     static void GetWidth(std::string &capStr, const CapabilityData &capData);
     static void GetHeight(std::string &capStr, const CapabilityData &capData);
@@ -113,7 +120,7 @@ const std::map<std::pair<int32_t, std::string>, GType> GstHdiFactory::COMPONENT_
 const std::map<std::pair<int32_t, std::string>, GetCapsStr> GstHdiFactory::SINK_CAPS_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), GetH264Caps},
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetRawCaps},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetH265Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetH265DecCaps},
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC), GetRawCaps},
 };
 
@@ -178,24 +185,23 @@ gboolean GstHdiFactory::SupportSwapWidthHeight(GstElementClass *kclass)
 void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData)
 {
     std::pair<int32_t, std::string> factoryPair = {capData.codecType, capData.mimeType};
-    if (FUNCTIONS_MAP.find(factoryPair) == FUNCTIONS_MAP.end()) {
-        return;
-    }
-    switch (capData.codecType) {
-        case AVCODEC_TYPE_VIDEO_DECODER: {
-            GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
-            vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
-            vdecClass->input_need_copy = InputNeedCopy;
-            vdecClass->support_swap_width_height = SupportSwapWidthHeight;
-            break;
+    if (FUNCTIONS_MAP.find(factoryPair) != FUNCTIONS_MAP.end()) {
+        switch (capData.codecType) {
+            case AVCODEC_TYPE_VIDEO_DECODER: {
+                GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
+                vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
+                vdecClass->input_need_copy = InputNeedCopy;
+                vdecClass->support_swap_width_height = SupportSwapWidthHeight;
+                break;
+            }
+            case AVCODEC_TYPE_VIDEO_ENCODER: {
+                GstVencBaseClass *vencClass = reinterpret_cast<GstVencBaseClass*>(elementClass);
+                vencClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
+                break;
+            }
+            default:
+                break;
         }
-        case AVCODEC_TYPE_VIDEO_ENCODER: {
-            GstVencBaseClass *vencClass = reinterpret_cast<GstVencBaseClass*>(elementClass);
-            vencClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
-            break;
-        }
-        default:
-            break;
     }
 }
 
@@ -225,15 +231,10 @@ void GstHdiFactory::GetFrameRate(std::string &capStr, const CapabilityData &capD
 
 void GstHdiFactory::GetFormat(std::string &capStr, CapabilityData &capData)
 {
-    if (capData.format.empty()) {
-        MEDIA_LOGW("No format");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(!capData.format.empty(), "No format");
     for (auto format : capData.format) {
-        if (FORMAT_MAPPING.find(format) == FORMAT_MAPPING.end()) {
-            MEDIA_LOGW("Error format %{public}d", format);
-            return;
-        }
+        CHECK_AND_RETURN_LOG(FORMAT_MAPPING.find(format) != FORMAT_MAPPING.end(),
+            "Error format %{public}d", format);
     }
     capStr += "format = (string) ";
     if (capData.format.size() == 1) {
@@ -262,22 +263,22 @@ std::string GstHdiFactory::GetRawCaps(CapabilityData &capData)
 
 GstCaps *GstHdiFactory::GetSrcCaps(CapabilityData &capData)
 {
+    GstCaps *ret = nullptr;
     std::pair<int32_t, std::string> factoryPair = {capData.codecType, capData.mimeType};
     if (SRC_CAPS_MAP.find(factoryPair) != SRC_CAPS_MAP.end()) {
-        return gst_caps_from_string(SRC_CAPS_MAP.at(factoryPair)(capData).c_str());
+        ret = gst_caps_from_string(SRC_CAPS_MAP.at(factoryPair)(capData).c_str());
     }
-    MEDIA_LOGD("Not find src caps");
-    return nullptr;
+    return ret;
 }
 
 GstCaps *GstHdiFactory::GetSinkCaps(CapabilityData &capData)
 {
+    GstCaps *ret = nullptr;
     std::pair<int32_t, std::string> factoryPair = {capData.codecType, capData.mimeType};
     if (SINK_CAPS_MAP.find(factoryPair) != SINK_CAPS_MAP.end()) {
-        return gst_caps_from_string(SINK_CAPS_MAP.at(factoryPair)(capData).c_str());
+        ret = gst_caps_from_string(SINK_CAPS_MAP.at(factoryPair)(capData).c_str());
     }
-    MEDIA_LOGD("Not find sink caps");
-    return nullptr;
+    return ret;
 }
 
 void GstHdiFactory::UpdatePluginName(std::string &codecName)

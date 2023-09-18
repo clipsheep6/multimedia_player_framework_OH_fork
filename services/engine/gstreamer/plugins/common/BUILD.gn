@@ -13,6 +13,10 @@
 
 import("//build/ohos.gni")
 
+declare_args() {
+  multimedia_player_framework_no_stride = true
+}
+
 config("gst_plugins_common_config") {
   visibility = [ ":*" ]
 
@@ -39,6 +43,10 @@ config("gst_plugins_common_config") {
     "-Wunused-parameter",
   ]
 
+  if (multimedia_player_framework_no_stride) {
+    cflags += [ "-DSURFACE_MEM_NO_STRIDE" ]
+  }
+
   include_dirs = [
     "include",
     "//commonlibrary/c_utils/base/include",
@@ -58,6 +66,13 @@ config("gst_plugins_common_config") {
 ohos_shared_library("gst_media_common") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../../../cfi_blocklist.txt"
+  }
+
   configs = [
     ":gst_plugins_common_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
@@ -65,23 +80,32 @@ ohos_shared_library("gst_media_common") {
 
   sources = [
     "buffer_type_meta.c",
+    "gst_producer_surface_pool.cpp",
     "gst_shmem_allocator.cpp",
     "gst_shmem_pool.cpp",
-    "gst_shmem_wrap_allocator.cpp",
+    "gst_shmemory_wrap_allocator.cpp",
+    "gst_surface_allocator.cpp",
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common:gst_codec_plugins_common",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink:gst_mem_sink_base",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/source/memsource:gst_mem_src_base",
+    "../../../../utils:media_service_utils",
+    "../codec/common:gst_codec_plugins_common",
+    "../sink/memsink:gst_mem_sink_base",
+    "../sink/subtitlesink:gst_subtitle_sink_base",
+    "../source/memsource:gst_mem_src_base",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:surface",
+    "graphic_2d:sync_fence",
+    "hilog:libhilog",
+  ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

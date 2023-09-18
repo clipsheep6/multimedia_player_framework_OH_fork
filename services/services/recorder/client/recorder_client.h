@@ -20,10 +20,11 @@
 #include "i_recorder_service.h"
 #include "i_standard_recorder_service.h"
 #include "recorder_listener_stub.h"
+#include "monitor_client_object.h"
 
 namespace OHOS {
 namespace Media {
-class RecorderClient : public IRecorderService {
+class RecorderClient : public IRecorderService, public MonitorClientObject {
 public:
     static std::shared_ptr<RecorderClient> Create(const sptr<IStandardRecorderService> &ipcProxy);
     explicit RecorderClient(const sptr<IStandardRecorderService> &ipcProxy);
@@ -59,25 +60,17 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
-    int32_t HeartBeat() override;
     // RecorderClient
     void MediaServerDied();
-    void CreateWatchDog();
-    void StopWatchDog();
-    void WatchDog();
 
 private:
     int32_t CreateListenerObject();
+    int32_t ExecuteWhen(int32_t ret, bool ok);
 
     sptr<IStandardRecorderService> recorderProxy_ = nullptr;
     sptr<RecorderListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
     std::mutex mutex_;
-
-    std::unique_ptr<std::thread> watchDogThread_;
-    std::atomic<bool> stopWatchDog = false;
-    std::condition_variable watchDogCond_;
-    std::mutex watchDogMutex_;
 };
 } // namespace Media
 } // namespace OHOS

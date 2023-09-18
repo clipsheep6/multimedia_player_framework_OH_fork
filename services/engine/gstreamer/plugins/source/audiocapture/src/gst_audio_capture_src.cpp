@@ -37,9 +37,11 @@ enum {
     PROP_CHANNELS,
     PROP_BITRATE,
     PROP_TOKEN_ID,
+    PROP_FULL_TOKEN_ID,
     PROP_APP_UID,
     PROP_APP_PID,
-    PROP_BYPASS_AUDIO_SERVICE
+    PROP_BYPASS_AUDIO_SERVICE,
+    PROP_SUPPORTED_AUDIO_PARAMS
 };
 
 using namespace OHOS::Media;
@@ -99,39 +101,40 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_SAMPLE_RATE,
-        g_param_spec_uint("sample-rate", "Sample-Rate",
-            "Audio sampling rate", 0, G_MAXINT32, 0,
+        g_param_spec_uint("sample-rate", "Sample-Rate", "Audio sampling rate", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_CHANNELS,
-        g_param_spec_uint("channels", "Channels",
-            "Number of audio channels", 0, G_MAXINT32, 0,
+        g_param_spec_uint("channels", "Channels", "Number of audio channels", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_BITRATE,
-        g_param_spec_uint("bitrate", "Bitrate",
-            "Audio bitrate", 0, G_MAXINT32, 0,
+        g_param_spec_uint("bitrate", "Bitrate", "Audio bitrate", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_TOKEN_ID,
-        g_param_spec_uint("token-id", "TokenID",
-            "Token ID", 0, G_MAXUINT32, 0,
+        g_param_spec_uint("token-id", "TokenID", "Token ID", 0, G_MAXUINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_FULL_TOKEN_ID,
+        g_param_spec_uint64("full-token-id", "FullTokenID", "Full Token ID", 0, G_MAXUINT64, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_APP_UID,
-        g_param_spec_int("app-uid", "Appuid",
-            "APP UID", 0, G_MAXINT32, 0,
+        g_param_spec_int("app-uid", "Appuid", "APP UID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_APP_PID,
-        g_param_spec_int("app-pid", "Apppid",
-            "APP PID", 0, G_MAXINT32, 0,
+        g_param_spec_int("app-pid", "Apppid", "APP PID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_BYPASS_AUDIO_SERVICE,
         g_param_spec_boolean("bypass-audio-service", "Bypass Audio Service",
-        "do not enable audio service", FALSE,
-        (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            "do not enable audio service", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+    
+    g_object_class_install_property(gobject_class, PROP_SUPPORTED_AUDIO_PARAMS,
+        g_param_spec_boolean("supported-audio-params", "issupport audio params",
+            "issupport audio params", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio capture source", "Source/Audio",
@@ -160,6 +163,7 @@ static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
     src->is_start = FALSE;
     src->need_caps_info = TRUE;
     src->token_id = 0;
+    src->full_token_id = 0;
     src->appuid = 0;
     src->apppid = 0;
     src->bypass_audio = FALSE;
@@ -169,12 +173,19 @@ static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
 
 static void gst_audio_capture_src_finalize(GObject *object)
 {
+    GST_DEBUG_OBJECT(object, "finalize");
     GstAudioCaptureSrc *src = GST_AUDIO_CAPTURE_SRC(object);
     g_return_if_fail(src != nullptr);
     if (src->src_caps != nullptr) {
         gst_caps_unref(src->src_caps);
         src->src_caps = nullptr;
     }
+
+    if (src->audio_capture) {
+        src->audio_capture = nullptr;
+    }
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
@@ -198,6 +209,9 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
             break;
         case PROP_TOKEN_ID:
             src->token_id = g_value_get_uint(value);
+            break;
+        case PROP_FULL_TOKEN_ID:
+            src->full_token_id = g_value_get_uint64(value);
             break;
         case PROP_APP_UID:
             src->appuid = g_value_get_int(value);
@@ -237,6 +251,14 @@ static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
             break;
         case PROP_BITRATE:
             g_value_set_uint(value, src->bitrate);
+            break;
+        case PROP_SUPPORTED_AUDIO_PARAMS:
+            if (src->audio_capture == nullptr) {
+                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_boolean(value, src->audio_capture->IsSupportedCaptureParameter(
+                src->bitrate, src->channels, src->sample_rate));
             break;
         default:
             break;
@@ -297,41 +319,43 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
     g_return_val_if_fail(src != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY: {
-            src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            if (src->audio_capture == nullptr) {
+                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "failed to CreateAudioCapture");
+            }
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             AudioCapture::AppInfo appInfo = {};
             appInfo.appUid = src->appuid;
             appInfo.appPid = src->apppid;
             appInfo.appTokenId = src->token_id;
-            if (src->audio_capture->SetCaptureParameter(
-                src->bitrate, src->channels, src->sample_rate, appInfo) != MSERR_OK) {
-                return GST_STATE_CHANGE_FAILURE;
-            }
+            appInfo.appFullTokenId = src->full_token_id;
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture->SetCaptureParameter(src->bitrate, src->channels,
+                src->sample_rate, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             if (src->need_caps_info) {
-                g_return_val_if_fail(process_caps_info(src) == TRUE, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(process_caps_info(src) == TRUE, src, "process caps info failed");
                 src->need_caps_info = FALSE;
             }
             if (src->is_start == FALSE) {
-                g_return_val_if_fail(src->audio_capture->StartAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture->StartAudioCapture() == MSERR_OK,
+                    src, "StartAudioCapture failed");
                 gst_audio_capture_src_mgr_init(src);
                 src->is_start = TRUE;
             } else {
                 if (!src->bypass_audio) {
-                    g_return_val_if_fail(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
-                        GST_STATE_CHANGE_FAILURE);
+                    CHECK_AND_BREAK_REP_ERR(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
+                        src, "ResumeAudioCapture failed");
                     gst_audio_capture_src_mgr_enable_watchdog(src);
                 } else {
                     src->audio_mgr = nullptr;
-                    g_return_val_if_fail(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
-                        GST_STATE_CHANGE_FAILURE);
+                    CHECK_AND_BREAK_REP_ERR(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
+                        src, "WakeUpAudioThreads failed");
                 }
             }
             break;
@@ -355,16 +379,18 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             gst_audio_capture_src_mgr_disable_watchdog(src);
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             if (!src->bypass_audio) {
-                g_return_val_if_fail(src->audio_capture->PauseAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture->PauseAudioCapture() == MSERR_OK,
+                    src, "PauseAudioCapture failed");
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             src->is_start = FALSE;
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             src->audio_mgr = nullptr;
-            g_return_val_if_fail(src->audio_capture->StopAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture->StopAudioCapture() == MSERR_OK, src,
+                "StopAudioCapture failed");
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             src->audio_capture = nullptr;

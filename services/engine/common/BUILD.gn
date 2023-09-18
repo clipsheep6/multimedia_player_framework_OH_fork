@@ -14,8 +14,14 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("media_engine_common") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   deps = [ "avcodeclist:media_engine_common_avcodeclist" ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

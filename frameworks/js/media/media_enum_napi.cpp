@@ -23,7 +23,7 @@
 #include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "recorder_profiles.h"
-#include "avcontainer_common.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
@@ -300,6 +300,7 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_AUD_CHANNEL_COUNT", "channel_count" },
     { "MD_KEY_AUD_SAMPLE_RATE", "sample_rate" },
     { "MD_KEY_CUSTOM", "vendor.custom" },
+    { "MD_KEY_LANGUAGE", "language" },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
@@ -375,20 +376,20 @@ napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)
 napi_value MediaEnumNapi::JsEnumStringInit(napi_env env, napi_value exports)
 {
     for (auto it = g_stringEnumClassMap.begin(); it != g_stringEnumClassMap.end(); it++) {
-        auto &enumClassName = it->first;
-        auto &enumItemVec = it->second;
-        int32_t vecSize = enumItemVec.size();
+        auto &enumType = it->first;
+        auto &enumValue = it->second;
+        int32_t vecSize = enumValue.size();
         std::vector<napi_value> value;
         value.resize(vecSize);
         for (int32_t index = 0; index < vecSize; ++index) {
-            napi_create_string_utf8(env, enumItemVec[index].enumString.data(), NAPI_AUTO_LENGTH, &value[index]);
+            napi_create_string_utf8(env, enumValue[index].enumString.data(), NAPI_AUTO_LENGTH, &value[index]);
         }
 
         std::vector<napi_property_descriptor> property;
         property.resize(vecSize);
         for (int32_t index = 0; index < vecSize; ++index) {
             property[index] = napi_property_descriptor DECLARE_NAPI_STATIC_PROPERTY(
-                enumItemVec[index].enumName.data(), value[index]);
+                enumValue[index].enumName.data(), value[index]);
         }
 
         auto constructor = [](napi_env env, napi_callback_info info) {
@@ -398,11 +399,11 @@ napi_value MediaEnumNapi::JsEnumStringInit(napi_env env, napi_value exports)
         };
 
         napi_value result = nullptr;
-        napi_status status = napi_define_class(env, enumClassName.data(), NAPI_AUTO_LENGTH, constructor,
+        napi_status status = napi_define_class(env, enumType.data(), NAPI_AUTO_LENGTH, constructor,
             nullptr, property.size(), property.data(), &result);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define enum");
 
-        status = napi_set_named_property(env, exports, enumClassName.data(), result);
+        status = napi_set_named_property(env, exports, enumType.data(), result);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set result");
     }
     return exports;

@@ -109,7 +109,6 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
     gst_venc_base_init_config(gobject_class);
     const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
-    GST_DEBUG_OBJECT(klass, "Sink_caps %" GST_PTR_FORMAT, sink_caps);
     if (sink_caps != nullptr) {
         GstPadTemplate *sink_templ = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
         gst_element_class_add_pad_template(element_class, sink_templ);
@@ -299,6 +298,7 @@ static void gst_venc_base_finalize(GObject *object)
     self->output.av_shmem_pool = nullptr;
     std::vector<GstVideoFormat> tempVec;
     tempVec.swap(self->formats);
+    self->encoder = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -633,6 +633,13 @@ static GstStateChangeReturn gst_venc_base_change_state(GstElement *element, GstS
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: stop start");
+
+            GST_VIDEO_ENCODER_STREAM_LOCK(self);
+            if (self->encoder != nullptr) {
+                (void)self->encoder->Flush(GST_CODEC_ALL);
+            }
+            gst_venc_base_set_flushing(self, TRUE);
+            GST_VIDEO_ENCODER_STREAM_UNLOCK(self);
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: close start");
@@ -793,7 +800,9 @@ static gboolean gst_venc_base_push_out_buffers(GstVencBase *self)
         flow = gst_buffer_pool_acquire_buffer(pool, &buffer, &params);
         if (flow == GST_FLOW_OK) {
             g_return_val_if_fail(buffer != nullptr, FALSE);
-            // buffer ref give to encoder
+            ON_SCOPE_EXIT(1) {
+                gst_buffer_unref(buffer);
+            };
             codec_ret = self->encoder->PushOutputBuffer(buffer);
             g_return_val_if_fail(gst_codec_return_is_ok(self, codec_ret, "push buffer", TRUE), FALSE);
             self->coding_outbuf_cnt++;
@@ -951,7 +960,7 @@ static gboolean gst_venc_base_event(GstVideoEncoder *encoder, GstEvent *event)
         case GST_EVENT_FLUSH_START:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: flush start");
             if (self->encoder != nullptr) {
-                (void)self->encoder->Flush(GST_CODEC_INPUT);
+                (void)self->encoder->Flush(GST_CODEC_ALL);
             }
             gst_venc_base_set_flushing(self, TRUE);
             self->encoder_start = FALSE;
@@ -960,9 +969,6 @@ static gboolean gst_venc_base_event(GstVideoEncoder *encoder, GstEvent *event)
             self->flushing_stopping = TRUE;
             self->encoder_start = FALSE;
             ret = GST_VIDEO_ENCODER_CLASS(parent_class)->sink_event(encoder, event);
-            if (self->encoder != nullptr) {
-                (void)self->encoder->Flush(GST_CODEC_OUTPUT);
-            }
             gst_venc_base_set_flushing(self, FALSE);
             self->flushing_stopping = FALSE;
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: flush stop");
@@ -1101,7 +1107,6 @@ static gboolean gst_venc_base_propose_allocation(GstVideoEncoder *encoder, GstQu
     gst_video_info_init(&vinfo);
     gst_query_parse_allocation(query, &incaps, nullptr);
     if (incaps != nullptr) {
-        GST_DEBUG_OBJECT(encoder, "Query caps %" GST_PTR_FORMAT, incaps);
         gst_video_info_from_caps(&vinfo, incaps);
     }
     size = vinfo.size;

@@ -39,17 +39,26 @@ config("media_service_config") {
     "-Wextra",
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
-    "-Wunused-parameter",
   ]
+
+  if (multimedia_player_framework_support_avsession_background) {
+    cflags += [ "-Wno-unused-parameter" ]
+  } else {
+    cflags += [ "-Wunused-parameter" ]
+  }
 
   include_dirs = [
     "sa_media/ipc",
     "sa_media/server",
     "common",
     "player/ipc",
+    "player/player_mem_manage",
     "player/server",
     "media_data_source/ipc",
     "media_data_source/server",
+    "monitor/client",
+    "monitor/ipc",
+    "monitor/server",
     "recorder/ipc",
     "recorder/server",
     "avmetadatahelper/ipc",
@@ -60,8 +69,8 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
-    "//base/security/access_token/interfaces/innerkits/access_token/include",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    "screen_capture/server",
+    "screen_capture/ipc",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -69,11 +78,14 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
   ]
+
+  if (multimedia_player_framework_support_avsession_background) {
+    include_dirs += [ "player/avsession_background" ]
+  }
 
   defines = []
   defines += player_framework_defines
@@ -86,11 +98,20 @@ config("media_service_config") {
 ohos_shared_library("media_service") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
     "//foundation/multimedia/player_framework/services/utils/avsharedmemorybase.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
+    "monitor/ipc/monitor_service_stub.cpp",
+    "monitor/server/monitor_server.cpp",
+    "monitor/server/monitor_server_object.cpp",
     "sa_media/ipc/media_listener_proxy.cpp",
     "sa_media/ipc/media_parcel.cpp",
     "sa_media/ipc/media_service_stub.cpp",
@@ -106,6 +127,15 @@ ohos_shared_library("media_service") {
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
     ]
+    if (use_memmgr_plugin || use_memmgr) {
+      sources += [
+        "player/player_mem_manage/app_state_listener.cpp",
+        "player/player_mem_manage/player_mem_manage.cpp",
+        "player/player_mem_manage/player_server_mem.cpp",
+        "player/player_mem_manage/player_server_mem_state.cpp",
+        "player/player_mem_manage/player_service_stub_mem.cpp",
+      ]
+    }
   }
   if (multimedia_player_framework_support_recorder) {
     sources += [
@@ -119,6 +149,7 @@ ohos_shared_library("media_service") {
       "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
+
   if (multimedia_player_framework_support_codec) {
     sources += [
       "avcodec/ipc/avcodec_listener_proxy.cpp",
@@ -136,6 +167,14 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "screen_capture/ipc/screen_capture_listener_proxy.cpp",
+      "screen_capture/ipc/screen_capture_service_stub.cpp",
+      "screen_capture/server/screen_capture_server.cpp",
+    ]
+  }
+
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
@@ -149,20 +188,50 @@ ohos_shared_library("media_service") {
     "//third_party/libxml2:xml2",
   ]
 
-  if (multimedia_player_framework_support_video) {
-    configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
-    deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
-  }
-
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "audio_framework:audio_client",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "image_framework:image_native",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
   ]
 
+  if (multimedia_player_framework_support_video) {
+    external_deps += [ "graphic_2d:surface" ]
+  }
+
+  if (multimedia_player_framework_support_screen_capture) {
+    external_deps += [
+      "ability_runtime:runtime",
+      "access_token:libnativetoken",
+      "access_token:libprivacy_sdk",
+      "access_token:libtoken_setproc",
+      "audio_framework:audio_capturer",
+      "audio_framework:audio_client",
+      "window_manager:libdm",
+    ]
+  }
+
+  if (multimedia_player_framework_support_avsession_background) {
+    sources += [ "player/avsession_background/avsession_background.cpp" ]
+    external_deps += [
+      "ability_base:want",
+      "ability_runtime:wantagent_innerkits",
+      "audio_framework:audio_client",
+      "av_session:avsession_client",
+      "input:libmmi-client",
+    ]
+  }
+
+  if (use_memmgr_plugin) {
+    external_deps += [ "memmgr_plugin:memmgrclient" ]
+  } else if (use_memmgr) {
+    external_deps += [ "memmgr:memmgrclient" ]
+  }
+
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

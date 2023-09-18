@@ -29,11 +29,19 @@ ServiceDumpManager &ServiceDumpManager::GetInstance()
 
 void ServiceDumpManager::RegisterDfxDumper(std::u16string key, DfxDumper dump)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     dfxDumper_[key] = dump;
+}
+
+void ServiceDumpManager::UnregisterDfxDumper()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    dfxDumper_.clear();
 }
 
 int32_t ServiceDumpManager::Dump(int32_t fd, std::unordered_set<std::u16string> args)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string dumpString = "------------------MediaDfx------------------\n";
     for (auto iter : dfxDumper_) {
         if (args.find(static_cast<std::u16string>(iter.first)) != args.end()) {

@@ -53,38 +53,30 @@ config("gst_mem_sink_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
-    "//foundation/graphic/graphic_2d/interfaces/innerkits/common",
-    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
   ]
-}
-
-declare_args() {
-  multimedia_player_framework_no_stride = true
 }
 
 ohos_shared_library("gst_mem_sink") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../../../../cfi_blocklist.txt"
+  }
+
   sources = [
     "gst_mem_sink_plugins.cpp",
     "gst_shared_mem_sink.cpp",
-    "gst_surface_allocator.cpp",
     "gst_surface_mem_sink.cpp",
     "gst_video_display_sink.cpp",
   ]
 
-  if (!multimedia_player_framework_no_stride) {
-    sources += [ "gst_producer_surface_pool.cpp" ]
-  } else {
-    sources += [ "gst_producer_surface_pool_no_stride.cpp" ]
-  }
-
   configs = [ ":gst_mem_sink_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -95,16 +87,24 @@ ohos_shared_library("gst_mem_sink") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "init:libbegetutil" ]
+  external_deps = [
+    "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:surface",
+    "graphic_2d:sync_fence",
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_static_library("gst_mem_sink_base") {
   sources = [ "gst_mem_sink.cpp" ]
   configs = [ ":gst_mem_sink_config" ]
+  deps = [ "../../../../../utils:media_service_utils" ]
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

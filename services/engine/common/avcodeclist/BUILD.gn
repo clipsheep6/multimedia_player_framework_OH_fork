@@ -46,7 +46,6 @@ config("media_engine_common_avcodeclist_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
     "//commonlibrary/c_utils/base/include",
     "//third_party/libxml2/include",
   ]
@@ -71,10 +70,11 @@ ohos_static_library("media_engine_common_avcodeclist") {
   ]
 
   external_deps = [
+    "audio_framework:audio_client",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

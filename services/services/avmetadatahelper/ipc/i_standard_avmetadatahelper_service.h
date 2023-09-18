@@ -50,6 +50,7 @@ public:
         FETCH_FRAME_AT_TIME,
         RELEASE,
         DESTROY,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");

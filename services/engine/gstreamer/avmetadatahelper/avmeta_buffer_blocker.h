@@ -41,6 +41,7 @@ public:
     bool IsBufferDetected();
     void Remove();
     void Hide();
+    std::string GetElemName();
 
 private:
     static GstPadProbeReturn BlockCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);

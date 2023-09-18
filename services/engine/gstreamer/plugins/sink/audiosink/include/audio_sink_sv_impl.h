@@ -42,6 +42,16 @@ private:
     TaskQueue taskQue_;
 };
 
+class AudioServiceDiedCallback : public AudioStandard::AudioRendererPolicyServiceDiedCallback {
+public:
+    explicit AudioServiceDiedCallback(GstBaseSink *audioSink);
+    using AudioDiedCbFunc = std::function<void(GstBaseSink *)>;
+    void SaveAudioPolicyServiceDiedCb(AudioDiedCbFunc diedCb);
+    void OnAudioPolicyServiceDied() override;
+private:
+    AudioDiedCbFunc diedCb_ = nullptr;
+    GstBaseSink *audioSink_ = nullptr;
+};
 
 class AudioSinkSvImpl : public AudioSink {
 public:
@@ -53,7 +63,7 @@ public:
     int32_t GetVolume(float &volume) override;
     int32_t GetMaxVolume(float &volume) override;
     int32_t GetMinVolume(float &volume) override;
-    int32_t Prepare(int32_t appUid, int32_t appPid) override;
+    int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) override;
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Pause() override;
@@ -71,7 +81,10 @@ public:
     void SetAudioInterruptMode(int32_t interruptMode) override;
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &)) override;
+                        void (*errorCb)(GstBaseSink *, const std::string &),
+                        void (*audioDiedCb)(GstBaseSink *)) override;
+    int32_t SetAudioEffectMode(int32_t effectMode) override;
+    int32_t GetAudioEffectMode(int32_t &effectMode) override;
     bool Writeable() const override;
 
 private:
@@ -85,11 +98,13 @@ private:
     void InitRateRange(GstCaps *caps) const;
     void SetMuteVolumeBySysParam();
     void SetAudioDumpBySysParam();
+    bool DisableAudioEffectBySysParam() const;
     void DumpAudioBuffer(uint8_t *buffer, const size_t &bytesWritten, const size_t &bytesSingle);
     bool isMute_ = false;
     bool enableDump_ = false;
     FILE *dumpFile_ = nullptr;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
+    std::shared_ptr<AudioServiceDiedCallback> audioServiceDiedCallback_ = nullptr;
 };
 
 class AudioSinkBypass : public AudioSinkSvImpl {
@@ -117,10 +132,11 @@ public:
         volume = 0.0; // default min volume 0.0
         return MSERR_OK;
     }
-    int32_t Prepare(int32_t appUid, int32_t appPid) override
+    int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) override
     {
         (void)appUid;
         (void)appPid;
+        (void)appTokenId;
         return MSERR_OK;
     }
     int32_t Start() override
@@ -199,11 +215,13 @@ public:
     }
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &)) override
+                        void (*errorCb)(GstBaseSink *, const std::string &),
+                        void (*audioDiedCb)(GstBaseSink *)) override
     {
         (void)interruptCb;
         (void)stateCb;
         (void)errorCb;
+        (void)audioDiedCb;
     }
     bool Writeable() const override
     {

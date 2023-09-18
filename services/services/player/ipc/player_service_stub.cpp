@@ -24,6 +24,9 @@
 #include "parameter.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
+#ifdef SUPPORT_AVSESSION
+#include "avsession_background.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
@@ -50,12 +53,11 @@ PlayerServiceStub::PlayerServiceStub()
 
 PlayerServiceStub::~PlayerServiceStub()
 {
+    (void)CancellationMonitor(appPid_);
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("PlayerServiceStub::~PlayerServiceStub");
-            (void)playerServer_->Release();
-            PlayerXCollie::GetInstance().CancelTimer(id);
-            playerServer_ = nullptr;
+            LISTENER((void)playerServer_->Release(); playerServer_ = nullptr,
+                "PlayerServiceStub::~PlayerServiceStub", false)
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -64,17 +66,14 @@ PlayerServiceStub::~PlayerServiceStub()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t PlayerServiceStub::Init()
+void PlayerServiceStub::SetPlayerFuncs()
 {
-    if (playerServer_ == nullptr) {
-        playerServer_ = PlayerServer::Create();
-    }
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
-
     playerFuncs_[SET_LISTENER_OBJ] = { &PlayerServiceStub::SetListenerObject, "Player::SetListenerObject" };
     playerFuncs_[SET_SOURCE] = { &PlayerServiceStub::SetSource, "Player::SetSource" };
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { &PlayerServiceStub::SetMediaDataSource, "Player::SetMediaDataSource" };
     playerFuncs_[SET_FD_SOURCE] = { &PlayerServiceStub::SetFdSource, "Player::SetFdSource" };
+    playerFuncs_[ADD_SUB_SOURCE] = { &PlayerServiceStub::AddSubSource, "Player::AddSubSource" };
+    playerFuncs_[ADD_SUB_FD_SOURCE] = { &PlayerServiceStub::AddSubFdSource, "Player::AddSubFdSource" };
     playerFuncs_[PLAY] = { &PlayerServiceStub::Play, "Player::Play" };
     playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
     playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
@@ -99,9 +98,29 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[SET_CALLBACK] = { &PlayerServiceStub::SetPlayerCallback, "Player::SetPlayerCallback" };
     playerFuncs_[GET_VIDEO_TRACK_INFO] = { &PlayerServiceStub::GetVideoTrackInfo, "Player::GetVideoTrackInfo" };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { &PlayerServiceStub::GetAudioTrackInfo, "Player::GetAudioTrackInfo" };
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = {
+        &PlayerServiceStub::GetSubtitleTrackInfo, "Player::GetSubtitleTrackInfo"
+    };
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
+    playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
+    playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
+    playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
+
+    (void)RegisterMonitor(appPid_);
+}
+
+int32_t PlayerServiceStub::Init()
+{
+    if (playerServer_ == nullptr) {
+        playerServer_ = PlayerServer::Create();
+    }
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
+
+    appUid_ = IPCSkeleton::GetCallingUid();
+    appPid_ = IPCSkeleton::GetCallingPid();
+    SetPlayerFuncs();
     return MSERR_OK;
 }
 
@@ -121,11 +140,10 @@ int32_t PlayerServiceStub::DestroyStub()
 int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    MediaTrace trace("binder::OnRemoteRequest");
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(PlayerServiceStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
@@ -134,9 +152,9 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
         MEDIA_LOGI("Stub: OnRemoteRequest task: %{public}s is received", funcName.c_str());
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
-                int32_t id = PlayerXCollie::GetInstance().SetTimer(funcName);
-                auto ret = (this->*memberFunc)(data, reply);
-                PlayerXCollie::GetInstance().CancelTimer(id);
+                (void)IpcRecovery(false);
+                int32_t ret = -1;
+                LISTENER(ret = (this->*memberFunc)(data, reply), funcName, false)
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);
@@ -194,10 +212,27 @@ int32_t PlayerServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size)
     return playerServer_->SetSource(fd, offset, size);
 }
 
+int32_t PlayerServiceStub::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("binder::AddSubSource(url)");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->AddSubSource(url);
+}
+
+int32_t PlayerServiceStub::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MediaTrace trace("binder::AddSubSource(fd)");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->AddSubSource(fd, offset, size);
+}
+
 int32_t PlayerServiceStub::Play()
 {
     MediaTrace trace("binder::Play");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+#ifdef SUPPORT_AVSESSION
+    AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
+#endif
     return playerServer_->Play();
 }
 
@@ -276,6 +311,13 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     MediaTrace trace("binder::GetAudioTrackInfo");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetAudioTrackInfo(audioTrack);
+}
+
+int32_t PlayerServiceStub::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MediaTrace trace("binder::GetSubtitleTrackInfo");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetSubtitleTrackInfo(subtitleTrack);
 }
 
 int32_t PlayerServiceStub::GetVideoWidth()
@@ -372,6 +414,70 @@ int32_t PlayerServiceStub::DumpInfo(int32_t fd)
     return std::static_pointer_cast<PlayerServer>(playerServer_)->DumpInfo(fd);
 }
 
+int32_t PlayerServiceStub::DoIpcAbnormality()
+{
+    MEDIA_LOGI("Enter DoIpcAbnormality.");
+    auto task = std::make_shared<TaskHandler<int>>([&, this] {
+        MEDIA_LOGI("DoIpcAbnormality.");
+        CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, static_cast<int>(MSERR_NO_MEMORY),
+            "player server is nullptr");
+        CHECK_AND_RETURN_RET_LOG(IsPlaying(), static_cast<int>(MSERR_INVALID_OPERATION), "Not in playback state");
+        auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+        int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoIpcAbnormality End.");
+        SetIpcAlarmedFlag();
+        MEDIA_LOGI("DoIpcAbnormality End.");
+        return ret;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
+{
+    MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    if (fromMonitor) {
+        auto task = std::make_shared<TaskHandler<int>>([&, this] {
+            MEDIA_LOGI("DoIpcRecovery.");
+            auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+            int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || ret == MSERR_INVALID_OPERATION, ret, "Failed to ChangeState");
+            UnSetIpcAlarmedFlag();
+            MEDIA_LOGI("DoIpcRecovery End.");
+            return ret;
+        });
+        (void)taskQue_.EnqueueTask(task);
+    } else {
+        auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+        int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || ret == MSERR_INVALID_OPERATION, ret, "Failed to ChangeState");
+        UnSetIpcAlarmedFlag();
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SelectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::SelectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SelectTrack(index);
+}
+
+int32_t PlayerServiceStub::DeselectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::DeselectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->DeselectTrack(index);
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MediaTrace trace("PlayerServiceStub::GetCurrentTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCurrentTrack(trackType, index);
+}
+
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -399,6 +505,23 @@ int32_t PlayerServiceStub::SetFdSource(MessageParcel &data, MessageParcel &reply
     int64_t offset = data.ReadInt64();
     int64_t size = data.ReadInt64();
     reply.WriteInt32(SetSource(fd, offset, size));
+    (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::AddSubSource(MessageParcel &data, MessageParcel &reply)
+{
+    std::string url = data.ReadString();
+    reply.WriteInt32(AddSubSource(url));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::AddSubFdSource(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t fd = data.ReadFileDescriptor();
+    int64_t offset = data.ReadInt64();
+    int64_t size = data.ReadInt64();
+    reply.WriteInt32(AddSubSource(fd, offset, size));
     (void)::close(fd);
     return MSERR_OK;
 }
@@ -499,6 +622,20 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(MessageParcel &data, MessageParcel 
     int32_t ret = GetAudioTrackInfo(audioTrack);
     reply.WriteInt32(static_cast<int32_t>(audioTrack.size()));
     for (auto iter = audioTrack.begin(); iter != audioTrack.end(); iter++) {
+        (void)MediaParcel::Marshalling(reply, *iter);
+    }
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetSubtitleTrackInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<Format> subtitleTrack;
+    int32_t ret = GetSubtitleTrackInfo(subtitleTrack);
+    reply.WriteInt32(static_cast<int32_t>(subtitleTrack.size()));
+    for (auto iter = subtitleTrack.begin(); iter != subtitleTrack.end(); iter++) {
         (void)MediaParcel::Marshalling(reply, *iter);
     }
     reply.WriteInt32(ret);
@@ -620,6 +757,30 @@ int32_t PlayerServiceStub::SetPlayerCallback(MessageParcel &data, MessageParcel 
 {
     (void)data;
     reply.WriteInt32(SetPlayerCallback());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SelectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(SelectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::DeselectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(DeselectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t trackType = data.ReadInt32();
+    int32_t index = -1;
+    int32_t ret = GetCurrentTrack(trackType, index);
+    reply.WriteInt32(index);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 } // namespace Media

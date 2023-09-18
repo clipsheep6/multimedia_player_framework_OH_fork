@@ -37,6 +37,7 @@ HdiOutBufferMgr::HdiOutBufferMgr()
 HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    ClearmBuffers();
 }
 
 int32_t HdiOutBufferMgr::Start()
@@ -65,7 +66,6 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
     MediaTrace::CounterTrace("AvailableBuffers", availableBuffers_.size());
     std::unique_lock<std::mutex> lock(mutex_);
-    ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
     if (isFormatChange_) {
         MEDIA_LOGD("It is formatchange");
         return GST_CODEC_OK;
@@ -77,8 +77,11 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     codecBuffer = GetCodecBuffer(buffer);
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-    auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
+    {
+        MediaTrace trace("HdiOutBufferMgr::FillThisBuffer");
+        auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
+        CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
+    }
     return GST_CODEC_OK;
 }
 
@@ -87,8 +90,10 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     MEDIA_LOGD("Enter PullBuffer");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_; });
-    if (isFlushed_ || !isStart_) {
+    bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isFormatChange_; });
+    if (isFormatChange_ && !mBuffers.empty()) {
+        MEDIA_LOGD("format change, waiting mBuffers empty");
+    } else if (isFlushed_ || !isStart_) {
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;
     }
@@ -114,8 +119,9 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferReleased_; });
     FreeCodecBuffers();
+    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });
     EmptyList(mBuffers);
     return GST_CODEC_OK;
@@ -147,6 +153,10 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
                 GST_BUFFER_PTS(bufferWarp.gstBuffer) = buffer->pts;
                 MEDIA_LOGD("get from hdi, pts = %{public}" PRId64 "", buffer->pts);
             }
+            if (!firstFramePrinted && buffer->pts != 0) {
+                MEDIA_LOGI("first output buffer, pts = %{public}" PRId64 "", buffer->pts);
+                firstFramePrinted = true;
+            }
             SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
             (void)codingBuffers_.erase(iter);
@@ -156,6 +166,17 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     NotifyAvailable();
     bufferCond_.notify_all();
     return GST_CODEC_OK;
+}
+
+void HdiOutBufferMgr::ClearmBuffers()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
+    while (!mBuffers.empty()) {
+        GstBufferWrap bufferWarp = mBuffers.front();
+        mBuffers.pop_front();
+        gst_buffer_unref(bufferWarp.gstBuffer);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

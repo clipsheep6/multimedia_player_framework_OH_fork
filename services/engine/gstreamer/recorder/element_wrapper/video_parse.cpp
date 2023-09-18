@@ -27,10 +27,8 @@ namespace Media {
 int32_t VideoParse::Init()
 {
     gstElem_ = gst_element_factory_make("h264parse", name_.c_str());
-    if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create video parse gst element failed! sourceId: %{public}d", desc_.handle_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstElem_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create video parse gst element failed! sourceId: %{public}d", desc_.handle_);
 
     return MSERR_OK;
 }

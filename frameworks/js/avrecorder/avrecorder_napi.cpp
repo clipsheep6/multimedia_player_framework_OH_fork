@@ -23,7 +23,10 @@
 #include "surface_utils.h"
 #include "string_ex.h"
 #include "avcodec_info.h"
-#include "avcontainer_common.h"
+#include "av_common.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 #include "avrecorder_napi.h"
 
 namespace {
@@ -71,6 +74,8 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
+        DECLARE_NAPI_FUNCTION("getAVRecorderProfile", JsGetAVRecorderProfile),
+        DECLARE_NAPI_FUNCTION("setAVRecorderConfig", JsSetAVRecorderConfig),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
     };
@@ -178,7 +183,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     napi_create_string_utf8(env, "JsCreateAVRecorder", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
               MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
     MEDIA_LOGI("JsCreateAVRecorder success");
@@ -189,6 +194,14 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    if (errCode == MSERR_UNSUPPORT_VID_PARAMS) {
+        return RetInfo(err, "The video parameter is not supported. Please check the type and range.");
+    }
+    
+    if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
+        return RetInfo(err, "The audio parameter is not supported. Please check the type and range.");
+    }
+    
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -245,7 +258,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -287,6 +300,9 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
 napi_value AVRecorderNapi::JsStart(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsStart");
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     return ExecuteByPromise(env, info, AVRecordergOpt::START);
 }
 
@@ -299,6 +315,9 @@ napi_value AVRecorderNapi::JsPause(napi_env env, napi_callback_info info)
 napi_value AVRecorderNapi::JsResume(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsResume");
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     return ExecuteByPromise(env, info, AVRecordergOpt::RESUME);
 }
 
@@ -318,6 +337,158 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsRelease");
     return ExecuteByPromise(env, info, AVRecordergOpt::RELEASE);
+}
+
+napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsGetAVRecorderProfile");
+    MEDIA_LOGI("AVRecorder::JsGetAVRecorderProfile");
+    const std::string &opt = AVRecordergOpt::GET_AV_RECORDER_PROFILE;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 3; // config + callbackRef
+    const int32_t callbackParam = 2; // callback
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[callbackParam]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    if (asyncCtx->napi->GetSourceIdAndQuality(asyncCtx, env, args[0], args[1], opt) == MSERR_OK) {
+        asyncCtx->task_ = AVRecorderNapi::GetAVRecorderProfileTask(asyncCtx);
+        (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                asyncCtx->JsResult = std::make_unique<MediaJsAVRecorderProfile>(asyncCtx->profile_);
+            }
+        }
+        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetAVRecorderProfileTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &profile = asyncCtx->profile_]() {
+        const std::string &option = AVRecordergOpt::GET_AV_RECORDER_PROFILE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        profile = std::make_shared<AVRecorderProfile>();
+
+        CHECK_AND_RETURN_RET(napi != nullptr && profile != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET_LOG(napi->sourceId_ >= 0 && ((napi->qualityLevel_ >= RECORDER_QUALITY_LOW &&
+            napi->qualityLevel_ <= RECORDER_QUALITY_2160P) ||
+            (napi->qualityLevel_ >= RECORDER_QUALITY_TIME_LAPSE_LOW &&
+            napi->qualityLevel_ <= RECORDER_QUALITY_TIME_LAPSE_2160P) ||
+            (napi->qualityLevel_ >= RECORDER_QUALITY_HIGH_SPEED_LOW &&
+            napi->qualityLevel_ <= RECORDER_QUALITY_HIGH_SPEED_1080P)),
+            GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderProfileTask", ""), "sourceId or qualityLevel is null");
+
+        int32_t ret = AVRecorderNapi::GetAVRecorderProfile(profile, napi->sourceId_, napi->qualityLevel_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderProfileTask", ""),
+            "get AVRecorderProfile failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetAVRecorderConfigTask(
+    std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
+        const std::string &option = AVRecordergOpt::SET_AV_RECORDER_CONFIG;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        RetInfo retinfo = napi->Configure(config);
+        CHECK_AND_RETURN_RET(retinfo.first == MSERR_OK, ((void)napi->recorder_->Reset(), retinfo));
+
+        napi->withVideo_ = config->withVideo;
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+napi_value AVRecorderNapi::JsSetAVRecorderConfig(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetAVRecorderConfig");
+    const std::string &opt = AVRecordergOpt::SET_AV_RECORDER_CONFIG;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 2; // config + callbackRef
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetConfig(asyncCtx, env, args[0]) == MSERR_OK) {
+            asyncCtx->task_ = AVRecorderNapi::SetAVRecorderConfigTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
 }
 
 napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info info)
@@ -491,7 +662,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
         }
         MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -552,6 +723,7 @@ RetInfo AVRecorderNapi::Stop()
     int32_t ret = recorder_->Stop(false);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "Stop", ""));
     StateCallback(AVRecorderState::STATE_STOPPED);
+    hasConfiged_ = false;
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -562,6 +734,7 @@ RetInfo AVRecorderNapi::Reset()
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "Reset", ""));
 
     StateCallback(AVRecorderState::STATE_IDLE);
+    hasConfiged_ = false;
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -573,58 +746,17 @@ RetInfo AVRecorderNapi::Release()
 
     StateCallback(AVRecorderState::STATE_RELEASED);
     CancelCallback();
+    hasConfiged_ = false;
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
 int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
 {
-    const std::map<std::string, std::vector<std::string>> stateCtrl = {
-        {AVRecorderState::STATE_IDLE, {
-            AVRecordergOpt::PREPARE,
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_PREPARED, {
-            AVRecordergOpt::GETINPUTSURFACE,
-            AVRecordergOpt::START,
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_STARTED, {
-            AVRecordergOpt::START,
-            AVRecordergOpt::RESUME,
-            AVRecordergOpt::PAUSE,
-            AVRecordergOpt::STOP,
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_PAUSED, {
-            AVRecordergOpt::PAUSE,
-            AVRecordergOpt::RESUME,
-            AVRecordergOpt::STOP,
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_STOPPED, {
-            AVRecordergOpt::STOP,
-            AVRecordergOpt::PREPARE,
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_RELEASED, {
-            AVRecordergOpt::RELEASE
-        }},
-        {AVRecorderState::STATE_ERROR, {
-            AVRecordergOpt::RESET,
-            AVRecordergOpt::RELEASE
-        }},
-    };
-
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> allowedOpt = stateCtrl.at(curState);
+    std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -637,7 +769,9 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
 {
     const std::map<std::string, std::vector<std::string>> stateCtrl = {
         {AVRecorderState::STATE_IDLE, {
-            AVRecordergOpt::RESET
+            AVRecordergOpt::RESET,
+            AVRecordergOpt::GET_AV_RECORDER_PROFILE,
+            AVRecordergOpt::SET_AV_RECORDER_CONFIG,
         }},
         {AVRecorderState::STATE_PREPARED, {}},
         {AVRecorderState::STATE_STARTED, {
@@ -674,6 +808,7 @@ int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecF
     MEDIA_LOGI("mime %{public}s", mime.c_str());
     const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
         { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
+        { "", AudioCodecFormat::AUDIO_DEFAULT },
     };
 
     auto iter = mimeStrToCodecFormat.find(mime);
@@ -690,6 +825,7 @@ int32_t AVRecorderNapi::GetVideoCodecFormat(const std::string &mime, VideoCodecF
     const std::map<std::string_view, VideoCodecFormat> mimeStrToCodecFormat = {
         { CodecMimeType::VIDEO_AVC, VideoCodecFormat::H264 },
         { CodecMimeType::VIDEO_MPEG4, VideoCodecFormat::MPEG4 },
+        { "", VideoCodecFormat::VIDEO_DEFAULT },
     };
 
     auto iter = mimeStrToCodecFormat.find(mime);
@@ -706,6 +842,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
     const std::map<std::string, OutputFormatType> extensionToOutputFormat = {
         { "mp4", OutputFormatType::FORMAT_MPEG_4 },
         { "m4a", OutputFormatType::FORMAT_M4A },
+        { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
     auto iter = extensionToOutputFormat.find(extension);
@@ -714,6 +851,37 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         return MSERR_OK;
     }
     return MSERR_INVALID_VAL;
+}
+
+int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+{
+    std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
+    int32_t audioSource = AUDIO_SOURCE_INVALID;
+    int32_t videoSource = VIDEO_SOURCE_BUTT;
+
+    bool getValue = false;
+    int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource, getValue);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "getaudioSourceType", "audioSourceType"), ret));
+    if (getValue) {
+        config->audioSourceType = static_cast<AudioSourceType>(audioSource);
+        config->withAudio = true;
+        MEDIA_LOGI("audioSource Type %{public}d!", audioSource);
+    }
+    
+    ret = AVRecorderNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource, getValue);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "getvideoSourceType", "videoSourceType"), ret));
+    if (getValue) {
+        config->videoSourceType = static_cast<VideoSourceType>(videoSource);
+        config->withVideo = true;
+        MEDIA_LOGI("videoSource Type %{public}d!", videoSource);
+    }
+
+    CHECK_AND_RETURN_RET(config->withAudio || config->withVideo,
+        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getsourcetype", "SourceType"), MSERR_INVALID_VAL));
+
+    return MSERR_OK;
 }
 
 int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
@@ -788,35 +956,22 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         (asyncCtx->AVRecorderSignError(MSERR_NO_MEMORY, "AVRecorderConfig", "AVRecorderConfig"), MSERR_NO_MEMORY));
 
     std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
-    int32_t audioSource = AUDIO_SOURCE_INVALID;
-    int32_t videoSource = VIDEO_SOURCE_BUTT;
 
-    bool ret = CommonNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource);
-    if (ret) {
-        config->audioSourceType = static_cast<AudioSourceType>(audioSource);
-        config->withAudio = true;
-        MEDIA_LOGI("audioSource Type %{public}d!", audioSource);
-    }
-    
-    ret = CommonNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource);
-    if (ret) {
-        config->videoSourceType = static_cast<VideoSourceType>(videoSource);
-        config->withVideo = true;
-        MEDIA_LOGI("videoSource Type %{public}d!", videoSource);
-    }
+    int32_t ret = GetSourceType(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetSourceType");
 
-    CHECK_AND_RETURN_RET(config->withAudio || config->withVideo,
-        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getsourcetype", "SourceType"), MSERR_INVALID_VAL));
-
-    int32_t rett = GetProfile(asyncCtx, env, args);
-    CHECK_AND_RETURN_RET_LOG(rett == MSERR_OK, rett, "failed to GetProfile");
+    ret = GetProfile(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetProfile");
 
     config->url = CommonNapi::GetPropertyString(env, args, "url");
     MEDIA_LOGI("url %{public}s!", config->url.c_str());
     CHECK_AND_RETURN_RET(config->url != "",
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "geturl", "url"), MSERR_INVALID_VAL));
 
-    (void)CommonNapi::GetPropertyInt32(env, args, "rotation", config->rotation);
+    bool getValue = false;
+    ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "getrotation", "rotation"), ret));
     MEDIA_LOGI("rotation %{public}d!", config->rotation);
     CHECK_AND_RETURN_RET((config->rotation == VIDEO_ROTATION_0 || config->rotation == VIDEO_ROTATION_90 ||
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
@@ -877,14 +1032,18 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 {
     CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "Configure", ""));
     CHECK_AND_RETURN_RET(config != nullptr, GetRetInfo(MSERR_INVALID_VAL, "Configure", "config"));
-    
-    int32_t ret;
 
+    if (hasConfiged_) {
+        MEDIA_LOGE("AVRecorderConfig has been configured and will not be configured again");
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    }
+
+    int32_t ret;
     if (config->withAudio) {
         ret = recorder_->SetAudioSource(config->audioSourceType, audioSourceID_);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioSource", "audioSourceType"));
     }
-    
+
     if (config->withVideo) {
         ret = recorder_->SetVideoSource(config->videoSourceType, videoSourceID_);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSource", "videoSourceType"));
@@ -908,8 +1067,59 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
     ret = recorder_->SetOutputFile(fd);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetOutputFile", "uri"));
+    hasConfiged_ = true;
 
     return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+int32_t AVRecorderNapi::GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    napi_env env, napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt)
+{
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        napi_status ret = napi_get_value_int32(env, sourceIdArgs, &asyncCtx->napi->sourceId_);
+        if (ret != napi_ok) {
+            asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "failed to get sourceId", "");
+            return MSERR_INVALID_VAL;
+        }
+        ret = napi_get_value_int32(env, qualityArgs, &asyncCtx->napi->qualityLevel_);
+        if (ret != napi_ok) {
+            asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "failed to get qualityLevel", "");
+            return MSERR_INVALID_VAL;
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+        return MSERR_INVALID_OPERATION;
+    }
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
+    const int32_t sourceId, const int32_t qualityLevel)
+{
+    MediaTrace trace("AVRecorder::GetAVRecorderProfile");
+    std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
+        OHOS::Media::RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderProfile(sourceId, qualityLevel);
+    CHECK_AND_RETURN_RET_LOG(videoRecorderProfile != nullptr, MSERR_INVALID_VAL, "failed to get videoRecorderProfile");
+
+    int32_t ret = MSERR_OK;
+    ret = AVRecorderNapi::GetOutputFormat(videoRecorderProfile->containerFormatType, profile ->fileFormat);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "get outputFormat error");
+
+    ret = AVRecorderNapi::GetAudioCodecFormat(videoRecorderProfile->audioCodec, profile ->audioCodecFormat);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "get audioCodec error");
+
+    ret = AVRecorderNapi::GetVideoCodecFormat(videoRecorderProfile->videoCodec, profile ->videoCodecFormat);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "get videoCodec error");
+
+    profile->audioBitrate = videoRecorderProfile->audioBitrate;
+    profile->audioChannels = videoRecorderProfile->audioChannels;
+    profile->auidoSampleRate = videoRecorderProfile->audioSampleRate;
+    profile->videoBitrate = videoRecorderProfile->videoBitrate;
+    profile->videoFrameWidth = videoRecorderProfile->videoFrameWidth;
+    profile->videoFrameHeight = videoRecorderProfile->videoFrameHeight;
+    profile->videoFrameRate = videoRecorderProfile->videoFrameRate;
+
+    return MSERR_OK;
 }
 
 void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
@@ -964,6 +1174,137 @@ void AVRecorderNapi::RemoveSurface()
         }
         surface_ = nullptr;
     }
+}
+
+int32_t AVRecorderNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
+    bool &getValue)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    getValue = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGI("can not find %{public}s property", type.c_str());
+        return MSERR_OK;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGI("get %{public}s property fail", type.c_str());
+        return MSERR_UNKNOWN;
+    }
+
+    if (napi_get_value_int32(env, item, &result) != napi_ok) {
+        std::string string = CommonNapi::GetStringArgument(env, item);
+        if (string == "") {
+            // This attribute has not been assigned
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+            return MSERR_INVALID_VAL;
+        }
+    }
+
+    MEDIA_LOGI("get %{public}s : %{public}d!", type.c_str(), result);
+    getValue = true;
+    return MSERR_OK;
+}
+
+napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status ret = napi_ok;
+    bool setRet = true;
+    int32_t setState = MSERR_OK;
+    CHECK_AND_RETURN_RET(value_ != nullptr, napi_generic_failure);
+    CHECK_AND_RETURN_RET((ret = napi_create_object(env, &result)) == napi_ok, ret);
+
+    setRet = CommonNapi::SetPropertyInt32(env, result, "audioBitrate", value_->audioBitrate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "audioChannels", value_->audioChannels);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    std::string audioCodec;
+    setState = SetAudioCodecFormat(value_->audioCodecFormat, audioCodec);
+    CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, result, "audioCodec", audioCodec);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    setRet = CommonNapi::SetPropertyInt32(env, result, "audioSampleRate", value_->auidoSampleRate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    std::string fileFormat;
+    setState = SetFileFormat(value_->fileFormat, fileFormat);
+    CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, result, "fileFormat", fileFormat);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    setRet = CommonNapi::SetPropertyInt32(env, result, "videoBitrate", value_->videoBitrate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    std::string videoCodec;
+    setState = SetVideoCodecFormat(value_->videoCodecFormat, videoCodec);
+    CHECK_AND_RETURN_RET(setState == MSERR_OK, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, result, "videoCodec", videoCodec);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameWidth", value_->videoFrameWidth);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameHeight", value_->videoFrameHeight);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameRate", value_->videoFrameRate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+
+    return ret;
+}
+
+int32_t MediaJsAVRecorderProfile::SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime)
+{
+    MEDIA_LOGI("audioCodecFormat %{public}d", codecFormat);
+    const std::map<AudioCodecFormat, std::string_view> codecFormatToMimeStr = {
+        { AudioCodecFormat::AAC_LC, CodecMimeType::AUDIO_AAC },
+        { AudioCodecFormat::AUDIO_DEFAULT, "" },
+    };
+
+    auto iter = codecFormatToMimeStr.find(codecFormat);
+    if (iter != codecFormatToMimeStr.end()) {
+        mime = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t MediaJsAVRecorderProfile::SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime)
+{
+    MEDIA_LOGI("VideoCodecFormat %{public}d", codecFormat);
+    const std::map<VideoCodecFormat, std::string_view> codecFormatTomimeStr = {
+        { VideoCodecFormat::H264, CodecMimeType::VIDEO_AVC },
+        { VideoCodecFormat::MPEG4, CodecMimeType::VIDEO_MPEG4 },
+        { VideoCodecFormat::VIDEO_DEFAULT, ""},
+    };
+
+    auto iter = codecFormatTomimeStr.find(codecFormat);
+    if (iter != codecFormatTomimeStr.end()) {
+        mime = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t MediaJsAVRecorderProfile::SetFileFormat(OutputFormatType &type, std::string &extension)
+{
+    MEDIA_LOGI("OutputFormatType %{public}d", type);
+    const std::map<OutputFormatType, std::string> outputFormatToextension = {
+        { OutputFormatType::FORMAT_MPEG_4, "mp4" },
+        { OutputFormatType::FORMAT_M4A, "m4a" },
+        { OutputFormatType::FORMAT_DEFAULT, "" },
+    };
+
+    auto iter = outputFormatToextension.find(type);
+    if (iter != outputFormatToextension.end()) {
+        extension = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
 }
 
 void AVRecorderAsyncContext::AVRecorderSignError(int32_t errCode, const std::string &operate,

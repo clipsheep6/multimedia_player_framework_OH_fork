@@ -29,6 +29,7 @@ public:
         int32_t appUid { 0 };
         uint32_t appTokenId { 0 };
         int32_t appPid { 0 };
+        uint64_t appFullTokenId { 0 };
     };
 
     /**
@@ -46,6 +47,18 @@ public:
      */
     virtual int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         const AppInfo &appInfo) = 0;
+
+    /**
+     * @brief Query whether the recorded encoding bit rate, number of audio channels and sampling rate are supported.
+     *
+     * @param bitrate Indicates the audio encoding bit rate, in bit/s.
+     * @param channels Indicates the number of audio channels to set.
+     * @param sampleRate Indicates the sampling rate of the audio per second.
+     * @return If supported, return true; Otherwise, false is returned.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual bool IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate) = 0;
 
     /**
      * @brief Gets the encoding bit rate, number of audio channels and sampling rate for recording.

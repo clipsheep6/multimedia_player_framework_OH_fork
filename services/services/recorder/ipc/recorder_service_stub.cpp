@@ -19,6 +19,9 @@
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "ipc_skeleton.h"
+#include "media_permission.h"
+#include "accesstoken_kit.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
@@ -43,6 +46,8 @@ RecorderServiceStub::RecorderServiceStub()
 
 RecorderServiceStub::~RecorderServiceStub()
 {
+    (void)CancellationMonitor(pid_);
+    needAudioPermissionCheck = false;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -81,14 +86,15 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
-    recFuncs_[HEARTBEAT] = &RecorderServiceStub::HeartBeat;
+
+    pid_ = IPCSkeleton::GetCallingPid();
+    (void)RegisterMonitor(pid_);
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::DestroyStub()
 {
     recorderServer_ = nullptr;
-
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::RECORDER, AsObject());
     return MSERR_OK;
 }
@@ -97,25 +103,41 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+    int32_t permissionResult;
+    if (AUDIO_REQUEST.count(code) != 0) {
+        permissionResult = MediaPermission::CheckMicPermission();
+        needAudioPermissionCheck = true;
+    } else if (COMMON_REQUEST.count(code) != 0) {
+        if (needAudioPermissionCheck) {
+            permissionResult = MediaPermission::CheckMicPermission();
+        } else {
+            // none audio request no need to check permission in recorder server
+            permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+        }
+    } else {
+        // none audio request no need to check permission in recorder server
+        permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+    }
+    CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
+        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
 
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (RecorderServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    // When the server encounters the application freeze and enters the pause state, it needs to recover in advance.
-    if (code != PAUSE) {
-        HeartBeat();
-    }
+    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            (void)IpcRecovery(false);
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
+            }
+            if (AUDIO_REQUEST.count(code) != 0 && reply.ReadInt32() != MSERR_OK) {
+                MEDIA_LOGE("audio memberFunc failed, reset permission check.");
+                needAudioPermissionCheck = false;
             }
             return MSERR_OK;
         }
@@ -310,16 +332,29 @@ int32_t RecorderServiceStub::SetFileSplitDuration(FileSplitType type, int64_t ti
     return recorderServer_->SetFileSplitDuration(type, timestamp, duration);
 }
 
-int32_t RecorderServiceStub::HeartBeat()
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->HeartBeat();
-}
-
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
+}
+
+int32_t RecorderServiceStub::DoIpcAbnormality()
+{
+    MEDIA_LOGI("Enter DoIpcAbnormality.");
+    if (Pause() == MSERR_OK) {
+        SetIpcAlarmedFlag();
+    }
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::DoIpcRecovery(bool fromMonitor)
+{
+    MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
+    int32_t ret = Resume();
+    if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
+        UnSetIpcAlarmedFlag();
+    }
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
@@ -541,6 +576,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Reset());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -548,6 +584,7 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Release());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -565,13 +602,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::HeartBeat(MessageParcel &data, MessageParcel &reply)
-{
-    (void)data;
-    reply.WriteInt32(HeartBeat());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 } // namespace Media

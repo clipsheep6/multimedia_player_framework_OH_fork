@@ -25,17 +25,33 @@
 namespace OHOS {
 namespace Media {
 namespace PlayerTestParam {
+inline constexpr int32_t SEEK_TIME_9_SEC = 9000;
 inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
 inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
 inline constexpr int32_t WAITSECOND = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
-inline constexpr int32_t PLAYING_TIME = 2;
+inline constexpr int32_t PLAYING_TIME_2_SEC = 2;
+inline constexpr int32_t PLAYING_TIME_1_SEC = 1;
+inline constexpr int32_t PLAYING_TIME_10_SEC = 10;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
+const std::string SUBTITLE_SRT_FIELE1 = MEDIA_ROOT + "utf8_test1.srt";
+const std::string SUBTITLE_0_SEC = "MediaOS: test for subtitle_1";
+const std::string SUBTITLE_1_SEC = "MediaOS: test for subtitle_2";
+const std::string SUBTITLE_2_SEC = "MediaOS: test for subtitle_3";
+const std::string SUBTITLE_3_SEC = "MediaOS: test for subtitle_4";
+const std::string SUBTITLE_4_SEC = "MediaOS: test for subtitle_5";
+const std::string SUBTITLE_5_SEC = "MediaOS: test for subtitle_6";
+const std::string SUBTITLE_6_SEC = "MediaOS: test for subtitle_7";
+const std::string SUBTITLE_8_SEC = "MediaOS: test for subtitle_9";
+const std::string SUBTITLE_10_SEC = "MediaOS: test for subtitle_10";
+const std::string SUBTITLE_TEST1_8_SEC = "MediaOS: test1 for subtitle_9";
 const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
+const std::string INVALID_FILE = MEDIA_ROOT + "invalid.mp4";
 } // namespace PlayerTestParam
 
 class PlayerSignal {
@@ -44,8 +60,15 @@ protected:
     int32_t seekPosition_;
     bool seekDoneFlag_;
     bool speedDoneFlag_;
+    bool trackDoneFlag_ = false;
+    bool trackChange_ = false;
+    bool trackInfoUpdate_ = false;
+    bool textUpdate_ = false;
+    std::string text_ = "";
     PlayerSeekMode seekMode_ = PlayerSeekMode::SEEK_CLOSEST;
     std::mutex mutexCond_;
+    std::mutex subtitleMutex_;
+    std::condition_variable condVarText_;
     std::condition_variable condVarPrepare_;
     std::condition_variable condVarPlay_;
     std::condition_variable condVarPause_;
@@ -53,6 +76,8 @@ protected:
     std::condition_variable condVarReset_;
     std::condition_variable condVarSeek_;
     std::condition_variable condVarSpeed_;
+    std::condition_variable condVarTrackDone_;
+    std::condition_variable condVarTrackInfoUpdate_;
 };
 
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable, public PlayerSignal {
@@ -66,6 +91,7 @@ public:
     void SetSpeedDoneFlag(bool speedDoneFlag);
     void SetSeekPosition(int32_t seekPosition);
     void SetState(PlayerStates state);
+    void SetTrackDoneFlag(bool trackDoneFlag);
     int32_t PrepareSync();
     int32_t PlaySync();
     int32_t PauseSync();
@@ -73,6 +99,12 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    int32_t TrackSync(bool &trackChange);
+    int32_t TrackInfoUpdateSync();
+    std::string SubtitleTextUpdate(std::string text);
+private:
+    void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
+    void HandleTrackInfoCallback(int32_t extra, const Format &infoBody);
 };
 
 class PlayerMock : public NoCopyable {
@@ -83,6 +115,7 @@ public:
     int32_t SetSource(const std::string url);
     int32_t SetDataSrc(const std::string &path, int32_t size, bool seekable);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size);
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size);
     int32_t Prepare();
     int32_t PrepareAsync();
     int32_t Play();
@@ -109,6 +142,12 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
     int32_t SetVideoSurface(sptr<Surface> surface);
     sptr<Surface> GetVideoSurface();
+    int32_t SelectTrack(int32_t index, bool &trackChange);
+    int32_t DeselectTrack(int32_t index, bool &trackChange);
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index);
+    int32_t AddSubSource(const std::string &url);
+    int32_t AddSubSource(const std::string &path, int64_t offset, int64_t size);
+    std::string GetSubtitleText(std::string text);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

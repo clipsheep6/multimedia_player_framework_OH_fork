@@ -45,6 +45,7 @@ inline constexpr std::string_view INNER_META_KEY_TITLE = "title";
 inline constexpr std::string_view INNER_META_KEY_TRACK_INDEX = "track-index";
 inline constexpr std::string_view INNER_META_KEY_TRACK_TYPE = "track-type";
 inline constexpr std::string_view INNER_META_KEY_VIDEO_WIDTH = "width";
+inline constexpr std::string_view INNER_META_KEY_BANDWIDTH = "bandwidth";
 
 // video codec mime
 inline constexpr std::string_view VIDEO_MIMETYPE_AVC = "video/avc";
@@ -53,6 +54,9 @@ inline constexpr std::string_view VIDEO_MIMETYPE_MPEG4 = "video/mp4v-es";
 // audio codec mime
 inline constexpr std::string_view AUDIO_MIMETYPE_AAC = "audio/mp4a-latm";
 inline constexpr std::string_view AUDIO_MIMETYPE_MPEG = "audio/mpeg";
+
+// subtitle codec mime
+inline constexpr std::string_view SUBTITLE_MIMETYPE_SRT = "subtitle/srt";
 
 // container mime
 inline constexpr std::string_view FILE_MIMETYPE_VIDEO_MP4 = "video/mp4";

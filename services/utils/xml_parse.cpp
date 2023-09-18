@@ -33,20 +33,14 @@ XmlParser::~XmlParser()
 bool XmlParser::LoadConfiguration(const char *xmlPath)
 {
     mDoc_ = xmlReadFile(xmlPath, nullptr, 0);
-    if (mDoc_ == nullptr) {
-        MEDIA_LOGE("XmlParser xmlReadFile failed");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(mDoc_ != nullptr, false, "XmlParser xmlReadFile failed");
     return true;
 }
 
 bool XmlParser::Parse()
 {
     xmlNode *root = xmlDocGetRootElement(mDoc_);
-    if (root == nullptr) {
-        MEDIA_LOGE("XmlParser xmlDocGetRootElement failed");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(root != nullptr, false, "XmlParser xmlDocGetRootElement failed");
     return ParseInternal(root);
 }
 
@@ -72,22 +66,19 @@ bool XmlParser::IsNumberArray(const std::vector<std::string> &strArray) const
 
 bool XmlParser::TransStrAsRange(const std::string &str, Range &range) const
 {
-    if (str == "null" || str == "") {
-        MEDIA_LOGD("str is null");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(str != "null", false, "str is null");
+    CHECK_AND_RETURN_RET_LOG(str != "", false, "str is empty");
     size_t pos = str.find("-");
     if (pos != str.npos && pos + 1 < str.size()) {
         std::string head = str.substr(0, pos);
         std::string tail = str.substr(pos + 1);
-        if (!StrToInt(head, range.minVal)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", head.c_str());
-            return false;
-        }
-        if (!StrToInt(tail, range.maxVal)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", tail.c_str());
-            return false;
-        }
+        bool ret = StrToInt(head, range.minVal);
+        CHECK_AND_RETURN_RET_LOG(ret == true, false,
+            "call StrToInt func false, input head is: %{public}s", head.c_str());
+
+        ret = StrToInt(tail, range.maxVal);
+        CHECK_AND_RETURN_RET_LOG(ret == true, false,
+            "call StrToInt func false, input tail is: %{public}s", tail.c_str());
     } else {
         MEDIA_LOGD("Can not find the delimiter of \"-\" in : %{public}s", str.c_str());
         return false;
@@ -95,30 +86,14 @@ bool XmlParser::TransStrAsRange(const std::string &str, Range &range) const
     return true;
 }
 
-std::vector<int32_t> XmlParser::TransMapAsIntegerArray(
-    const std::unordered_map<std::string, int> &capabilityMap,
-    const std::vector<std::string> &spilt) const
-{
-    std::vector<int32_t> res;
-    for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
-        if (capabilityMap.find(*iter) != capabilityMap.end()) {
-            res.emplace_back(capabilityMap.at(*iter));
-        } else {
-            MEDIA_LOGD("can not find %{public}s in capabilityMap", iter->c_str());
-        }
-    }
-    return res;
-}
-
 std::vector<int32_t> XmlParser::TransStrAsIntegerArray(const std::vector<std::string> &spilt) const
 {
     std::vector<int32_t> array;
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
         int32_t num = -1;
-        if (!StrToInt(*iter, num)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", iter->c_str());
-            return array;
-        }
+        bool ret = StrToInt(*iter, num);
+        CHECK_AND_RETURN_RET_LOG(ret == true, array,
+            "call StrToInt func false, input str is: %{public}s", iter->c_str());
         array.push_back(num);
     }
     return array;
@@ -127,9 +102,7 @@ std::vector<int32_t> XmlParser::TransStrAsIntegerArray(const std::vector<std::st
 bool XmlParser::SpiltKeyList(const std::string &str, const std::string &delim,
     std::vector<std::string> &spilt) const
 {
-    if (str == "") {
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(str != "", false, "str is null");
     std::string strAddDelim = str;
     if (str.back() != delim.back()) {
         strAddDelim = str + delim;
@@ -150,20 +123,6 @@ bool XmlParser::SetCapabilityStringData(std::unordered_map<std::string, std::str
     const std::string &capabilityKey, const std::string &capabilityValue) const
 {
     dataMap.at(capabilityKey) = capabilityValue;
-    return true;
-}
-
-bool XmlParser::SetCapabilityBoolData(std::unordered_map<std::string, bool&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
-{
-    if (capabilityValue == "true") {
-        dataMap.at(capabilityKey) = true;
-    } else if (capabilityValue == "false") {
-        dataMap.at(capabilityKey) = false;
-    } else {
-        MEDIA_LOGD("The value of %{public}s in the configuration file is incorrect.", capabilityValue.c_str());
-        return false;
-    }
     return true;
 }
 

@@ -58,6 +58,28 @@ public:
      */
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
     /**
+     * @brief Add a subtitle source for the player. The corresponding source can be local file url.
+     *
+     * @param url Indicates the subtitle source.
+     * @return Returns {@link MSERR_OK} if the url is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(const std::string &url) = 0;
+    /**
+     * @brief Add a playback subtitle file descriptor source for the player.
+     *
+     * @param fd Indicates the file descriptor of subtitle source.
+     * @param offset Indicates the offset of subtitle source in file descriptor.
+     * @param size Indicates the size of subtitle source.
+     * @return Returns {@link MSERR_OK} if the fd source is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) = 0;
+    /**
      * @brief Start playback.
      *
      * This function must be called after {@link Prepare}. If the player state is <b>Prepared</b>,
@@ -70,25 +92,25 @@ public:
      */
     virtual int32_t Play() = 0;
 
-  /**
-     * @brief Prepares the playback environment and buffers media data.
+    /**
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is prepared; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Prepare} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
     virtual int32_t Prepare() = 0;
 
     /**
-     * @brief Prepare the playback environment and buffers media data asynchronous.
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is preparing; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link PrepareAsync} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -97,8 +119,8 @@ public:
     /**
      * @brief Pauses playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is paused; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Pause} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -107,8 +129,8 @@ public:
     /**
      * @brief Stop playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is stopped; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Stop} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -120,8 +142,8 @@ public:
      * After the function is called, add a playback source by calling {@link SetSource},
      * call {@link Play} to start playback again after {@link Prepare} is called.
      *
-     * @return Returns {@link MSERR_OK} if the playback is reset; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Reset} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -130,8 +152,8 @@ public:
     /**
      * @brief Releases player resources async
      *
-     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Release} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -338,6 +360,56 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) = 0;
+
+    /**
+     * @brief Select audio or subtitle track.
+     * By default, the first audio stream with data is played, and the subtitle track is not played.
+     * After the settings take effect, the original track will become invalid.
+     * Please set it in the prepared/playing/paused/completed state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SelectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Deselect the current audio or subtitle track.
+     * After audio is deselected, the default track will be played, and after subtitles are deselected,
+     * they will not be played. Please set it in the prepared/playing/paused/completed state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Obtain the currently effective track index.
+     *
+     * @param trackType Media type.
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if the track index is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+
+    /**
+     * @brief Obtains the subtitle track info, contains mimeType, type, language.
+     *
+     * @param subtitle track info vec.
+     * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
 };
 } // namespace Media
 } // namespace OHOS

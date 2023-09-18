@@ -16,22 +16,19 @@ import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avmetadata"
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("AVmetadataFileFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "$MEDIA_ROOT_DIR/test/fuzztest/avmetadata_fuzztest/avmetadatafile_fuzzer"
-
-  resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
+      "../../../../test/fuzztest/avmetadata_fuzztest/avmetadatafile_fuzzer"
+  resource_config_file = "../../../../test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_ROOT_DIR/services/utils/include",
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "//foundation/windowmanager/interfaces/innerkits/wm",
-    "//graphic/graphic_2d/interfaces/innerkits/surface",
+    "../../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
+    "../../../../interfaces/inner_api/native",
+    "../../../../services/utils/include",
+    "../../../../test/fuzztest/common/",
   ]
   cflags = [
     "-std=c++17",
@@ -57,20 +54,20 @@ ohos_fuzztest("AVmetadataFileFuzzTest") {
   ]
   if (multimedia_player_framework_support_metadata) {
     sources = [
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_metadata.cpp",
+      "../../../../test/fuzztest/common/aw_common.cpp",
+      "../../../../test/fuzztest/common/test_metadata.cpp",
       "avmetadatafile_fuzzer.cpp",
     ]
   }
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wm:libwm",
+    "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-    "multimedia_player_framework:media_client",
+    "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "player_framework:media_client",
   ]
 }

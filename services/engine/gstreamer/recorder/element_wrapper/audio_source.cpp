@@ -17,7 +17,6 @@
 #include <gst/gst.h>
 #include "media_errors.h"
 #include "media_log.h"
-#include "ipc_skeleton.h"
 #include "recorder_private_param.h"
 
 namespace {
@@ -110,6 +109,7 @@ int32_t AudioSource::ConfigAppInfo(const RecorderParam &recParam)
 {
     const AppInfo &param = static_cast<const AppInfo &>(recParam);
     g_object_set(gstElem_, "token-id", param.appTokenId_, nullptr);
+    g_object_set(gstElem_, "full-token-id", param.appFullTokenId_, nullptr);
     g_object_set(gstElem_, "app-uid", param.appUid_, nullptr);
     g_object_set(gstElem_, "app-pid", param.appPid_, nullptr);
 
@@ -130,6 +130,11 @@ int32_t AudioSource::CheckConfigReady()
         MEDIA_LOGE("audiosource required parameter not configured completely, failed !");
         return MSERR_INVALID_OPERATION;
     }
+
+    int32_t isSupportedParams = 0;
+    g_object_get(gstElem_, "supported-audio-params", &isSupportedParams, nullptr);
+    CHECK_AND_RETURN_RET_LOG(isSupportedParams != 0, MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
+
     return MSERR_OK;
 }
 

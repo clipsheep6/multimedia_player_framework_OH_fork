@@ -80,6 +80,21 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
     return playerService_->SetSource(fd, offset, size);
 }
 
+int32_t PlayerImpl::AddSubSource(const std::string &url)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(url): %{public}s", FAKE_POINTER(this), url.c_str());
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+    return playerService_->AddSubSource(url);
+}
+
+int32_t PlayerImpl::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(fd)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->AddSubSource(fd, offset, size);
+}
+
 int32_t PlayerImpl::Play()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Play in", FAKE_POINTER(this));
@@ -179,6 +194,13 @@ int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playerService_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetSubtitleTrackInfo in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerImpl::GetVideoWidth()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoWidth in", FAKE_POINTER(this));
@@ -268,6 +290,27 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetParameter in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->SetParameter(param);
+}
+
+int32_t PlayerImpl::SelectTrack(int32_t index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SelectTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SelectTrack(index);
+}
+
+int32_t PlayerImpl::DeselectTrack(int32_t index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " DeselectTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->DeselectTrack(index);
+}
+
+int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetCurrentTrack(trackType, index);
 }
 } // namespace Media
 } // namespace OHOS

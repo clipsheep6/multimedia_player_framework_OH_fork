@@ -10,7 +10,7 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "multimedia_player_framework",
+      "name": "player_framework",
       "subsystem": "multimedia",
       "syscap": [
         "SystemCapability.Multimedia.Media.Core",
@@ -24,7 +24,10 @@
         "SystemCapability.Multimedia.Media.VideoEncoder",
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
-        "SystemCapability.Multimedia.Media.AVRecorder"
+        "SystemCapability.Multimedia.Media.AVRecorder",
+        "SystemCapability.Multimedia.SystemSound.Core",
+        "SystemCapability.Multimedia.Media.AVScreenCapture",
+        "SystemCapability.Multimedia.Media.SoundPool"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -35,34 +38,44 @@
       ],
       "deps": {
         "components": [
+          "av_session",
           "safwk",
-          "hiviewdfx_hilog_native",
+          "hilog",
           "window_manager",
           "napi",
-          "startup_l2",
           "samgr",
-          "libxml2",
-          "thirdparty_bounds_checking_function",
-          "hitrace_native",
-          "multimedia_audio_framework",
+          "hitrace",
+          "audio_framework",
           "ipc",
-          "graphic_standard",
-          "hisysevent_native",
+          "graphic_2d",
+          "hisysevent",
           "c_utils",
-          "hilog_native",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
-          "common"
+          "image_framework",
+          "hiview",
+          "eventhandler",
+          "init",
+          "input",
+          "memmgr_plugin",
+          "hicollie",
+          "drivers_peripheral_codec",
+          "drivers_peripheral_display",
+          "hdf_core",
+          "ability_base",
+          "ability_runtime",
+          "bundle_framework",
+          "relational_store",
+          "resource_management",
+          "av_codec"
         ],
         "third_party": [
           "glib",
           "gstreamer",
           "libffi",
           "ffmpeg",
-          "libsoup",
-          "libpsl",
-          "libgettext"
+          "libxml2",
+          "bounds_checking_function"
         ]
       },
       "build": {
@@ -81,6 +94,26 @@
         "inner_kits": [
           {
             "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_format",
+            "header": {
+              "header_files": [
+                "format.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+            "header": {
+              "header_files": [
+                "avsharedmemorypool.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/services/utils/include"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "header": {
               "header_files": [
@@ -89,7 +122,9 @@
                 "avcodec_video_decoder.h",
                 "avcodec_video_encoder.h",
                 "player.h",
-                "recorder.h"
+                "recorder.h",
+                "screen_capture.h",
+                "media_errors.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }
@@ -106,18 +141,17 @@
           },
           {
             "type": "none",
-            "name": "//foundation/multimedia/audio_framework/frameworks/native/systemsound:audio_ringtone_client",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound:audio_ringtone_client",
             "header": {
               "header_files": [
                 "iringtone_player.h",
                 "iringtone_sound_manager.h"
               ],
-              "header_base": "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audioringtone/include"
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_ringtone/include"
             }
           }
         ],
         "test": [
-            "//foundation/multimedia/player_framework/test:media_demo_test",
             "//foundation/multimedia/player_framework/test:media_fuzz_test",
             "//foundation/multimedia/player_framework/test:media_unit_test"
         ]

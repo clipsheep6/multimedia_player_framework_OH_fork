@@ -14,11 +14,9 @@
  */
 
 #include "player_sinkprovider.h"
-#include <sync_fence.h>
 #include "securec.h"
 #include "display_type.h"
 #include "param_wrapper.h"
-#include "surface_buffer_impl.h"
 #include "gst/video/gstvideometa.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -49,6 +47,10 @@ PlayerSinkProvider::~PlayerSinkProvider()
     if (videoSink_ != nullptr) {
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
+    }
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
     }
     if (audioCaps_ != nullptr) {
         gst_caps_unref(audioCaps_);
@@ -110,6 +112,7 @@ GstElement *PlayerSinkProvider::DoCreateAudioSink(const GstCaps *caps, const gpo
 
     g_object_set(G_OBJECT(sink), "app-uid", uid_, nullptr);
     g_object_set(G_OBJECT(sink), "app-pid", pid_, nullptr);
+    g_object_set(G_OBJECT(sink), "app-token-id", tokenId_, nullptr);
 
     gboolean enable = static_cast<gboolean>(EnableOptRenderDelay());
     g_object_set(G_OBJECT(sink), "enable-opt-render-delay", enable, nullptr);
@@ -144,11 +147,8 @@ bool PlayerSinkProvider::EnableKpiAVSyncLog() const
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
 {
-    if (producerSurface_ == nullptr) {
-        MEDIA_LOGI("producerSurface_ is nullptr, cannot create video sink!");
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, nullptr,
+        "producerSurface_ is nullptr, cannot create video sink!");
     if (videoCaps_ == nullptr) {
         videoCaps_ = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "RGBA", nullptr);
         CHECK_AND_RETURN_RET_LOG(videoCaps_ != nullptr, nullptr, "gst_caps_new_simple failed..");
@@ -208,14 +208,80 @@ void PlayerSinkProvider::FirstRenderFrame(gpointer userData)
 void PlayerSinkProvider::OnFirstRenderFrame()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (notifier_ != nullptr) {
-        if (GetFirstRenderFrameFlag()) {
-            PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
-            notifier_(msg);
-            SetFirstRenderFrameFlag(false);
-            MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
-        }
+    CHECK_AND_RETURN(notifier_ != nullptr);
+    if (GetFirstRenderFrameFlag()) {
+        PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
+        notifier_(msg);
+        SetFirstRenderFrameFlag(false);
+        MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
     }
+}
+
+PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
+{
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
+    }
+    subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
+    return subtitleSink_;
+}
+
+GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
+{
+    MEDIA_LOGI("CreateSubtitleSink in.");
+    CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
+
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", nullptr)));
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
+
+    GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
+    gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
+    MEDIA_LOGI("CreateSubtitleSink out.");
+    return sink;
+}
+
+void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
+{
+    if (sample == nullptr) {
+        (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, "");
+        return;
+    }
+    GstMapInfo mapInfo;
+    CHECK_AND_RETURN(gst_buffer_map(sample, &mapInfo, GST_MAP_READ));
+    uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
+    char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
+    (void)memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
+    textFrame[gstBufferSize] = static_cast<char>(0);
+    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
+    MEDIA_LOGD("text = %{public}s", textFrame);
+    delete[] textFrame;
+    gst_buffer_unmap(sample, &mapInfo);
+}
+
+GstFlowReturn PlayerSinkProvider::SubtitleUpdated(GstBuffer *sample, gpointer userData)
+{
+    MediaTrace trace("PlayerSinkProvider::SubtitleUpdated");
+    CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
+    PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
+    Format subtitle;
+    sinkProvider->HandleSubtitleBuffer(sample, subtitle);
+    sinkProvider->OnSubtitleUpdated(subtitle);
+    return GST_FLOW_OK;
+}
+
+void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("OnSubtitleUpdated enter");
+    auto temp_notifier = notifier_;
+    lock.unlock();
+    CHECK_AND_RETURN(temp_notifier != nullptr);
+    PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
+    temp_notifier(msg);
+    MEDIA_LOGD("OnSubtitleUpdated exit");
 }
 
 void PlayerSinkProvider::EosCb(GstMemSink *memSink, gpointer userData)
@@ -294,10 +360,11 @@ void PlayerSinkProvider::SetVideoScaleType(const uint32_t videoScaleType)
     }
 }
 
-void PlayerSinkProvider::SetAppInfo(int32_t uid, int32_t pid)
+void PlayerSinkProvider::SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId)
 {
     uid_ = uid;
     pid_ = pid;
+    tokenId_ = tokenId;
 }
 }
 }

@@ -22,7 +22,8 @@
 #include "nocopyable.h"
 #include "playbin_msg_define.h"
 #include "playbin_sink_provider.h"
-#include "gst_appsrc_wrap.h"
+#include "gst_appsrc_engine.h"
+#include "format.h"
 
 namespace OHOS {
 namespace Media {
@@ -56,26 +57,35 @@ public:
     static std::shared_ptr<IPlayBinCtrler> Create(PlayBinKind kind, const PlayBinCreateParam &createParam);
 
     virtual int32_t SetSource(const std::string &url) = 0;
-    virtual int32_t SetSource(const std::shared_ptr<GstAppsrcWrap> &appsrcWrap) = 0;
-    virtual int32_t Prepare() = 0; // sync
+    virtual int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) = 0;
+    virtual int32_t AddSubSource(const std::string &url) = 0;
     virtual int32_t PrepareAsync() = 0; // async
     virtual int32_t Play() = 0; // async
     virtual int32_t Pause() = 0; // async
     virtual int32_t Seek(int64_t timeUs, int32_t seekOption) = 0; // async
     virtual int32_t Stop(bool needWait) = 0; // async
     virtual int32_t SetRate(double rate) = 0;
-    virtual double GetRate() = 0;
     virtual int32_t SetLoop(bool loop) = 0;
     virtual void SetVolume(const float &leftVolume, const float &rightVolume) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
     virtual void SetAudioInterruptMode(const int32_t interruptMode) = 0;
     virtual int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) = 0;
+    virtual int32_t SetAudioEffectMode(const int32_t effectMode) = 0;
     using ElemSetupListener = std::function<void(GstElement &elem)>;
     using AutoPlugSortListener = std::function<GValueArray *(GValueArray &factories)>;
     virtual void SetElemSetupListener(ElemSetupListener listener) = 0;
     virtual void SetElemUnSetupListener(ElemSetupListener listener) = 0;
     virtual void SetAutoPlugSortListener(AutoPlugSortListener listener) = 0;
     virtual void RemoveGstPlaySinkVideoConvertPlugin() = 0;
+    virtual int64_t QueryPosition() = 0;
+    virtual void SetNotifier(PlayBinMsgNotifier notifier) = 0;
+    virtual void SetAutoSelectBitrate(bool enable) = 0;
+    virtual int32_t SelectTrack(int32_t index) = 0;
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
 };
 } // namespace Media
 } // namespace OHOS

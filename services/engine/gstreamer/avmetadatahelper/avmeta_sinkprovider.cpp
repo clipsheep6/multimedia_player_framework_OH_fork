@@ -50,10 +50,7 @@ PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateAudioSink()
     }
 
     audSink_ = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("fakesink", "avmeta_aud_sink")));
-    if (audSink_ == nullptr) {
-        MEDIA_LOGE("audsink is nullptr");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(audSink_ != nullptr, nullptr, "audsink is nullptr");
 
     return audSink_;
 }
@@ -67,10 +64,8 @@ PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateVideoSink()
             vidSink_ = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("appsink", "avmeta_vid_sink")));
         }
     }
-
-    if (vidSink_ == nullptr) {
-        MEDIA_LOGE("vidsink is nullptr");
-    }
+    
+    CHECK_AND_RETURN_RET_LOG(vidSink_ != nullptr, vidSink_, "vidsink is nullptr");
 
     return vidSink_;
 }

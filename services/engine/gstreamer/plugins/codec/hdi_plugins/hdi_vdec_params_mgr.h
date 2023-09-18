@@ -36,16 +36,19 @@ protected:
     int32_t SetInputVideoCommon(GstElement *element);
     int32_t SetOutputVideoCommon(GstElement *element);
     int32_t SetVideoFormat(GstElement *element);
+    int32_t SetFrameRate(GstElement *element);
+    int32_t SetMetadataMode();
     int32_t VideoSurfaceInit(GstElement *element);
     int32_t GetInputVideoCommon(GstElement *element);
     int32_t GetOutputVideoCommon(GstElement *element);
     int32_t GetVideoFormat(GstElement *element);
+    int32_t GetBufferUsage(GstElement *element);
 private:
-    CodecComponentType *handle_ = nullptr;
-    OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {};
-    OMX_PARAM_PORTDEFINITIONTYPE outPortDef_ = {};
-    CodecVideoPortFormatParam videoFormat_ = {};
     CompVerInfo verInfo_ = {};
+    CodecVideoPortFormatParam videoFormat_ = {};
+    OMX_PARAM_PORTDEFINITIONTYPE outPortDef_ = {};
+    OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {};
+    CodecComponentType *handle_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

@@ -54,7 +54,11 @@ protected:
     void HandleVideoRotation(const InnerMessage &msg);
     virtual void HandlePositionUpdate() {}
 
+    void HandleTrackInfoUpdate();
     PlayBinCtrlerBase &ctrler_;
+
+private:
+    void HandleAsyncDoneMsg();
 };
 
 class PlayBinCtrlerBase::IdleState : public PlayBinCtrlerBase::BaseState {
@@ -118,7 +122,11 @@ public:
 
 protected:
     void ProcessStateChange(const InnerMessage &msg) override;
+    void HandleAsyncDone(const InnerMessage &msg) override;
     void StateEnter() override;
+
+private:
+    void ProcessPlayingStateChange();
 };
 
 class PlayBinCtrlerBase::PausedState : public PlayBinCtrlerBase::BaseState {
@@ -134,6 +142,7 @@ public:
 
 protected:
     void ProcessStateChange(const InnerMessage &msg) override;
+    void HandleAsyncDone(const InnerMessage &msg) override;
     void StateEnter() override;
 };
 
@@ -169,6 +178,7 @@ public:
     ~PlaybackCompletedState() = default;
 
     int32_t Play() override;
+    int32_t Pause() override;
     int32_t Stop() override;
     int32_t Seek(int64_t timeUs, int32_t option) override;
     int32_t SetRate(double rate) override;
@@ -177,6 +187,9 @@ protected:
     void ProcessStateChange(const InnerMessage &msg) override;
     void StateEnter() override;
     void HandleAsyncDone(const InnerMessage &msg) override;
+
+private:
+    bool isCompletedSeek_ = false;
 };
 } // namespace Media
 } // namespace OHOS

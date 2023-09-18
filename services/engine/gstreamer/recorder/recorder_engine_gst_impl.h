@@ -22,6 +22,8 @@
 
 #include "nocopyable.h"
 #include "i_recorder_engine.h"
+#include "iconsumer_surface.h"
+#include "surface.h"
 #include "recorder_pipeline.h"
 #include "recorder_pipeline_ctrler.h"
 #include "recorder_pipeline_builder.h"
@@ -31,7 +33,7 @@ namespace OHOS {
 namespace Media {
 class RecorderEngineGstImpl : public IRecorderEngine, public NoCopyable {
 public:
-    RecorderEngineGstImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId);
+    RecorderEngineGstImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~RecorderEngineGstImpl();
 
     int32_t Init();
@@ -51,7 +53,9 @@ public:
 
 private:
     int32_t BuildPipeline();
+    int32_t StopPipeline(bool isDrainAll);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
+    int32_t SetSurface();
 
     std::unique_ptr<RecorderPipelineBuilder> builder_ = nullptr;
     std::shared_ptr<RecorderPipelineCtrler> ctrler_ = nullptr;
@@ -62,6 +66,9 @@ private:
     int32_t appUid_;
     int32_t appPid_;
     uint32_t appTokenId_;
+    uint64_t appFullTokenId_;
+    sptr<IConsumerSurface> consumerSurface_ = nullptr;
+    int32_t videoSourceId_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

@@ -34,6 +34,9 @@
 #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_client.h"
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+#include "screen_capture_client.h"
+#endif
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -42,6 +45,8 @@ class MediaClient : public IMediaService, public NoCopyable {
 public:
     MediaClient() noexcept;
     ~MediaClient();
+
+    sptr<IStandardMonitorService> GetMonitorProxy() override;
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
@@ -62,12 +67,18 @@ public:
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+    std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() override;
+    int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture) override;
+#endif
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();
     static void MediaServerDied(pid_t pid);
     void DoMediaServerDied();
+    void AVPlayerServerDied();
+    void AVCodecServerDied();
 
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
@@ -85,6 +96,9 @@ private:
 #ifdef SUPPORT_CODEC
     std::list<std::shared_ptr<IAVCodecService>> avCodecClientList_;
     std::list<std::shared_ptr<IAVCodecListService>> avCodecListClientList_;
+#endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+    std::list<std::shared_ptr<IScreenCaptureService>> screenCaptureClientList_;
 #endif
     std::mutex mutex_;
 };

@@ -53,20 +53,23 @@ public:
     }
 
 #ifdef SUPPORT_PLAYER
-    virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0)
+    virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0)
     {
         (void)uid;
         (void)pid;
+        (void)tokenId;
         return nullptr;
     }
 #endif
 
 #ifdef SUPPORT_RECORDER
-    virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId)
+    virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+        uint64_t appFullTokenId)
     {
         (void)appUid;
         (void)appPid;
         (void)appTokenId;
+        (void)appFullTokenId;
         return nullptr;
     }
 #endif

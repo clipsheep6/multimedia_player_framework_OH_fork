@@ -100,7 +100,7 @@ bool SrcBytebufferImpl::Needflush()
 std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(index <= bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(index < bufferList_.size(), nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
 
@@ -117,7 +117,7 @@ std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index
 int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(index <= bufferList_.size(), MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(index < bufferList_.size(), MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, MSERR_INVALID_VAL);
 
     auto &bufWrapper = bufferList_[index];
@@ -148,14 +148,10 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     CHECK_AND_RETURN_RET((info.offset + info.size) <= bufWrapper->mem_->GetSize(), MSERR_INVALID_VAL);
 
     constexpr int32_t usToNs = 1000;
-    if (info.presentationTimeUs < 0) {
-        MEDIA_LOGE("Invalid pts: < 0, use 0 as default");
+    GST_BUFFER_PTS(bufWrapper->gstBuffer_) = static_cast<uint64_t>(info.presentationTimeUs * usToNs);
+    if (info.presentationTimeUs < 0 || info.presentationTimeUs >= (INT64_MAX / usToNs)) {
+        MEDIA_LOGE("Invalid pts: %{public}" PRId64 ", use 0 as default", info.presentationTimeUs);
         GST_BUFFER_PTS(bufWrapper->gstBuffer_) = 0;
-    } else if (info.presentationTimeUs >= (INT64_MAX / usToNs)) {
-        MEDIA_LOGE("Invalid pts: too big, use 0 as default");
-        GST_BUFFER_PTS(bufWrapper->gstBuffer_) = 0;
-    } else {
-        GST_BUFFER_PTS(bufWrapper->gstBuffer_) = static_cast<uint64_t>(info.presentationTimeUs * usToNs);
     }
 
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);

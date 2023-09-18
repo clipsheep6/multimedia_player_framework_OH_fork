@@ -21,8 +21,10 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "avplayer_callback.h"
+#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
+#include "audio_effect.h"
 #include "task_queue.h"
 
 namespace OHOS {
@@ -48,11 +50,14 @@ const std::string EVENT_SPEED_DONE = "speedDone";
 const std::string EVENT_BITRATE_DONE = "bitrateDone";
 const std::string EVENT_TIME_UPDATE = "timeUpdate";
 const std::string EVENT_DURATION_UPDATE = "durationUpdate";
+const std::string EVENT_SUBTITLE_TEXT_UPDATE = "subtitleTextUpdate";
 const std::string EVENT_BUFFERING_UPDATE = "bufferingUpdate";
 const std::string EVENT_START_RENDER_FRAME = "startRenderFrame";
 const std::string EVENT_VIDEO_SIZE_CHANGE = "videoSizeChange";
 const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
+const std::string EVENT_TRACKCHANGE = "trackChange";
+const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
 const std::string EVENT_ERROR = "error";
 }
 
@@ -117,6 +122,14 @@ private:
      */
     static napi_value JsSelectBitrate(napi_env env, napi_callback_info info);
     /**
+     * addSubtitleUrl: string
+     */
+    static napi_value JsAddSubtitleUrl(napi_env env, napi_callback_info info);
+    /**
+     * addSubtitleFdSrc: AVFileDescriptor
+     */
+    static napi_value JsAddSubtitleAVFileDescriptor(napi_env env, napi_callback_info info);
+    /**
      * url: string
      */
     static napi_value JsSetUrl(napi_env env, napi_callback_info info);
@@ -126,6 +139,11 @@ private:
      */
     static napi_value JsGetAVFileDescriptor(napi_env env, napi_callback_info info);
     static napi_value JsSetAVFileDescriptor(napi_env env, napi_callback_info info);
+    /**
+     * dataSrc: DataSrcDescriptor
+     */
+    static napi_value JsSetDataSrc(napi_env env, napi_callback_info info);
+    static napi_value JsGetDataSrc(napi_env env, napi_callback_info info);
     /**
      * surfaceId?: string
      */
@@ -146,13 +164,18 @@ private:
      */
     static napi_value JsGetAudioInterruptMode(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioInterruptMode(napi_env env, napi_callback_info info);
-    
+
     /**
      * audioRendererInfo?: audio.AudioRendererInfo
      */
     static napi_value JsGetAudioRendererInfo(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioRendererInfo(napi_env env, napi_callback_info info);
 
+    /**
+     * audioEffectMode ?: audio.AudioEffectMode;
+     */
+    static napi_value JsGetAudioEffectMode(napi_env env, napi_callback_info info);
+    static napi_value JsSetAudioEffectMode(napi_env env, napi_callback_info info);
     /**
      * readonly currentTime: number
      */
@@ -179,35 +202,48 @@ private:
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
     /**
-    * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
-    * off(type: 'stateChange'): void;
-    * on(type: 'volumeChange', callback: Callback<number>): void;
-    * off(type: 'volumeChange'): void;
-    * on(type: 'endOfStream', callback: Callback<void>): void;
-    * off(type: 'endOfStream'): void;
-    * on(type: 'seekDone', callback: Callback<number>): void;
-    * off(type: 'seekDone'): void;
-    * on(type: 'speedDone', callback: Callback<number>): void;
-    * off(type: 'speedDone'): void;
-    * on(type: 'bitrateDone', callback: Callback<number>): void;
-    * off(type: 'bitrateDone'): void;
-    * on(type: 'timeUpdate', callback: Callback<number>): void;
-    * off(type: 'timeUpdate'): void;
-    * on(type: 'durationUpdate', callback: Callback<number>): void;
-    * off(type: 'durationUpdate'): void;
-    * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
-    * off(type: 'bufferingUpdate'): void;
-    * on(type: 'startRenderFrame', callback: Callback<void>): void;
-    * off(type: 'startRenderFrame'): void;
-    * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
-    * off(type: 'videoSizeChange'): void;
-    * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-    * off(type: 'audioInterrupt'): void;
-    * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
-    * off(type: 'availableBitrates'): void;
-    * on(type: 'error', callback: ErrorCallback): void;
-    * off(type: 'error'): void;
-    */
+     * selectTrack(index: number): void;
+     */
+    static napi_value JsSelectTrack(napi_env env, napi_callback_info info);
+    /**
+     * deselectTrack(index: number): void;
+     */
+    static napi_value JsDeselectTrack(napi_env env, napi_callback_info info);
+    /**
+     * GetCurrentTrack(trackType: MediaType, callback: AsyncCallback<number>): void;
+     * GetCurrentTrack(trackType: MediaType): Promise<number>;
+     */
+    static napi_value JsGetCurrentTrack(napi_env env, napi_callback_info info);
+    /**
+     * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+     * off(type: 'stateChange'): void;
+     * on(type: 'volumeChange', callback: Callback<number>): void;
+     * off(type: 'volumeChange'): void;
+     * on(type: 'endOfStream', callback: Callback<void>): void;
+     * off(type: 'endOfStream'): void;
+     * on(type: 'seekDone', callback: Callback<number>): void;
+     * off(type: 'seekDone'): void;
+     * on(type: 'speedDone', callback: Callback<number>): void;
+     * off(type: 'speedDone'): void;
+     * on(type: 'bitrateDone', callback: Callback<number>): void;
+     * off(type: 'bitrateDone'): void;
+     * on(type: 'timeUpdate', callback: Callback<number>): void;
+     * off(type: 'timeUpdate'): void;
+     * on(type: 'durationUpdate', callback: Callback<number>): void;
+     * off(type: 'durationUpdate'): void;
+     * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+     * off(type: 'bufferingUpdate'): void;
+     * on(type: 'startRenderFrame', callback: Callback<void>): void;
+     * off(type: 'startRenderFrame'): void;
+     * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
+     * off(type: 'videoSizeChange'): void;
+     * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+     * off(type: 'audioInterrupt'): void;
+     * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
+     * off(type: 'availableBitrates'): void;
+     * on(type: 'error', callback: ErrorCallback): void;
+     * off(type: 'error'): void;
+     */
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
 
@@ -224,6 +260,7 @@ private:
     void PauseListenCurrentResource();
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void SetSource(std::string url);
+    void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
 
@@ -235,11 +272,18 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
+    bool IsLiveSource() const;
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
     void NotifyState(PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
+    void NotifyIsLiveStream() override;
+    void StopTaskQue();
+    void WaitTaskQueStop();
+
+    std::condition_variable stopTaskQueCond_;
+    bool taskQueStoped_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
@@ -256,13 +300,16 @@ private:
         std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
     };
+    void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
+    std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
+    struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;
@@ -273,17 +320,19 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
+    int32_t audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
+    std::mutex taskMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
-    std::condition_variable preparingCond_;
     std::condition_variable stateChangeCond_;
-    std::condition_variable resettingCond_;
+    std::atomic<bool> stopWait_;
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t position_ = -1;
     int32_t duration_ = -1;
+    bool isLiveStream_ = false;
 };
 } // namespace Media
 } // namespace OHOS

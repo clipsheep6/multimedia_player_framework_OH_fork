@@ -14,11 +14,13 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import("./../../../multimedia_player_framework_aafwk.gni")
 
 group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
     deps += [
+      "${multimedia_player_framework_path}/frameworks/js/ringtone_manager:systemsoundmanager",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
     ]
@@ -26,7 +28,7 @@ group("napi_packages") {
 }
 
 js_declaration("media_js") {
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
   sources = [ "./@ohos.multimedia.media.d.ts" ]
 }
 
@@ -38,6 +40,12 @@ ohos_copy("media_declaration") {
 }
 
 ohos_shared_library("media") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/kits/js",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
@@ -47,13 +55,13 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/media",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
+    "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
+    "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
     "//third_party/libuv/include",
-    "//third_party/bounds_checking_function/include",
   ]
 
   sources = [
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/media/media_capability_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
   ]
@@ -113,30 +121,47 @@ ohos_shared_library("media") {
   ]
 
   deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/arkui/napi:ace_napi",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   if (multimedia_player_framework_support_player_js_api9) {
-    deps += [ "//foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer" ]
+    deps += [
+      "../../../../../../foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer",
+      "../../../../../../third_party/bounds_checking_function:libsec_shared",
+    ]
   }
 
-  if (multimedia_player_framework_support_video) {
-    deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
+  if (multimedia_player_framework_support_jssoundpool) {
+    deps += [
+      "${multimedia_player_framework_path}/frameworks/js/soundpool:media_soundpool",
+      "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
+    ]
   }
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
   ]
 
+  if (multimedia_player_framework_support_video) {
+    external_deps += [ "graphic_2d:surface" ]
+  }
+
+  if (multimedia_player_framework_support_jsstack) {
+    external_deps += [ "hiview:libxpower_event_js" ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
   relative_install_dir = "module/multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
   subsystem_name = "multimedia"
 }

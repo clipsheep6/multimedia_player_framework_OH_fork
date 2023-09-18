@@ -26,6 +26,12 @@ config("media_service_log_dfx_public_config") {
 ohos_shared_library("media_service_log_dfx") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "dfx_log_dump.cpp" ]
 
   include_dirs = [
@@ -60,15 +66,21 @@ ohos_shared_library("media_service_log_dfx") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("media_service_dfx") {
   install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
 
   sources = [ "service_dump_manager.cpp" ]
 
@@ -108,11 +120,10 @@ ohos_shared_library("media_service_dfx") {
 
   external_deps = [
     "c_utils:utils",
-    "hicollie_native:libhicollie",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

@@ -405,8 +405,6 @@ private:
     void UpdateParams();
     void LoadLevelParams();
     void LoadAVCLevelParams();
-    void LoadMPEG2LevelParams();
-    void LoadMPEG4LevelParams();
     ImgSize MatchClosestSize(const ImgSize &imgSize);
     int32_t DivCeil(const int32_t &dividend, const int32_t &divisor);
     Range DivRange(const Range &range, const int32_t &divisor);

@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "multimedia_player_framework/recorder"
+module_output_path = "player_framework/recorder"
 
 ohos_unittest("recorder_unit_test") {
   module_out_path = module_output_path
@@ -45,6 +45,12 @@ ohos_unittest("recorder_unit_test") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "hilog:libhilog",
   ]
 
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"

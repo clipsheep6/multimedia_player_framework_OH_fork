@@ -24,8 +24,9 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-RecorderEngineGstImpl::RecorderEngineGstImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId)
-    : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId)
+RecorderEngineGstImpl::RecorderEngineGstImpl(int32_t appUid, int32_t appPid,
+    uint32_t appTokenId, uint64_t appFullTokenId)
+    : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     MEDIA_LOGD("enter, ctor");
     sourceCount_.resize(RECORDER_SOURCE_KIND_MAX);
@@ -34,7 +35,7 @@ RecorderEngineGstImpl::RecorderEngineGstImpl(int32_t appUid, int32_t appPid, uin
 RecorderEngineGstImpl::~RecorderEngineGstImpl()
 {
     MEDIA_LOGD("enter, dtor");
-    (void)Reset();
+    (void)StopPipeline(false);
     MEDIA_LOGD("exit, dtor");
 }
 
@@ -45,7 +46,7 @@ int32_t RecorderEngineGstImpl::Init()
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
 
     ctrler_ = ctrler;
-    builder_ = std::make_unique<RecorderPipelineBuilder>(appUid_, appPid_, appTokenId_);
+    builder_ = std::make_unique<RecorderPipelineBuilder>(appUid_, appPid_, appTokenId_, appFullTokenId_);
 
     return MSERR_OK;
 }
@@ -54,10 +55,8 @@ int32_t RecorderEngineGstImpl::SetVideoSource(VideoSourceType source, int32_t &s
 {
     sourceId = INVALID_SOURCE_ID;
 
-    if (source < VIDEO_SOURCE_SURFACE_YUV || source >= VIDEO_SOURCE_BUTT) {
-        MEDIA_LOGE("Invalid video source type: %{public}d", source);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(source >= VIDEO_SOURCE_SURFACE_YUV && source < VIDEO_SOURCE_BUTT, MSERR_INVALID_VAL,
+        "Invalid video source type: %{public}d", source);
 
     std::unique_lock<std::mutex> lock(mutex_);
 
@@ -77,6 +76,7 @@ int32_t RecorderEngineGstImpl::SetVideoSource(VideoSourceType source, int32_t &s
     sourceCount_[RECORDER_SOURCE_KIND_VIDEO] += 1;
 
     sourceId = desc.handle_;
+    videoSourceId_ = sourceId;
     return MSERR_OK;
 }
 
@@ -84,10 +84,8 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
 {
     sourceId = INVALID_SOURCE_ID;
 
-    if (source <= AUDIO_SOURCE_INVALID || source > AUDIO_MIC) {
-        MEDIA_LOGE("Input AudioSourceType : %{public}d is invalid", source);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(source > AUDIO_SOURCE_INVALID && source <= AUDIO_MIC, MSERR_INVALID_VAL,
+        "Input AudioSourceType : %{public}d is invalid", source);
 
     if (source == AudioSourceType::AUDIO_SOURCE_DEFAULT) {
         source = AudioSourceType::AUDIO_MIC;
@@ -116,10 +114,8 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
 
 int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 {
-    if (format < FORMAT_DEFAULT || format >= FORMAT_BUTT) {
-        MEDIA_LOGE("invalid output format: %{public}d", format);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(format >= FORMAT_DEFAULT && format < FORMAT_BUTT, MSERR_INVALID_VAL,
+        "invalid output format: %{public}d", format);
 
     if (format == FORMAT_DEFAULT) {
         format = FORMAT_MPEG_4;
@@ -127,10 +123,8 @@ int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (allSources_.empty()) {
-        MEDIA_LOGE("No source is set before set the output format!");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(!allSources_.empty(), MSERR_INVALID_OPERATION,
+        "No source is set before set the output format!");
 
     int32_t ret = builder_->SetOutputFormat(format);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
@@ -140,8 +134,9 @@ int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderEngineGstImpl::BuildPipeline()
 {
-    pipeline_ = builder_->Build();
-    CHECK_AND_RETURN_RET(pipeline_ != nullptr, MSERR_INVALID_OPERATION);
+    pipeline_ = nullptr;
+    int32_t ret = builder_->Build(pipeline_);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     ctrler_->SetPipeline(pipeline_);
 
@@ -159,10 +154,8 @@ int32_t RecorderEngineGstImpl::Configure(int32_t sourceId, const RecorderParam &
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if ((allSources_.find(sourceId) == allSources_.end()) && (sourceId != DUMMY_SOURCE_ID)) {
-        MEDIA_LOGE("invalid sourceId: 0x%{public}x", sourceId);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG((allSources_.find(sourceId) != allSources_.end()) || (sourceId == DUMMY_SOURCE_ID),
+                             MSERR_INVALID_OPERATION, "invalid sourceId: 0x%{public}x", sourceId);
 
     CHECK_AND_RETURN_RET(CheckParamType(sourceId, recParam), MSERR_INVALID_VAL);
 
@@ -173,20 +166,13 @@ sptr<Surface> RecorderEngineGstImpl::GetSurface(int32_t sourceId)
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (allSources_.find(sourceId) == allSources_.end()) {
-        MEDIA_LOGE("invalid sourceId: 0x%{public}x", sourceId);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), nullptr,
+                             "invalid sourceId: 0x%{public}x", sourceId);
 
-    if  (!allSources_[sourceId].IsVideo()) {
-        MEDIA_LOGE("The sourceId %{public}d is not video source, GetSurface invalid !", sourceId);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(allSources_[sourceId].IsVideo(), nullptr,
+                             "The sourceId %{public}d is not video source, GetSurface invalid !", sourceId);
 
-    if (pipeline_ == nullptr)  {
-        MEDIA_LOGE("Pipeline is nullptr");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, nullptr, "Pipeline is nullptr");
 
     SurfaceParam param;
     int32_t ret = pipeline_->GetParameter(sourceId, param);
@@ -198,7 +184,12 @@ sptr<Surface> RecorderEngineGstImpl::GetSurface(int32_t sourceId)
 int32_t RecorderEngineGstImpl::Prepare()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = BuildPipeline();
+    int32_t ret = SetSurface();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("Prepare failed due to SetSurface failed!");
+        return ret;
+    }
+    ret = BuildPipeline();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("Prepare failed due to pipeline build failed !");
         return ret;
@@ -231,7 +222,19 @@ int32_t RecorderEngineGstImpl::Resume()
 int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    int ret = StopPipeline(isDrainAll);
+    return ret;
+}
 
+int32_t RecorderEngineGstImpl::Reset()
+{
+    (void)Stop(false);
+    consumerSurface_ = nullptr;
+    return MSERR_OK;
+}
+
+int32_t RecorderEngineGstImpl::StopPipeline(bool isDrainAll)
+{
     if (allSources_.empty())  {
         return MSERR_OK;
     }
@@ -245,13 +248,9 @@ int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
         sourceCount_[i] = 0;
     }
     allSources_.clear();
+    videoSourceId_ = -1;
 
     return ret;
-}
-
-int32_t RecorderEngineGstImpl::Reset()
-{
-    return Stop(false);
 }
 
 int32_t RecorderEngineGstImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
@@ -284,29 +283,48 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
     }
 
     auto iter = allSources_.find(sourceId);
-    if (iter == allSources_.end()) {
-        MEDIA_LOGE("invalid sourceId: 0x%{public}x", sourceId);
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(iter != allSources_.end(), false, "invalid sourceId: 0x%{public}x", sourceId);
 
     if (iter->second.IsVideo()) {
-        if (recParam.IsVideoParam()) {
-            return true;
-        }
-        MEDIA_LOGE("The specified sourceId is associated with video, but the param type is irrelevant with video !");
-        return false;
+        CHECK_AND_RETURN_RET_LOG(recParam.IsVideoParam(), false,
+            "The specified sourceId is associated with video, but the param type is irrelevant with video !");
+        return true;
     }
     if (iter->second.IsAudio()) {
-        if (recParam.IsAudioParam()) {
-            return true;
-        }
-        MEDIA_LOGE("The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
-        return false;
+        CHECK_AND_RETURN_RET_LOG(recParam.IsAudioParam(), false,
+            "The specified sourceId is associated with audio, but the param type is irrelevant with audio !");
+        return true;
     }
 
     // unreachable.
     MEDIA_LOGE("unknown error !");
     return false;
+}
+
+int32_t RecorderEngineGstImpl::SetSurface()
+{
+    if (videoSourceId_ == -1) {
+        MEDIA_LOGI("audio record no surface needed.");
+        return MSERR_OK;
+    }
+    if (consumerSurface_ == nullptr) {
+        MEDIA_LOGI("consumerSurface_ not exist");
+        consumerSurface_ = IConsumerSurface::Create();
+        if (consumerSurface_ == nullptr) {
+            MEDIA_LOGE("create consumerSurface failed, return");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+    MEDIA_LOGI("consumerSurface surfaceID: %{public}s", std::to_string(consumerSurface_->GetUniqueId()).c_str());
+    SurfaceParam surfaceParam;
+    surfaceParam.surface_ = consumerSurface_;
+    int32_t ret = builder_->Configure(videoSourceId_, surfaceParam);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("set surface to videoSource failed");
+        return ret;
+    }
+    MEDIA_LOGI("set surface to videoSource success");
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS

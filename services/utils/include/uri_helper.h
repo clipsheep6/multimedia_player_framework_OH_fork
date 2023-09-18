@@ -22,13 +22,14 @@
 #include <map>
 #include <unistd.h>
 #include <fcntl.h>
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
 /**
  * The simple utility is designed to facilitate the uri processing.
  */
-class __attribute__((visibility("default"))) UriHelper {
+class __attribute__((visibility("default"))) UriHelper : public NoCopyable {
 public:
     enum UriType : uint8_t {
         URI_TYPE_FILE,
@@ -46,11 +47,6 @@ public:
     UriHelper(int32_t fd, int64_t offset, int64_t size);
     ~UriHelper();
 
-    UriHelper(UriHelper &&rhs) noexcept;
-    UriHelper &operator=(UriHelper &&rhs) noexcept;
-    UriHelper(const UriHelper &rhs);
-    UriHelper &operator=(const UriHelper &rhs);
-
     uint8_t UriType() const;
     std::string FormattedUri() const;
     bool AccessCheck(uint8_t flag) const;
@@ -60,8 +56,6 @@ private:
     void FormatMeForFd() noexcept;
     bool ParseFdUri(std::string_view uri);
     bool CorrectFdParam();
-    void Swap(UriHelper &&rhs) noexcept;
-    void Copy(const UriHelper &rhs) noexcept;
 
     std::string formattedUri_ = "";
     std::string_view rawFileUri_ = "";

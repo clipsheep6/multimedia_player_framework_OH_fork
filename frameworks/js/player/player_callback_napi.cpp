@@ -17,6 +17,7 @@
 #include <uv.h>
 #include "media_errors.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerCallbackNapi"};
@@ -300,6 +301,11 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr,
@@ -322,19 +328,14 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
 
 void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -347,6 +348,11 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -377,6 +383,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
         delete jsCb;
         delete work;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
@@ -407,6 +414,11 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -435,19 +447,14 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
 
 void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -460,6 +467,11 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -490,6 +502,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
         delete jsCb;
         delete work;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
@@ -521,6 +534,11 @@ void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr,
@@ -547,18 +565,14 @@ void PlayerCallbackNapi::OnJsCallBackIntArray(PlayerJsCallback *jsCb) const
 
 void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -571,6 +585,11 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->callback.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -598,6 +617,7 @@ void PlayerCallbackNapi::OnJsCallBackInterrupt(PlayerJsCallback *jsCb) const
         delete jsCb;
         delete work;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 } // namespace Media
 } // namespace OHOS

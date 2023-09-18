@@ -83,8 +83,8 @@ static OHOS::BufferRequestConfig g_esRequestConfig = {
     .width = CODEC_BUFFER_WIDTH,
     .height = CODEC_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
-    .format = PIXEL_FMT_RGBA_8888,
-    .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    .format = GRAPHIC_PIXEL_FMT_RGBA_8888,
+    .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
     .timeout = 0
 };
 
@@ -103,8 +103,8 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .width = YUV_BUFFER_WIDTH,
     .height = YUV_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
-    .format = PIXEL_FMT_YCRCB_420_SP,
-    .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    .format = GRAPHIC_PIXEL_FMT_YCRCB_420_SP,
+    .usage =  BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
     .timeout = 0
 };
 
@@ -176,6 +176,12 @@ void TestRecorder::SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &record
     recorder->SetOutputFile(recorderConfig.outputFd);
 }
 
+void TestRecorder::SetDataSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    DataSourceType dataType = DataSourceType::METADATA;
+    recorder->SetDataSource(dataType, recorderConfig.videoSourceId);
+}
+
 void TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     std::shared_ptr<TestRecorderCallbackTest> cb = std::make_shared<TestRecorderCallbackTest>();
@@ -190,6 +196,16 @@ void TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConf
 void TestRecorder::Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     recorder->Start();
+}
+
+void TestRecorder::Pause(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Pause();
+}
+
+void TestRecorder::Resume(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Resume();
 }
 
 void TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
@@ -213,7 +229,6 @@ bool TestRecorder::CreateRecorder()
 {
     recorder = RecorderFactory::CreateRecorder();
     if (recorder == nullptr) {
-        recorder->Release();
         return false;
     }
     return true;
@@ -359,7 +374,9 @@ void TestRecorder::HDICreateESBuffer()
             (void)producerSurface->CancelBuffer(buffer);
             break;
         }
-        (void)file->read(tempBuffer, *frameLenArray);
+        if ((file != nullptr) && (file->is_open())) {
+            (void)file->read(tempBuffer, *frameLenArray);
+        }
         if (*frameLenArray > buffer->GetSize()) {
             free(tempBuffer);
             (void)producerSurface->CancelBuffer(buffer);
@@ -381,9 +398,7 @@ void TestRecorder::HDICreateESBuffer()
         frameLenArray++;
         free(tempBuffer);
     }
-    if ((file != nullptr) && (file->is_open())) {
-        file->close();
-    }
+    (void)CloseFile();
 }
 
 void TestRecorder::HDICreateYUVBuffer()
@@ -436,5 +451,12 @@ void TestRecorder::StopBuffer(const std::string &recorderType)
 {
     if (recorderType != PURE_AUDIO && camereHDIThread != nullptr) {
         camereHDIThread->join();
+    }
+}
+
+void TestRecorder::CloseFile()
+{
+    if ((file != nullptr) && (file->is_open())) {
+        file->close();
     }
 }

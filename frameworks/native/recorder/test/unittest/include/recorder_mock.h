@@ -88,7 +88,7 @@ namespace RecorderTestParam {
         int32_t width = YUV_BUFFER_WIDTH;
         int32_t height = YUV_BUFFER_HEIGHT;
         int32_t frameRate = 30;
-        int32_t videoEncodingBitRate = 48000;
+        int32_t videoEncodingBitRate = 2000000;
         int32_t sampleRate = 48000;
         double captureFps = 30;
         int32_t outputFd = 0;

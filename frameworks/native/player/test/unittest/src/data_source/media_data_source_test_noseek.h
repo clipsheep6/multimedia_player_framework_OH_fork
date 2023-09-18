@@ -28,6 +28,7 @@ public:
     MediaDataSourceTestNoSeek(const std::string &uri, int32_t size);
     ~MediaDataSourceTestNoSeek() override;
 
+    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) override;
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
     int32_t GetSize(int64_t &size) override;
@@ -37,7 +38,6 @@ private:
     int32_t Init();
     std::string uri_;
     FILE *fd_ = nullptr;
-    int64_t size_ = 0;
     int64_t pos_ = 0;
     int32_t fixedSize_ = 0;
 };

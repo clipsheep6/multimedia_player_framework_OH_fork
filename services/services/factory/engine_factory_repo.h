@@ -33,13 +33,14 @@ private:
     ~EngineFactoryRepo();
     int32_t LoadGstreamerEngine();
     int32_t LoadHistreamerEngine();
-    int32_t LoadLib(const std::string &libPath);
+    __attribute__((no_sanitize("cfi"))) int32_t LoadLib(const std::string &libPath);
+    __attribute__((no_sanitize("cfi"))) void UnloadLib();
 
     std::mutex mutex_;
     std::vector<std::shared_ptr<IEngineFactory>> factorys_;
     std::vector<void*> factoryLibs_;
-    bool gstreamerLoad_ = false;
-    bool histreamerLoad_ = false;
+    bool isLoadGstreamer_ = false;
+    bool isLoadHistreamer_ = false;
 };
 } // namespace Media
 } // namespace OHOS

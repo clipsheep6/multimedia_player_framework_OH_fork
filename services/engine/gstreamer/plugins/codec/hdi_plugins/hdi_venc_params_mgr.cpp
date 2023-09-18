@@ -110,7 +110,7 @@ void HdiVencParamsMgr::Init(CodecComponentType *handle,
     InitHdiParam(videoFormat_, verInfo_);
     inPortDef_.nPortIndex = portParam.nStartPortNumber;
     outPortDef_.nPortIndex = portParam.nStartPortNumber + 1;
-    videoFormat_.portIndex = portParam.nStartPortNumber + 1;
+    videoFormat_.portIndex = portParam.nStartPortNumber;
 }
 
 int32_t HdiVencParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element)
@@ -281,11 +281,9 @@ int32_t HdiVencParamsMgr::VideoSurfaceInit(GstElement *element)
     supportBufferTypes.portIndex = inPortDef_.nPortIndex;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes); // need to do
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
-    if (!(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_DYNAMIC_HANDLE)) {
-        MEDIA_LOGD("No CODEC_BUFFER_TYPE_DYNAMIC_HANDLE, support bufferType %{public}d",
-            supportBufferTypes.bufferTypes);
-        return GST_CODEC_ERROR;
-    }
+    CHECK_AND_RETURN_RET_LOG(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_DYNAMIC_HANDLE,
+        GST_CODEC_ERROR, "No CODEC_BUFFER_TYPE_DYNAMIC_HANDLE, support bufferType %{public}d",
+        supportBufferTypes.bufferTypes);
 
     UseBufferType useBufferTypes;
     InitHdiParam(useBufferTypes, verInfo_);

@@ -46,6 +46,7 @@ typedef struct _GstVdecBase GstVdecBase;
 typedef struct _GstVdecBaseClass GstVdecBaseClass;
 typedef struct _GstVdecBasePort GstVdecBasePort;
 typedef struct _DisplayRect DisplayRect;
+typedef struct _ParseMeta ParseMeta;
 
 struct _GstVdecBasePort {
     gint frame_rate;
@@ -72,6 +73,13 @@ struct _DisplayRect {
     gint height;
 };
 
+struct _ParseMeta {
+    GstMapInfo &src_info;
+    GstMapInfo &dts_info;
+    bool is_codec_data;
+    guint &copy_len;
+};
+
 struct _GstVdecBase {
     GstVideoDecoder parent;
     std::shared_ptr<OHOS::Media::IGstCodec> decoder;
@@ -81,6 +89,7 @@ struct _GstVdecBase {
     GMutex lock;
     gboolean flushing;
     gboolean prepared;
+    gboolean idrframe;
     GstVideoCodecState *input_state;
     GstVideoCodecState *output_state;
     std::vector<GstVideoFormat> formats;
@@ -111,13 +120,20 @@ struct _GstVdecBase {
     DisplayRect rect;
     gboolean pre_init_pool;
     gboolean performance_mode;
-    gboolean enable_slice_cat;
+    gboolean player_scene;
     gboolean resolution_changed;
+    GMutex format_changed_lock;
+    gboolean unsupport_format_changed;
     GstCaps *sink_caps;
     gboolean input_need_ashmem;
     gboolean has_set_format;
     gboolean player_mode;
+    gboolean metadata_mode;
     gboolean is_support_swap_width_height;
+    gboolean codec_data_update;
+    gboolean is_free_codec_buffers;
+    gboolean is_eos_state;
+    GstBuffer *codec_data;
 };
 
 struct _GstVdecBaseClass {
@@ -128,7 +144,8 @@ struct _GstVdecBaseClass {
     void (*flush_cache_slice_buffer)(GstVdecBase *self);
     gboolean (*input_need_copy)();
     gboolean (*support_swap_width_height)(GstElementClass *kclass);
-    GMutex vdec_mutex;
+    gboolean (*parser)(GstVdecBase *base, ParseMeta &meta);
+    gboolean (*bypass_frame)(GstVdecBase *base, GstVideoCodecFrame *frame);
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);

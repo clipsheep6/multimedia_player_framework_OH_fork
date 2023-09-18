@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef AV_PLAYER_CALLBACK
-#define AV_PLAYER_CALLBACK
+#ifndef AV_PLAYER_CALLBACK_H
+#define AV_PLAYER_CALLBACK_H
 
 #include <map>
 #include <mutex>
 #include "player.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Media {
@@ -32,6 +33,7 @@ public:
     virtual void NotifyPosition(int32_t position) = 0;
     virtual void NotifyState(PlayerStates state) = 0;
     virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
+    virtual void NotifyIsLiveStream() = 0;
 };
 
 class AVPlayerCallback : public PlayerCallback {
@@ -52,20 +54,24 @@ public:
     void Release();
 
 private:
-    void OnStateChangeCb(PlayerStates state, const Format &infoBody);
-    void OnVolumeChangeCb(const Format &infoBody);
-    void OnSeekDoneCb(int32_t currentPositon) const;
-    void OnSpeedDoneCb(int32_t speedMode) const;
-    void OnBitRateDoneCb(int32_t bitRate) const;
-    void OnPositionUpdateCb(int32_t position) const;
-    void OnDurationUpdateCb(int32_t duration) const;
-    void OnBufferingUpdateCb(const Format &infoBody) const;
-    void OnMessageCb(int32_t extra, const Format &infoBody) const;
     void OnStartRenderFrameCb() const;
-    void OnVideoSizeChangedCb(const Format &infoBody);
-    void OnAudioInterruptCb(const Format &infoBody) const;
-    void OnBitRateCollectedCb(const Format &infoBody) const;
-    void OnEosCb(int32_t isLooping) const;
+    void OnStateChangeCb(const int32_t extra, const Format &infoBody);
+    void OnVolumeChangeCb(const int32_t extra, const Format &infoBody);
+    void OnSeekDoneCb(const int32_t extra, const Format &infoBody);
+    void OnSpeedDoneCb(const int32_t extra, const Format &infoBody);
+    void OnBitRateDoneCb(const int32_t extra, const Format &infoBody);
+    void OnPositionUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnDurationUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnBufferingUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnSubtitleUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnMessageCb(const int32_t extra, const Format &infoBody);
+    void OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody);
+    void OnAudioInterruptCb(const int32_t extra, const Format &infoBody);
+    void OnBitRateCollectedCb(const int32_t extra, const Format &infoBody);
+    void OnEosCb(const int32_t extra, const Format &infoBody);
+    void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
+    void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
+    void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
@@ -73,7 +79,9 @@ private:
     AVPlayerNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
     PlayerStates state_ = PLAYER_IDLE;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    std::map<uint32_t, void(AVPlayerCallback::*)(const int32_t extra, const Format &infoBody)> onInfoFuncs_;
 };
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_CALLBACK_NAPI_H_
+#endif // AV_PLAYER_CALLBACK_H

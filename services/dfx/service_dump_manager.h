@@ -18,6 +18,7 @@
 #include <map>
 #include <unordered_set>
 #include <string>
+#include <mutex>
 
 namespace OHOS {
 namespace Media {
@@ -26,11 +27,13 @@ class __attribute__((visibility("default"))) ServiceDumpManager {
 public:
     static ServiceDumpManager &GetInstance();
     void RegisterDfxDumper(std::u16string key, DfxDumper dump);
+    void UnregisterDfxDumper();
     int32_t Dump(int32_t fd, std::unordered_set<std::u16string> args);
 private:
     ServiceDumpManager() = default;
     ~ServiceDumpManager() = default;
     std::map<std::u16string, DfxDumper> dfxDumper_;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS

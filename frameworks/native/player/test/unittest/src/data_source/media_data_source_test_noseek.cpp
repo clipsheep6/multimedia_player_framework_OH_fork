@@ -73,28 +73,13 @@ void MediaDataSourceTestNoSeek::Reset()
     (void)fseek(fd_, 0, SEEK_SET);
 }
 
-int32_t MediaDataSourceTestNoSeek::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
+    MEDIA_LOGD("ReadAt in");
     (void)pos;
-    (void)length;
-    (void)mem;
-    return 0;
-}
-
-int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     size_t readRet = 0;
-    if (fixedSize_ > 0) {
-        length = static_cast<uint32_t>(fixedSize_);
-    }
-    CHECK_AND_RETURN_RET_LOG(mem->GetSize() > 0, SOURCE_ERROR_IO, "AVSHMEM length should large than 0");
-    length = std::min(length, static_cast<uint32_t>(mem->GetSize()));
     int32_t realLen = static_cast<int32_t>(length);
-    if (pos_ >= size_) {
-        MEDIA_LOGI("Is eos");
-        return SOURCE_ERROR_EOF;
-    }
     if (mem->GetBase() == nullptr) {
         MEDIA_LOGI("Is null mem");
         return SOURCE_ERROR_IO;
@@ -105,18 +90,33 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr
         return SOURCE_ERROR_IO;
     }
     if (readRet == 0) {
-        realLen = static_cast<int32_t>(size_ - pos_);
+        realLen = static_cast<int32_t>(fixedSize_ - pos_);
     }
     MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
+    if (realLen == 0) {
+        return SOURCE_ERROR_EOF;
+    }
     pos_ += realLen;
     return realLen;
 }
 
+int32_t MediaDataSourceTestNoSeek::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
+int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
 int32_t MediaDataSourceTestNoSeek::GetSize(int64_t &size)
 {
-    (void)fseek(fd_, 0, SEEK_END);
-    size_ = static_cast<int64_t>(ftell(fd_));
-    (void)fseek(fd_, 0, SEEK_SET);
     size = -1;
     return MSERR_OK;
 }

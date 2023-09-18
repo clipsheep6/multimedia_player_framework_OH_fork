@@ -45,8 +45,16 @@ public:
 
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    virtual int32_t AddSubSource(const std::string &url)
+    {
+        (void)url;
+        return 0;
+    }
     virtual int32_t Play() = 0;
-    virtual int32_t Prepare() = 0;
+    virtual int32_t Prepare()
+    {
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -56,6 +64,11 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+    {
+        (void)subtitleTrack;
+        return 0;
+    }
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
@@ -86,6 +99,43 @@ public:
     virtual int32_t SetAudioInterruptMode(const int32_t interruptMode)
     {
         (void)interruptMode;
+        return 0;
+    }
+    
+    virtual int32_t SelectTrack(int32_t index)
+    {
+        (void)index;
+        return 0;
+    }
+    virtual int32_t DeselectTrack(int32_t index)
+    {
+        (void)index;
+        return 0;
+    }
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index)
+    {
+        (void)trackType;
+        (void)index;
+        return 0;
+    }
+    virtual int32_t SetAudioEffectMode(const int32_t effectMode)
+    {
+        (void)effectMode;
+        return 0;
+    }
+    virtual int32_t GetHEBCMode()
+    {
+        return 0;
+    }
+    virtual int32_t HandleCodecBuffers(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+    virtual int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+    {
+        (void)mSeconds;
+        (void)mode;
         return 0;
     }
 };

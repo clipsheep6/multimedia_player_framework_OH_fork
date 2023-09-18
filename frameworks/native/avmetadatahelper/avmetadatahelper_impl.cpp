@@ -115,15 +115,14 @@ static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMe
     MEDIA_LOGD("width: %{public}d, stride : %{public}d, height: %{public}d, size: %{public}d, format: %{public}d",
         frame->width_, frame->stride_, frame->height_, frame->size_, color);
 
-    ImageInfo info;
-    info.size.width = frame->width_;
-    info.size.height = frame->height_;
-    info.pixelFormat = color;
-    info.colorSpace = ColorSpace::SRGB;
+    InitializationOptions opts;
+    opts.size.width = frame->width_;
+    opts.size.height = frame->height_;
+    opts.pixelFormat = color;
+    opts.editable = true;
+    std::shared_ptr<PixelMap> pixelMap = PixelMap::Create(opts);
 
-    std::shared_ptr<PixelMap> pixelMap = std::make_shared<PixelMap>();
-    uint32_t ret = pixelMap->SetImageInfo(info);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Set image info failed");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap create failed");
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetByteCount() <= frame->size_, nullptr, "Size inconsistent !");
 
     PixelMapMemHolder *holder = CreatePixelMapData(mem, *frame);

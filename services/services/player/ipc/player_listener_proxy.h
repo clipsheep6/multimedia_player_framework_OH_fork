@@ -44,6 +44,7 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 private:
+    int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerListenerProxy> delegator_;
 };
 } // namespace Media
