@@ -1,0 +1,9 @@
+{
+  "src": [
+    "pages/ListPage",
+    "soundpool/SoundPool_maxStream1",
+    "soundpool/SoundPool_maxStream3",
+    "soundpool/SoundPoolCallback_maxStream1",
+    "soundpool/SoundPoolCallback_maxStream3"
+  ]
+}
