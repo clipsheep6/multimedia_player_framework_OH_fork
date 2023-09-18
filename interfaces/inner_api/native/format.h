@@ -285,6 +285,15 @@ public:
      */
     std::string Stringify() const;
 
+    /**
+     * @brief get all format keys.
+     *
+     * @return Returns a vector<string>.
+     * @since 1.0
+     * @version 1.0
+     */
+    std::vector<std::string> GetFormatKeys() const;
+
 private:
     FormatDataMap formatMap_;
     FormatVectorMap formatVecMap_;

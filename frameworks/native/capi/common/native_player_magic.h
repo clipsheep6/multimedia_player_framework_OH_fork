@@ -18,10 +18,17 @@
 
 #include <refbase.h>
 #include "screen_capture.h"
+#include "player.h"
 
 struct OH_AVScreenCapture : public OHOS::RefBase {
     OH_AVScreenCapture() = default;
     virtual ~OH_AVScreenCapture() = default;
+};
+
+struct OH_AVPlayer : public OHOS::RefBase {
+    OH_AVPlayer() = default;
+    virtual ~OH_AVPlayer() = default;
+    OHOS::Media::PlayerStates state_ = OHOS::Media::PLAYER_IDLE;
 };
 
 #endif // NATIVE_SCREEN_CAPTURE_MAGIC_H

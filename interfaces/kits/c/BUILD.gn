@@ -17,8 +17,10 @@ import("//foundation/multimedia/player_framework/config.gni")
 group("capi_packages") {
   deps = []
   if (multimedia_player_framework_support_capi) {
-    deps +=
-        [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
+    deps += [
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avplayer",
+    ]
   }
 }
 
@@ -29,6 +31,8 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
+    "//foundation/multimedia/av_codec/interfaces/kits/c",
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
   ]
 
   cflags = [
@@ -78,6 +82,36 @@ ohos_shared_library("native_avscreen_capture") {
     "graphic_2d:surface",
     "hilog:libhilog",
     "window_manager:libdm",
+  ]
+  output_extension = "so"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_shared_library("native_avplayer") {
+  install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../cfi_blocklist.txt"
+  }
+
+  sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/player/native_avplayer.cpp" ]
+
+  configs = [ ":media_capi_config" ]
+
+  public_configs = [ ":media_capi_public_config" ]
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "window_manager:libdm",
+    "av_codec:native_media_core",
   ]
   output_extension = "so"
   subsystem_name = "multimedia"

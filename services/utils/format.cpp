@@ -342,5 +342,15 @@ std::string Format::Stringify() const
     }
     return outString;
 }
+
+std::vector<std::string> Format::GetFormatKeys() const
+{
+    std::vector<std::string> outString;
+    for (auto iter = formatMap_.begin(); iter != formatMap_.end(); iter++) {
+        outString.push_back(iter->first);
+    }
+
+    return outString;
+}
 } // namespace Media
 } // namespace OHOS
