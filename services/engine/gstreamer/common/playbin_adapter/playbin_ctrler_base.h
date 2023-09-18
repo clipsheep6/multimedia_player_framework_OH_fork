@@ -21,6 +21,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <future>
 #include <gst/gst.h>
 #include "nocopyable.h"
 #include "i_playbin_ctrler.h"
@@ -197,6 +198,8 @@ private:
 
     bool isErrorHappened_ = false;
     std::thread audioSeekThread_;
+    std::promise<gboolean> seekPromise_;
+    std::future<gboolean> seekFuture_;
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
