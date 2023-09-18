@@ -25,6 +25,8 @@ ohos_static_library("media_engine_dfx") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

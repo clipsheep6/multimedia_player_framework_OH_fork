@@ -72,6 +72,8 @@ ohos_shared_library("media_service_utils") {
   defines += player_framework_defines
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

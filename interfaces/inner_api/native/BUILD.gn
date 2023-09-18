@@ -62,8 +62,14 @@ config("media_client_base_config") {
   ]
 
   cflags = [
+<<<<<<< HEAD
+    # "-fsanitize=cfi",
+    # "-flto",
+    # "-fvisibility=default",
+=======
     "-std=c++17",
     "-fno-rtti",
+>>>>>>> cd880bec4ee0e8c7d1f701fb79c2ab3bb988af72
     "-fno-exceptions",
     "-Wall",
     "-fno-common",

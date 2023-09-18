@@ -290,9 +290,8 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     if (videoSink_ == nullptr) {
         g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
     }
-    if (audioSeekThread_.joinable()) {
-        audioSeekThread_.join();
-    }
+    gboolean ret = seekFuture_.get();
+    MEDIA_LOGI("audio seek thread ret is %{public}d", ret);
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     (void)currState->Stop();
 
@@ -678,13 +677,17 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
         CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
     } else {
-        audioSeekThread_ = std::thread([this, event]() {
+        seekFuture_ = seekPromise_.get_future();
+        audioSeekThread_ = std::thread([this, event](std::promise<gboolean> &p) {
             pthread_setname_np(pthread_self(), "AudioAsyncSeek");
             MEDIA_LOGI("audio start async seek");
+            p.set_value(FALSE);
             if (playbin_ != nullptr) {
-                (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+                gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+                p.set_value(ret);
+                MEDIA_LOGI("audio async end, ret is %{public}d", ret);
             }
-        });
+        }, std::ref(seekPromise_));
         audioSeekThread_.detach();
     }
 
