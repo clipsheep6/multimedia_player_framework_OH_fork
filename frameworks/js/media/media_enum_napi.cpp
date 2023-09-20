@@ -356,19 +356,19 @@ napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)
                 enumItemVec[index].enumName.data(), value[index]);
         }
 
-        auto constructor = [](napi_env env, napi_callback_info info) {
+        auto napiConstructor = [](napi_env env, napi_callback_info info) {
             napi_value jsThis = nullptr;
             napi_get_cb_info(env, info, nullptr, nullptr, &jsThis, nullptr);
             return jsThis;
         };
 
         napi_value result = nullptr;
-        napi_status status = napi_define_class(env, enumClassName.data(), NAPI_AUTO_LENGTH, constructor,
+        napi_status napiStatus = napi_define_class(env, enumClassName.data(), NAPI_AUTO_LENGTH, napiConstructor,
             nullptr, property.size(), property.data(), &result);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define enum");
+        CHECK_AND_RETURN_RET_LOG(napiStatus == napi_ok, nullptr, "Failed to define enum");
 
-        status = napi_set_named_property(env, exports, enumClassName.data(), result);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set result");
+        napiStatus = napi_set_named_property(env, exports, enumClassName.data(), result);
+        CHECK_AND_RETURN_RET_LOG(napiStatus == napi_ok, nullptr, "Failed to set result");
     }
     return exports;
 }

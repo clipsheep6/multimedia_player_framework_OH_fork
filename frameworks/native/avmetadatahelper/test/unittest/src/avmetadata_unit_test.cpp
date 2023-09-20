@@ -95,27 +95,10 @@ void AVMetadataUnitTest::GetThumbnail(const std::string uri)
  */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0100, TestSize.Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2022-05-29 22:10:43"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2022-05-29 22:10:43";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("H264_AAC.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -125,27 +108,10 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0100, TestSize.Level0)
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0200, Function | MediumTest | Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2022"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2022";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/H264_MP3.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -155,27 +121,10 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0200, Function | MediumT
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0300, Function | MediumTest | Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2012-06-30 22:46:43"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2012-06-30 22:46:43";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/MPEG2_AAC.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -185,27 +134,10 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0300, Function | MediumT
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0400, Function | MediumTest | Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2022-05-19"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2022-05-19";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/MPEG2_MP3.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -215,27 +147,10 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0400, Function | MediumT
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0500, Function | MediumTest | Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2022-05-29 22:46:43"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2022-05-29 22:46:43";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/MPEG4_AAC.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -245,27 +160,10 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0500, Function | MediumT
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0600, Function | MediumTest | Level0)
 {
-    std::unordered_map<int32_t, std::string> expectMeta = {
-        {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, "media_test"},
-        {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
-        {AV_KEY_COMPOSER, "测试"},
-        {AV_KEY_DURATION, "10030"},
-        {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
-        {AV_KEY_HAS_VIDEO, "yes"},
-        {AV_KEY_MIME_TYPE, "video/mp4"},
-        {AV_KEY_NUM_TRACKS, "2"},
-        {AV_KEY_SAMPLE_RATE, "44100"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, "480"},
-        {AV_KEY_VIDEO_WIDTH, "720"},
-        {AV_KEY_DATE_TIME, "2022-05"},
-    };
+    EXPECT_META[AV_KEY_DATE_TIME] = "2022-05";
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/MPEG4_MP3.mp4");
-    CheckMeta(uri, expectMeta);
+    CheckMeta(uri, EXPECT_META);
 }
 
 /**
@@ -396,21 +294,21 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0100, Function | MediumT
 {
     std::unordered_map<int32_t, std::string> expectMeta = {
         {AV_KEY_ALBUM, "media"},
-        {AV_KEY_ALBUM_ARTIST, ""},
         {AV_KEY_ARTIST, "元数据测试"},
-        {AV_KEY_AUTHOR, ""},
+        {AV_KEY_ALBUM_ARTIST, ""},
         {AV_KEY_COMPOSER, ""},
-        {AV_KEY_DURATION, "5460"},
+        {AV_KEY_AUTHOR, ""},
         {AV_KEY_GENRE, "Lyrical"},
-        {AV_KEY_HAS_AUDIO, "yes"},
+        {AV_KEY_DURATION, "5460"},
         {AV_KEY_HAS_VIDEO, ""},
+        {AV_KEY_HAS_AUDIO, "yes"},
         {AV_KEY_MIME_TYPE, "audio/wav"},
-        {AV_KEY_NUM_TRACKS, "1"},
         {AV_KEY_SAMPLE_RATE, "48000"},
-        {AV_KEY_TITLE, "test"},
-        {AV_KEY_VIDEO_HEIGHT, ""},
-        {AV_KEY_VIDEO_WIDTH, ""},
+        {AV_KEY_NUM_TRACKS, "1"},
         {AV_KEY_DATE_TIME, "2022-05-29 22:46:43"},
+        {AV_KEY_TITLE, "test"},
+        {AV_KEY_VIDEO_WIDTH, ""},
+        {AV_KEY_VIDEO_HEIGHT, ""},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("/pcm_s16le_48000Hz_768kbs_mono.wav");

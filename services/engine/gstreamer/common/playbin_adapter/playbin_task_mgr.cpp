@@ -148,7 +148,7 @@ void PlayBinTaskMgr::ClearAllTask()
 int32_t PlayBinTaskMgr::Reset()
 {
     MEDIA_LOGD("enter");
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> resetLock(mutex_);
 
     currTwoPhaseTask_ = nullptr;
     currTwoPhaseType_ = PlayBinTaskType::PREEMPT;
@@ -156,13 +156,13 @@ int32_t PlayBinTaskMgr::Reset()
     isInited_ = false;
 
     if (taskThread_ != nullptr) {
-        std::unique_ptr<TaskQueue> tmp;
-        std::swap(tmp, taskThread_);
+        std::unique_ptr<TaskQueue> temp;
+        std::swap(temp, taskThread_);
 
-        lock.unlock();
-        int32_t ret = tmp->Stop();
+        resetLock.unlock();
+        int32_t ret = temp->Stop();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "stop task thread failed");
-        lock.lock();
+        resetLock.lock();
     }
 
     MEDIA_LOGD("exit");

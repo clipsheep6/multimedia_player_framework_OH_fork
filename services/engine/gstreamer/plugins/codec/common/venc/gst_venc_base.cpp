@@ -590,36 +590,38 @@ static gboolean gst_venc_base_prepare(GstVencBase *self)
 
 static void gst_venc_debug_input_time(GstVencBase *self)
 {
+    auto time = g_get_monotonic_time();
     if (self->input.first_frame_time == 0) {
-        self->input.first_frame_time = g_get_monotonic_time();
+        self->input.first_frame_time = time;
     } else {
-        self->input.last_frame_time = g_get_monotonic_time();
+        self->input.last_frame_time = time;
     }
     self->input.frame_cnt++;
-    gint64 time_interval = self->input.last_frame_time - self->input.first_frame_time;
-    gint64 frame_cnt = self->input.frame_cnt - 1;
-    if (frame_cnt > 0) {
-        gint64 time_every_frame = time_interval / frame_cnt;
+    gint64 interval = self->input.last_frame_time - self->input.first_frame_time;
+    gint64 cnt = self->input.frame_cnt - 1;
+    if (cnt > 0) {
+        gint64 time_every_frame = interval / cnt;
         GST_DEBUG_OBJECT(self, "Encoder Input Time interval %" G_GINT64_FORMAT " us, frame count %" G_GINT64_FORMAT
-        " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", time_interval, self->input.frame_cnt,
+        " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", interval, self->input.frame_cnt,
         time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND) / static_cast<double>(time_every_frame));
     }
 }
 
 static void gst_venc_debug_output_time(GstVencBase *self)
 {
+    auto time = g_get_monotonic_time();
     if (self->output.first_frame_time == 0) {
-        self->output.first_frame_time = g_get_monotonic_time();
+        self->output.first_frame_time = time;
     } else {
-        self->output.last_frame_time = g_get_monotonic_time();
+        self->output.last_frame_time = time;
     }
     self->output.frame_cnt++;
-    gint64 time_interval = self->output.last_frame_time - self->output.first_frame_time;
-    gint64 frame_cnt = self->output.frame_cnt - 1;
-    if (frame_cnt > 0) {
-        gint64 time_every_frame = time_interval / frame_cnt;
+    gint64 interval = self->output.last_frame_time - self->output.first_frame_time;
+    gint64 cnt = self->output.frame_cnt - 1;
+    if (cnt > 0) {
+        gint64 time_every_frame = interval / cnt;
         GST_DEBUG_OBJECT(self, "Encoder Output Time interval %" G_GINT64_FORMAT " us, frame count %" G_GINT64_FORMAT
-        " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", time_interval, self->output.frame_cnt,
+        " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", interval, self->output.frame_cnt,
         time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND) / static_cast<double>(time_every_frame));
     }
 }

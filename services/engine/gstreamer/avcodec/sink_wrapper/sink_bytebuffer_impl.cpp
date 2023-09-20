@@ -74,19 +74,19 @@ int32_t SinkBytebufferImpl::Flush()
     return MSERR_OK;
 }
 
-std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t index)
+std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t idx)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(index < bufferList_.size(), nullptr);
-    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
-    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
+    CHECK_AND_RETURN_RET(idx < bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[idx] != nullptr, nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[idx]->owner_ == BufferWrapper::SERVER, nullptr);
 
-    GstMemory *memory = gst_buffer_peek_memory(bufferList_[index]->gstBuffer_, 0);
-    CHECK_AND_RETURN_RET(memory != nullptr, nullptr);
-    CHECK_AND_RETURN_RET(gst_is_shmem_memory(memory), nullptr);
+    GstMemory *outMemory = gst_buffer_peek_memory(bufferList_[idx]->gstBuffer_, 0);
+    CHECK_AND_RETURN_RET(outMemory != nullptr, nullptr);
+    CHECK_AND_RETURN_RET(gst_is_shmem_memory(outMemory), nullptr);
 
-    GstShMemMemory *shmem = reinterpret_cast<GstShMemMemory *>(memory);
-    bufferList_[index]->owner_ = BufferWrapper::APP;
+    GstShMemMemory *shmem = reinterpret_cast<GstShMemMemory *>(outMemory);
+    bufferList_[idx]->owner_ = BufferWrapper::APP;
     return shmem->mem;
 }
 
@@ -206,23 +206,23 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     return MSERR_OK;
 }
 
-int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> mem)
+int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> avSharedMem)
 {
-    CHECK_AND_RETURN_RET(mem != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(avSharedMem != nullptr, MSERR_UNKNOWN);
 
     index = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
-        if ((*it) != nullptr && (*it)->mem_ == mem.get()) {
+        if ((*it) != nullptr && (*it)->mem_ == avSharedMem.get()) {
             break;
         }
         index++;
     }
 
     if (index == bufferList_.size()) {
-        auto bufWrap = std::make_shared<BufferWrapper>(BufferWrapper::SERVER);
-        CHECK_AND_RETURN_RET(bufWrap != nullptr, MSERR_NO_MEMORY);
-        bufWrap->mem_ = mem.get();
-        bufferList_.push_back(bufWrap);
+        auto avbufWrap = std::make_shared<BufferWrapper>(BufferWrapper::SERVER);
+        CHECK_AND_RETURN_RET(avbufWrap != nullptr, MSERR_NO_MEMORY);
+        avbufWrap->mem_ = avSharedMem.get();
+        bufferList_.push_back(avbufWrap);
     }
 
     return MSERR_OK;

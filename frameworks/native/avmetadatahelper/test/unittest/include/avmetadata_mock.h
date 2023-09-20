@@ -44,6 +44,25 @@ static const std::unordered_map<int32_t, std::string_view> AVMETA_KEY_TO_STRING_
     AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_VIDEO_HEIGHT),
     AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_VIDEO_WIDTH),
 };
+
+static std::unordered_map<int32_t, std::string> EXPECT_META = {
+    {AV_KEY_ALBUM, "media"},
+    {AV_KEY_ALBUM_ARTIST, "media_test"},
+    {AV_KEY_ARTIST, "元数据测试"},
+    {AV_KEY_AUTHOR, ""},
+    {AV_KEY_COMPOSER, "测试"},
+    {AV_KEY_DURATION, "10030"},
+    {AV_KEY_GENRE, "Lyrical"},
+    {AV_KEY_HAS_AUDIO, "yes"},
+    {AV_KEY_HAS_VIDEO, "yes"},
+    {AV_KEY_MIME_TYPE, "video/mp4"},
+    {AV_KEY_NUM_TRACKS, "2"},
+    {AV_KEY_SAMPLE_RATE, "44100"},
+    {AV_KEY_TITLE, "test"},
+    {AV_KEY_VIDEO_HEIGHT, "480"},
+    {AV_KEY_VIDEO_WIDTH, "720"},
+    {AV_KEY_DATE_TIME, "2022"},
+};
 } // namespace AVMetadataTestParam
 
 static const int RGB888_PIXEL_BYTES = 3;

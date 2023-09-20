@@ -1799,15 +1799,15 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
 {
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
+    sptr<Surface> vSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, vSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(vSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
         char str[100]; // 100: str len
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
@@ -1829,7 +1829,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -1857,16 +1857,17 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
-        if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
+    std::vector<std::string> vec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
+    for (uint32_t i = 0; i < vec.size(); i++) {
+        if (vec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
-        ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-        EXPECT_EQ(MSERR_OK, player_->Prepare());
-        EXPECT_EQ(MSERR_OK, player_->Play());
-        EXPECT_EQ(MSERR_OK, player_->Pause());
+        const auto ret = MSERR_OK;
+        ASSERT_EQ(ret, player_->SetSource(vec[i]));
+        EXPECT_EQ(ret, player_->SetVideoSurface(videoSurface));
+        EXPECT_EQ(ret, player_->Prepare());
+        EXPECT_EQ(ret, player_->Play());
+        EXPECT_EQ(ret, player_->Pause());
         char str[100]; // 100: str len
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
@@ -1906,20 +1907,21 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
-        ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
-        EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-        EXPECT_EQ(MSERR_OK, player_->Prepare());
-        EXPECT_EQ(MSERR_OK, player_->Play());
-        EXPECT_EQ(MSERR_OK, player_->Pause());
+        const auto result = MSERR_OK;
+        ASSERT_EQ(result, player_->SetSource(srcVec[i]));
+        EXPECT_EQ(result, player_->SetVideoSurface(videoSurface));
+        EXPECT_EQ(result, player_->Prepare());
+        EXPECT_EQ(result, player_->Play());
+        EXPECT_EQ(result, player_->Pause());
         char str[100]; // 100: str len
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 1909 -a \"-t 3\"");
-        EXPECT_EQ(MSERR_OK, player_->Reset());
+        EXPECT_EQ(result, player_->Reset());
         system("param set sys.media.player.resource.type Local");
     }
 }
@@ -1934,7 +1936,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -1963,7 +1965,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     std::vector<PlaybackRateMode> speedMode = {SPEED_FORWARD_2_00_X, SPEED_FORWARD_1_25_X};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -1992,7 +1994,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2024,7 +2026,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2053,7 +2055,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2081,7 +2083,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2109,7 +2111,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2137,7 +2139,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
@@ -2166,12 +2168,12 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
-        if (srcVec[i] == MEDIA_ROOT + "H264_AAC.mp4") {
+    std::vector<std::string> srcVector = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
+    for (uint32_t i = 0; i < srcVector.size(); i++) {
+        if (srcVector[i] == MEDIA_ROOT + "H264_AAC.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }
-        ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
+        ASSERT_EQ(MSERR_OK, player_->SetSource(srcVector[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
         EXPECT_EQ(MSERR_OK, player_->Prepare());
         char str[100]; // 100: str len
@@ -2196,7 +2198,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
-    for (int32_t i = 0; i < srcVec.size(); i++) {
+    for (uint32_t i = 0; i < srcVec.size(); i++) {
         if (srcVec[i] == MEDIA_ROOT + "H264_AAC.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }

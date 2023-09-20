@@ -33,7 +33,7 @@ public:
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;
-    std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index) override;
+    std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t idx) override;
     int32_t ReleaseOutputBuffer(uint32_t index, bool render = false) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
     bool IsEos() override;
@@ -43,7 +43,7 @@ private:
     static GstFlowReturn NewSampleCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData);
 
     int32_t HandleNewSampleCb(GstBuffer *buffer);
-    int32_t FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> mem);
+    int32_t FindBufferIndex(uint32_t &index, std::shared_ptr<AVSharedMemory> avSharedmem);
     int32_t AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, uint32_t rawFrameSize);
 
     std::mutex mutex_;

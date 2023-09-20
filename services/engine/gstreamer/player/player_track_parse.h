@@ -65,21 +65,21 @@ private:
     int32_t GetInputSelectPadIndex(GstPad *pad);
     void ParseSubtitlePadCaps(const GstElement *element, GstPad *pad, int32_t index, Format &innerMeta);
 
-    inline void AddSignalIds(GstElement *element, gulong signalId)
+    inline void AddSignalIds(GstElement *elem, gulong signalId)
     {
-        if (signalIds_.find(element) == signalIds_.end()) {
-            signalIds_[element] = {signalId};
+        if (signalIds_.find(elem) == signalIds_.end()) {
+            signalIds_[elem] = {signalId};
         } else {
-            signalIds_[element].push_back(signalId);
+            signalIds_[elem].push_back(signalId);
         }
     }
-    inline void RemoveSignalIds(GstElement *element)
+    inline void RemoveSignalIds(GstElement *elem)
     {
-        if (signalIds_.find(element) != signalIds_.end()) {
-            for (auto id : signalIds_[element]) {
-                g_signal_handler_disconnect(element, id);
+        if (signalIds_.find(elem) != signalIds_.end()) {
+            for (auto id : signalIds_[elem]) {
+                g_signal_handler_disconnect(elem, id);
             }
-            signalIds_.erase(element);
+            signalIds_.erase(elem);
         }
     }
     std::map<GstElement *, std::vector<gulong>> signalIds_;

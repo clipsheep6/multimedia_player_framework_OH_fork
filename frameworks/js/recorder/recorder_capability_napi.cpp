@@ -161,39 +161,39 @@ napi_value RecorderCapabilityNapi::GetVideoRecorderCaps(napi_env env, napi_callb
     return result;
 }
 
-napi_value RecorderCapabilityNapi::GetVideoRecorderProfile(napi_env env, napi_callback_info info)
+napi_value RecorderCapabilityNapi::GetVideoRecorderProfile(napi_env napiEnv, napi_callback_info info)
 {
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
+    napi_value ret = nullptr;
+    napi_get_undefined(napiEnv, &ret);
 
-    auto asyncCtx = std::make_unique<RecorderCapabilityAsyncContext>(env);
+    auto asyncCtx = std::make_unique<RecorderCapabilityAsyncContext>(napiEnv);
 
     napi_value jsThis = nullptr;
     napi_value args[3] = {nullptr};
     size_t argCount = 3;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    napi_status status = napi_get_cb_info(napiEnv, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
     napi_valuetype valueType = napi_undefined;
-    if ((args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) &&
-        (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number)) {
-        NAPI_CALL(env, napi_get_value_int32(env, args[0], &asyncCtx->sourceId));
-        NAPI_CALL(env, napi_get_value_int32(env, args[1], &asyncCtx->qualityLevel));
+    if ((args[0] != nullptr && napi_typeof(napiEnv, args[0], &valueType) == napi_ok && valueType == napi_number) &&
+        (args[1] != nullptr && napi_typeof(napiEnv, args[1], &valueType) == napi_ok && valueType == napi_number)) {
+        NAPI_CALL(napiEnv, napi_get_value_int32(napiEnv, args[0], &asyncCtx->sourceId));
+        NAPI_CALL(napiEnv, napi_get_value_int32(napiEnv, args[1], &asyncCtx->qualityLevel));
     } else {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
     }
 
-    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[2]);  // 2 : two params
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->callbackRef = CommonNapi::CreateReference(napiEnv, args[2]);  // 2 : two params
+    asyncCtx->deferred = CommonNapi::CreatePromise(napiEnv, asyncCtx->callbackRef, ret);
 
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    (void)napi_unwrap(napiEnv, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "GetVideoRecorderProfile", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void* data) {
+    napi_create_string_utf8(napiEnv, "GetVideoRecorderProfile", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(napiEnv, napi_create_async_work(napiEnv, nullptr, resource,
+        [](napi_env napiEnv, void* data) {
             auto asyncCtx = reinterpret_cast<RecorderCapabilityAsyncContext *>(data);
             if (asyncCtx == nullptr) {
                 MEDIA_LOGE("Failed, asyncCtx is nullptr");
@@ -208,10 +208,10 @@ napi_value RecorderCapabilityNapi::GetVideoRecorderProfile(napi_env env, napi_ca
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(napiEnv, napi_queue_async_work(napiEnv, asyncCtx->work));
     asyncCtx.release();
 
-    return result;
+    return ret;
 }
 
 napi_value RecorderCapabilityNapi::HasVideoRecorderProfile(napi_env env, napi_callback_info info)

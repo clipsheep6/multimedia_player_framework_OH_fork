@@ -1847,31 +1847,31 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::selectTrack");
     MEDIA_LOGI("JsSelectTrack In");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
+    napi_value ret = nullptr;
+    napi_get_undefined(env, &ret);
 
     size_t argCount = 1; // 1 prarm, args[0]:index
     napi_value args[1] = { nullptr };
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, ret, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
-        return result;
+        return ret;
     }
 
     int32_t index = -1;
     napi_status status = napi_get_value_int32(env, args[0], &index);
     if (status != napi_ok || index < 0) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
-        return result;
+        return ret;
     }
 
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
-        return result;
+        return ret;
     }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index]() {
@@ -1882,29 +1882,29 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
         MEDIA_LOGI("selectTrack Task end");
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    return result;
+    return ret;
 }
 
-napi_value AVPlayerNapi::JsDeselectTrack(napi_env env, napi_callback_info info)
+napi_value AVPlayerNapi::JsDeselectTrack(napi_env napiEnv, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::deselectTrack");
     MEDIA_LOGI("deselectTrack In");
     napi_value result = nullptr;
-    napi_get_undefined(env, &result);
+    napi_get_undefined(napiEnv, &result);
 
     size_t argCount = 1;     // 1 prarm, args[0]:index
     napi_value args[1] = { nullptr };
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(napiEnv, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (args[0] == nullptr || napi_typeof(napiEnv, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
         return result;
     }
 
     int32_t index = -1;
-    napi_status status = napi_get_value_int32(env, args[0], &index);
+    napi_status status = napi_get_value_int32(napiEnv, args[0], &index);
     if (status != napi_ok || index < 0) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
         return result;
