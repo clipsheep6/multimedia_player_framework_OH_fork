@@ -15,12 +15,11 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
-module_output_path = "player_framework/screen_capture"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("ScreenCaptureNdkAcquireVideoBufferFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = "$MODULE_OUTPUT_PATH/screen_capture"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturendkacquirevideobuffer_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 

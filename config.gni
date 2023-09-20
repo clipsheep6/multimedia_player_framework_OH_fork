@@ -129,3 +129,6 @@ if (multimedia_player_framework_support_jssoundpool) {
 # Config path
 MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
 MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
+
+# Fuzz test output path
+MODULE_OUTPUT_PATH = "player_framework/player_framework"
