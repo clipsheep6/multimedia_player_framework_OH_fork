@@ -49,6 +49,8 @@ public:
         const std::string &taskName, const std::shared_ptr<ITaskHandler> &cancelTask = nullptr);
     int32_t SeekTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
         const std::string &taskName, int32_t seekMode, int32_t seekTime);
+    int32_t SpeedTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
+        const std::string &taskName, int32_t speedMode);
     // only take effect when it is called at the task thread.
     int32_t MarkTaskDone(const std::string &taskName);
     void ClearAllTask();
@@ -66,6 +68,7 @@ private:
         std::string taskName;
         int32_t seekMode_ = -1;
         int32_t seekTime_ = -1;
+        int32_t speedMode_ = -1;
     };
 
     std::unique_ptr<TaskQueue> taskThread_;

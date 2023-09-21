@@ -354,7 +354,7 @@ int32_t PlayerServer::HandlePrepare()
             taskMgr_.MarkTaskDone("interrupted speed done");
         });
 
-        (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
+        (void)taskMgr_.SpeedTask(rateTask, cancelTask, "prepare-speed", config_.speedMode);
     }
 
     if (config_.effectMode != OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT) {
@@ -862,7 +862,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         taskMgr_.MarkTaskDone("interrupted speed done");
     });
 
-    int ret = taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
+    int ret = taskMgr_.SpeedTask(rateTask, cancelTask, "speed", config_.speedMode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed failed");
 
     return MSERR_OK;

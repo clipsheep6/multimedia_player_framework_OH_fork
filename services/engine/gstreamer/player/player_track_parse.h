@@ -102,6 +102,7 @@ private:
 
     bool findTrackInfo_ = false;
     bool updateTrackInfo_ = false;
+    std::atomic<bool> isStopping_ = false;
     std::set<GstPad *> parsePadSet_;
     std::map<GstElement *, InputSelectInfo> inputSelectMap_;
     std::vector<DemuxInfo> trackVec_;

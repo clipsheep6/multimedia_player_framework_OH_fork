@@ -67,20 +67,7 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
 
-    if (type == PlayerServerTaskType::SEEKING || type == PlayerServerTaskType::RATE_CHANGE) {
-        if (currTwoPhaseTask_ == nullptr) {
-            return EnqueueTask(task, type, taskName);
-        }
-        MEDIA_LOGI("current task[%{public}s] is in processing, the new task[%{public}s]",
-            currTwoPhaseTaskName_.c_str(), taskName.c_str());
-        for (auto &item : pendingTwoPhaseTasks_) {
-            if (item.type == type) {
-                item.type = PlayerServerTaskType::CANCEL_TASK;
-                MEDIA_LOGI("replace old task");
-            }
-        }
-        pendingTwoPhaseTasks_.push_back({ type, task, cancelTask, taskName });
-    } else if (type == PlayerServerTaskType::STATE_CHANGE) {
+    if (type == PlayerServerTaskType::STATE_CHANGE) {
         if (currTwoPhaseTask_ == nullptr) {
             return EnqueueTask(task, type, taskName);
         } else {
@@ -89,6 +76,33 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
             pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
         }
     }
+    return MSERR_OK;
+}
+
+int32_t PlayerServerTaskMgr::SpeedTask(const std::shared_ptr<ITaskHandler> &task,
+    const std::shared_ptr<ITaskHandler> &cancelTask,
+    const std::string &taskName, int32_t speedMode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
+    if (currTwoPhaseTask_ == nullptr) {
+        EnqueueTask(task, PlayerServerTaskType::RATE_CHANGE, taskName);
+        MEDIA_LOGI("speed task[%{public}s] start", currTwoPhaseTaskName_.c_str());
+        return MSERR_OK;
+    }
+    MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
+        currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    for (auto &item : pendingTwoPhaseTasks_) {
+        if (item.type == PlayerServerTaskType::RATE_CHANGE &&
+            item.speedMode_ != speedMode) {
+            item.type = PlayerServerTaskType::CANCEL_TASK;
+            MEDIA_LOGI("replace old speed task");
+        }
+    }
+
+    pendingTwoPhaseTasks_.push_back({
+        PlayerServerTaskType::RATE_CHANGE, task, cancelTask, taskName, -1, -1, speedMode
+    });
     return MSERR_OK;
 }
 
@@ -115,7 +129,7 @@ int32_t PlayerServerTaskMgr::SeekTask(const std::shared_ptr<ITaskHandler> &task,
     if (currTwoPhaseTask_ == nullptr) {
         return EnqueueSeekTask(task, PlayerServerTaskType::SEEKING, taskName, seekMode, seekTime);
     }
-    MEDIA_LOGI("current seek task[%{public}s] is in processing, the new task[%{public}s]",
+    MEDIA_LOGI("current task[%{public}s] is in processing, new task[%{public}s] wait",
         currTwoPhaseTaskName_.c_str(), taskName.c_str());
     for (auto &item : pendingTwoPhaseTasks_) {
         if (item.type == PlayerServerTaskType::SEEKING) {

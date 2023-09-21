@@ -101,6 +101,7 @@ void HdiCodec::DeinitInner()
         MediaTrace trace("HdiCodec::Deinit");
         (void)HdiInit::GetInstance().FreeHandle(handle_, id_);
     }
+    CodecComponentTypeRelease(handle_);
     handle_ = nullptr;
     if (appData_) {
         delete appData_;
@@ -260,7 +261,7 @@ int32_t HdiCodec::PushInputBuffer(GstBuffer *buffer)
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
     MEDIA_LOGD("Flush start");
-    if (!start_ || isError_) {
+    if (!start_) {
         return GST_CODEC_OK;
     }
 
