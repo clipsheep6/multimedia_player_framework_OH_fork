@@ -151,10 +151,10 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         MEDIA_INFO_LOG("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
             freshCacheBuffer->GetPriority(), playingCacheBuffer->GetPriority());
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
-            MEDIA_INFO_LOG("StreamIDManager stop playing low priority sound");
+            MEDIA_INFO_LOG("StreamIDManager stop playing low priority sound:%{public}d", playingStreamID);
             playingCacheBuffer->Stop(playingStreamID);
             playingStreamIDs_.pop_back();
-            MEDIA_INFO_LOG("StreamIDManager to playing fresh sound.");
+            MEDIA_INFO_LOG("StreamIDManager to playing fresh sound:%{public}d.", streamID);
             AddPlayTask(streamID, playParameters);
         } else {
             MEDIA_INFO_LOG("StreamIDManager queue will play streams, streamID:%{public}d.", streamID);
@@ -177,14 +177,22 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
         std::lock_guard lock(streamIDManagerLock_);
         playingStreamIDs_.emplace_back(streamID);
     } else {
-        for (size_t i = 0; i > playingStreamIDs_.size(); i++) {
+        bool shouldReCombinePlayingQueue = false;
+        for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer == nullptr) {
                 std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-                continue;
+                shouldReCombinePlayingQueue = true;
+                break;
+            }
+            if (!playingCacheBuffer->IsRunning()) {
+                std::lock_guard lock(streamIDManagerLock_);
+                playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
+                shouldReCombinePlayingQueue = true;
+                break;
             }
             if (freshCacheBuffer == nullptr) {
                 break;
@@ -194,6 +202,9 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
                 break;
             }
+        }
+        if (shouldReCombinePlayingQueue) {
+            QueueAndSortPlayingStreamID(streamID);
         }
     }
 }
@@ -207,13 +218,15 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
         std::lock_guard lock(streamIDManagerLock_);
         willPlayStreamInfos_.emplace_back(freshStreamIDAndPlayParamsInfo);
     } else {
+        bool shouldReCombineWillPlayQueue = false;
         for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(freshStreamIDAndPlayParamsInfo.streamID);
             std::shared_ptr<CacheBuffer> willPlayCacheBuffer = FindCacheBuffer(willPlayStreamInfos_[i].streamID);
             if (willPlayCacheBuffer == nullptr) {
                 std::lock_guard lock(streamIDManagerLock_);
                 willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
-                continue;
+                shouldReCombineWillPlayQueue = true;
+                break;
             }
             if (freshCacheBuffer == nullptr) {
                 break;
@@ -223,6 +236,9 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
                 break;
             }
+        }
+        if (shouldReCombineWillPlayQueue) {
+            QueueAndSortWillPlayStreamID(freshStreamIDAndPlayParamsInfo);
         }
     }
 }
@@ -286,21 +302,6 @@ void StreamIDManager::OnPlayFinished()
         AddPlayTask(willPlayStreamInfo.streamID, willPlayStreamInfo.playParameters);
         std::lock_guard lock(streamIDManagerLock_);
         willPlayStreamInfos_.pop_front();
-    }
-
-    for (size_t i = 0; i > playingStreamIDs_.size(); i++) {
-        int32_t playingStreamID = playingStreamIDs_[i];
-
-        std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
-        if (playingCacheBuffer == nullptr) {
-            std::lock_guard lock(streamIDManagerLock_);
-            playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-            continue;
-        }
-        if (!playingCacheBuffer->IsRunning()) {
-            std::lock_guard lock(streamIDManagerLock_);
-            playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-        }
     }
 }
 

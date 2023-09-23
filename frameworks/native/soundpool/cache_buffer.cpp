@@ -23,7 +23,9 @@ namespace Media {
 CacheBuffer::CacheBuffer(const MediaAVCodec::Format trackFormat,
     const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
     const size_t cacheDataTotalSize, const int32_t soundID, const int32_t streamID) : trackFormat_(trackFormat),
-    cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID)
+    cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
+    cacheDataFrameNum_(0), havePlayedCount_(0)
+
 {
     MEDIA_INFO_LOG("Construction CacheBuffer");
 }
@@ -64,6 +66,8 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         cacheDir = playParams.cacheDir;
     }
 
+    MEDIA_INFO_LOG("CacheBuffer sampleRate:%{public}d, sampleFormat:%{public}d, channelCount:%{public}d.",
+        sampleRate, sampleFormat, channelCount);
     // low-latency:1, non low-latency:0
     if ((rendererOptions.streamInfo.samplingRate == AudioStandard::AudioSamplingRate::SAMPLE_RATE_48000) &&
         (rendererOptions.streamInfo.channels == AudioStandard::AudioChannel::MONO ||
@@ -173,7 +177,7 @@ int32_t CacheBuffer::DealPlayParamsBeforePlay(const int32_t streamID, const Play
     return MSERR_OK;
 }
 
-AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const int32_t rate) const
+AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const int32_t rate)
 {
     AudioStandard::AudioRendererRate renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
     switch (rate) {

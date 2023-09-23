@@ -71,7 +71,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
     return true;
 }
 
-int32_t SoundPool::Load(std::string url)
+int32_t SoundPool::Load(const std::string url)
 {
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
     std::lock_guard lock(soundPoolLock_);

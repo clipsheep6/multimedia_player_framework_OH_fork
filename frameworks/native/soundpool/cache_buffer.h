@@ -65,7 +65,7 @@ public:
 
     bool IsRunning() const
     {
-        return isRunning_;
+        return isRunning_.load();
     }
     int32_t GetSoundID() const
     {
@@ -88,7 +88,7 @@ private:
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
     int32_t ReCombineCacheData();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
-    AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t renderRate) const;
+    static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
 
     MediaAVCodec::Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;

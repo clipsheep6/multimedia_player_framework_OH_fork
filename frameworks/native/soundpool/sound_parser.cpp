@@ -87,11 +87,15 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
             MEDIA_ERR_LOG("Get track format failed:%{public}d", ret);
         }
         int32_t trackBitRateInfo;
+        std::string trackMimeTypeInfo;
         trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_BITRATE, trackBitRateInfo);
         trackFormat->PutLongValue(MediaDescriptionKey::MD_KEY_BITRATE, static_cast<int64_t>(trackBitRateInfo));
-        // resample format
-        trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
-            MediaAVCodec::SAMPLE_S16LE);
+        trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
+        if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
+            // resample format
+            trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
+                MediaAVCodec::SAMPLE_S16LE);
+        }
     }
     return MSERR_OK;
 }
@@ -106,8 +110,9 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         MEDIA_INFO_LOG("SoundParser mime type:%{public}s", trackMimeTypeInfo.c_str());
         if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) == 0) {
             MEDIA_INFO_LOG("SoundParser pcm file, read it directly.");
+            // Just use this codec's callback process.
             audioDec_ =
-                MediaAVCodec::AudioDecoderFactory::CreateByName((AVCodecCodecName::AUDIO_DECODER_AAC_NAME).data());
+                MediaAVCodec::AudioDecoderFactory::CreateByName((AVCodecCodecName::AUDIO_DECODER_FLAC_NAME).data());
         } else {
             audioDec_ = MediaAVCodec::AudioDecoderFactory::CreateByMime(trackMimeTypeInfo);
         }

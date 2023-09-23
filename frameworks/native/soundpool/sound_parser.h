@@ -151,7 +151,7 @@ private:
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
         std::deque<std::shared_ptr<AudioBufferEntry>> soundData_;
-        size_t soundBufferTotalSize_;
+        size_t soundBufferTotalSize_ = 0;
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
 
