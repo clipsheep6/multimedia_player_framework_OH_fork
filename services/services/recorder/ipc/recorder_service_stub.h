@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>,
+class __attribute__((visibility("default"))) RecorderServiceStub : public IRemoteStub<IStandardRecorderService>,
     public MonitorServerObject, public NoCopyable {
 public:
     static sptr<RecorderServiceStub> Create();

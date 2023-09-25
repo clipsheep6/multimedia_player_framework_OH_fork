@@ -17,7 +17,7 @@
 #define TEST_RECORDER_H
 
 #include <thread>
-#include "recorder.h"
+#include "recorder_service_stub.h"
 #include "aw_common.h"
 
 namespace OHOS {
@@ -33,7 +33,7 @@ class TestRecorder : public NoCopyable {
 public:
     TestRecorder();
     ~TestRecorder();
-    std::shared_ptr<Recorder> recorder = nullptr;
+    sptr<RecorderServiceStub> recorder = nullptr;
     std::shared_ptr<std::ifstream> file = nullptr;
     std::unique_ptr<std::thread> camereHDIThread = nullptr;
     OHOS::sptr<OHOS::Surface> producerSurface = nullptr;
