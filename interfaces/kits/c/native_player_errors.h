@@ -27,56 +27,56 @@ extern "C" {
  * @version 1.0
  */
 
-typedef enum OH_AVSCREEN_CAPTURE_ErrCode {
+typedef enum OH_PLAYER_ErrCode {
     /**
      * basic error mask for screen recording.
      */
-    AV_SCREEN_CAPTURE_ERR_BASE = 0,
+    PLAYER_ERR_BASE = 0,
     /**
      * the operation completed successfully.
      */
-    AV_SCREEN_CAPTURE_ERR_OK = AV_SCREEN_CAPTURE_ERR_BASE,
+    PLAYER_ERR_OK = PLAYER_ERR_BASE,
     /**
      * no memory.
      */
-    AV_SCREEN_CAPTURE_ERR_NO_MEMORY = AV_SCREEN_CAPTURE_ERR_BASE + 1,
+    PLAYER_ERR_NO_MEMORY = PLAYER_ERR_BASE + 1,
     /**
      * opertation not be permitted.
      */
-    AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT = AV_SCREEN_CAPTURE_ERR_BASE + 2,
+    PLAYER_ERR_OPERATE_NOT_PERMIT = PLAYER_ERR_BASE + 2,
     /**
      * invalid argument.
      */
-    AV_SCREEN_CAPTURE_ERR_INVALID_VAL = AV_SCREEN_CAPTURE_ERR_BASE + 3,
+    PLAYER_ERR_INVALID_VAL = PLAYER_ERR_BASE + 3,
     /**
      * IO error.
      */
-    AV_SCREEN_CAPTURE_ERR_IO = AV_SCREEN_CAPTURE_ERR_BASE + 4,
+    PLAYER_ERR_IO = PLAYER_ERR_BASE + 4,
     /**
      * network timeout.
      */
-    AV_SCREEN_CAPTURE_ERR_TIMEOUT = AV_SCREEN_CAPTURE_ERR_BASE + 5,
+    PLAYER_ERR_TIMEOUT = PLAYER_ERR_BASE + 5,
     /**
      * unknown error.
      */
-    AV_SCREEN_CAPTURE_ERR_UNKNOWN = AV_SCREEN_CAPTURE_ERR_BASE + 6,
+    PLAYER_ERR_UNKNOWN = PLAYER_ERR_BASE + 6,
     /**
      * media service died.
      */
-    AV_SCREEN_CAPTURE_ERR_SERVICE_DIED = AV_SCREEN_CAPTURE_ERR_BASE + 7,
+    PLAYER_ERR_SERVICE_DIED = PLAYER_ERR_BASE + 7,
     /**
      * the state is not support this operation.
      */
-    AV_SCREEN_CAPTURE_ERR_INVALID_STATE = AV_SCREEN_CAPTURE_ERR_BASE + 8,
+    PLAYER_ERR_INVALID_STATE = PLAYER_ERR_BASE + 8,
     /**
      * unsupport interface.
      */
-    AV_SCREEN_CAPTURE_ERR_UNSUPPORT = AV_SCREEN_CAPTURE_ERR_BASE + 9,
+    PLAYER_ERR_UNSUPPORT = PLAYER_ERR_BASE + 9,
     /**
      * extend err start.
      */
-    AV_SCREEN_CAPTURE_ERR_EXTEND_START = AV_SCREEN_CAPTURE_ERR_BASE + 100,
-} OH_AVSCREEN_CAPTURE_ErrCode;
+    PLAYER_ERR_EXTEND_START = PLAYER_ERR_BASE + 100,
+} OH_PLAYER_ErrCode;
 
 #ifdef __cplusplus
 }
