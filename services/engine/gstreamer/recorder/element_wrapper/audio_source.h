@@ -17,6 +17,7 @@
 #define AUDIO_SOURCE_H
 
 #include "recorder_element.h"
+#include "recorder_private_param.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,12 +32,17 @@ public:
     int32_t Prepare() override;
     int32_t Stop() override;
     void Dump() override;
+    int32_t GetParameter(RecorderParam &recParam) override;
 
 private:
     int32_t ConfigAudioSampleRate(const RecorderParam &recParam);
     int32_t ConfigAudioChannels(const RecorderParam &recParam);
     int32_t ConfigAudioBitRate(const RecorderParam &recParam);
     int32_t ConfigAppInfo(const RecorderParam &recParam);
+    int32_t GetAudioCaptureChangeInfoToParam(RecorderParam &recParam);
+    int32_t GetAudioDeviceInfoToParam(AudioRecordChangeInfoParam &param);
+    int32_t GetAudioStreamInfoToParam(AudioRecordChangeInfoParam &param);
+    int32_t GetMicInfoToParam(RecorderParam &recParam);
 
     int32_t sampleRate_;
     int32_t channels_;

@@ -272,6 +272,17 @@ int32_t RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallba
     return MSERR_OK;
 }
 
+int32_t RecorderClient::SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback)
+{
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
+
+    audioChangeCallback_ = callback;
+    MEDIA_LOGD("SetRecorderAudioChangeCallback");
+    listenerStub_->SetRecorderAudioChangeCallback(callback);
+    return MSERR_OK;
+}
+
 int32_t RecorderClient::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -360,6 +371,34 @@ int32_t RecorderClient::SetParameter(int32_t sourceId, const Format &format)
     (void)sourceId;
     (void)format;
     return MSERR_INVALID_OPERATION;
+}
+
+int32_t RecorderClient::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetActiveAudioCaptureChangeInfo");
+    return recorderProxy_->GetActiveAudioCaptureChangeInfo(sourceId, changeInfo);
+}
+
+int32_t RecorderClient::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetAudioCaptureMaxAmplitude");
+    return recorderProxy_->GetAudioCaptureMaxAmplitude(sourceId);
+}
+
+int32_t RecorderClient::GetActiveMicrophones(int32_t sourceId,
+    std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetActiveMicrophones");
+    return recorderProxy_->GetActiveMicrophones(sourceId, microPhoneDescriptors);
 }
 } // namespace Media
 } // namespace OHOS

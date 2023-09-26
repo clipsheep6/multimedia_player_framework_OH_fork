@@ -49,6 +49,10 @@ const std::string RESET = "Reset";
 const std::string RELEASE = "Release";
 const std::string GET_AV_RECORDER_PROFILE = "GetAVRecorderProfile";
 const std::string SET_AV_RECORDER_CONFIG = "SetAVRecorderConfig";
+const std::string SET_NEXTOUTPUTFILE = "SetNextOutputFile";
+const std::string GET_AUDIORECORDERCONFIG = "GetActiveAudioCaptureChangeInfo";
+const std::string GET_AUDIO_MAX_AMPLITUDE = "GetAudioCaptureMaxAmplitude";
+const std::string GET_AUDIO_AVTIVE_MICROPHONES = "GetActiveMicrophones";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -66,12 +70,16 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::SET_NEXTOUTPUTFILE,
+        AVRecordergOpt::GET_AUDIO_AVTIVE_MICROPHONES
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::GETINPUTSURFACE,
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_AUDIORECORDERCONFIG,
+        AVRecordergOpt::GET_AUDIO_AVTIVE_MICROPHONES
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -79,7 +87,10 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::PAUSE,
         AVRecordergOpt::STOP,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_AUDIORECORDERCONFIG,
+        AVRecordergOpt::GET_AUDIO_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_AUDIO_AVTIVE_MICROPHONES
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -110,6 +121,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
 namespace AVRecorderEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
+const std::string EVENT_INFO_NOTIFY = "infoNotify";
+const std::string EVENT_AUDIO_RECORDER_CONFIG = "audioRecorderConfig";
 }
 
 struct AVRecorderAsyncContext;
@@ -135,6 +148,8 @@ struct AVRecorderConfig {
     std::string url;
     int32_t rotation = 0; // Optional
     Location location; // Optional
+    int32_t maxDuration;
+    int64_t maxFileSize;
     bool withVideo = false;
     bool withAudio = false;
 };
@@ -220,6 +235,26 @@ private:
      * setAVRecorderConfig(config: AVRecorderConfig): Promise<void>;
     */
     static napi_value JsSetAVRecorderConfig(napi_env env, napi_callback_info info);
+    /**
+     * setNextOutputFile(string: url, callback: AsyncCallback<void>): void;
+     * setNextOutputFile(string: url: Promise<void>;
+    */
+    static napi_value JsSetNextOutputFile(napi_env env, napi_callback_info info);
+    /**
+     * getActiveAudioRecorderConfig(callback: AsyncCallback<audio.AudioCapturerChangeInfo>): void;
+     * getActiveAudioRecorderConfig():Promise<audio.AudioCapturerChangeInfo>;
+    */
+    static napi_value JsGetActiveAudioRecorderConfig(napi_env env, napi_callback_info info);
+    /**
+     * getAudioRecorderMaxAmplitude(callback: AsyncCallback<number>):void;
+     * getAudioRecorderMaxAmplitude():Promise<number>;
+    */
+    static napi_value JsGetAudioRecorderMaxAmplitude(napi_env env, napi_callback_info info);
+    /**
+     * getActiveMicrophonesInfos(callback: AsyncCallback<audio.MicrophoneDescriptors>):void;
+     * getActiveMicrophonesInfos():Promise<audio.MicrophoneDescriptors>;
+    */
+    static napi_value JsGetActiveMicrophonesInfo(napi_env env, napi_callback_info info);
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
@@ -229,6 +264,8 @@ private:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> SetAVRecorderConfigTask(
         std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> SetNextOutputFileTask(
+        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
@@ -237,9 +274,13 @@ private:
 
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
         bool &getValue);
+    static int32_t GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result,
+        bool &getValue);
 
     static int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
         const int32_t sourceId, const int32_t qualityLevel);
+
+    static int32_t GetNextOutputFile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
@@ -274,6 +315,7 @@ private:
     napi_env env_ = nullptr;
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
+    std::shared_ptr<RecorderAudioChangeCallback> recorderAudioCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvRecorderTaskqFunc> taskQFuncs_;
@@ -299,6 +341,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;
+    int32_t nextFd_ = 0;
 };
 
 class MediaJsAVRecorderProfile : public MediaJsResult {
@@ -315,6 +358,32 @@ public:
 
 private:
     std::shared_ptr<AVRecorderProfile> value_ = nullptr;
+};
+
+class MediaJsAudioCaptureChangeInfo : public MediaJsResult {
+public:
+    explicit MediaJsAudioCaptureChangeInfo(AudioRecordChangeInfo value)
+        : value_(value)
+    {
+    }
+    ~MediaJsAudioCaptureChangeInfo() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    AudioRecordChangeInfo value_ = {0};
+};
+
+class MediaJsMicrophoneDescriptors : public MediaJsResult {
+public:
+    explicit MediaJsMicrophoneDescriptors(std::vector<MicrophoneDescriptor> microPhoneDescriptors)
+        : microPhoneDescriptors_(microPhoneDescriptors)
+    {
+    }
+    ~MediaJsMicrophoneDescriptors() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    std::vector<MicrophoneDescriptor> microPhoneDescriptors_;
 };
 } // namespace Media
 } // namespace OHOS

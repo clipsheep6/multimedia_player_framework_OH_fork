@@ -130,6 +130,14 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
     }
 }
 
+void RecorderServer::OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo)
+{
+    std::lock_guard<std::mutex> lock(cbMutex_);
+    if (recorderAudioCb_ != nullptr) {
+        recorderAudioCb_->OnAudioCapturerChange(audioRecordChangeInfo);
+    }
+}
+
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -483,6 +491,16 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
     return result.Value();
 }
 
+int32_t RecorderServer::SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    {
+        std::lock_guard<std::mutex> cbLock(cbMutex_);
+        recorderAudioCb_ = callback;
+    }
+    return MSERR_OK;
+}
+
 int32_t RecorderServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -642,6 +660,57 @@ int32_t RecorderServer::SetParameter(int32_t sourceId, const Format &format)
     (void)sourceId;
     (void)format;
     return MSERR_OK;
+}
+
+int32_t RecorderServer::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        recorderEngine_->GetActiveAudioCaptureChangeInfo(sourceId, changeInfo);
+        MEDIA_LOGI("get changeInfo:%{public}d", changeInfo.sessionId);
+        return MSERR_OK;
+    });
+
+    CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_INVALID_OPERATION, "Task is nullptr");
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetAudioCaptureMaxAmplitude(sourceId);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetActiveMicrophones(int32_t sourceId,
+    std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED && status_ != REC_PREPARED && status_ != REC_RECORDING,
+        MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetActiveMicrophones(sourceId, microPhoneDescriptors);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::DumpInfo(int32_t fd)

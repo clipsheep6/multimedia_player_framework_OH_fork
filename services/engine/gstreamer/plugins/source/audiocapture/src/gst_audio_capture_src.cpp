@@ -41,7 +41,41 @@ enum {
     PROP_APP_UID,
     PROP_APP_PID,
     PROP_BYPASS_AUDIO_SERVICE,
-    PROP_SUPPORTED_AUDIO_PARAMS
+    PROP_SUPPORTED_AUDIO_PARAMS,
+    PROP_CREATE_UID,
+    PROP_CLIENT_UID,
+    PROP_SESSION_ID,
+    PROP_INPUT_SOURCE,
+    PROP_CAPTURER_FLAG,
+    PROP_RECORDER_STATE,
+    PROP_DEVICE_TYPE,
+    PROP_DEVICE_ROLE,
+    PROP_DEVICE_ID,
+    PROP_CHANNNEL_MASKS,
+    PROP_CHANNEL_INDEX_MASKS,
+    PROP_DEVICE_NAME,
+    PROP_MAC_ADDRESS,
+    PORP_SAMPLING_RATE,
+    PROP_ENCODING,
+    PROP_AUDIO_FORMAT,
+    PROP_AUDIO_CHANNELS,
+    PROP_NETWORK_ID,
+    PROP_DISPLAY_NAME,
+    PROP_INTERRUPT_GROUPID,
+    PROP_VOLUME_GROUPLD,
+    PROP_ISLOWATENCY_DEVICE,
+    PROP_MUTED,
+    PROP_MAX_AMPLITUDE,
+    PROP_MICPRHONE_LENGTH,
+    PROP_MICPRHONE_ID,
+    PROP_MIC_DEVICE_TYPE,
+    PROP_SENSITIVITY,
+    PROP_POSITION_X,
+    PROP_POSITION_Y,
+    PROP_POSITION_Z,
+    PROP_ORIENTATION_X,
+    PROP_ORIENTATION_Y,
+    PROP_ORIENTATION_Z
 };
 
 using namespace OHOS::Media;
@@ -61,6 +95,16 @@ static void gst_audio_capture_src_getbuffer_timeout(GstPushSrc *psrc);
 static void gst_audio_capture_src_mgr_init(GstAudioCaptureSrc *src);
 static void gst_audio_capture_src_mgr_enable_watchdog(GstAudioCaptureSrc *src);
 static void gst_audio_capture_src_mgr_disable_watchdog(GstAudioCaptureSrc *src);
+static void gst_audio_microphoneInfo_init(GObjectClass *gobject_class);
+static void gst_audio_capturechangeinfo_init(GObjectClass *gobject_class);
+static void gst_audio_streaminfo_init(GObjectClass *gobject_class);
+static void gst_audio_device_descriptor_init(GObjectClass *gobject_class);
+static void gst_audio_max_amplitude_init(GObjectClass *gobject_class);
+static void gst_audio_capture_get_audiostreaminfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value);
+static void gst_audio_capture_get_audiodeviceinfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value);
+static void gst_audio_capture_get_audiochangeInfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value);
+static void gst_audio_capture_get_micprhoneInfo_sensor_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value);
+static void gst_audio_capture_get_micprhoneInfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value);
 
 void AudioManager::Alarm()
 {
@@ -137,6 +181,12 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
         g_param_spec_boolean("supported-audio-params", "issupport audio params",
             "issupport audio params", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    gst_audio_capturechangeinfo_init(gobject_class);
+
+    gst_audio_max_amplitude_init(gobject_class);
+
+    gst_audio_microphoneInfo_init(gobject_class);
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio capture source", "Source/Audio",
         "Retrieve audio frame from audio buffer queue", "OpenHarmony");
@@ -146,6 +196,160 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
     gstelement_class->change_state = gst_audio_capture_src_change_state;
     gstbasesrc_class->negotiate = gst_audio_capture_src_negotiate;
     gstpushsrc_class->create = gst_audio_capture_src_create;
+}
+
+static void gst_audio_max_amplitude_init(GObjectClass *gobject_class)
+{
+    g_object_class_install_property(gobject_class, PROP_MAX_AMPLITUDE,
+        g_param_spec_int("max-Amplitude", "MaxAmplitude", "MAX AMPLITUDE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+}
+
+static void gst_audio_capturechangeinfo_init(GObjectClass *gobject_class)
+{
+    g_object_class_install_property(gobject_class, PROP_CREATE_UID,
+        g_param_spec_int("creater-uid", "CreateUid", "CREATE UID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CLIENT_UID,
+        g_param_spec_int("client-uid", "ClientUid", "CLIENT UID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_SESSION_ID,
+        g_param_spec_int("session-id", "SessionID", "SESSION ID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_INPUT_SOURCE,
+        g_param_spec_int("input-source", "InputSource", "INPUT SOURCE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CAPTURER_FLAG,
+        g_param_spec_int("capturer-flag", "CapturerFlag", "CAPTURER FLAG", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_RECORDER_STATE,
+        g_param_spec_int("recorder-state", "RecorderState", "RECORDER STATE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    gst_audio_device_descriptor_init(gobject_class);
+
+    g_object_class_install_property(gobject_class, PROP_MUTED,
+        g_param_spec_boolean("muted", "Muted", "MUTED", FALSE,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+}
+
+static void gst_audio_streaminfo_init(GObjectClass *gobject_class)
+{
+    g_object_class_install_property(gobject_class, PORP_SAMPLING_RATE,
+        g_param_spec_int("sampling-Rate", "SamplingRate", "SAMPLING RATE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_ENCODING,
+        g_param_spec_int("encoding", "Encoding", "ENCODING", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_AUDIO_FORMAT,
+        g_param_spec_int("audio-format", "AudioFormat", "AUDIO FORMAT", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_AUDIO_CHANNELS,
+        g_param_spec_int("audio-channels", "AudioChannels", "AUDIO CHANNELS", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+}
+
+static void gst_audio_device_descriptor_init(GObjectClass *gobject_class)
+{
+    g_object_class_install_property(gobject_class, PROP_DEVICE_TYPE,
+        g_param_spec_int("device-Type", "DeviceType", "DEVICE TYPE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DEVICE_ROLE,
+        g_param_spec_int("device-Role", "DeviceRole", "DEVICE ROLE", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DEVICE_ID,
+        g_param_spec_int("device-Id", "DeviceId", "DEVICE ID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CHANNNEL_MASKS,
+        g_param_spec_int("channel-Masks", "ChannelMasks", "CHANNNEL MASKS", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CHANNEL_INDEX_MASKS,
+        g_param_spec_int("channel-Index-Masks", "ChannelIndexMasks", "CHANNEL INDEX MASKS,", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DEVICE_NAME,
+        g_param_spec_string("device-Name", "DeviceName", "DEVICE NAME", "",
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MAC_ADDRESS,
+        g_param_spec_string("mac-Address", "MacAddress", "MAC ADDRESS", "",
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    gst_audio_streaminfo_init(gobject_class);
+    g_object_class_install_property(gobject_class, PROP_NETWORK_ID,
+        g_param_spec_string("network-Id", "NetworkId", "NETWORK ID", "",
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DISPLAY_NAME,
+        g_param_spec_string("display-Name", "DisplayName", "DISPLAY NAME", "",
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_INTERRUPT_GROUPID,
+        g_param_spec_int("interrupt-GroupId", "InterruptGroupId", "INTERRUPT GROUPID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_VOLUME_GROUPLD,
+        g_param_spec_int("volume-GroupId", "VolumeGroupId", "VOLUME GROUPLD", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_ISLOWATENCY_DEVICE,
+        g_param_spec_boolean("isLowLatency-Device", "IsLowLatencyDevice", "ISLOWLATENCY DDEVICE", FALSE,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+}
+
+static void gst_audio_microphoneInfo_init(GObjectClass *gobject_class)
+{
+    g_object_class_install_property(gobject_class, PROP_MICPRHONE_LENGTH,
+        g_param_spec_int("microphonedescriptors-length", "microphonedescriptorslength",
+        "MICROPHONEDESCRIPTORS LENGTH", 0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MICPRHONE_ID,
+        g_param_spec_int("mic-id", "MicId", "MIC ID",
+        0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MIC_DEVICE_TYPE,
+        g_param_spec_int("mic-device-type", "MicDeviceType", "MIC DEVICE TYPE",
+        0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_SENSITIVITY,
+        g_param_spec_int("sensitivity", "Sensitivity", "SENSITIVITY",
+        0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_POSITION_X,
+        g_param_spec_float("position-x", "PositionX", "POSITION X",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_POSITION_Y,
+        g_param_spec_float("position-y", "PositionY", "POSITION Y",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_POSITION_Z,
+        g_param_spec_float("position-z", "PositionZ", "POSITION Z",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_ORIENTATION_X,
+        g_param_spec_float("orientation-x", "OrientationX", "ORIENTATION X",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_ORIENTATION_Y,
+        g_param_spec_float("orientation-y", "OrientationY", "ORIENTATION Y",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_ORIENTATION_Z,
+        g_param_spec_float("orientation-z", "OrientationZ", "ORIENTATION Z",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
@@ -234,6 +438,206 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
     }
 }
 
+static void gst_audio_capture_get_audiostreaminfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value)
+{
+    g_return_if_fail(src != nullptr);
+    switch (prop_id) {
+        case PORP_SAMPLING_RATE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetSamPlingRate());
+            break;
+        case PROP_ENCODING:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetEncoding());
+            break;
+        case PROP_AUDIO_FORMAT:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetAudioFormat());
+            break;
+        case PROP_AUDIO_CHANNELS:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetAudioChannels());
+            break;
+        default:
+            break;
+    }
+}
+
+static void gst_audio_capture_get_audiodeviceinfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value)
+{
+    g_return_if_fail(src != nullptr);
+    switch (prop_id) {
+        case PROP_DEVICE_ID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetDeviceID());
+            break;
+        case PROP_CHANNNEL_MASKS:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetChannelMasks());
+            break;
+        case PROP_CHANNEL_INDEX_MASKS:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetChannelIndexMasks());
+            break;
+        case PROP_DEVICE_NAME:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_string(value, src->audio_capture->GetDeviceName().c_str());
+            break;
+        case PROP_MAC_ADDRESS:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_string(value, src->audio_capture->GetMacAddress().c_str());
+            break;
+        case PROP_NETWORK_ID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_string(value, src->audio_capture->GetNetWorkId().c_str());
+            break;
+        case PROP_DISPLAY_NAME:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_string(value, src->audio_capture->GetDisplayName().c_str());
+            break;
+        case PROP_INTERRUPT_GROUPID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetInterruptGroupId());
+            break;
+        case PROP_VOLUME_GROUPLD:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetVolumeGroupId());
+            break;
+        case PROP_ISLOWATENCY_DEVICE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_boolean(value, src->audio_capture->GetIsLowatencyDevice());
+            break;
+        default:
+            break;
+    }
+    gst_audio_capture_get_audiostreaminfo_property(prop_id, src, value);
+}
+
+static void gst_audio_capture_get_audiochangeInfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value)
+{
+    g_return_if_fail(src != nullptr);
+    switch (prop_id) {
+        case PROP_CREATE_UID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetCreateUid());
+            break;
+        case PROP_CLIENT_UID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetClientUid());
+            break;
+        case PROP_SESSION_ID:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetSessionId());
+            break;
+        case PROP_INPUT_SOURCE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetInputSource());
+            break;
+        case PROP_CAPTURER_FLAG:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetCapturerFlag());
+            break;
+        case PROP_RECORDER_STATE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetRecorderState());
+            break;
+        case PROP_DEVICE_TYPE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetDeviceType());
+            break;
+        case PROP_DEVICE_ROLE:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_int(value, src->audio_capture->GetDeviceRole());
+            break;
+        case PROP_MUTED:
+            g_return_if_fail(src->audio_capture != nullptr);
+            g_value_set_boolean(value, src->audio_capture->Getmuted());
+            break;
+        default:
+            break;
+    }
+    gst_audio_capture_get_audiodeviceinfo_property(prop_id, src, value);
+}
+
+static void gst_audio_capture_get_micprhoneInfo_sensor_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value)
+{
+    g_return_if_fail(src != nullptr);
+    switch (prop_id) {
+        case PROP_POSITION_X:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesPositionX());
+            break;
+        case PROP_POSITION_Y:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesPositionY());
+            break;
+        case PROP_POSITION_Z:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesPositionZ());
+            break;
+        case PROP_ORIENTATION_X:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesOrientationX());
+            break;
+        case PROP_ORIENTATION_Y:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesOrientationY());
+            break;
+        case PROP_ORIENTATION_Z:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_float(value, src->audio_capture->GetActiveMicrophonesOrientationZ());
+            break;
+        default:
+            break;
+    }
+}
+
+static void gst_audio_capture_get_micprhoneInfo_property(guint prop_id, GstAudioCaptureSrc *src, GValue *value)
+{
+    g_return_if_fail(src != nullptr);
+    switch (prop_id) {
+        case PROP_MICPRHONE_LENGTH:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_int(value, src->audio_capture->GetActiveMicrophones());
+            break;
+        case PROP_MICPRHONE_ID:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_int(value, src->audio_capture->GetActiveMicrophonesMicId());
+            break;
+        case PROP_MIC_DEVICE_TYPE:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_int(value, src->audio_capture->GetActiveMicrophonesDviceType());
+            break;
+        case PROP_SENSITIVITY:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_int(value, src->audio_capture->GetActiveMicrophonesSensitivity());
+            break;
+        default:
+            break;
+    }
+    gst_audio_capture_get_micprhoneInfo_sensor_property(prop_id, src, value);
+}
+
 static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
     GValue *value, GParamSpec *pspec)
 {
@@ -261,9 +665,17 @@ static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
             g_value_set_boolean(value, src->audio_capture->IsSupportedCaptureParameter(
                 src->bitrate, src->channels, src->sample_rate));
             break;
+        case PROP_MAX_AMPLITUDE:
+            if (src->audio_capture == nullptr) {
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_int(value, src->audio_capture->GetMaxAmpitude());
+            break;
         default:
             break;
     }
+    gst_audio_capture_get_audiochangeInfo_property(prop_id, src, value);
+    gst_audio_capture_get_micprhoneInfo_property(prop_id, src, value);
 }
 
 static gboolean process_caps_info(GstAudioCaptureSrc *src)

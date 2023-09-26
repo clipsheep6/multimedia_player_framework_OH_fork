@@ -65,6 +65,7 @@ public:
     void SetLocation(float latitude, float longitude) override;
     void SetOrientationHint(int32_t rotation) override;
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) override;
+    int32_t SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback) override;
     int32_t Prepare() override;
     int32_t Start() override;
     int32_t Pause() override;
@@ -74,11 +75,15 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) override;
+    int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) override;
+    int32_t GetActiveMicrophones(int32_t sourceId, std::vector<MicrophoneDescriptor> &microPhoneDescriptors) override;
     int32_t DumpInfo(int32_t fd);
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
+    void OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo) override;
 
 private:
     int32_t Init();
@@ -86,6 +91,7 @@ private:
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
+    std::shared_ptr<RecorderAudioChangeCallback> recorderAudioCb_ = nullptr;
     RecStatus status_ = REC_INITIALIZED;
     std::mutex mutex_;
     std::mutex cbMutex_;

@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVRecorderCallback : public RecorderCallback {
+class AVRecorderCallback : public RecorderCallback, public RecorderAudioChangeCallback {
 public:
     explicit AVRecorderCallback(napi_env env);
     virtual ~AVRecorderCallback();
@@ -34,11 +34,20 @@ public:
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
+    void SendInfoCallback(const int32_t type, const int32_t extra);
+    void SendAudioCapturerChangeCallback(const AudioRecordChangeInfo audioRecordChangeInfo);
     std::string GetState();
+
+    static void NativeAudioRecorderChangeInfoToJsObj(const napi_env &env, napi_value &jsChangeDeviceInfoObj,
+        const AudioRecordChangeInfo &recordChangeInfo);
+    static void SetDeviceDescriptors(const napi_env& env, napi_value &jsChangeInfoObj, const DeviceInfo &deviceInfo);
+    static void SetValueBoolean(const napi_env& env, const std::string& fieldStr,
+        const bool boolValue, napi_value& result);
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo) override;
 
 private:
     struct AVRecordJsCallback {
@@ -48,9 +57,14 @@ private:
         int32_t errorCode = MSERR_EXT_UNKNOWN;
         int32_t reason = 1;
         std::string state = "unknown";
+        int32_t type = 0;
+        int32_t extra = 0;
+        AudioRecordChangeInfo audioRecordChangeInfo;
     };
     void OnJsErrorCallBack(AVRecordJsCallback *jsCb) const;
     void OnJsStateCallBack(AVRecordJsCallback *jsCb) const;
+    void OnJsInfoCallBack(AVRecordJsCallback *jsCb) const;
+    void OnJsAudioRecorderConfigCallBack(AVRecordJsCallback *jsCb) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;

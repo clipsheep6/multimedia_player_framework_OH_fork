@@ -46,6 +46,8 @@ AudioCaptureAsImpl::~AudioCaptureAsImpl()
     if (audioCapturer_ != nullptr) {
         (void)audioCapturer_->Release();
         audioCapturer_ = nullptr;
+        getChangeInfoSucess_ = false;
+        audioCaptureCb_ = nullptr;
     }
 }
 
@@ -147,7 +149,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             params.audioEncoding = AudioStandard::ENCODING_PCM;
             MEDIA_LOGD("SetCaptureParameter out, channels:%{public}d, sampleRate:%{public}d",
                 params.audioChannel, params.samplingRate);
-                
+
             audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
                 audioAppInfo);
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
@@ -162,9 +164,14 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
             MEDIA_LOGD("SetCaptureParameterOptions out, channels:%{public}d, sampleRate:%{public}d",
                 options.streamInfo.channels, options.streamInfo.samplingRate);
-            
+
             audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+            audioCaptureCb_ = std::make_shared<AudioCaptureAsImplCallBack>(this);
+            int32_t ret = audioCapturer_->SetAudioCapturerInfoChangeCallback(audioCaptureCb_);
+            if (ret) {
+                MEDIA_LOGE("Registering of capturer info change callback failed");
+            }
         } else {
             MEDIA_LOGE("Set sourceType invaild");
             return MSERR_INVALID_OPERATION;
@@ -176,6 +183,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
     CHECK_AND_RETURN_RET(audioCapturer_->GetBufferSize(bufferSize_) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     MEDIA_LOGD("audio buffer size is: %{public}zu", bufferSize_);
     CHECK_AND_RETURN_RET_LOG(bufferSize_ < MAXIMUM_BUFFER_SIZE, MSERR_UNKNOWN, "audio buffer size too long");
+    CHECK_AND_RETURN_RET(GetCurrentCapturerChangeInfo() == MSERR_OK, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 
@@ -233,6 +241,9 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetSegmentData()
     }
     bool isBlocking = true;
     int32_t bytesRead = audioCapturer_->Read(*(map.data), map.size, isBlocking);
+    if (*(map.data) > maxAmpitude_) {
+        maxAmpitude_ = *(map.data);
+    }
     gst_buffer_unmap(tempBuffer->gstBuffer, &map);
     if (bytesRead <= 0) {
         gst_buffer_unref(tempBuffer->gstBuffer);
@@ -393,7 +404,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
     if (audioCapturer_->GetStatus() != AudioStandard::CapturerState::CAPTURER_RELEASED) {
         CHECK_AND_RETURN_RET(audioCapturer_->Release(), MSERR_UNKNOWN);
     }
-
+    getChangeInfoSucess_ = false;
     {
         std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
         EmptyCaptureQueue();
@@ -462,6 +473,41 @@ void AudioCaptureAsImpl::EmptyCaptureQueue()
             gst_buffer_unref(iter->gstBuffer);
         }
         audioCacheCtrl_->captureQueue_.pop();
+    }
+}
+
+int32_t AudioCaptureAsImpl::GetCurrentCapturerChangeInfo()
+{
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+    OHOS::AudioStandard::AudioCapturerChangeInfo changeInfo;
+    int32_t ret = audioCapturer_->GetCurrentCapturerChangeInfo(changeInfo);
+    if (ret == MSERR_OK) {
+        changeInfo_ = changeInfo;
+        getChangeInfoSucess_ = true;
+    }
+    return ret;
+}
+
+int32_t AudioCaptureAsImpl::GetActiveMicrophones()
+{
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, -1);
+    microphoneDescriptors_ = audioCapturer_->GetCurrentMicrophones();
+    return microphoneDescriptors_.size();
+}
+
+int32_t AudioCaptureAsImpl::NotifyAudioCaptureChangeEvent(OHOS::AudioStandard::AudioCapturerChangeInfo changeInfo)
+{
+    MEDIA_LOGI("NotifyAudioCaptureChangeEvent:createrUID:%{public}d", changeInfo.createrUID);
+    changeInfo_ = changeInfo;
+    getChangeInfoSucess_ = true;
+    return MSERR_OK;
+}
+
+void AudioCaptureAsImplCallBack::OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
+{
+    MEDIA_LOGI("OnStateChange:createrUID:%{public}d", capturerChangeInfo.createrUID);
+    if (callback_ != nullptr) {
+        callback_->NotifyAudioCaptureChangeEvent(capturerChangeInfo);
     }
 }
 } // namespace Media

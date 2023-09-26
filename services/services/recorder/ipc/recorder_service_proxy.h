@@ -55,6 +55,9 @@ public:
     int32_t Reset() override;
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
+    int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) override;
+    int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) override;
+    int32_t GetActiveMicrophones(int32_t sourceId, std::vector<MicrophoneDescriptor> &microPhoneDescriptors) override;
     int32_t DestroyStub() override;
 
 private:

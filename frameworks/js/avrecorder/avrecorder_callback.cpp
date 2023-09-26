@@ -93,6 +93,39 @@ void AVRecorderCallback::SendStateCallback(const std::string &state, const State
     return OnJsStateCallBack(cb);
 }
 
+void AVRecorderCallback::SendInfoCallback(int32_t type, int32_t extra)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVRecorderEvent::EVENT_INFO_NOTIFY) == refMap_.end()) {
+        MEDIA_LOGW("can not find infoNotify callback!");
+        return;
+    }
+
+    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_INFO_NOTIFY);
+    cb->callbackName = AVRecorderEvent::EVENT_INFO_NOTIFY;
+    cb->type = type;
+    cb->extra = extra;
+    return OnJsInfoCallBack(cb);
+}
+
+void AVRecorderCallback::SendAudioCapturerChangeCallback(const AudioRecordChangeInfo audioRecordChangeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_RECORDER_CONFIG) == refMap_.end()) {
+        MEDIA_LOGW("can not find audiorecorderconfig callback!");
+        return;
+    }
+
+    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_RECORDER_CONFIG);
+    cb->callbackName = AVRecorderEvent::EVENT_AUDIO_RECORDER_CONFIG;
+    cb->audioRecordChangeInfo = audioRecordChangeInfo;
+    return OnJsAudioRecorderConfigCallBack(cb);
+}
+
 std::string AVRecorderCallback::GetState()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -120,6 +153,13 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 {
     MEDIA_LOGI("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
+    SendInfoCallback(type, extra);
+}
+
+void AVRecorderCallback::OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo)
+{
+    MEDIA_LOGI("OnAudioCapturerChange, createrUID:%{public}d", audioRecordChangeInfo.createrUID);
+    SendAudioCapturerChangeCallback(audioRecordChangeInfo);
 }
 
 void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
@@ -245,6 +285,203 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
     }, uv_qos_user_initiated);
     CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+void AVRecorderCallback::OnJsInfoCallBack(AVRecordJsCallback *jsCb) const
+{
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
+
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
+    work->data = reinterpret_cast<void *>(jsCb);
+    // async callback, jsWork and jsWork->data should be heap object.
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        // Js Thread
+        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
+        CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
+        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+        std::string request = event->callbackName;
+        MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
+            event->errorCode, event->errorMsg.c_str());
+        do {
+            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+            napi_value jsCallback = nullptr;
+            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+                request.c_str());
+            // Call back function
+            napi_value args[1] = { nullptr };
+            napi_create_object(ref->env_, &args[0]);
+            napi_value jsValue = nullptr;
+            napi_create_int32(ref->env_, event->type, &jsValue);
+            napi_set_named_property(ref->env_, args[0], "type", jsValue);
+
+            napi_create_int32(ref->env_, event->extra, &jsValue);
+            napi_set_named_property(ref->env_, args[0], "extra", jsValue);
+            // Call back function
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } while (0);
+        delete event;
+        delete work;
+    }, uv_qos_user_initiated);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
+}
+
+void AVRecorderCallback::SetValueBoolean(const napi_env& env, const std::string& fieldStr,
+    const bool boolValue, napi_value& result)
+{
+    napi_value value = nullptr;
+    napi_get_boolean(env, boolValue, &value);
+    napi_set_named_property(env, result, fieldStr.c_str(), value);
+}
+
+void AVRecorderCallback::SetDeviceDescriptors(const napi_env& env, napi_value &jsChangeInfoObj,
+    const DeviceInfo &deviceInfo)
+{
+    napi_value jsDeviceDescriptorsObj = nullptr;
+    napi_value valueParam = nullptr;
+    napi_create_array_with_length(env, 1, &jsDeviceDescriptorsObj);
+
+    (void)napi_create_object(env, &valueParam);
+    CommonNapi::SetPropertyInt32(env, valueParam, "deviceRole", static_cast<int32_t>(deviceInfo.deviceRole));
+    CommonNapi::SetPropertyInt32(env, valueParam, "deviceType", static_cast<int32_t>(deviceInfo.deviceType));
+    CommonNapi::SetPropertyInt32(env, valueParam, "id", static_cast<int32_t>(deviceInfo.deviceId));
+    CommonNapi::SetPropertyString(env, valueParam, "name", deviceInfo.deviceName);
+    CommonNapi::SetPropertyString(env, valueParam, "address", deviceInfo.macAddress);
+    CommonNapi::SetPropertyString(env, valueParam, "networkId", deviceInfo.networkId);
+    CommonNapi::SetPropertyString(env, valueParam, "displayName", deviceInfo.displayName);
+    CommonNapi::SetPropertyInt32(env, valueParam, "interruptGroupId",
+        static_cast<int32_t>(deviceInfo.interruptGroupId));
+    CommonNapi::SetPropertyInt32(env, valueParam, "volumeGroupId", static_cast<int32_t>(deviceInfo.volumeGroupId));
+
+    napi_value value = nullptr;
+    napi_value sampleRates;
+    napi_create_array_with_length(env, 1, &sampleRates);
+    napi_create_int32(env, deviceInfo.audioStreamInfo.samplingRate, &value);
+    napi_set_element(env, sampleRates, 0, value);
+    napi_set_named_property(env, valueParam, "sampleRates", sampleRates);
+
+    napi_value channelCounts;
+    napi_create_array_with_length(env, 1, &channelCounts);
+    napi_create_int32(env, deviceInfo.audioStreamInfo.channels, &value);
+    napi_set_element(env, channelCounts, 0, value);
+    napi_set_named_property(env, valueParam, "channelCounts", channelCounts);
+
+    napi_value channelMasks;
+    napi_create_array_with_length(env, 1, &channelMasks);
+    napi_create_int32(env, deviceInfo.channelMasks, &value);
+    napi_set_element(env, channelMasks, 0, value);
+    napi_set_named_property(env, valueParam, "channelMasks", channelMasks);
+
+    napi_value channelIndexMasks;
+    napi_create_array_with_length(env, 1, &channelIndexMasks);
+    napi_create_int32(env, deviceInfo.channelIndexMasks, &value);
+    napi_set_element(env, channelIndexMasks, 0, value);
+    napi_set_named_property(env, valueParam, "channelIndexMasks", channelIndexMasks);
+    napi_value encodingTypes;
+    napi_create_array_with_length(env, 1, &encodingTypes);
+    napi_create_int32(env, deviceInfo.audioStreamInfo.encoding, &value);
+    napi_set_element(env, encodingTypes, 0, value);
+    napi_set_named_property(env, valueParam, "encodingTypes", encodingTypes);
+
+    napi_set_element(env, jsDeviceDescriptorsObj, 0, valueParam);
+    napi_set_named_property(env, jsChangeInfoObj, "deviceDescriptors", jsDeviceDescriptorsObj);
+}
+
+void AVRecorderCallback::NativeAudioRecorderChangeInfoToJsObj(const napi_env &env, napi_value &jsChangeDeviceInfoObj,
+    const AudioRecordChangeInfo &recordChangeInfo)
+{
+    napi_value jsCapInfoObj = nullptr;
+    napi_create_object(env, &jsChangeDeviceInfoObj);
+    CommonNapi::SetPropertyInt32(env, jsChangeDeviceInfoObj, "streamId", recordChangeInfo.sessionId);
+    CommonNapi::SetPropertyInt32(env, jsChangeDeviceInfoObj, "clientUid", recordChangeInfo.clientUID);
+    CommonNapi::SetPropertyInt32(env, jsChangeDeviceInfoObj, "capturerState",
+        static_cast<int32_t>(recordChangeInfo.aRecorderState));
+    SetValueBoolean(env, "muted", recordChangeInfo.muted, jsChangeDeviceInfoObj);
+
+    napi_create_object(env, &jsCapInfoObj);
+    CommonNapi::SetPropertyInt32(env, jsCapInfoObj, "source",
+        static_cast<int32_t>(recordChangeInfo.aRecorderInfo.inputSource));
+    CommonNapi::SetPropertyInt32(env, jsCapInfoObj, "capturerFlags", recordChangeInfo.aRecorderInfo.capturerFlags);
+    napi_set_named_property(env, jsChangeDeviceInfoObj, "capturerInfo", jsCapInfoObj);
+
+    SetDeviceDescriptors(env, jsChangeDeviceInfoObj, recordChangeInfo.inputDeviceInfo);
+}
+
+void AVRecorderCallback::OnJsAudioRecorderConfigCallBack(AVRecordJsCallback *jsCb) const
+{
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
+
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
+    work->data = reinterpret_cast<void *>(jsCb);
+    // async callback, jsWork and jsWork->data should be heap object.
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        // Js Thread
+        CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
+        CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
+        AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
+        std::string request = event->callbackName;
+        MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
+            event->errorCode, event->errorMsg.c_str());
+        do {
+            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            std::shared_ptr<AutoRef> ref = event->autoRef.lock();
+            CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", request.c_str());
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
+            napi_value jsCallback = nullptr;
+            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
+                request.c_str());
+            // Call back function
+            napi_value args[1] = { nullptr };
+            NativeAudioRecorderChangeInfoToJsObj(ref->env_, args[0], event->audioRecordChangeInfo);
+            // Call back function
+            napi_value result = nullptr;
+            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
+        } while (0);
+        delete event;
+        delete work;
+    }, uv_qos_user_initiated);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }

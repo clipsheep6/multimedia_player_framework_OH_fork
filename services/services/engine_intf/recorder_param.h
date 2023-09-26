@@ -57,7 +57,6 @@ enum RecorderPublicParamType : uint32_t {
     OUT_FD,
     NEXT_OUT_FD, // reserved.
     GEO_LOCATION,
-
     PUBLIC_PARAM_TYPE_END,
 };
 

@@ -24,6 +24,7 @@
 #include "audio_capture.h"
 #include "audio_capturer.h"
 #include "nocopyable.h"
+#include "refbase.h"
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +39,18 @@ struct AudioCacheCtrl {
     uint32_t pausedCount_ = 0; // the paused count times
     uint64_t persistTime_ = 0;
     uint64_t totalPauseTime_ = 0;
+};
+
+typedef class AudioCaptureAsImpl AudioCaptureAsImpl;
+
+class AudioCaptureAsImplCallBack : public AudioStandard::AudioCapturerInfoChangeCallback {
+public:
+    explicit AudioCaptureAsImplCallBack(AudioCaptureAsImpl *callback):callback_(callback) {}
+    virtual ~AudioCaptureAsImplCallBack() = default;
+    void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo) override;
+
+private:
+   AudioCaptureAsImpl* callback_;
 };
 
 class AudioCaptureAsImpl : public AudioCapture, public NoCopyable {
@@ -62,6 +75,291 @@ public:
     bool CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerOptions &options);
 
+    int32_t GetActiveMicrophones() override;
+    int32_t NotifyAudioCaptureChangeEvent(OHOS::AudioStandard::AudioCapturerChangeInfo changeInfo);
+    int32_t GetCreateUid() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.createrUID;
+        }
+        return -1;
+    }
+
+    int32_t GetClientUid() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.clientUID;
+        }
+        return -1;
+    }
+
+    int32_t GetSessionId() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.sessionId;
+        }
+        return -1;
+    }
+
+    int32_t GetInputSource() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.capturerInfo.sourceType);
+        }
+        return -1;
+    }
+
+    int32_t GetCapturerFlag() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.capturerInfo.capturerFlags);
+        }
+        return -1;
+    }
+
+    int32_t GetRecorderState() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.capturerState);
+        }
+        return -1;
+    }
+
+    int32_t GetDeviceType() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.deviceType);
+        }
+        return -1;
+    }
+
+    int32_t GetDeviceRole() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.deviceRole);
+        }
+        return -1;
+    }
+
+    int32_t GetDeviceID() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.deviceId);
+        }
+        return -1;
+    }
+
+    int32_t GetChannelMasks() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.channelMasks);
+        }
+        return -1;
+    }
+
+    int32_t GetChannelIndexMasks() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.channelIndexMasks);
+        }
+        return -1;
+    }
+
+    std::string GetDeviceName() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.inputDeviceInfo.deviceName;
+        }
+        std::string devicename = "";
+        return devicename;
+    }
+
+    std::string GetMacAddress() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.inputDeviceInfo.macAddress;
+        }
+        std::string macAddress = "";
+        return macAddress;
+    }
+
+    int32_t GetSamPlingRate() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.audioStreamInfo.samplingRate);
+        }
+        return -1;
+    }
+
+    int32_t GetEncoding() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.audioStreamInfo.encoding);
+        }
+        return -1;
+    }
+
+    int32_t GetAudioFormat() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.audioStreamInfo.format);
+        }
+        return -1;
+    }
+
+    int32_t GetAudioChannels() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.audioStreamInfo.channels);
+        }
+        return -1;
+    }
+
+    std::string GetNetWorkId() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.inputDeviceInfo.networkId;
+        }
+        std::string networkId = "";
+        return networkId;
+    }
+
+    std::string GetDisplayName() override
+    {
+        if (getChangeInfoSucess_) {
+            return changeInfo_.inputDeviceInfo.displayName;
+        }
+        std::string displayName = "";
+        return displayName;
+    }
+
+    int32_t GetInterruptGroupId() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.interruptGroupId);
+        }
+        return -1;
+    }
+
+    int32_t GetVolumeGroupId() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<int32_t>(changeInfo_.inputDeviceInfo.volumeGroupId);
+        }
+        return -1;
+    }
+
+    gboolean GetIsLowatencyDevice() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<gboolean>(changeInfo_.inputDeviceInfo.isLowLatencyDevice);
+        }
+        return false;
+    }
+
+    gboolean Getmuted() override
+    {
+        if (getChangeInfoSucess_) {
+            return static_cast<gboolean>(changeInfo_.muted);
+        }
+        return false;
+    }
+
+    int32_t GetMaxAmpitude() override
+    {
+        return maxAmpitude_;
+    }
+
+    int32_t GetActiveMicrophonesMicId() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->micId_;
+            }
+        }
+        return 0;
+    }
+
+    int32_t GetActiveMicrophonesDviceType() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return static_cast<int32_t>(microphoneDescriptor->deviceType_);
+            }
+        }
+        return 0;
+    }
+
+    int32_t GetActiveMicrophonesSensitivity() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return static_cast<int32_t>(microphoneDescriptor->sensitivity_);
+            }
+        }
+        return 0;
+    }
+
+    float GetActiveMicrophonesPositionX() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->position_.x;
+            }
+        }
+        return 0.0f;
+    }
+
+    float GetActiveMicrophonesPositionY() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->position_.y;
+            }
+        }
+        return 0.0f;
+    }
+
+    float GetActiveMicrophonesPositionZ() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->position_.z;
+            }
+        }
+        return 0.0f;
+    }
+
+    float GetActiveMicrophonesOrientationX() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->orientation_.x;
+            }
+        }
+        return 0.0f;
+    }
+
+    float GetActiveMicrophonesOrientationY() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->orientation_.y;
+            }
+        }
+        return 0.0f;
+    }
+
+    float GetActiveMicrophonesOrientationZ() override
+    {
+        for (auto microphoneDescriptor : microphoneDescriptors_) {
+            if (microphoneDescriptor != nullptr) {
+                return microphoneDescriptor->orientation_.z;
+            }
+        }
+        return 0.0f;
+    }
+
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
     size_t bufferSize_ = 0; // minimum size of each buffer acquired from AudioServer
@@ -78,6 +376,7 @@ private:
 
     static constexpr int MAX_QUEUE_SIZE = 100;
 
+    int32_t GetCurrentCapturerChangeInfo();
     int32_t AudioCaptureLoop();
     void GetAudioCaptureBuffer();
     void EmptyCaptureQueue();
@@ -88,6 +387,12 @@ private:
     std::atomic<int32_t> curState_ = RECORDER_INITIALIZED;
     std::atomic<bool> captureLoopErr_ { false };
     uint64_t lastInputTime_ = 0;
+    OHOS::AudioStandard::AudioCapturerChangeInfo changeInfo_;
+    bool getChangeInfoSucess_ = false;
+    std::mutex mutex_;
+    int32_t maxAmpitude_ = 0;
+    std::shared_ptr<AudioCaptureAsImplCallBack> audioCaptureCb_;
+    std::vector<sptr<OHOS::AudioStandard::MicrophoneDescriptor>> microphoneDescriptors_;
 };
 } // namespace Media
 } // namespace OHOS

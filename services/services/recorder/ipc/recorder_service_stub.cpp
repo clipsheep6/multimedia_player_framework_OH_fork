@@ -22,6 +22,7 @@
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
+#include "audio_changeinfo_proxy_stub.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
@@ -85,6 +86,9 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RESET] = &RecorderServiceStub::Reset;
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
+    recFuncs_[GET_ACTIVEAUDIOCAPTUREINFO] = &RecorderServiceStub::GetActiveAudioCaptureChangeInfo;
+    recFuncs_[GET_MAX_AUDIO_MAXAMPLITUDE] = &RecorderServiceStub::GetAudioCaptureMaxAmplitude;
+    recFuncs_[GET_ACTIVE_MICROPHONES] = &RecorderServiceStub::GetActiveMicrophones;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
 
     pid_ = IPCSkeleton::GetCallingPid();
@@ -157,8 +161,14 @@ int32_t RecorderServiceStub::SetListenerObject(const sptr<IRemoteObject> &object
     std::shared_ptr<RecorderCallback> callback = std::make_shared<RecorderListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new RecorderListenerCallback");
 
+    std::shared_ptr<RecorderAudioChangeCallback> audioChangeCallback  =
+        std::make_shared<RecorderListenerAudioChangeCallback>(listener);
+    CHECK_AND_RETURN_RET_LOG(audioChangeCallback != nullptr, MSERR_NO_MEMORY,
+        "failed to new RecorderListenerAudioChangeCallback");
+
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     (void)recorderServer_->SetRecorderCallback(callback);
+    (void)recorderServer_->SetRecorderAudioChangeCallback(audioChangeCallback);
     return MSERR_OK;
 }
 
@@ -330,6 +340,25 @@ int32_t RecorderServiceStub::SetFileSplitDuration(FileSplitType type, int64_t ti
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetFileSplitDuration(type, timestamp, duration);
+}
+
+int32_t RecorderServiceStub::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetActiveAudioCaptureChangeInfo(sourceId, changeInfo);
+}
+
+int32_t RecorderServiceStub::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetAudioCaptureMaxAmplitude(sourceId);
+}
+
+int32_t RecorderServiceStub::GetActiveMicrophones(int32_t sourceId,
+    std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetActiveMicrophones(sourceId, microPhoneDescriptors);
 }
 
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
@@ -595,6 +624,54 @@ int32_t RecorderServiceStub::SetFileSplitDuration(MessageParcel &data, MessagePa
     int64_t timestamp = data.ReadInt64();
     uint32_t duration = data.ReadUint32();
     reply.WriteInt32(SetFileSplitDuration(splitType, timestamp, duration));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetActiveAudioCaptureChangeInfo(MessageParcel &data, MessageParcel &reply)
+{
+    AudioRecordChangeInfo changeInfo;
+    int32_t sourceId = data.ReadInt32();
+    int32_t ret = GetActiveAudioCaptureChangeInfo(sourceId, changeInfo);
+    reply.WriteInt32(ret);
+    if (ret == MSERR_OK) {
+        bool token = AudioChangeInfoProxyStub::WriteAudioRecordChangeInfoParcel(reply, changeInfo);
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "AudioRecordChangeInfo!");
+    }
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetAudioCaptureMaxAmplitude(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t sourceId = data.ReadInt32();
+    int32_t ret = GetAudioCaptureMaxAmplitude(sourceId);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetActiveMicrophones(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t sourceId = data.ReadInt32();
+    std::vector<MicrophoneDescriptor> microPhoneDescriptors;
+    int32_t ret = GetActiveMicrophones(sourceId, microPhoneDescriptors);
+    reply.WriteInt32(ret);
+    reply.WriteInt32(microPhoneDescriptors.size());
+    if (microPhoneDescriptors.size() > 0) {
+        for (MicrophoneDescriptor microPhoneDescriptor : microPhoneDescriptors) {
+            bool token = reply.WriteInt32(microPhoneDescriptor.micId_)
+                && reply.WriteInt32(microPhoneDescriptor.micId_)
+                && reply.WriteInt32(microPhoneDescriptor.deviceType_)
+                && reply.WriteInt32(microPhoneDescriptor.sensitivity_)
+                && reply.WriteFloat(microPhoneDescriptor.position_.x)
+                && reply.WriteFloat(microPhoneDescriptor.position_.y)
+                && reply.WriteFloat(microPhoneDescriptor.position_.z)
+                && reply.WriteFloat(microPhoneDescriptor.orientation_.x)
+                && reply.WriteFloat(microPhoneDescriptor.orientation_.y)
+                && reply.WriteFloat(microPhoneDescriptor.orientation_.z);
+            CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Write ActiveMicrophones failed!");
+        }
+    }
     return MSERR_OK;
 }
 
