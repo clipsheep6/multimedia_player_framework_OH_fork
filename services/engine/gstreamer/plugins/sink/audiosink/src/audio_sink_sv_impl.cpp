@@ -329,8 +329,7 @@ int32_t AudioSinkSvImpl::Release()
     MediaTrace trace("AudioSink::Release");
     MEDIA_LOGD("audioRenderer Release In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    LISTENER((void)audioRenderer_->Release(); audioRenderer_ = nullptr,
-        "AudioRenderer::Release", PlayerXCollie::timerTimeout)
+    LISTENER((void)audioRenderer_->Release(), "AudioRenderer::Release", PlayerXCollie::timerTimeout)
     MEDIA_LOGD("audioRenderer Release Out");
     return MSERR_OK;
 }
