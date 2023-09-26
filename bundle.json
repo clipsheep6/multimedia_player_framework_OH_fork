@@ -26,7 +26,8 @@
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
         "SystemCapability.Multimedia.SystemSound.Core",
-        "SystemCapability.Multimedia.Media.AVScreenCapture"
+        "SystemCapability.Multimedia.Media.AVScreenCapture",
+        "SystemCapability.Multimedia.Media.SoundPool"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -64,7 +65,8 @@
           "ability_runtime",
           "bundle_framework",
           "relational_store",
-          "resource_management"
+          "resource_management",
+          "av_codec"
         ],
         "third_party": [
           "glib",

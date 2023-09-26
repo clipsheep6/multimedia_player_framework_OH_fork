@@ -28,6 +28,7 @@ declare_args() {
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
   multimedia_player_framework_support_screen_capture = true
+  multimedia_player_framework_support_jssoundpool = true
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }
@@ -117,6 +118,12 @@ if (multimedia_player_framework_support_screen_capture) {
   player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_SCREEN_CAPTURE" ]
+}
+
+if (multimedia_player_framework_support_jssoundpool) {
+  player_framework_defines += [ "SUPPORT_SOUND_POOL" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_SOUND_POOL" ]
 }
 
 # Config path
