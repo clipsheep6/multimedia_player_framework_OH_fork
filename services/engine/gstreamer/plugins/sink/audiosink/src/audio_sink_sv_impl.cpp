@@ -299,7 +299,6 @@ int32_t AudioSinkSvImpl::Release()
     (void)audioRenderer_->Release();
     PlayerXCollie::GetInstance().CancelTimer(id);
     id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::~AudioRenderer");
-    audioRenderer_ = nullptr;
     PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Release Out");
     return MSERR_OK;
