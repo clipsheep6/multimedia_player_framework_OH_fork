@@ -20,9 +20,9 @@
 
 namespace OHOS {
 namespace Media {
-CacheBuffer::CacheBuffer(const MediaAVCodec::Format trackFormat,
-    const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
-    const size_t cacheDataTotalSize, const int32_t soundID, const int32_t streamID) : trackFormat_(trackFormat),
+CacheBuffer::CacheBuffer(const MediaAVCodec::Format &trackFormat,
+    const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
+    const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID) : trackFormat_(trackFormat),
     cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
     cacheDataFrameNum_(0), havePlayedCount_(0)
 
@@ -139,6 +139,10 @@ int32_t CacheBuffer::ReCombineCacheData()
     size_t preAudioBufferIndex = 0;
     for (size_t reCombineCacheDataNum = 0; reCombineCacheDataNum < reCombineCacheDataSize; reCombineCacheDataNum++) {
         uint8_t *reCombineBuf = new(std::nothrow) uint8_t[bufferSize];
+        if (reCombineBuf == nullptr) {
+            MEDIA_ERR_LOG("Invalid recombine buffer.");
+            continue;
+        }
         for (size_t bufferNum = 0; bufferNum < bufferSize; bufferNum++) {
             if (cacheData_.size() > 1 && (preAudioBufferIndex == static_cast<size_t>(preAudioBuffer->size))) {
                 cacheData_.pop_front();

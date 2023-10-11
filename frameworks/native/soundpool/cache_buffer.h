@@ -44,10 +44,10 @@ class CacheBuffer :
     public AudioStandard::AudioRendererWriteCallback,
     public std::enable_shared_from_this<CacheBuffer> {
 public:
-    CacheBuffer(const MediaAVCodec::Format trackFormat,
-        const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
-        const size_t cacheDataTotalSize,
-        const int32_t soundID, const int32_t streamID);
+    CacheBuffer(const MediaAVCodec::Format &trackFormat,
+        const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
+        const size_t &cacheDataTotalSize,
+        const int32_t &soundID, const int32_t &streamID);
     ~CacheBuffer();
     void OnWriteData(size_t length) override;
     int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
