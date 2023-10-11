@@ -16,11 +16,9 @@
 #include "ringtone_player_napi.h"
 
 #include "audio_renderer_info_napi.h"
-#include "hilog/log.h"
+#include "media_log.h"
 
 using namespace std;
-using OHOS::HiviewDFX::HiLog;
-using OHOS::HiviewDFX::HiLogLabel;
 
 namespace {
     /* Constants for array index */
@@ -33,9 +31,9 @@ namespace {
 
     const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 
-    const int SUCCESS = 0;
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerNapi"};
 
-    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerNapi"};
+    const int SUCCESS = 0;
 }
 
 namespace OHOS {
@@ -46,20 +44,6 @@ shared_ptr<IRingtonePlayer> RingtonePlayerNapi::sIRingtonePlayer_ = nullptr;
 RingtonePlayerNapi::RingtonePlayerNapi() : env_(nullptr) {}
 
 RingtonePlayerNapi::~RingtonePlayerNapi() = default;
-
-napi_status RingtonePlayerNapi::AddNamedProperty(napi_env env, napi_value object,
-    const std::string name, int32_t enumValue)
-{
-    napi_status status;
-    napi_value enumNapiValue;
-
-    status = napi_create_int32(env, enumValue, &enumNapiValue);
-    if (status == napi_ok) {
-        status = napi_set_named_property(env, object, name.c_str(), enumNapiValue);
-    }
-
-    return status;
-}
 
 napi_value RingtonePlayerNapi::Init(napi_env env, napi_value exports)
 {
@@ -109,7 +93,7 @@ napi_value RingtonePlayerNapi::RingtonePlayerNapiConstructor(napi_env env, napi_
             if (obj->sIRingtonePlayer_ != nullptr) {
                 obj->iRingtonePlayer_ = move(obj->sIRingtonePlayer_);
             } else {
-                HiLog::Error(LABEL, "Failed to create sIRingtonePlayer_ instance.");
+                MEDIA_LOGE("Failed to create sIRingtonePlayer_ instance.");
                 return result;
             }
 
@@ -127,7 +111,7 @@ napi_value RingtonePlayerNapi::RingtonePlayerNapiConstructor(napi_env env, napi_
                 obj.release();
                 return thisVar;
             } else {
-                HiLog::Error(LABEL, "Failed to wrap the native rngplyrmngr object with JS.");
+                MEDIA_LOGE("Failed to wrap the native rngplyrmngr object with JS.");
             }
         }
     }
@@ -143,8 +127,7 @@ void RingtonePlayerNapi::RingtonePlayerNapiDestructor(napi_env env, void* native
     }
 }
 
-napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env,
-    shared_ptr<IRingtonePlayer> &iRingtonePlayer)
+napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env, shared_ptr<IRingtonePlayer> &iRingtonePlayer)
 {
     napi_status status;
     napi_value result = nullptr;
@@ -157,7 +140,7 @@ napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env,
         if (status == napi_ok) {
             return result;
         } else {
-            HiLog::Error(LABEL, "New instance could not be obtained.");
+            MEDIA_LOGE("GetRingtonePlayerInstance: New instance could not be obtained.");
         }
     }
 
@@ -165,7 +148,7 @@ napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env,
     return result;
 }
 
-static void CommonAsyncCallbackComp(napi_env env, napi_status status, void* data)
+void RingtonePlayerNapi::CommonAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
     auto context = static_cast<RingtonePlayerAsyncContext *>(data);
     napi_value callback = nullptr;
@@ -177,7 +160,7 @@ static void CommonAsyncCallbackComp(napi_env env, napi_status status, void* data
         napi_get_undefined(env, &result[PARAM0]);
     } else {
         napi_value message = nullptr;
-        napi_create_string_utf8(env, "Error, Operation not supported or Failed", NAPI_AUTO_LENGTH, &message);
+        napi_create_string_utf8(env, "Error: Operation is not supported or failed", NAPI_AUTO_LENGTH, &message);
         napi_create_error(env, nullptr, message, &result[PARAM0]);
     }
 
@@ -198,10 +181,10 @@ static void CommonAsyncCallbackComp(napi_env env, napi_status status, void* data
     context = nullptr;
 }
 
-static void GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+void RingtonePlayerNapi::GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
     auto context = static_cast<RingtonePlayerAsyncContext *>(data);
-    napi_value callback = nullptr;
+    napi_value getTitleCallback = nullptr;
     napi_value retVal = nullptr;
     napi_value result[2] = {};
 
@@ -210,7 +193,8 @@ static void GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void
         napi_create_string_utf8(env, context->title.c_str(), NAPI_AUTO_LENGTH, &result[PARAM1]);
     } else {
         napi_value message = nullptr;
-        napi_create_string_utf8(env, "Error, Operation not supported or Failed", NAPI_AUTO_LENGTH, &message);
+        napi_create_string_utf8(env, "GetTitle Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
         napi_create_error(env, nullptr, message, &result[PARAM0]);
         napi_get_undefined(env, &result[PARAM1]);
     }
@@ -222,8 +206,8 @@ static void GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void
             napi_reject_deferred(env, context->deferred, result[PARAM0]);
         }
     } else {
-        napi_get_reference_value(env, context->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
+        napi_get_reference_value(env, context->callbackRef, &getTitleCallback);
+        napi_call_function(env, nullptr, getTitleCallback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, context->callbackRef);
     }
     napi_delete_async_work(env, context->work);
@@ -245,20 +229,20 @@ napi_value RingtonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("GetTitle: Failed to retrieve details about the callback");
         return result;
     }
 
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "GetTitle: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         if (argc == ARGS_ONE) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[PARAM0], &valueType);
-            if (valueType == napi_function) {
-                napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
-            }
+            CHECK_AND_RETURN_RET_LOG(valueType == napi_function, result,
+                "GetTitle: the param type is not napi_function");
+            napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
         } else {
             napi_create_promise(env, &asyncContext->deferred, &result);
         }
@@ -272,7 +256,7 @@ napi_value RingtonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
             },
             GetTitleAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("GetTitle: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -283,10 +267,10 @@ napi_value RingtonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
     return result;
 }
 
-void AudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+void RingtonePlayerNapi::GetAudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
     auto context = static_cast<RingtonePlayerAsyncContext *>(data);
-    napi_value callback = nullptr;
+    napi_value getRendererInfoCallback = nullptr;
     napi_value retVal = nullptr;
     napi_value valueParam = nullptr;
     napi_value result[2] = {};
@@ -303,7 +287,8 @@ void AudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, vo
         result[PARAM1] = valueParam;
     } else {
         napi_value message = nullptr;
-        napi_create_string_utf8(env, "Error, Operation not supported or Failed", NAPI_AUTO_LENGTH, &message);
+        napi_create_string_utf8(env, "GetRendererInfo Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
         napi_create_error(env, nullptr, message, &result[PARAM0]);
         napi_get_undefined(env, &result[PARAM1]);
     }
@@ -315,8 +300,8 @@ void AudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, vo
             napi_reject_deferred(env, context->deferred, result[PARAM0]);
         }
     } else {
-        napi_get_reference_value(env, context->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
+        napi_get_reference_value(env, context->callbackRef, &getRendererInfoCallback);
+        napi_call_function(env, nullptr, getRendererInfoCallback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, context->callbackRef);
     }
     napi_delete_async_work(env, context->work);
@@ -338,20 +323,20 @@ napi_value RingtonePlayerNapi::GetAudioRendererInfo(napi_env env, napi_callback_
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("GetAudioRendererInfo: Failed to retrieve details about the callback");
         return result;
     }
 
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "GetAudioRendererInfo: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         if (argc == ARGS_ONE) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[PARAM0], &valueType);
-            if (valueType == napi_function) {
-                napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
-            }
+            CHECK_AND_RETURN_RET_LOG(valueType == napi_function, result,
+                "GetAudioRendererInfo: the param type is not napi_function");
+            napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
         } else {
             napi_create_promise(env, &asyncContext->deferred, &result);
         }
@@ -369,9 +354,9 @@ napi_value RingtonePlayerNapi::GetAudioRendererInfo(napi_env env, napi_callback_
                     context->rendererFlags  = rendererInfo.rendererFlags;
                 }
             },
-            AudioRendererInfoAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
+            GetAudioRendererInfoAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("GetAudioRendererInfo: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -397,7 +382,7 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("Configure: Failed to retrieve details about the callback");
         return result;
     }
 
@@ -410,14 +395,14 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
         if (valueType == napi_object) {
             if ((napi_get_named_property(env, argv[PARAM0], "volume", &property) != napi_ok)
                 || napi_get_value_double(env, property, &volume) != napi_ok) {
-                HiLog::Error(LABEL, "Could not get the volume argument!");
+                MEDIA_LOGE("Configure: Could not get the volume argument!");
                 NAPI_ASSERT(env, false, "missing properties");
             }
             asyncContext->volume = (float)volume;
 
             if ((napi_get_named_property(env, argv[PARAM0], "loop", &property) != napi_ok)
                 || napi_get_value_bool(env, property, &asyncContext->loop) != napi_ok) {
-                HiLog::Error(LABEL, "Could not get the loop argument!");
+                MEDIA_LOGE("Configure: Could not get the loop argument!");
                 NAPI_ASSERT(env, false, "missing properties");
             }
         }
@@ -438,9 +423,9 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
                 context->status = context->objectInfo->iRingtonePlayer_->Configure(
                     context->volume, context->loop);
             },
-            CommonAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("Configure: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -464,20 +449,20 @@ napi_value RingtonePlayerNapi::Start(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("Start: Failed to retrieve details about the callback");
         return result;
     }
 
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "Start: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         if (argc == ARGS_ONE) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[PARAM0], &valueType);
-            if (valueType == napi_function) {
-                napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
-            }
+            CHECK_AND_RETURN_RET_LOG(valueType == napi_function, result,
+                "Start: the param type is not napi_function");
+            napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
         } else {
             napi_create_promise(env, &asyncContext->deferred, &result);
         }
@@ -488,9 +473,9 @@ napi_value RingtonePlayerNapi::Start(napi_env env, napi_callback_info info)
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
                 context->status = context->objectInfo->iRingtonePlayer_->Start();
             },
-            CommonAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("Start: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -514,20 +499,20 @@ napi_value RingtonePlayerNapi::Stop(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("Stop: Failed to retrieve details about the callback");
         return result;
     }
 
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "Stop: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         if (argc == ARGS_ONE) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[PARAM0], &valueType);
-            if (valueType == napi_function) {
-                napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
-            }
+            CHECK_AND_RETURN_RET_LOG(valueType == napi_function, result,
+                "Stop: the param type is not napi_function");
+            napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
         } else {
             napi_create_promise(env, &asyncContext->deferred, &result);
         }
@@ -538,9 +523,9 @@ napi_value RingtonePlayerNapi::Stop(napi_env env, napi_callback_info info)
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
                 context->status = context->objectInfo->iRingtonePlayer_->Stop();
             },
-            CommonAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("Stop: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -564,20 +549,20 @@ napi_value RingtonePlayerNapi::Release(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Failed to retrieve details about the callback");
+        MEDIA_LOGE("Release: Failed to retrieve details about the callback");
         return result;
     }
 
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "Release: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         if (argc == ARGS_ONE) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[PARAM0], &valueType);
-            if (valueType == napi_function) {
-                napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
-            }
+            CHECK_AND_RETURN_RET_LOG(valueType == napi_function, result,
+                "Release: the param type is not napi_function");
+            napi_create_reference(env, argv[PARAM0], refCount, &asyncContext->callbackRef);
         } else {
             napi_create_promise(env, &asyncContext->deferred, &result);
         }
@@ -588,9 +573,9 @@ napi_value RingtonePlayerNapi::Release(napi_env env, napi_callback_info info)
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
                 context->status = context->objectInfo->iRingtonePlayer_->Release();
             },
-            CommonAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            HiLog::Error(LABEL, "Failed to get create async work");
+            MEDIA_LOGE("Release: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -611,7 +596,7 @@ napi_value RingtonePlayerNapi::GetAudioState(napi_env env, napi_callback_info in
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &thisVar, nullptr);
     if (status != napi_ok || thisVar == nullptr) {
-        HiLog::Error(LABEL, "Get volume fail to napi_get_cb_info");
+        MEDIA_LOGE("GetAudioState: fail to napi_get_cb_info");
         return result;
     }
 
@@ -640,17 +625,17 @@ napi_value RingtonePlayerNapi::On(napi_env env, napi_callback_info info)
     THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
     THROW_ERROR_ASSERT(env, argc >= requireArgc, NAPI_ERR_INPUT_INVALID);
 
-    napi_valuetype eventType = napi_undefined;
-    napi_typeof(env, argv[0], &eventType);
-    THROW_ERROR_ASSERT(env, eventType == napi_string, NAPI_ERR_INPUT_INVALID);
+    napi_valuetype argvType = napi_undefined;
+    napi_typeof(env, argv[0], &argvType);
+    THROW_ERROR_ASSERT(env, argvType == napi_string, NAPI_ERR_INPUT_INVALID);
 
     std::string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
     MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", callbackName.c_str());
 
-    napi_valuetype handler = napi_undefined;
+    napi_valuetype callbackFunction = napi_undefined;
     if (argc == requireArgc) {
-        napi_typeof(env, argv[1], &handler);
-        THROW_ERROR_ASSERT(env, handler == napi_function, NAPI_ERR_INPUT_INVALID);
+        napi_typeof(env, argv[1], &callbackFunction);
+        THROW_ERROR_ASSERT(env, callbackFunction == napi_function, NAPI_ERR_INPUT_INVALID);
     } else {
         napi_valuetype paramArg1 = napi_undefined;
         napi_typeof(env, argv[1], &paramArg1);
@@ -658,8 +643,8 @@ napi_value RingtonePlayerNapi::On(napi_env env, napi_callback_info info)
         THROW_ERROR_ASSERT(env, paramArg1 == expectedValType, NAPI_ERR_INPUT_INVALID);
 
         const int32_t arg2 = 2;
-        napi_typeof(env, argv[arg2], &handler);
-        THROW_ERROR_ASSERT(env, handler == napi_function, NAPI_ERR_INPUT_INVALID);
+        napi_typeof(env, argv[arg2], &callbackFunction);
+        THROW_ERROR_ASSERT(env, callbackFunction == napi_function, NAPI_ERR_INPUT_INVALID);
     }
 
     return RegisterCallback(env, jsThis, argv, callbackName);
@@ -713,9 +698,9 @@ napi_value RingtonePlayerNapi::Off(napi_env env, napi_callback_info info)
     THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
     THROW_ERROR_ASSERT(env, argc <= requireArgc, NAPI_ERR_INVALID_PARAM);
 
-    napi_valuetype eventType = napi_undefined;
-    napi_typeof(env, argv[0], &eventType);
-    THROW_ERROR_ASSERT(env, eventType == napi_string, NAPI_ERR_INVALID_PARAM);
+    napi_valuetype callbackNameType = napi_undefined;
+    napi_typeof(env, argv[0], &callbackNameType);
+    THROW_ERROR_ASSERT(env, callbackNameType == napi_string, NAPI_ERR_INVALID_PARAM);
 
     string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
     MEDIA_LOGI("Off callbackName: %{public}s", callbackName.c_str());

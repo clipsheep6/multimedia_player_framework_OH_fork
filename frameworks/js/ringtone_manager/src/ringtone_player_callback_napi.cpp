@@ -19,13 +19,10 @@
 #include "media_errors.h"
 #include "media_log.h"
 
-using OHOS::HiviewDFX::HiLog;
-using OHOS::HiviewDFX::HiLogLabel;
-
 namespace {
     const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 
-    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerCallbackNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerCallbackNapi"};
 }
 
 namespace OHOS {
@@ -133,20 +130,20 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s cancelled", request.c_str());
 
             napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
-                request.c_str());
+            napi_status napiStatus = napi_get_reference_value(env, callback, &jsCallback);
+            CHECK_AND_BREAK_LOG(napiStatus == napi_ok && jsCallback != nullptr,
+                "%{public}s get reference value fail", request.c_str());
 
             // Call back function
             napi_value args[1] = { nullptr };
             NativeInterruptEventToJsObj(env, args[0], event->interruptEvent);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
+            CHECK_AND_BREAK_LOG(napiStatus == napi_ok && args[0] != nullptr,
                 "%{public}s fail to create Interrupt callback", request.c_str());
 
             const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call Interrupt callback", request.c_str());
+            napiStatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_BREAK_LOG(napiStatus == napi_ok, "%{public}s fail to send interrupt callback", request.c_str());
         } while (0);
         napi_close_handle_scope(env, scope);
         delete event;

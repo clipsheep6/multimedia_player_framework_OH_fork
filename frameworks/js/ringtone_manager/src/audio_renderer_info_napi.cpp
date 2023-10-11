@@ -14,24 +14,20 @@
  */
 
 #include "audio_renderer_info_napi.h"
-#include "hilog/log.h"
+#include "media_log.h"
 
 using namespace std;
-using OHOS::HiviewDFX::HiLog;
-using OHOS::HiviewDFX::HiLogLabel;
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRendererInfoNapi"};
+}
 
 namespace OHOS {
 namespace Media {
 napi_ref AudioRendererInfoNapi::sConstructor_ = nullptr;
 unique_ptr<AudioStandard::AudioRendererInfo> AudioRendererInfoNapi::sAudioRendererInfo_ = nullptr;
 
-namespace {
-    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRendererInfoNapi"};
-}
-
-AudioRendererInfoNapi::AudioRendererInfoNapi()
-    : env_(nullptr) {
-}
+AudioRendererInfoNapi::AudioRendererInfoNapi() : env_(nullptr) {}
 
 AudioRendererInfoNapi::~AudioRendererInfoNapi() = default;
 
@@ -73,7 +69,7 @@ napi_value AudioRendererInfoNapi::Init(napi_env env, napi_value exports)
             return exports;
         }
     }
-    HiLog::Error(LABEL, "Failure in AudioRendererInfoNapi::Init()");
+    MEDIA_LOGE("Failure in AudioRendererInfoNapi::Init()");
 
     return result;
 }
@@ -98,7 +94,7 @@ napi_value AudioRendererInfoNapi::Construct(napi_env env, napi_callback_info inf
             }
         }
     }
-    HiLog::Error(LABEL, "Failed in AudioRendererInfoNapi::Construct()!");
+    MEDIA_LOGE("Failed in AudioRendererInfoNapi::Construct()!");
     napi_get_undefined(env, &jsThis);
 
     return jsThis;
@@ -120,7 +116,7 @@ napi_value AudioRendererInfoNapi::CreateAudioRendererInfoWrapper(napi_env env,
             return result;
         }
     }
-    HiLog::Error(LABEL, "Failed in CreateAudioRendererInfoWrapper, %{public}d", status);
+    MEDIA_LOGE("Failed in CreateAudioRendererInfoWrapper, %{public}d", status);
 
     napi_get_undefined(env, &result);
 
@@ -139,7 +135,7 @@ napi_value AudioRendererInfoNapi::GetContentType(napi_env env, napi_callback_inf
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        HiLog::Error(LABEL, "Get content type fail to napi_get_cb_info");
+        MEDIA_LOGE("Get content type fail to napi_get_cb_info");
         return jsResult;
     }
 
@@ -162,13 +158,13 @@ napi_value AudioRendererInfoNapi::SetContentType(napi_env env, napi_callback_inf
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
-    int32_t contentType;
+    int32_t contentType = 0;
     napi_value jsResult = nullptr;
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        HiLog::Error(LABEL, "set content type fail to napi_get_cb_info");
+        MEDIA_LOGE("SetContentType: napi_get_cb_info failed");
         return jsResult;
     }
 
@@ -176,15 +172,14 @@ napi_value AudioRendererInfoNapi::SetContentType(napi_env env, napi_callback_inf
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-            HiLog::Error(LABEL, "set content type fail: wrong data type");
+            MEDIA_LOGE("SetContentType: wrong data type");
             return jsResult;
         }
     }
 
     status = napi_get_value_int32(env, args[0], &contentType);
     if (status == napi_ok) {
-        audioRendererInfoNapi->audioRendererInfo_->contentType
-            = static_cast<AudioStandard::ContentType>(contentType);
+        audioRendererInfoNapi->audioRendererInfo_->contentType = static_cast<AudioStandard::ContentType>(contentType);
     }
 
     return jsResult;
@@ -202,7 +197,7 @@ napi_value AudioRendererInfoNapi::GetStreamUsage(napi_env env, napi_callback_inf
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        HiLog::Error(LABEL, "Get stream usage fail to napi_get_cb_info");
+        MEDIA_LOGE("Get stream usage fail to napi_get_cb_info");
         return jsResult;
     }
 
@@ -225,31 +220,31 @@ napi_value AudioRendererInfoNapi::SetStreamUsage(napi_env env, napi_callback_inf
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
-    int32_t usage;
+    int32_t streamUsage = 0;
     napi_value jsResult = nullptr;
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        HiLog::Error(LABEL, "set stream usage fail to napi_get_cb_info");
+        MEDIA_LOGE("SetStreamUsage: napi_get_cb_info failed");
         return jsResult;
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioRendererInfoNapi);
     if (status != napi_ok) {
-        HiLog::Error(LABEL, "Napi unwrap failed");
+        MEDIA_LOGE("SetStreamUsage: napi_unwrap failed");
         return jsResult;
     }
 
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        HiLog::Error(LABEL, "set stream usage fail: wrong data type");
+        MEDIA_LOGE("SetStreamUsage: wrong data type");
         return jsResult;
     }
 
-    status = napi_get_value_int32(env, args[0], &usage);
+    status = napi_get_value_int32(env, args[0], &streamUsage);
     if (status == napi_ok) {
-        audioRendererInfoNapi->audioRendererInfo_->streamUsage = static_cast<AudioStandard::StreamUsage>(usage);
+        audioRendererInfoNapi->audioRendererInfo_->streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
     }
 
     return jsResult;
@@ -266,7 +261,7 @@ napi_value AudioRendererInfoNapi::GetRendererFlags(napi_env env, napi_callback_i
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        HiLog::Error(LABEL, "Get renderer flag fail to napi_get_cb_info");
+        MEDIA_LOGE("Get renderer flag fail to napi_get_cb_info");
         return jsResult;
     }
 
@@ -295,7 +290,7 @@ napi_value AudioRendererInfoNapi::SetRendererFlags(napi_env env, napi_callback_i
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        HiLog::Error(LABEL, "get renderer flag fail to napi_get_cb_info");
+        MEDIA_LOGE("get renderer flag fail to napi_get_cb_info");
         return jsResult;
     }
 
@@ -303,7 +298,7 @@ napi_value AudioRendererInfoNapi::SetRendererFlags(napi_env env, napi_callback_i
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-            HiLog::Error(LABEL, "get renderer flag fail: wrong data type");
+            MEDIA_LOGE("get renderer flag fail: wrong data type");
             return jsResult;
         }
     }

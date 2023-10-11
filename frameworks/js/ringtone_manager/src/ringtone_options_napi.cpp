@@ -14,11 +14,13 @@
  */
 
 #include "ringtone_options_napi.h"
-#include "hilog/log.h"
+#include "media_log.h"
 
 using namespace std;
-using OHOS::HiviewDFX::HiLog;
-using OHOS::HiviewDFX::HiLogLabel;
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtoneOptionsNapi"};
+}
 
 namespace OHOS {
 namespace Media {
@@ -26,10 +28,6 @@ napi_ref RingtoneOptionsNapi::sConstructor_ = nullptr;
 
 float RingtoneOptionsNapi::sVolume_ = 1;
 bool RingtoneOptionsNapi::sLoop_ = true;
-
-namespace {
-    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtoneOptionsNapi"};
-}
 
 RingtoneOptionsNapi::RingtoneOptionsNapi()
     : env_(nullptr) {
@@ -73,7 +71,7 @@ napi_value RingtoneOptionsNapi::Init(napi_env env, napi_value exports)
             return exports;
         }
     }
-    HiLog::Error(LABEL, "Failure in RingtoneOptionsNapi::Init()");
+    MEDIA_LOGE("Failure in RingtoneOptionsNapi::Init()");
 
     return result;
 }
@@ -100,7 +98,7 @@ napi_value RingtoneOptionsNapi::Construct(napi_env env, napi_callback_info info)
         }
     }
 
-    HiLog::Error(LABEL, "Failed in RingtoneOptionsNapi::Construct()!");
+    MEDIA_LOGE("Failed in RingtoneOptionsNapi::Construct()!");
     napi_get_undefined(env, &jsThis);
 
     return jsThis;
@@ -121,7 +119,7 @@ napi_value RingtoneOptionsNapi::CreateRingtoneOptionsWrapper(napi_env env, float
             return result;
         }
     }
-    HiLog::Error(LABEL, "Failed in CreateRingtoneOptionsWrapper, %{public}d", status);
+    MEDIA_LOGE("Failed in CreateRingtoneOptionsWrapper, %{public}d", status);
 
     napi_get_undefined(env, &result);
 
@@ -139,7 +137,7 @@ napi_value RingtoneOptionsNapi::GetVolume(napi_env env, napi_callback_info info)
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        HiLog::Error(LABEL, "Get volume fail to napi_get_cb_info");
+        MEDIA_LOGE("Get volume: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -167,7 +165,7 @@ napi_value RingtoneOptionsNapi::SetVolume(napi_env env, napi_callback_info info)
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        HiLog::Error(LABEL, "set volume fail to napi_get_cb_info");
+        MEDIA_LOGE("SetVolume: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -175,7 +173,7 @@ napi_value RingtoneOptionsNapi::SetVolume(napi_env env, napi_callback_info info)
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-            HiLog::Error(LABEL, "set volume fail: wrong data type");
+            MEDIA_LOGE("Setvolume: failed for wrong data type");
             return jsResult;
         }
     }
@@ -199,7 +197,7 @@ napi_value RingtoneOptionsNapi::GetLoop(napi_env env, napi_callback_info info)
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        HiLog::Error(LABEL, "Get volume fail to napi_get_cb_info");
+        MEDIA_LOGE("GetLoop: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -227,7 +225,7 @@ napi_value RingtoneOptionsNapi::SetLoop(napi_env env, napi_callback_info info)
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        HiLog::Error(LABEL, "set loop fail to napi_get_cb_info");
+        MEDIA_LOGE("SetLoop: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -235,7 +233,7 @@ napi_value RingtoneOptionsNapi::SetLoop(napi_env env, napi_callback_info info)
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
-            HiLog::Error(LABEL, "set volume fail: wrong data type");
+            MEDIA_LOGE("SetLoop: failed for wrong data type");
             return jsResult;
         }
     }

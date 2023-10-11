@@ -55,16 +55,15 @@ public:
 };
 
 struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb)
-        : env_(env), cb_(cb)
-    {
-    }
+    AutoRef(napi_env env, napi_ref cb) : env_(env), cb_(cb) {}
+
     ~AutoRef()
     {
         if (env_ != nullptr && cb_ != nullptr) {
             (void)napi_delete_reference(env_, cb_);
         }
     }
+
     napi_env env_;
     napi_ref cb_;
 };

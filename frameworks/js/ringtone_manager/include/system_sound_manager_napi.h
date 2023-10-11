@@ -54,6 +54,9 @@ private:
     static napi_value CreateRingtoneTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
+    static void SetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
+    static void GetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
+    static void GetRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
 
     static napi_ref ringtoneType_;
     static napi_ref sConstructor_;
