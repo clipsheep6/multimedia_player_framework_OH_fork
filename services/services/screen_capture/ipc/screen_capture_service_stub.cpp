@@ -21,6 +21,7 @@
 #include "screen_capture_listener_proxy.h"
 
 namespace {
+constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServiceStub"};
 }
 
@@ -233,6 +234,7 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     VideoCaptureInfo videoInfo;
     videoInfo.displayId = data.ReadUint64();
     int32_t size = data.ReadInt32();
+    size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     if (size > 0) {
         for (auto i = 0; i < size; i++) {
             videoInfo.taskIDs.push_back(data.ReadInt32());

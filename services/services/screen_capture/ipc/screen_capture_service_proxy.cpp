@@ -19,6 +19,7 @@
 #include "avsharedmemory_ipc.h"
 
 namespace {
+constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServiceProxy"};
 }
 
@@ -132,9 +133,14 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     token = data.WriteUint64(videoInfo.displayId) && data.WriteInt32(videoInfo.taskIDs.size());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayid and taskId size!");
     // write list data
+    int count = 0;
     for (int32_t taskID : videoInfo.taskIDs) {
         token = data.WriteInt32(taskID);
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");
+        count++;
+        if (count >= MAX_WINDOWS_LEN) {
+            break;
+        }
     }
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
             data.WriteInt32(videoInfo.videoSource);

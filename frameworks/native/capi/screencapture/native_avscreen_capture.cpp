@@ -21,6 +21,7 @@
 #include "native_avscreen_capture.h"
 
 namespace {
+constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeScreenCapture"};
 }
 
@@ -114,6 +115,7 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
     int32_t *taskIds = config.videoInfo.videoCapInfo.missionIDs;
     int32_t size = config.videoInfo.videoCapInfo.missionIDsLen;
+    size = size >= MAX_WINDOWS_LEN ? MAX_WINDOWS_LEN : size;
     while (size > 0) {
         if (taskIds == nullptr) {
             break;
