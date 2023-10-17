@@ -14,6 +14,7 @@
 */
 
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
+import image from "./@ohos.multimedia.image";
 import audio from "./@ohos.multimedia.audio";
 
 /**
@@ -516,6 +517,24 @@ declare namespace media {
      * @throws { BusinessError } 5400102 - Operation not allowed. Return by promise.
      */
     getTrackDescription() : Promise<Array<MediaDescription>>;
+
+   /**
+    * Get current displayed frame.
+    * @since 11
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @param callback Async callback return the pixel map.
+    * @throws { BusinessError } 5400102 - Operation not allowed. Return by callback.
+    */
+   getCurrentFrame(callback: AsyncCallback<image.PixelMap>): void;
+
+   /**
+    * Get current displayed frame.
+    * @since 11
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @returns A Promise instance used to return the pixel map.
+    * @throws { BusinessError } 5400102 - Operation not allowed. Return by promise.
+    */
+   getCurrentFrame() : Promise<image.PixelMap>;
 
     /**
      * Media URI. Mainstream media formats are supported.
