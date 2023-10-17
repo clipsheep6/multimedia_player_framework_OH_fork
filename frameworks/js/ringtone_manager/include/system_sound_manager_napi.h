@@ -46,9 +46,12 @@ private:
     static napi_value SetSystemRingtoneUri(napi_env env, napi_callback_info info);
     static napi_value GetSystemRingtoneUri(napi_env env, napi_callback_info info);
     static napi_value GetSystemRingtonePlayer(napi_env env, napi_callback_info info);
+    static void AsyncGetSystemRingtonePlayer(napi_env env, void *data);
     static napi_value SetSystemNotificationUri(napi_env env, napi_callback_info info);
+    static void AsyncSetSystemNotificationUri(napi_env env, void *data);
     static napi_value GetSystemNotificationUri(napi_env env, napi_callback_info info);
     static napi_value SetSystemAlarmUri(napi_env env, napi_callback_info info);
+    static void AsyncSetSystemAlarmUri(napi_env env, void *data);
     static napi_value GetSystemAlarmUri(napi_env env, napi_callback_info info);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value CreateRingtoneTypeObject(napi_env env);
