@@ -207,7 +207,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PrepareTask", false)
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "PrepareTask", false)
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -285,7 +286,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PlayTask", false)
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "PlayTask", false)
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -361,7 +363,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PauseTask", false)
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "PauseTask", false)
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -429,7 +432,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "StopTask", false)
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "StopTask", false)
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -507,7 +511,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 stopWait_ = false;
-                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResetTask", false)
+                LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                    [this]() { return stopWait_.load(); }), "ResetTask", false)
             }
         }
         MEDIA_LOGI("Reset Task Out");
@@ -572,7 +577,8 @@ void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
     std::unique_lock<std::mutex> lock(taskMutex_);
-    LISTENER(stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; }), "StopTaskQue", false)
+    LISTENER(stopTaskQueCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+        [this]() { return taskQueStoped_; }), "StopTaskQue", false)
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
 
@@ -968,51 +974,64 @@ void AVPlayerNapi::SetSource(std::string url)
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
-        auto task = std::make_shared<TaskHandler<void>>([this, url]() {
-            std::unique_lock<std::mutex> lock(taskMutex_);
-            auto state = GetCurrentState();
-            if (state != AVPlayerState::STATE_IDLE) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
-                return;
-            }
-            if (player_ != nullptr) {
-                if (player_->SetSource(url) != MSERR_OK) {
-                    OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
-                }
-                stopWait_ = false;
-                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
-            }
-        });
-        (void)taskQue_->EnqueueTask(task);
+        EnqueueNetworkTask(url);
     } else if (isFd) {
         std::string inputFd = url.substr(sizeof("fd://") - 1);
         int32_t fd = -1;
         if (!StrToInt(inputFd, fd) || fd < 0) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid parameters, The input parameter is not a fd://+numeric string");
+                      "invalid parameters, The input parameter is not a fd://+numeric string");
             return;
         }
-
-        auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
-            std::unique_lock<std::mutex> lock(taskMutex_);
-            auto state = GetCurrentState();
-            if (state != AVPlayerState::STATE_IDLE) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
-                return;
-            }
-            if (player_ != nullptr) {
-                if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
-                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
-                }
-                stopWait_ = false;
-                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
-            }
-        });
-        (void)taskQue_->EnqueueTask(task);
+        EnqueueFdTask(url, fd);
     } else {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, The input parameter is not fd:// or network address");
     }
+}
+
+void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
+{
+    auto task = std::make_shared<TaskHandler<void>>([this, url]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_IDLE) {
+            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+            return;
+        }
+        if (player_ != nullptr) {
+            if (player_->SetSource(url) != MSERR_OK) {
+                OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
+            }
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
+            MEDIA_LOGI("Set source network out");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
+}
+
+void AVPlayerNapi::EnqueueFdTask(const std::string url, const int32_t fd)
+{
+    auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state != AVPlayerState::STATE_IDLE) {
+            OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
+            return;
+        }
+        if (player_ != nullptr) {
+            if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
+                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+            }
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                [this]() { return stopWait_.load(); }), "SetSourceFd", false)
+            MEDIA_LOGI("Set source fd out");
+        }
+    });
+    (void)taskQue_->EnqueueTask(task);
 }
 
 napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)

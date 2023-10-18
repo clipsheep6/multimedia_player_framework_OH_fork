@@ -273,6 +273,8 @@ private:
     std::string GetCurrentState();
     bool IsControllable();
     bool IsLiveSource() const;
+    void EnqueueNetworkTask(const std::string url);
+    void EnqueueFdTask(const std::string url, const int32_t fd);
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
@@ -333,6 +335,7 @@ private:
     int32_t position_ = -1;
     int32_t duration_ = -1;
     bool isLiveStream_ = false;
+    const int32_t WAITSECOND = 9;
 };
 } // namespace Media
 } // namespace OHOS
