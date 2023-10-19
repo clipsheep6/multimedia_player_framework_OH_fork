@@ -80,21 +80,30 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     }
     sourceFormat.GetIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_TRACK_COUNT, sourceTrackCountInfo);
     sourceFormat.GetLongValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_DURATION, sourceDurationInfo);
-    if (sourceTrackCountInfo == AUDIO_SOURCE_TRACK_COUNT) {
-        demuxer_->SelectTrackByID(AUDIO_SOURCE_TRACK_INDEX);
-        ret = source_->GetTrackFormat(*trackFormat, AUDIO_SOURCE_TRACK_INDEX);
+
+    MEDIA_INFO_LOG("SoundParser sourceTrackCountInfo:%{public}d", sourceTrackCountInfo);
+    for (int32_t sourceTrackIndex = 0; sourceTrackIndex < sourceTrackCountInfo; sourceTrackIndex++) {
+        int32_t trackType = 0;
+        ret = source_->GetTrackFormat(*trackFormat, sourceTrackIndex);
         if (ret != 0) {
             MEDIA_ERR_LOG("Get track format failed:%{public}d", ret);
         }
-        int32_t trackBitRateInfo;
-        std::string trackMimeTypeInfo;
-        trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_BITRATE, trackBitRateInfo);
-        trackFormat->PutLongValue(MediaDescriptionKey::MD_KEY_BITRATE, static_cast<int64_t>(trackBitRateInfo));
-        trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
-        if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
-            // resample format
-            trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
-                MediaAVCodec::SAMPLE_S16LE);
+        trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_TRACK_TYPE, trackType);
+        MEDIA_INFO_LOG("SoundParser trackType:%{public}d", trackType);
+        if (trackType == MEDIA_TYPE_AUD) {
+            MEDIA_INFO_LOG("SoundParser trackType:%{public}d", trackType);
+            demuxer_->SelectTrackByID(sourceTrackIndex);
+            int32_t trackBitRateInfo;
+            std::string trackMimeTypeInfo;
+            trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_BITRATE, trackBitRateInfo);
+            trackFormat->PutLongValue(MediaDescriptionKey::MD_KEY_BITRATE, static_cast<int64_t>(trackBitRateInfo));
+            trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
+            if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
+                // resample format
+                trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
+                    MediaAVCodec::SAMPLE_S16LE);
+            }
+            break;
         }
     }
     return MSERR_OK;
@@ -179,7 +188,7 @@ int32_t SoundParser::Release()
 SoundDecoderCallback::SoundDecoderCallback(const int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
     const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer,
-    const std::string trackMimeTypeInfo) : soundID_(soundID), audioDec_(audioDec),
+    const std::string &trackMimeTypeInfo) : soundID_(soundID), audioDec_(audioDec),
     demuxer_(demuxer), trackMimeTypeInfo_(trackMimeTypeInfo), eosFlag_(false),
     decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
@@ -216,9 +225,8 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
             MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
             return;
         }
-        int32_t size = sampleInfo.size;
-        uint8_t *buf = new(std::nothrow) uint8_t[size];
-        if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
+        if (!decodeShouldCompleted_ && (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE ||
+                bufferFlag == AVCODEC_BUFFER_FLAG_EOS)) {
             decodeShouldCompleted_ = true;
             CHECK_AND_RETURN_LOG(listener_ != nullptr, "sound decode listener invalid.");
             listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
@@ -227,6 +235,8 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
             callback_->OnLoadCompleted(soundID_);
             return;
         }
+        int32_t size = sampleInfo.size;
+        uint8_t *buf = new(std::nothrow) uint8_t[size];
         if (buf != nullptr) {
             if (memcpy_s(buf, size, buffer->GetBase(), size) != EOK) {
                 MEDIA_INFO_LOG("audio buffer copy failed:%{public}s", strerror(errno));

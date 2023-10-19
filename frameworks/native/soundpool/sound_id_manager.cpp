@@ -19,7 +19,7 @@
 
 namespace {
     static const std::string THREAD_POOL_NAME = "SoundParserThreadPool";
-    static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency();
+    static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }
 
 namespace OHOS {

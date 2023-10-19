@@ -56,7 +56,7 @@ public:
     };
 
     SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const std::string trackMimeTypeInfo);
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const std::string &trackMimeTypeInfo);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
