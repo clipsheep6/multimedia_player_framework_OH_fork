@@ -87,7 +87,7 @@ bool ScreenCaptureAcquireAudioBufferNdkFuzzer::FuzzScreenCaptureAcquireAudioBuff
         OH_ALL_PLAYBACK,
         OH_APP_PLAYBACK,
     };
-    int32_t asourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
+    int32_t asourcesubscript = (static_cast<int32_t>(*data)) % (audioSourceTypesList);
     OH_AudioCaptureSourceType type = audioSourceType[asourcesubscript];
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);

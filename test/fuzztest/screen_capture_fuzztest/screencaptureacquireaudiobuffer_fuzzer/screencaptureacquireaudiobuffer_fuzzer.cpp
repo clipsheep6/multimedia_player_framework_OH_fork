@@ -85,7 +85,7 @@ bool ScreenCaptureAcquireAudioBufferFuzzer::FuzzScreenCaptureAcquireAudioBuffer(
         ALL_PLAYBACK,
         APP_PLAYBACK,
     };
-    int32_t asourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
+    int32_t asourcesubscript = (static_cast<int32_t>(*data)) % (audioSourceTypesList);
     AudioCaptureSourceType type = audioSourceType[asourcesubscript];
 
     TestScreenCapture::SetMicrophoneEnabled(true);
