@@ -94,6 +94,7 @@ config("media_service_config") {
 }
 
 ohos_shared_library("media_service") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
