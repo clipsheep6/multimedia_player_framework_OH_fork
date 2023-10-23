@@ -773,7 +773,7 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
         }
     }
 
-    if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
+    if (CommonNapi::CheckValueType(env, args[1], napi_number)) {
         (void)napi_get_value_int32(env, args[1], &asyncContext->seekMode); // mode:SeekMode
         if (asyncContext->seekMode < SEEK_NEXT_SYNC || asyncContext->seekMode > SEEK_CLOSEST) {
             asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek mode invalid");
