@@ -15,23 +15,21 @@ import("//build/ohos.gni")
 import("//build/ohos/ndk/ndk.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-ohos_ndk_headers("native_avplayer_header") {
+ohos_ndk_headers("avplayer_header") {
   dest_dir = "$ndk_headers_out_dir/multimedia/player_framework"
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c/native_avplayer.h",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c/native_avplayer_base.h",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c/avplayer.h",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c/avplayer_base.h",
   ]
 }
 
-ohos_ndk_library("libnative_avplayer") {
-  ndk_description_file = "./libnative_avplayer.ndk.json"
-  min_compact_version = "1"
-  output_name = "native_avplayer"
+ohos_ndk_library("libavplayer") {
+  ndk_description_file = "./libavplayer.ndk.json"
+  output_name = "avplayer"
   output_extension = "so"
-
   system_capability = "SystemCapability.Multimedia.Media.AVPlayer"
   system_capability_headers = [
-    "multimedia/player_framework/native_avplayer.h",
-    "multimedia/player_framework/native_avplayer_base.h",
+    "multimedia/player_framework/avplayer.h",
+    "multimedia/player_framework/avplayer_base.h",
   ]
 }

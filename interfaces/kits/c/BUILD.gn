@@ -18,7 +18,7 @@ group("capi_packages") {
   deps = []
   if (multimedia_player_framework_support_capi) {
     deps += [
-      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avplayer",
+      "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
     ]
   }
@@ -87,7 +87,7 @@ ohos_shared_library("native_avscreen_capture") {
   part_name = "player_framework"
 }
 
-ohos_shared_library("native_avplayer") {
+ohos_shared_library("avplayer") {
   install_enable = true
 
   sanitize = {
