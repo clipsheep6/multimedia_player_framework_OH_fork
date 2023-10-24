@@ -17,6 +17,7 @@
 #include "cache_buffer.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace Media {
@@ -226,9 +227,11 @@ void CacheBuffer::OnWriteData(size_t length)
     audioRenderer_->GetBufferDesc(bufDesc);
     std::shared_ptr<AudioBufferEntry> audioBuffer = reCombineCacheData_[cacheDataFrameNum_];
 
-    bufDesc.buffer = audioBuffer->buffer;
-    bufDesc.bufLength = static_cast<size_t>(audioBuffer->size);
-    bufDesc.dataLength = static_cast<size_t>(audioBuffer->size);
+    int32_t ret = memcpy_s(static_cast<void *>(bufDesc.buffer), length,
+        static_cast<void *>(audioBuffer->buffer), length);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "memcpy failed.");
+    bufDesc.bufLength = length;
+    bufDesc.dataLength = length;
 
     audioRenderer_->Enqueue(bufDesc);
     cacheDataFrameNum_++;
@@ -296,6 +299,7 @@ int32_t CacheBuffer::SetLoop(const int32_t streamID, const int32_t loop)
     std::lock_guard lock(cacheBufferLock_);
     if (streamID == streamID_) {
         loop_ = loop;
+        havePlayedCount_ = 0;
     }
     return MSERR_OK;
 }
