@@ -21,6 +21,7 @@
 namespace {
     static constexpr int32_t MAX_SOUND_BUFFER_SIZE = 1 * 1024 * 1024;
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
+    static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
 }
 
 namespace OHOS {
@@ -102,6 +103,10 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
                 // resample format
                 trackFormat->PutIntValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_AUDIO_SAMPLE_FORMAT,
                     MediaAVCodec::SAMPLE_S16LE);
+            } else {
+                isRawFile_ = true;
+                trackFormat->PutStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME,
+                    AUDIO_MPEG_MIMETYPE_INFO);
             }
             break;
         }
@@ -117,18 +122,11 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         std::string trackMimeTypeInfo;
         trackFormat.GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
         MEDIA_INFO_LOG("SoundParser mime type:%{public}s", trackMimeTypeInfo.c_str());
-        if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) == 0) {
-            MEDIA_INFO_LOG("SoundParser pcm file, read it directly.");
-            // Just use this codec's callback process.
-            audioDec_ =
-                MediaAVCodec::AudioDecoderFactory::CreateByName((AVCodecCodecName::AUDIO_DECODER_FLAC_NAME).data());
-        } else {
-            audioDec_ = MediaAVCodec::AudioDecoderFactory::CreateByMime(trackMimeTypeInfo);
-        }
+        audioDec_ = MediaAVCodec::AudioDecoderFactory::CreateByMime(trackMimeTypeInfo);
         CHECK_AND_RETURN_RET_LOG(audioDec_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain audioDecorder.");
         int32_t ret = audioDec_->Configure(trackFormat);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to configure audioDecorder.");
-        audioDecCb_ = std::make_shared<SoundDecoderCallback>(soundID_, audioDec_, demuxer_, trackMimeTypeInfo);
+        audioDecCb_ = std::make_shared<SoundDecoderCallback>(soundID_, audioDec_, demuxer_, isRawFile_);
         CHECK_AND_RETURN_RET_LOG(audioDecCb_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain decode callback.");
         ret = audioDec_->SetCallback(audioDecCb_);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to setCallback audioDecorder");
@@ -188,8 +186,8 @@ int32_t SoundParser::Release()
 SoundDecoderCallback::SoundDecoderCallback(const int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
     const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer,
-    const std::string &trackMimeTypeInfo) : soundID_(soundID), audioDec_(audioDec),
-    demuxer_(demuxer), trackMimeTypeInfo_(trackMimeTypeInfo), eosFlag_(false),
+    const bool isRawFile) : soundID_(soundID), audioDec_(audioDec),
+    demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
     decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
     MEDIA_INFO_LOG("Construction SoundDecoderCallback");
@@ -202,7 +200,7 @@ SoundDecoderCallback::~SoundDecoderCallback()
 }
 void SoundDecoderCallback::OnError(AVCodecErrorType errorType, int32_t errorCode)
 {
-    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) != 0) {
+    if (isRawFile_) {
         MEDIA_INFO_LOG("Recive error, errorType:%{public}d,errorCode:%{public}d", errorType, errorCode);
     }
 }
@@ -220,7 +218,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
     CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain demuxer");
     CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
 
-    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) == 0) {
+    if (isRawFile_ && !decodeShouldCompleted_) {
         if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
             MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
             return;
@@ -266,7 +264,7 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     std::shared_ptr<AVSharedMemory> buffer)
 {
     std::unique_lock<std::mutex> lock(amutex_);
-    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) == 0) {
+    if (isRawFile_) {
         MEDIA_INFO_LOG("audio raw data, return.");
         CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
         audioDec_->ReleaseOutputBuffer(index);

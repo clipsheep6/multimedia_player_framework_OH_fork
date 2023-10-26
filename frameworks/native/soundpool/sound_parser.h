@@ -56,7 +56,7 @@ public:
     };
 
     SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const std::string &trackMimeTypeInfo);
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const bool isRawFile);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
@@ -80,6 +80,7 @@ private:
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<SoundDecodeListener> listener_;
     std::string trackMimeTypeInfo_;
+    bool isRawFile_ = false;
     bool eosFlag_;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
     bool decodeShouldCompleted_;
@@ -165,6 +166,7 @@ private:
     std::mutex soundParserLock_;
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
+    bool isRawFile_ = false;
 
     MediaAVCodec::Format trackFormat_;
 
