@@ -207,7 +207,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "PrepareTask", false)
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
@@ -286,7 +286,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "PlayTask", false)
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
@@ -363,7 +363,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "PauseTask", false)
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
@@ -432,7 +432,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "StopTask", false)
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
@@ -511,7 +511,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 stopWait_ = false;
-                LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+                LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                     [this]() { return stopWait_.load(); }), "ResetTask", false)
             }
         }
@@ -577,7 +577,7 @@ void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
     std::unique_lock<std::mutex> lock(taskMutex_);
-    LISTENER(stopTaskQueCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+    LISTENER(stopTaskQueCond_.wait_for(lock, std::chrono::seconds(waitsecond),
         [this]() { return taskQueStoped_; }), "StopTaskQue", false)
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
@@ -1004,7 +1004,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
             MEDIA_LOGI("Set source network out");
         }
@@ -1026,7 +1026,7 @@ void AVPlayerNapi::EnqueueFdTask(const std::string url, const int32_t fd)
                 OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(WAITSECOND),
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
                 [this]() { return stopWait_.load(); }), "SetSourceFd", false)
             MEDIA_LOGI("Set source fd out");
         }

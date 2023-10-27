@@ -335,7 +335,7 @@ private:
     int32_t position_ = -1;
     int32_t duration_ = -1;
     bool isLiveStream_ = false;
-    const int32_t WAITSECOND = 9;
+    const int32_t waitsecond = 9;
 };
 } // namespace Media
 } // namespace OHOS

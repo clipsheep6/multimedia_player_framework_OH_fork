@@ -925,7 +925,7 @@ void PlayerServerMem::ResetBackGroundForMemManage()
         continueReset = 0;
         return;
     }
-    if (CONTINUE_RESET_MAX_NUM > continueReset) {
+    if (continueReset < CONTINUE_RESET_MAX_NUM) {
         continueReset++;
         return;
     }

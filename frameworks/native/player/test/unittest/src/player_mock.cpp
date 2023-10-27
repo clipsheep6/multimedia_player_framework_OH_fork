@@ -56,7 +56,7 @@ int32_t PlayerCallbackTest::PrepareSync()
 {
     if (state_ != PLAYER_PREPARED) {
         std::unique_lock<std::mutex> lockPrepare(mutexCond_);
-        condVarPrepare_.wait_for(lockPrepare, std::chrono::seconds(WAITSECOND));
+        condVarPrepare_.wait_for(lockPrepare, std::chrono::seconds(waitsecond));
         if (state_ != PLAYER_PREPARED) {
             return -1;
         }
@@ -68,7 +68,7 @@ int32_t PlayerCallbackTest::PlaySync()
 {
     if (state_ != PLAYER_STARTED) {
         std::unique_lock<std::mutex> lockPlay(mutexCond_);
-        condVarPlay_.wait_for(lockPlay, std::chrono::seconds(WAITSECOND));
+        condVarPlay_.wait_for(lockPlay, std::chrono::seconds(waitsecond));
         if (state_ != PLAYER_STARTED && state_ != PLAYER_PLAYBACK_COMPLETE) {
             return -1;
         }
@@ -80,7 +80,7 @@ int32_t PlayerCallbackTest::PauseSync()
 {
     if (state_ != PLAYER_PAUSED) {
         std::unique_lock<std::mutex> lockPause(mutexCond_);
-        condVarPause_.wait_for(lockPause, std::chrono::seconds(WAITSECOND));
+        condVarPause_.wait_for(lockPause, std::chrono::seconds(waitsecond));
         if (state_ != PLAYER_PAUSED) {
             return -1;
         }
@@ -92,7 +92,7 @@ int32_t PlayerCallbackTest::StopSync()
 {
     if (state_ != PLAYER_STOPPED) {
         std::unique_lock<std::mutex> lockStop(mutexCond_);
-        condVarStop_.wait_for(lockStop, std::chrono::seconds(WAITSECOND));
+        condVarStop_.wait_for(lockStop, std::chrono::seconds(waitsecond));
         if (state_ != PLAYER_STOPPED) {
             return -1;
         }
@@ -104,7 +104,7 @@ int32_t PlayerCallbackTest::ResetSync()
 {
     if (state_ != PLAYER_IDLE) {
         std::unique_lock<std::mutex> lockReset(mutexCond_);
-        condVarReset_.wait_for(lockReset, std::chrono::seconds(WAITSECOND));
+        condVarReset_.wait_for(lockReset, std::chrono::seconds(waitsecond));
         if (state_ != PLAYER_IDLE) {
             return -1;
         }
@@ -116,7 +116,7 @@ int32_t PlayerCallbackTest::SeekSync()
 {
     if (seekDoneFlag_ == false) {
         std::unique_lock<std::mutex> lockSeek(mutexCond_);
-        condVarSeek_.wait_for(lockSeek, std::chrono::seconds(WAITSECOND));
+        condVarSeek_.wait_for(lockSeek, std::chrono::seconds(waitsecond));
         if (seekDoneFlag_ == false) {
             return -1;
         }
@@ -128,7 +128,7 @@ int32_t PlayerCallbackTest::SpeedSync()
 {
     if (speedDoneFlag_ == false) {
         std::unique_lock<std::mutex> lockSpeed(mutexCond_);
-        condVarSpeed_.wait_for(lockSpeed, std::chrono::seconds(WAITSECOND));
+        condVarSpeed_.wait_for(lockSpeed, std::chrono::seconds(waitsecond));
         if (speedDoneFlag_ == false) {
             return -1;
         }
@@ -140,7 +140,7 @@ int32_t PlayerCallbackTest::TrackSync(bool &trackChange)
 {
     if (trackDoneFlag_ == false) {
         std::unique_lock<std::mutex> lockTrackDone(mutexCond_);
-        condVarTrackDone_.wait_for(lockTrackDone, std::chrono::seconds(WAITSECOND));
+        condVarTrackDone_.wait_for(lockTrackDone, std::chrono::seconds(waitsecond));
         if (trackDoneFlag_ == false) {
             return -1;
         }
@@ -155,7 +155,7 @@ int32_t PlayerCallbackTest::TrackInfoUpdateSync()
 {
     if (trackInfoUpdate_ == false) {
         std::unique_lock<std::mutex> lock(mutexCond_);
-        condVarTrackInfoUpdate_.wait_for(lock, std::chrono::seconds(WAITSECOND), [this]() {
+        condVarTrackInfoUpdate_.wait_for(lock, std::chrono::seconds(waitsecond), [this]() {
             return trackInfoUpdate_;
         });
         if (trackInfoUpdate_ == false) {
@@ -238,7 +238,7 @@ std::string PlayerCallbackTest::SubtitleTextUpdate(std::string text)
 {
     std::unique_lock<std::mutex> lock(subtitleMutex_);
     std::cout << "wait for text update" <<std::endl;
-    condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [&, this]() {
+    condVarText_.wait_for(lock, std::chrono::seconds(waitsecond), [&, this]() {
         if (text_ != text) {
             return textUpdate_ = false;
         }
