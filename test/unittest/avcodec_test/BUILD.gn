@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/avcodec"
+module_output_path = "$MODULE_OUTPUT_PATH/avcodec"
 
 avcodec_unittest_native_include_dirs = [
   "../../../../../../foundation/window/window_manager/interfaces/innerkits/wm",
