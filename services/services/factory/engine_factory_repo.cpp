@@ -46,6 +46,7 @@ EngineFactoryRepo &EngineFactoryRepo::Instance()
 
 EngineFactoryRepo::~EngineFactoryRepo()
 {
+    factorys_.clear();
     for (auto &lib : factoryLibs_) {
         if (lib != nullptr) {
             (void)dlclose(lib);
