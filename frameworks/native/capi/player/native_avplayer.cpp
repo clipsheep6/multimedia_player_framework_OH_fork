@@ -22,10 +22,54 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeAVPlayer"};
+    constexpr uint32_t STATE_MAP_LENGTH = 9;
+    constexpr uint32_t INFO_TYPE_LENGTH = 17;
 }
 
 using namespace OHOS::Media;
 class NativeAVPlayerCallback;
+
+typedef struct StateConvert {
+    PlayerStates playerStates;
+    AVPlayerState avPlayerState;
+} StateConvert;
+
+typedef struct PlayerOnInfoTypeConvert {
+    PlayerOnInfoType playerOnInfoType;
+    AVPlayerOnInfoType aVPlayerOnInfoType;
+} PlayerOnInfoTypeConvert;
+
+static const StateConvert g_stateMap[STATE_MAP_LENGTH] = {
+    { PLAYER_STATE_ERROR, AV_ERROR},
+    { PLAYER_IDLE, AV_IDLE },
+    { PLAYER_INITIALIZED, AV_INITIALIZED },
+    { PLAYER_PREPARED, AV_PREPARED },
+    { PLAYER_STARTED, AV_PLAYING },
+    { PLAYER_PAUSED, AV_PAUSED },
+    { PLAYER_STOPPED, AV_STOPPED },
+    { PLAYER_PLAYBACK_COMPLETE, AV_COMPLETED },
+    { PLAYER_RELEASED, AV_RELEASED },
+};
+
+static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
+    { INFO_TYPE_SEEKDONE, AV_INFO_TYPE_SEEKDONE },
+    { INFO_TYPE_SPEEDDONE, AV_INFO_TYPE_SPEEDDONE },
+    { INFO_TYPE_BITRATEDONE, AV_INFO_TYPE_BITRATEDONE },
+    { INFO_TYPE_EOS, AV_INFO_TYPE_EOS },
+    { INFO_TYPE_STATE_CHANGE, AV_INFO_TYPE_STATE_CHANGE },
+    { INFO_TYPE_POSITION_UPDATE, AV_INFO_TYPE_POSITION_UPDATE },
+    { INFO_TYPE_MESSAGE, AV_INFO_TYPE_MESSAGE },
+    { INFO_TYPE_VOLUME_CHANGE, AV_INFO_TYPE_VOLUME_CHANGE },
+    { INFO_TYPE_RESOLUTION_CHANGE, AV_INFO_TYPE_RESOLUTION_CHANGE },
+    { INFO_TYPE_BUFFERING_UPDATE, AV_INFO_TYPE_BUFFERING_UPDATE },
+    { INFO_TYPE_BITRATE_COLLECT, AV_INFO_TYPE_BITRATE_COLLECT },
+    { INFO_TYPE_INTERRUPT_EVENT, AV_INFO_TYPE_INTERRUPT_EVENT },
+    { INFO_TYPE_DURATION_UPDATE, AV_INFO_TYPE_DURATION_UPDATE },
+    { INFO_TYPE_IS_LIVE_STREAM, AV_INFO_TYPE_IS_LIVE_STREAM },
+    { INFO_TYPE_TRACKCHANGE, AV_INFO_TYPE_TRACKCHANGE },
+    { INFO_TYPE_TRACK_INFO_UPDATE, AV_INFO_TYPE_TRACK_INFO_UPDATE },
+    { INFO_TYPE_SUBTITLE_UPDATE, AV_INFO_TYPE_SUBTITLE_UPDATE },
+};
 
 struct PlayerObject : public OH_AVPlayer {
     explicit PlayerObject(const std::shared_ptr<Player> &player)
@@ -52,7 +96,12 @@ public:
         }
 
         if (player_ != nullptr && callback_.onInfo != nullptr) {
-            callback_.onInfo(player_, static_cast<AVPlayerOnInfoType>(type), extra);
+            for (int i = 0; i < INFO_TYPE_LENGTH; i++) {
+                if (g_onInfoType[i].playerOnInfoType == type) {
+                    callback_.onInfo(player_, g_onInfoType[i].aVPlayerOnInfoType, extra);
+                    break;
+                }
+            }
         }
     }
 
@@ -85,7 +134,7 @@ OH_AVPlayer *OH_AVPlayer_Create(void)
 }
 
 
-OH_AVErrCode OH_AVPlayer_SetUrlSource(OH_AVPlayer *player, const char *url)
+OH_AVErrCode OH_AVPlayer_SetURLSource(OH_AVPlayer *player, const char *url)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
@@ -96,23 +145,13 @@ OH_AVErrCode OH_AVPlayer_SetUrlSource(OH_AVPlayer *player, const char *url)
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVPlayer_SetFdSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size)
+OH_AVErrCode OH_AVPlayer_SetFDSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->SetSource(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player setFdSource failed");
-    return AV_ERR_OK;
-}
-
-OH_AVErrCode OH_AVPlayer_Play(OH_AVPlayer *player)
-{
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
-    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
-    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
-    int32_t ret = playerObj->player_->Play();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player play failed");
     return AV_ERR_OK;
 }
 
@@ -123,6 +162,16 @@ OH_AVErrCode OH_AVPlayer_Prepare(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Prepare failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_Play(OH_AVPlayer *player)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->Play();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player play failed");
     return AV_ERR_OK;
 }
 
@@ -224,17 +273,17 @@ OH_AVErrCode OH_AVPlayer_GetVideoHeight(OH_AVPlayer *player, int32_t *videoHeigh
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackRateMode mode)
+OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed speed)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
-    int32_t ret = playerObj->player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode));
+    int32_t ret = playerObj->player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(speed));
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetPlaybackSpeed failed");
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackRateMode *mode)
+OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *speed)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
@@ -242,7 +291,7 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackRateMod
     PlaybackRateMode md;
     int32_t ret = playerObj->player_->GetPlaybackSpeed(md);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player GetPlaybackSpeed failed");
-    *mode = static_cast<AVPlaybackRateMode>(md);
+    *speed = static_cast<AVPlaybackSpeed>(md);
     return AV_ERR_OK;
 }
 
@@ -266,10 +315,17 @@ OH_AVErrCode OH_AVPlayer_GetDuration(OH_AVPlayer *player, int32_t *duration)
     return AV_ERR_OK;
 }
 
-OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerStates *state)
+OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
-    *state = static_cast<AVPlayerStates>(player->state_);
+    for (int i = 0; i < STATE_MAP_LENGTH; i++) {
+        if (g_stateMap[i].playerStates == player->state_) {
+            *state = g_stateMap[i].avPlayerState;
+            return AV_ERR_OK;
+        }
+    }
+
+    *state = static_cast<AVPlayerState>(player->state_);
     return AV_ERR_OK;
 }
 

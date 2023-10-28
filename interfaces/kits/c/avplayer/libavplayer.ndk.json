@@ -1,9 +1,9 @@
 [
   { "name": "OH_AVPlayer_Create" },
-  { "name": "OH_AVPlayer_SetUrlSource" },
-  { "name": "OH_AVPlayer_SetFdSource" },
-  { "name": "OH_AVPlayer_Play" },
+  { "name": "OH_AVPlayer_SetURLSource" },
+  { "name": "OH_AVPlayer_SetFDSource" },
   { "name": "OH_AVPlayer_Prepare" },
+  { "name": "OH_AVPlayer_Play" },
   { "name": "OH_AVPlayer_Pause" },
   { "name": "OH_AVPlayer_Stop" },
   { "name": "OH_AVPlayer_Reset" },
