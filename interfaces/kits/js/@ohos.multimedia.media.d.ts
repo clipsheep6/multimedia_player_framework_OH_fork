@@ -392,6 +392,28 @@ declare namespace media {
      */
     prepare(): Promise<void>;
 
+   /**
+    * Prepare audio/video playback, it will request resource for playing and jump to the specified playback position.
+    * @param { number } timeMs - Playback position to jump, should be in [0, duration].
+    * @param { AsyncCallback<void> } callback - instance used to return when prepareAt completed.
+    * @throws { BusinessError } 5400102 - Operation not allowed. Return by callback.
+    * @throws { BusinessError } 5400106 - Unsupport format. Return by callback.
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @since 9
+    */
+   prepareAt(timeMs: number, callback: AsyncCallback<void>): void;
+
+   /**
+    * Prepare audio/video playback, it will request resource for playing and jump to the specified playback position.
+    * @param { number } timeMs - Playback position to jump, should be in [0, duration].
+    * @returns { Promise<void> } A Promise instance used to return when prepareAt completed.
+    * @throws { BusinessError } 5400102 - Operation not allowed. Return by promise.
+    * @throws { BusinessError } 5400106 - Unsupport format. Return by promise.
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @since 9
+    */
+   prepareAt(timeMs: number): Promise<void>;
+
     /**
      * Play audio/video playback.
      * @since 9

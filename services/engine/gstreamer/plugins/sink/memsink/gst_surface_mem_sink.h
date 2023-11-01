@@ -58,6 +58,12 @@ struct _GstSurfaceMemSink {
     GstCaps *caps;
     guint lastRate;
     guint renderCnt;
+
+public:
+    static std::atomic<bool> first_ {false};
+    static void setFirstBool(bool flag) {
+        first_ = flag;
+    }
 };
 
 struct _GstSurfaceMemSinkClass {

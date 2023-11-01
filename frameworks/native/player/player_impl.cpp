@@ -121,6 +121,7 @@ int32_t PlayerImpl::PrepareAtAsync(int32_t timeMs)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAt in, PrepareAt to %{public}d ms",
             FAKE_POINTER(this), timeMs);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    GstSurfaceMemSink::setFirstBool(true);
     int32_t ret = playerService_->PrepareAsync();
     if (ret == MSERR_OK) {
         ret = playerService_->Seek(timeMs, PlayerSeekMode::SEEK_NEXT_SYNC);
