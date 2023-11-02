@@ -162,7 +162,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_STOP_FAILED,                         MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_SEEK_FAILED,                         MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_NETWORK_TIMEOUT,                     MSERR_EXT_API9_TIMEOUT},
-    {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_API9_UNSUPPORT_FORMAT},
     {MSERR_UNKNOWN,                             MSERR_EXT_API9_IO},
 };
 
