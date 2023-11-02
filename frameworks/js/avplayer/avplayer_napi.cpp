@@ -280,14 +280,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareAtTask(int32_t timeMs
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_INITIALIZED ||
             state == AVPlayerState::STATE_STOPPED) {
-            int32_t ret = player_->PrepareAtAsync();
+            int32_t ret = player_->PrepareAtAsync(timeMs);
             if (ret != MSERR_OK) {
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to prepareAt");
             }
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                                               [this]() { return stopWait_.load(); }), "PrepareAtTask", false)
+                [this]() { return stopWait_.load(); }), "PrepareAtTask", false)
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -351,7 +351,7 @@ napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info){
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                               "current state is not stopped or initialized, unsupport prepareAt operation");
     } else {
-        promiseCtx->asyncTask = jsPlayer->PrepareAtTask();
+        promiseCtx->asyncTask = jsPlayer->PrepareAtTask(time);
     }
 
     napi_value resource = nullptr;

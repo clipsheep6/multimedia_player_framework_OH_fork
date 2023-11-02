@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "../../../services/engine/gstreamer/plugins/sink/memsink/gst_surface_mem_sink.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};

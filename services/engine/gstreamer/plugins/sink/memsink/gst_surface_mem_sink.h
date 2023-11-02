@@ -45,6 +45,11 @@ struct _GstSurfaceMemSinkDump {
 };
 
 struct _GstSurfaceMemSink {
+    static bool first_;
+    static void setFirstBool(bool flag) {
+        first_ = flag;
+    }
+
     GstMemSink memsink;
     GstBuffer *prerollBuffer;
     gboolean firstRenderFrame;
@@ -58,13 +63,8 @@ struct _GstSurfaceMemSink {
     GstCaps *caps;
     guint lastRate;
     guint renderCnt;
-
-public:
-    static std::atomic<bool> first_ {false};
-    static void setFirstBool(bool flag) {
-        first_ = flag;
-    }
 };
+bool GstSurfaceMemSink::first_=false;
 
 struct _GstSurfaceMemSinkClass {
     GstMemSinkClass basesink_class;

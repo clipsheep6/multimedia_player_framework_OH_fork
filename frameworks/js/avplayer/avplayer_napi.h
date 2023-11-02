@@ -270,7 +270,7 @@ private:
     void ResetUserParameters();
 
     std::shared_ptr<TaskHandler<TaskRet>> PrepareTask();
-    std::shared_ptr<TaskHandler<TaskRet>> PrepareAtTask();
+    std::shared_ptr<TaskHandler<TaskRet>> PrepareAtTask(int32_t timeMs);
     std::shared_ptr<TaskHandler<TaskRet>> PlayTask();
     std::shared_ptr<TaskHandler<TaskRet>> PauseTask();
     std::shared_ptr<TaskHandler<TaskRet>> StopTask();
