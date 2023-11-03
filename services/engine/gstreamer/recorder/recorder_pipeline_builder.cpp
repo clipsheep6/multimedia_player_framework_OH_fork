@@ -147,7 +147,7 @@ int32_t RecorderPipelineBuilder::SetAudioSource(const RecorderSourceDesc &desc)
 
     std::shared_ptr<RecorderElement> audioSrcElem;
     // currently only the mic is supported.
-    if (desc.type_ == AudioSourceType::AUDIO_MIC) {
+    if (desc.type_ == AudioSourceType::AUDIO_MIC || desc.type_ == AudioSourceType::AUDIO_SOURCE_VOICE_CALL) {
         audioSrcElem = CreateElement("AudioSource", desc, true);
     } else {
         MEDIA_LOGE("Audio source type %{public}d currently unsupported", desc.type_);

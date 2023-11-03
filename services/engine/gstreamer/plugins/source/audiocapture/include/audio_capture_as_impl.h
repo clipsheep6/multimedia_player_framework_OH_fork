@@ -42,7 +42,7 @@ struct AudioCacheCtrl {
 
 class AudioCaptureAsImpl : public AudioCapture, public NoCopyable {
 public:
-    AudioCaptureAsImpl();
+    AudioCaptureAsImpl(AudioSourceType sourceType);
     virtual ~AudioCaptureAsImpl();
 
     int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
@@ -86,6 +86,7 @@ private:
     std::atomic<int32_t> curState_ = RECORDER_INITIALIZED;
     std::atomic<bool> captureLoopErr_ { false };
     uint64_t lastInputTime_ = 0;
+    AudioSourceType sourceType_;
 };
 } // namespace Media
 } // namespace OHOS

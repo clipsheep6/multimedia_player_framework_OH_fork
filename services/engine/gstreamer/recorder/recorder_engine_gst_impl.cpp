@@ -84,7 +84,7 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
 {
     sourceId = INVALID_SOURCE_ID;
 
-    CHECK_AND_RETURN_RET_LOG(source > AUDIO_SOURCE_INVALID && source <= AUDIO_MIC, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(source > AUDIO_SOURCE_INVALID && source <= AUDIO_SOURCE_VOICE_CALL, MSERR_INVALID_VAL,
         "Input AudioSourceType : %{public}d is invalid", source);
 
     if (source == AudioSourceType::AUDIO_SOURCE_DEFAULT) {
