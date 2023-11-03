@@ -28,7 +28,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-AudioCaptureAsImpl::AudioCaptureAsImpl()
+AudioCaptureAsImpl::AudioCaptureAsImpl(AudioSourceType sourceType):sourceType_(sourceType)
 {
 }
 
@@ -102,9 +102,12 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         audioAppInfo.appPid = appInfo.appPid;
         audioAppInfo.appTokenId = appInfo.appTokenId;
         audioAppInfo.appFullTokenId = appInfo.appFullTokenId;
-
-        audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
+        if (sourceType_ = AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
+                // TODO not sure
+        } else {
+            audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
                                                               audioAppInfo);
+        }
         CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
     }
     audioCacheCtrl_ = std::make_unique<AudioCacheCtrl>();

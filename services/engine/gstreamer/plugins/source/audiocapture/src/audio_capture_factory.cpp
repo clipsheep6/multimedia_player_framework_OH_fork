@@ -18,10 +18,9 @@
 
 namespace OHOS {
 namespace Media {
-std::unique_ptr<AudioCapture> AudioCaptureFactory::CreateAudioCapture(AudioStreamType streamType)
+std::unique_ptr<AudioCapture> AudioCaptureFactory::CreateAudioCapture(AudioSourceType sourceType)
 {
-    (void)streamType;
-    return std::make_unique<AudioCaptureAsImpl>();
+    return std::make_unique<AudioCaptureAsImpl>(sourceType);
 }
 } // namespace Media
 } // namespace OHOS

@@ -55,6 +55,8 @@ enum AudioSourceType : int32_t {
     AUDIO_SOURCE_DEFAULT = 0,
     /** Microphone */
     AUDIO_MIC = 1,
+    /** VOICE CALL*/
+    AUDIO_SOURCE_VOICE_CALL = 2,
 };
 
 /**

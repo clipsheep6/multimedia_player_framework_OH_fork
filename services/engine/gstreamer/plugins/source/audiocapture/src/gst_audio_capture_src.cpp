@@ -74,6 +74,7 @@ static GType gst_audio_capture_src_source_type_get_type(void)
     static const GEnumValue source_types[] = {
         {AUDIO_SOURCE_TYPE_DEFAULT, "MIC", "MIC"},
         {AUDIO_SOURCE_TYPE_MIC, "MIC", "MIC"},
+        {AUDIO_SOURCE_TYPE_VOICE_CALL, "MIC", "MIC"},
         {0, nullptr, nullptr}
     };
     if (!audio_capture_src_source_type) {
@@ -254,7 +255,7 @@ static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
             break;
         case PROP_SUPPORTED_AUDIO_PARAMS:
             if (src->audio_capture == nullptr) {
-                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
+                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->source_type);
                 g_return_if_fail(src->audio_capture != nullptr);
             }
             g_value_set_boolean(value, src->audio_capture->IsSupportedCaptureParameter(
