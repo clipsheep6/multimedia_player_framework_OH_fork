@@ -27,6 +27,7 @@ public:
     PlayerImpl();
     ~PlayerImpl();
 
+    static bool firstRenderFrame;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t Prepare() override;
@@ -69,6 +70,7 @@ private:
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
 };
+bool PlayerImpl::firstRenderFrame;
 } // namespace Media
 } // namespace OHOS
 #endif // PLAYER_IMPL_H

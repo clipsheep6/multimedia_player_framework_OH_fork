@@ -45,11 +45,6 @@ struct _GstSurfaceMemSinkDump {
 };
 
 struct _GstSurfaceMemSink {
-    static bool first_;
-    static void setFirstBool(bool flag) {
-        first_ = flag;
-    }
-
     GstMemSink memsink;
     GstBuffer *prerollBuffer;
     gboolean firstRenderFrame;
@@ -64,7 +59,6 @@ struct _GstSurfaceMemSink {
     guint lastRate;
     guint renderCnt;
 };
-bool GstSurfaceMemSink::first_=false;
 
 struct _GstSurfaceMemSinkClass {
     GstMemSinkClass basesink_class;
