@@ -43,6 +43,7 @@ config("gst_mem_sink_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/frameworks/native/player",
+    "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
     "//third_party/gstreamer/gstreamer",
