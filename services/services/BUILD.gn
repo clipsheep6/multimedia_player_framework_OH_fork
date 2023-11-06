@@ -162,6 +162,7 @@ ohos_shared_library("media_service") {
   if (multimedia_player_framework_support_metadata) {
     sources += [
       "avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
+      "avmetadatahelper/ipc/helper_listener_proxy.cpp",
       "avmetadatahelper/server/avmetadatahelper_server.cpp",
     ]
   }

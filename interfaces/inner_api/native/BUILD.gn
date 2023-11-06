@@ -155,6 +155,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
+      "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/helper_listener_stub.cpp",
     ]
   }
   if (multimedia_player_framework_support_screen_capture) {

@@ -36,6 +36,7 @@ public:
      * an error code otherwise.
      */
     virtual int32_t SetSource(const std::string &uri, int32_t usage) = 0;
+    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
      * Retrieve the meta data associated with the specified key. This method must be
