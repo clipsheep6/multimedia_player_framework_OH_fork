@@ -56,6 +56,7 @@ public:
                                 void (*audioDiedCb)(GstBaseSink *)) = 0;
     virtual int32_t SetAudioEffectMode(int32_t effectMode) = 0;
     virtual int32_t GetAudioEffectMode(int32_t &effectMode) = 0;
+    virtual bool IsMediaAudioActive() const;
 };
 } // namespace Media
 } // namespace OHOS

@@ -431,6 +431,17 @@ bool AudioSinkSvImpl::Writeable() const
     return ret == AudioStandard::RENDERER_RUNNING;
 }
 
+bool AudioSinkSvImpl::IsMediaAudioActive()
+{
+    bool ret = false;
+    LISTENER(
+            ret = AudioStandard::AudioStreamManager::GetInstance()->
+                    IsStreamActive(AudioStandard::AudioVolumeType::Stream_Music),
+            "AudioStreamManager::IsStreamActive",
+            PlayerXCollie::timerTimeout)
+    return ret;
+}
+
 void AudioSinkSvImpl::OnError(std::string errMsg)
 {
     if (errorCb_ != nullptr) {
