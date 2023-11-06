@@ -91,6 +91,40 @@ int32_t AVMetadataHelperServiceProxy::SetSource(int32_t fd, int64_t offset, int6
     return reply.ReadInt32();
 }
 
+int32_t AVMetadataHelperServiceProxy::SetSource(const sptr<IRemoteObject> &object)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteRemoteObject(object);
+    int32_t error = Remote()->SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSource failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t AVMetadataHelperServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteRemoteObject(object);
+    int32_t error = Remote()->SendRequest(SET_LISTENER_OBJ, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetListenerObject failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 std::string AVMetadataHelperServiceProxy::ResolveMetadata(int32_t key)
 {
     MessageParcel data;
@@ -190,6 +224,22 @@ void AVMetadataHelperServiceProxy::Release()
 
     int error = Remote()->SendRequest(RELEASE, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "Release failed, error: %{public}d", error);
+}
+
+int32_t AVMetadataHelperServiceProxy::SetHelperCallback()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = Remote()->SendRequest(SET_CALLBACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetHelperCallback failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
 }
 } // namespace Media
 } // namespace OHOS

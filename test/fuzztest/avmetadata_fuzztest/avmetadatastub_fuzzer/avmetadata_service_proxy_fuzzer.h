@@ -35,6 +35,10 @@ public:
     {
         return 0;
     }
+    int32_t SetSource(const sptr<IRemoteObject> &object) override
+    {
+        return 0;
+    }
     std::string ResolveMetadata(int32_t key) override
     {
         return std::string("");
@@ -58,6 +62,14 @@ public:
         return;
     }
     int32_t DestroyStub() override
+    {
+        return 0;
+    }
+    int32_t SetHelperCallback() override
+    {
+        return 0;
+    }
+    int32_t SetListenerObject(const sptr<IRemoteObject> &object) override
     {
         return 0;
     }

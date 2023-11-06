@@ -166,6 +166,15 @@ AVMetadataHelperImpl::~AVMetadataHelperImpl()
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t AVMetadataHelperImpl::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
+{
+    MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetHelperCallback in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_SERVICE_DIED,
+        "metadata helper service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
+    return avMetadataHelperService_->SetHelperCallback(callback);
+}
+
 int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
@@ -183,6 +192,13 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
     CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size > 0, MSERR_INVALID_VAL, "invalid param");
 
     return avMetadataHelperService_->SetSource(fd, offset, size, usage);
+}
+
+int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
+    return avMetadataHelperService_->SetSource(dataSrc);
 }
 
 std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)

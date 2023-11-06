@@ -22,6 +22,7 @@
 #include "i_avmetadatahelper_engine.h"
 #include "i_playbin_ctrler.h"
 #include "gst_utils.h"
+#include "gst_appsrc_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -34,6 +35,7 @@ public:
     ~AVMetadataHelperEngineGstImpl();
 
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
@@ -68,6 +70,8 @@ private:
     int32_t status_ = PLAYBIN_STATE_IDLE;
     bool firstFetch_ = true;
     bool asyncDone_ = false;
+
+    std::shared_ptr<GstAppsrcEngine> appsrcWrap_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

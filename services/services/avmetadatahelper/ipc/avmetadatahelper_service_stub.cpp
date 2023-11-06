@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
+#include "media_data_source_proxy.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServiceStub"};
@@ -54,18 +55,22 @@ int32_t AVMetadataHelperServiceStub::Init()
 
     avMetadataHelperFuncs_[SET_URI_SOURCE] = &AVMetadataHelperServiceStub::SetUriSource;
     avMetadataHelperFuncs_[SET_FD_SOURCE] = &AVMetadataHelperServiceStub::SetFdSource;
+    avMetadataHelperFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &AVMetadataHelperServiceStub::SetMediaDataSource;
     avMetadataHelperFuncs_[RESOLVE_METADATA] = &AVMetadataHelperServiceStub::ResolveMetadata;
     avMetadataHelperFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataHelperServiceStub::ResolveMetadataMap;
     avMetadataHelperFuncs_[FETCH_ART_PICTURE] = &AVMetadataHelperServiceStub::FetchArtPicture;
     avMetadataHelperFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataHelperServiceStub::FetchFrameAtTime;
     avMetadataHelperFuncs_[RELEASE] = &AVMetadataHelperServiceStub::Release;
     avMetadataHelperFuncs_[DESTROY] = &AVMetadataHelperServiceStub::DestroyStub;
+    avMetadataHelperFuncs_[SET_CALLBACK] = &AVMetadataHelperServiceStub::SetHelperCallback;
+    avMetadataHelperFuncs_[SET_LISTENER_OBJ] = &AVMetadataHelperServiceStub::SetListenerObject;
     return MSERR_OK;
 }
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    helperCallback_ = nullptr;
     avMetadateHelperServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
     return MSERR_OK;
@@ -112,6 +117,21 @@ int32_t AVMetadataHelperServiceStub::SetSource(int32_t fd, int64_t offset, int64
     return avMetadateHelperServer_->SetSource(fd, offset, size, usage);
 }
 
+int32_t AVMetadataHelperServiceStub::SetSource(const sptr<IRemoteObject> &object)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set mediadatasrc object is nullptr");
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+
+    sptr<IStandardMediaDataSource> proxy = iface_cast<IStandardMediaDataSource>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert MediaDataSourceProxy");
+
+    std::shared_ptr<IMediaDataSource> mediaDataSrc = std::make_shared<MediaDataCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(mediaDataSrc != nullptr, MSERR_NO_MEMORY, "failed to new MetaListenerCallback");
+
+    return avMetadateHelperServer_->SetSource(mediaDataSrc);
+}
+
 std::string AVMetadataHelperServiceStub::ResolveMetadata(int32_t key)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -148,6 +168,27 @@ void AVMetadataHelperServiceStub::Release()
     return avMetadateHelperServer_->Release();
 }
 
+int32_t AVMetadataHelperServiceStub::SetHelperCallback()
+{
+    MEDIA_LOGD("SetHelperCallback");
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "metadata server is nullptr");
+    return avMetadateHelperServer_->SetHelperCallback(helperCallback_);
+}
+
+int32_t AVMetadataHelperServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
+{
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
+
+    sptr<IStandardHelperListener> listener = iface_cast<IStandardHelperListener>(object);
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "failed to convert IStandardHelperListener");
+
+    std::shared_ptr<HelperCallback> callback = std::make_shared<HelperListenerCallback>(listener);
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new HelperListenerCallback");
+
+    helperCallback_ = callback;
+    return MSERR_OK;
+}
+
 int32_t AVMetadataHelperServiceStub::SetUriSource(MessageParcel &data, MessageParcel &reply)
 {
     std::string uri = data.ReadString();
@@ -164,6 +205,13 @@ int32_t AVMetadataHelperServiceStub::SetFdSource(MessageParcel &data, MessagePar
     int32_t usage = data.ReadInt32();
     reply.WriteInt32(SetSource(fd, offset, size, usage));
     (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetMediaDataSource(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetSource(object));
     return MSERR_OK;
 }
 
@@ -197,6 +245,7 @@ int32_t AVMetadataHelperServiceStub::FetchArtPicture(MessageParcel &data, Messag
     (void)data;
     auto result = FetchArtPicture();
     if (result == nullptr) {
+        MEDIA_LOGE("result is null");
         return MSERR_INVALID_OPERATION;
     }
 
@@ -225,6 +274,20 @@ int32_t AVMetadataHelperServiceStub::DestroyStub(MessageParcel &data, MessagePar
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetHelperCallback(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(SetHelperCallback());
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetListenerObject(object));
     return MSERR_OK;
 }
 } // namespace Media

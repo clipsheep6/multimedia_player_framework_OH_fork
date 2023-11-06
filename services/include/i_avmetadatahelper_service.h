@@ -60,6 +60,15 @@ public:
     virtual ~IAVMetadataHelperService() = default;
 
     /**
+     * @brief Method to set helper callback.
+     *
+     * @param callback object pointer.
+     * @return Returns {@link MSERR_OK} if the helpercallback is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
+
+    /**
      * Set the media source uri to use. Calling this method before the reset
      * of the methods in this class. This method maybe time consuming.
      * @param uri the URI of input media source.
@@ -84,6 +93,13 @@ public:
      * an error code otherwise.
      */
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) = 0;
+
+    /**
+     * Sets the media data source to resolve.
+     * @param dataSrc A data source instance with the fileSize and a callback {@link IMediaDataSource}.
+     * @return Returns the status code.
+     */
+    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
      * Retrieve the meta data associated with the specified key. This method can be

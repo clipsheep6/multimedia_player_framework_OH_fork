@@ -14,6 +14,7 @@
  */
 
 #include "avmetadatahelper_client.h"
+#include "helper_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -27,6 +28,8 @@ std::shared_ptr<AVMetadataHelperClient> AVMetadataHelperClient::Create(
     const sptr<IStandardAVMetadataHelperService> &ipcProxy)
 {
     std::shared_ptr<AVMetadataHelperClient> AVMetadataHelper = std::make_shared<AVMetadataHelperClient>(ipcProxy);
+    int32_t ret = AVMetadataHelper->CreateListenerObject();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
     return AVMetadataHelper;
 }
 
@@ -42,13 +45,32 @@ AVMetadataHelperClient::~AVMetadataHelperClient()
     if (avMetadataHelperProxy_ != nullptr) {
         (void)avMetadataHelperProxy_->DestroyStub();
     }
+    callback_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+int32_t AVMetadataHelperClient::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr..");
+
+    callback_ = callback;
+    listenerStub_->SetHelperCallback(callback);
+
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "metadata service does not exist..");
+    return avMetadataHelperProxy_->SetHelperCallback();
 }
 
 void AVMetadataHelperClient::MediaServerDied()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     avMetadataHelperProxy_ = nullptr;
+    if (callback_ != nullptr) {
+        callback_->OnError(MSERR_SERVICE_DIED,
+            "mediaserver is died, please create a new meta data helper instance again");
+    }
 }
 
 int32_t AVMetadataHelperClient::SetSource(const std::string &uri, int32_t usage)
@@ -65,6 +87,21 @@ int32_t AVMetadataHelperClient::SetSource(int32_t fd, int64_t offset, int64_t si
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist.");
     return avMetadataHelperProxy_->SetSource(fd, offset, size, usage);
+}
+
+int32_t AVMetadataHelperClient::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_SERVICE_DIED,
+        "Meta data service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_NO_MEMORY, "data source is nullptr");
+
+    dataSrcStub_ = new(std::nothrow) MediaDataSourceStub(dataSrc);
+    CHECK_AND_RETURN_RET_LOG(dataSrcStub_ != nullptr, MSERR_NO_MEMORY, "failed to new dataSrcStub object");
+
+    sptr<IRemoteObject> object = dataSrcStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+    return avMetadataHelperProxy_->SetSource(object);
 }
 
 std::string AVMetadataHelperClient::ResolveMetadata(int32_t key)
@@ -101,6 +138,21 @@ void AVMetadataHelperClient::Release()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(avMetadataHelperProxy_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperProxy_->Release();
+    callback_ = nullptr;
+}
+
+int32_t AVMetadataHelperClient::CreateListenerObject()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    listenerStub_ = new(std::nothrow) HelperListenerStub();
+    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "failed to new HelperListenerStub object");
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+
+    sptr<IRemoteObject> object = listenerStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+
+    MEDIA_LOGD("SetListenerObject");
+    return avMetadataHelperProxy_->SetListenerObject(object);
 }
 } // namespace Media
 } // namespace OHOS
