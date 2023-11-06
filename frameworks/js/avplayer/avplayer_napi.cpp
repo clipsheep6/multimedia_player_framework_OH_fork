@@ -207,8 +207,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "PrepareTask", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PrepareTask", false)
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -286,8 +285,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "PlayTask", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PlayTask", false)
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -363,8 +361,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "PauseTask", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PauseTask", false)
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -432,8 +429,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "StopTask", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "StopTask", false)
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -511,8 +507,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 stopWait_ = false;
-                LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                    [this]() { return stopWait_.load(); }), "ResetTask", false)
+                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResetTask", false)
             }
         }
         MEDIA_LOGI("Reset Task Out");
@@ -577,8 +572,7 @@ void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
     std::unique_lock<std::mutex> lock(taskMutex_);
-    LISTENER(stopTaskQueCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-        [this]() { return taskQueStoped_; }), "StopTaskQue", false)
+    LISTENER(stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; }), "StopTaskQue", false)
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
 
@@ -983,7 +977,7 @@ void AVPlayerNapi::SetSource(std::string url)
                       "invalid parameters, The input parameter is not a fd://+numeric string");
             return;
         }
-        EnqueueFdTask(url, fd);
+        EnqueueFdTask(fd);
     } else {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, The input parameter is not fd:// or network address");
@@ -1004,15 +998,14 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
             MEDIA_LOGI("Set source network out");
         }
     });
     (void)taskQue_->EnqueueTask(task);
 }
 
-void AVPlayerNapi::EnqueueFdTask(const std::string url, const int32_t fd)
+void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
 {
     auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
         std::unique_lock<std::mutex> lock(taskMutex_);
@@ -1026,8 +1019,7 @@ void AVPlayerNapi::EnqueueFdTask(const std::string url, const int32_t fd)
                 OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
-                [this]() { return stopWait_.load(); }), "SetSourceFd", false)
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
             MEDIA_LOGI("Set source fd out");
         }
     });
