@@ -85,6 +85,7 @@ AVMetadataHelperEngineGstImpl::~AVMetadataHelperEngineGstImpl()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     Reset();
+    appsrcWrap_ = nullptr;
 }
 
 int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t usage)
@@ -107,6 +108,20 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetSourceInternel");
 
     MEDIA_LOGI("set source success");
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "input dataSrc is empty!");
+    appsrcWrap_ = GstAppsrcEngine::Create(dataSrc);
+    CHECK_AND_RETURN_RET_LOG(appsrcWrap_ != nullptr, MSERR_NO_MEMORY, "new appsrcwrap failed!");
+
+    const std::string uri = "";
+    int32_t ret = SetSourceInternel(uri, AVMetadataUsage::AV_META_USAGE_META_ONLY);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetSourceInternel");
+
+    MEDIA_LOGI("set data source success");
     return MSERR_OK;
 }
 
@@ -141,20 +156,20 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperEngineGstImpl::ResolveM
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchArtPicture()
 {
-    MEDIA_LOGD("enter");
+    MEDIA_LOGD("enter FetchArtPicture");
 
     int32_t ret = ExtractMetadata();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to call ExtractMetadata");
 
     auto result = metaCollector_->FetchArtPicture();
-    MEDIA_LOGD("exit");
+    MEDIA_LOGD("exit FetchArtPicture");
     return result;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const OutputConfiguration &param)
 {
-    MEDIA_LOGD("enter");
+    MEDIA_LOGD("enter FetchFrameAtTime");
 
     if (usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
         MEDIA_LOGE("current instance is unavailable for fetch frame, check usage !");
@@ -165,7 +180,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     int32_t ret = FetchFrameInternel(timeUs, option, 1, param, outFrames);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "fetch frame failed");
 
-    MEDIA_LOGD("exit");
+    MEDIA_LOGD("exit FetchFrameAtTime");
     return outFrames[0];
 }
 
@@ -202,7 +217,12 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
     playBinCtrler_ = IPlayBinCtrler::Create(IPlayBinCtrler::PlayBinKind::PLAYBIN2, createParam);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_UNKNOWN, "Failed to call IPlayBinCtrler::Create");
 
-    int32_t ret = playBinCtrler_->SetSource(uri);
+    int32_t ret = MSERR_INVALID_VAL;
+    if (appsrcWrap_ != nullptr) {
+        ret = playBinCtrler_->SetSource(appsrcWrap_);
+    } else {
+        ret = playBinCtrler_->SetSource(uri);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call playBinCtrler_->SetSource");
 
     metaCollector_ = std::make_unique<AVMetaMetaCollector>();

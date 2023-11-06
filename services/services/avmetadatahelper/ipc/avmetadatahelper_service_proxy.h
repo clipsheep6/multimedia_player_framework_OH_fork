@@ -26,6 +26,7 @@ public:
     virtual ~AVMetadataHelperServiceProxy();
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetSource(const sptr<IRemoteObject> &object) override;
     std::unordered_map<int32_t, std::string> ResolveMetadataMap() override;
     std::string ResolveMetadata(int32_t key) override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
@@ -33,6 +34,8 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t DestroyStub() override;
     void Release() override;
+    int32_t SetHelperCallback() override;
+    int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
 private:
     static inline BrokerDelegator<AVMetadataHelperServiceProxy> delegator_;
 };

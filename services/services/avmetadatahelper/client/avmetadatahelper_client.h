@@ -18,6 +18,8 @@
 
 #include "i_avmetadatahelper_service.h"
 #include "i_standard_avmetadatahelper_service.h"
+#include "media_data_source_stub.h"
+#include "helper_listener_stub.h"
 
 namespace OHOS {
 namespace Media {
@@ -28,8 +30,10 @@ public:
     ~AVMetadataHelperClient();
 
     // IAVMetadataHelperService override
+    int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
     int32_t SetSource(const std::string &uri, int32_t usage) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
+    int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
@@ -40,8 +44,13 @@ public:
     // AVMetadataHelperClient
     void MediaServerDied();
 private:
+    int32_t CreateListenerObject();
+
     sptr<IStandardAVMetadataHelperService> avMetadataHelperProxy_ = nullptr;
     std::mutex mutex_;
+    std::shared_ptr<HelperCallback> callback_ = nullptr;
+    sptr<MediaDataSourceStub> dataSrcStub_ = nullptr;
+    sptr<HelperListenerStub> listenerStub_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

@@ -26,6 +26,14 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadata
 
 namespace OHOS {
 namespace Media {
+static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTION_TABLE = {
+    {HELPER_STATE_ERROR, "HELPER_STATE_ERROR"},
+    {HELPER_IDLE, "HELPER_IDLE"},
+    {HELPER_PREPARED, "HELPER_PREPARED"},
+    {HELPER_CALL_DONE, "HELPER_CALL_DONE"},
+    {HELPER_RELEASED, "HELPER_RELEASED"},
+};
+
 std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 {
     std::shared_ptr<AVMetadataHelperServer> server = std::make_shared<AVMetadataHelperServer>();
@@ -81,6 +89,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed.");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_PREPARED);
     return result.Value();
 }
 
@@ -111,6 +120,45 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_PREPARED);
+    return result.Value();
+}
+
+int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("AVMetadataHelperServer::SetSource dataSrc");
+    MEDIA_LOGD("AVMetadataHelperServer SetSource");
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
+    dataSrc_ = dataSrc;
+    std::string url = "media data source";
+    config_.url = url;
+
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
+            IEngineFactory::Scene::SCENE_AVMETADATA, config_.url);
+        CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
+            "Failed to get engine factory");
+        avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
+        CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
+            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+
+        int32_t ret = avMetadataHelperEngine_->SetSource(dataSrc_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed!");
+
+        int64_t size = 0;
+        (void)dataSrc_->GetSize(size);
+        if (size == -1) {
+            config_.looping = false;
+            isLiveStream_ = true;
+        }
+        return ret;
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_PREPARED);
     return result.Value();
 }
 
@@ -127,6 +175,7 @@ std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, "", "EnqueueTask failed");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
 
@@ -142,6 +191,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
 
@@ -157,6 +207,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
 
@@ -173,6 +224,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }
 
@@ -186,6 +238,86 @@ void AVMetadataHelperServer::Release()
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
     uriHelper_ = nullptr;
+    ChangeState(HelperStates::HELPER_RELEASED);
+    {
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
+        helperCb_ = nullptr;
+    }
+}
+
+int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCallback> &callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
+
+    if (currState_ != HELPER_IDLE) {
+        MEDIA_LOGE("Can not SetHelperCallback, currentState is %{public}s",
+            GetStatusDescription(currState_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    {
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
+        helperCb_ = callback;
+    }
+    return MSERR_OK;
+}
+
+void AVMetadataHelperServer::ChangeState(const HelperStates state)
+{
+    switch (state) {
+        case HELPER_PREPARED:
+            if (currState_ == HELPER_IDLE) {
+                currState_ = HELPER_PREPARED;
+                NotifyInfoCallback(HELPER_INFO_TYPE_STATE_CHANGE, currState_);
+            } else {
+                NotifyErrorCallback(HelperErrorType::INVALID_OPERATION, "State error, current Operation is invalid.");
+            }
+            break;
+        case HELPER_CALL_DONE:
+            if (currState_ == HELPER_CALL_DONE || currState_ == HELPER_PREPARED) {
+                currState_ = HELPER_CALL_DONE;
+                NotifyInfoCallback(HELPER_INFO_TYPE_STATE_CHANGE, currState_);
+            } else {
+                NotifyErrorCallback(HelperErrorType::INVALID_OPERATION, "State error, current Operation is invalid.");
+            }
+            break;
+        case HELPER_RELEASED:
+            if (currState_ == HELPER_IDLE || currState_ == HELPER_PREPARED || currState_ == HELPER_CALL_DONE) {
+                currState_ = HELPER_RELEASED;
+                NotifyInfoCallback(HELPER_INFO_TYPE_STATE_CHANGE, currState_);
+            } else {
+                NotifyErrorCallback(HelperErrorType::INVALID_OPERATION, "State error, current Operation is invalid.");
+            }
+            break;
+        default:
+            MEDIA_LOGI("Changed state is invalid.");
+            break;
+    }
+}
+
+void AVMetadataHelperServer::NotifyErrorCallback(int32_t code, const std::string msg)
+{
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    MEDIA_LOGD("NotifyErrorCallback error code: %{public}d", code);
+    helperCb_->OnError(code, msg);
+}
+
+void AVMetadataHelperServer::NotifyInfoCallback(HelperOnInfoType type, int32_t extra)
+{
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    MEDIA_LOGD("NotifyInfoCallback, extra: %{public}d", extra);
+    helperCb_->OnInfo(type, extra);
+}
+
+const std::string &AVMetadataHelperServer::GetStatusDescription(int32_t status)
+{
+    static const std::string ILLEGAL_STATE = "PLAYER_STATUS_ILLEGAL";
+    if (status < HELPER_STATE_ERROR || status > HELPER_RELEASED) {
+        return ILLEGAL_STATE;
+    }
+
+    return STATUS_TO_STATUS_DESCRIPTION_TABLE.find(status)->second;
 }
 } // namespace Media
 } // namespace OHOS

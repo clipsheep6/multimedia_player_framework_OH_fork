@@ -204,6 +204,7 @@ std::shared_ptr<AVSharedMemory> AVMetaElemMetaCollector::FetchArtPicture()
 std::shared_ptr<AVSharedMemory> AVMetaElemMetaCollector::DoFetchArtPicture(const Format &innerMeta)
 {
     if (!innerMeta.ContainKey(INNER_META_KEY_IMAGE)) {
+        MEDIA_LOGW("Not contains INNER_META_KEY_IMAGE");
         return nullptr;
     }
 

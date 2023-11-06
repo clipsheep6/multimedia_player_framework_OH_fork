@@ -34,6 +34,10 @@ static napi_value Export(napi_env env, napi_value exports)
     OHOS::Media::AudioPlayerNapi::Init(env, exports);
     OHOS::Media::VideoPlayerNapi::Init(env, exports);
 #endif
+#ifdef SUPPORT_METADATA
+    OHOS::Media::AVMetadataExtractorNapi::Init(env, exports);
+    OHOS::Media::AVImageGeneratorNapi::Init(env, exports);
+#endif
 #ifdef SUPPORT_PLAYER_API9
     OHOS::Media::AVPlayerNapi::Init(env, exports);
 #endif

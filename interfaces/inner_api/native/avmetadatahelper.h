@@ -16,15 +16,74 @@
 #ifndef AVMETADATAHELPER_H
 #define AVMETADATAHELPER_H
 
+#include <memory>
+#include <map>
 #include <string>
 #include <unordered_map>
-#include <memory>
-#include "pixel_map.h"
-#include "nocopyable.h"
 #include "avsharedmemory.h"
+#include "format.h"
+#include "media_data_source.h"
+#include "nocopyable.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Media {
+/**
+ * @brief Enumerates avmetadata helper callback error type.
+ */
+enum HelperErrorType : int32_t {
+    /* State error, current operation is invalid. */
+    INVALID_OPERATION,
+};
+
+/**
+ * @brief Enumerates avmetadata helper listener info type.
+ */
+enum HelperOnInfoType : int32_t {
+    /* Current State changed, notify NAPI with onInfo callback. */
+    HELPER_INFO_TYPE_STATE_CHANGE,
+};
+
+/**
+ * @brief Enumerates avmetadata helper states.
+ */
+enum HelperStates : int32_t {
+    /* error states */
+    HELPER_STATE_ERROR = 0,
+    /* idle states */
+    HELPER_IDLE = 1,
+    /* prepared states */
+    HELPER_PREPARED = 2,
+    /* call done states */
+    HELPER_CALL_DONE = 3,
+    /* released states */
+    HELPER_RELEASED = 4,
+};
+
+/**
+ * The meta data mappings from meta data enum keys to the string key.
+ */
+static const std::map<int32_t, const char*> g_MetadataCodeMap = {
+    {0,     "album"},
+    {1,     "albumArtist"},
+    {2,     "artist"},
+    {3,     "author"},
+    {4,     "dateTime"},
+    {5,     "dateTimeFormat"},
+    {12,    "composer"},
+    {15,    "duration"},
+    {18,    "genre"},
+    {19,    "hasAudio"},
+    {21,    "hasVideo"},
+    {29,    "mimeType"},
+    {30,    "trackCount"},
+    {31,    "sampleRate"},
+    {33,    "title"},
+    {35,    "videoHeight"},
+    {37,    "videoWidth"},
+    {38,    "videoOrientation"},
+};
+
 /**
  * @brief Enumerates avmetadata usage.
  */
@@ -179,6 +238,30 @@ struct PixelMapParams {
 };
 
 /**
+ * @brief Provides the callback interfaces to notify client about errors or infos.
+ */
+class HelperCallback {
+public:
+    virtual ~HelperCallback() = default;
+    /**
+     * Called when a metadata helper message is notified.
+     *
+     * @param type Indicates the information type. For details, see {@link HelperOnInfoType}.
+     * @param extra Indicates other information, for example, the current state in metadata helper server.
+     * @param infoBody According to the info type, the information carrier passed. Is an optional parameter.
+     */
+    virtual void OnInfo(HelperOnInfoType type, int32_t extra, const Format &infoBody = {}) = 0;
+
+    /**
+     * Called when an error occurred
+     *
+     * @param errorCode Error code.
+     * @param errorMsg Error message.
+     */
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
+};
+
+/**
  * @brief Provides the interfaces to resolve metadata or fetch frame
  * from a given media resource.
  */
@@ -212,6 +295,15 @@ public:
      */
     virtual int32_t SetSource(int32_t fd, int64_t offset = 0, int64_t size = 0,
         int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) = 0;
+
+    /**
+     * @brief Sets the playback media data source for the meta data helper.
+     *
+     * @param dataSrc Indicates the media data source. in {@link media_data_source.h}
+     * @return Returns {@link MSERR_OK} if the mediadatasource is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
      * Retrieve the meta data associated with the specified key. This method must be
@@ -258,6 +350,15 @@ public:
      * can not be used again.
      */
     virtual void Release() = 0;
+
+    /**
+     * @brief Method to set the meta data helper callback.
+     *
+     * @param callback object pointer.
+     * @return Returns {@link MSERR_OK} if the meta data helper callback is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     */
+    virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
 };
 
 class __attribute__((visibility("default"))) AVMetadataHelperFactory {

@@ -15,6 +15,7 @@
 
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
+import type image from './@ohos.multimedia.image';
 
 /**
  * @name media
@@ -118,6 +119,486 @@ declare namespace media {
    * @systemapi
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
+
+  /**
+   * Creates an AVMetadataExtractor instance.
+   * @returns { Promise<AVMetadataExtractor> } A Promise instance used to return AVMetadataExtractor instance
+   * if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Returned by promise.
+   * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+   * @since 11
+   */
+  function createAVMetadataExtractor(): Promise<AVMetadataExtractor>;
+
+  /**
+   * Creates an AVMetadataExtractor instance.
+   * @param { AsyncCallback<AVMetadataExtractor> } callback - Callback used to return AVMetadataExtractor instance
+   * if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Returned by callback.
+   * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+   * @since 11
+   */
+  function createAVMetadataExtractor(callback: AsyncCallback<AVMetadataExtractor>): void;
+
+  /**
+   * Creates an AVImageGenerator instance.
+   * @returns { Promise<AVImageGenerator> } A Promise instance used to return AVImageGenerator instance
+   * if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Returned by promise.
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  function createAVImageGenerator(): Promise<AVImageGenerator>;
+
+  /**
+   * Creates an AVImageGenerator instance.
+   * @param { AsyncCallback<AVImageGenerator> } callback - Callback used to return AVImageGenerator instance
+   * if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Returned by callback.
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  function createAVImageGenerator(callback: AsyncCallback<AVImageGenerator>): void;
+
+  /**
+   * Fetch media meta data or audio art picture from source. Before calling an AVMetadataExtractor method,
+   * you must use createAVMetadataExtractor() to create an AVMetadataExtractor instance.
+   * @typedef AVMetadataExtractor
+   * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+   * @since 11
+   */
+  interface AVMetadataExtractor {
+    /**
+     * Media file descriptor.
+     * @type { ?AVFileDescriptor }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    fdSrc ?: AVFileDescriptor;
+
+    /**
+     * DataSource descriptor.
+     * @type { ?DataSrcDescriptor }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    dataSrc ?: DataSrcDescriptor;
+
+    /**
+     * It will extract the resource to fetch media meta data info.
+     * @param { AsyncCallback<AVMetadata> } callback - A callback instance used to return when fetchMetadata completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by callback.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    fetchMetadata(callback: AsyncCallback<AVMetadata>): void;
+
+    /**
+     * It will extract the resource to fetch media meta data info.
+     * @returns { Promise<AVMetadata> } A Promise instance used to return when fetchMetadata completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by promise.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    fetchMetadata(): Promise<AVMetadata>;
+
+    /**
+     * It will extract the audio resource to fetch an album cover.
+     * @param { AsyncCallback<image.PixelMap> } callback - A callback instance used
+     * to return when fetchAlbumCover completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Return by callback.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by callback.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    fetchAlbumCover(callback: AsyncCallback<image.PixelMap>): void;
+
+    /**
+     * It will extract the audio resource to fetch an album cover.
+     * @returns { Promise<image.PixelMap> } A Promise instance used to return when fetchAlbumCover completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by promise.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    fetchAlbumCover(): Promise<image.PixelMap>;
+
+    /**
+     * Release resources used for AVMetadataExtractor.
+     * @param { AsyncCallback<void> } callback - A callback instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+     * Release resources used for AVMetadataExtractor.
+     * @returns { Promise<void> } A Promise instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    release(): Promise<void>;
+  }
+
+  /**
+   * Provides the container definition for media meta data.
+   * @typedef AVMetadata
+   * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+   * @since 11
+   */
+  interface AVMetadata {
+    /**
+     * The metadata to retrieve the information about the album title
+     * of the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    album?: string;
+
+    /**
+     * The metadata to retrieve the information about the performer or
+     * artist associated with the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    albumArtist?: string;
+
+    /**
+     * The metadata to retrieve the information about the artist of
+     * the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    artist?: string;
+
+    /**
+     * The metadata to retrieve the information about the author of
+     * the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    author?: string;
+
+    /**
+     * The metadata to retrieve the information about the created time of
+     * the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    dateTime?: string;
+
+    /**
+     * The metadata to retrieve the information about the created or modified time
+     * with the specific date format of the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    dateTimeFormat?: string;
+
+    /**
+     * The metadata to retrieve the information about the composer of
+     * the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    composer?: string;
+
+    /**
+     * The metadata to retrieve the playback duration of the media source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    duration?: string;
+
+    /**
+     * The metadata to retrieve the content type or genre of the data
+     * source.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    genre?: string;
+
+    /**
+     * If this value exists the media contains audio content.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    hasAudio?: string;
+
+    /**
+     * If this value exists the media contains video content.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    hasVideo?: string;
+
+    /**
+     * The metadata to retrieve the mime type of the media source. Some
+     * example mime types include: "video/mp4", "audio/mp4", "audio/amr-wb",
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    mimeType?: string;
+
+    /**
+     * The metadata to retrieve the number of tracks, such as audio, video,
+     * text, in the media source, such as a mp4 or 3gpp file.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    trackCount?: string;
+
+    /**
+     * It is the audio sample rate, if available.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    sampleRate?: string;
+
+    /**
+     * The metadata to retrieve the media source title.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    title?: string;
+
+    /**
+     * If the media contains video, this key retrieves its height.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    videoHeight?: string;
+
+    /**
+     * If the media contains video, this key retrieves its width.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    videoWidth?: string;
+
+    /**
+     * The metadata to retrieve the information about the video
+     * orientation.
+     * @type { ?string }
+     * @syscap SystemCapability.Multimedia.Media.AVMetadataExtractor
+     * @since 11
+     */
+    videoOrientation?: string;
+  }
+
+  /**
+   * Generate an image from a video resource with the specific time. Before calling an AVImageGenerator method,
+   * you must use createAVImageGenerator() to create an AVImageGenerator instance.
+   * @typedef AVImageGenerator
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  interface AVImageGenerator {
+    /**
+     * Media file descriptor.
+     * @type { ?AVFileDescriptor }
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    fdSrc ?: AVFileDescriptor;
+
+    /**
+     * It will fetch a picture at @timeUs from the given video resource.
+     * @param { number } timeUs - The time expected to fetch picture from the video resource.
+     * The unit is microsecond(us).
+     * @param { AVImageQueryOptions } options - The time options about the relationship
+     * between the given timeUs and a key frame, see @AVImageQueryOptions .
+     * @param { PixelMapParams } param - The output pixel map format params, see @PixelMapParams .
+     * @param { AsyncCallback<image.PixelMap> } callback - A callback instance used
+     * to return when fetchFrameByTime completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by callback.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    fetchFrameByTime(timeUs: number, options: AVImageQueryOptions, param: PixelMapParams,
+      callback: AsyncCallback<image.PixelMap>): void;
+
+    /**
+     * It will decode the given video resource. Then fetch a picture
+     * at @timeUs according the given @options and @param .
+     * @param { number } timeUs - The time expected to fetch picture from the video resource.
+     * The unit is microsecond(us).
+     * @param { AVImageQueryOptions } options - The time options about the relationship
+     * between the given timeUs and a key frame, see @AVImageQueryOptions .
+     * @param { PixelMapParams } param - The output pixel map format params, see @PixelMapParams .
+     * @returns { Promise<image.PixelMap> } A Promise instance used to return the pixel map
+     * when fetchFrameByTime completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
+     * @throws { BusinessError } 5400106 - Unsupported format. Returned by promise.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    fetchFrameByTime(timeUs: number, options: AVImageQueryOptions, param: PixelMapParams): Promise<image.PixelMap>;
+
+    /**
+     * Release resources used for AVImageGenerator.
+     * @param { AsyncCallback<void> } callback - A callback instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by callback.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+     * Release resources used for AVImageGenerator.
+     * @returns { Promise<void> } A Promise instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operation not allowed. Returned by promise.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    release(): Promise<void>;
+  }
+
+  /**
+   * Enumerates options about the relationship between the given timeUs and a key frame.
+   * @enum { number }
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  enum AVImageQueryOptions {
+    /**
+     * This option is used to fetch a key frame from the given media
+     * resource that is located right after or at the given time.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    AV_IMAGE_QUERY_NEXT_SYNC,
+
+    /**
+     * This option is used to fetch a key frame from the given media
+     * resource that is located right before or at the given time.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    AV_IMAGE_QUERY_PREVIOUS_SYNC,
+
+    /**
+     * This option is used to fetch a key frame from the given media
+     * resource that is located closest to or at the given time.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    AV_IMAGE_QUERY_CLOSEST_SYNC,
+
+    /**
+     * This option is used to fetch a frame (maybe not keyframe) from
+     * the given media resource that is located closest to or at the given time.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    AV_IMAGE_QUERY_CLOSEST,
+  }
+
+  /**
+   * Expected pixel map format for the fetched image from video resource.
+   * @typedef PixelMapParams
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  interface PixelMapParams {
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     * @type { ?number }
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    width?: number;
+
+    /**
+     * Expected pixelmap's width, -1 means to keep consistent with the
+     * original dimensions of the given video resource.
+     * @type { ?number }
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    height?: number;
+
+    /**
+     * Expected pixelmap's color format, see {@link PixelFormat}.
+     * @type { ?PixelFormat }
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    colorFormat?: PixelFormat;
+  }
+
+  /**
+   * Enumerates options about the expected color options for the fetched image.
+   * @enum { number }
+   * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+   * @systemapi
+   * @since 11
+   */
+  enum PixelFormat {
+    /**
+     * RGB_565 options.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    RGB_565 = 2,
+
+    /**
+     * RGBA_8888 options.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    RGBA_8888 = 3,
+
+    /**
+     * RGB_888 options.
+     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
+     * @systemapi
+     * @since 11
+     */
+    RGB_888 = 5,
+  }
 
   /**
    * Enumerates state change reason.

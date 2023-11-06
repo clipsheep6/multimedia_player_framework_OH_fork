@@ -56,8 +56,11 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
+    "${multimedia_player_framework_path}/frameworks/js/metadatahelper",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
     "//third_party/libuv/include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native/",
+    "//foundation/multimedia/image_framework/interfaces/innerkits/include/",
   ]
 
   sources = [
@@ -92,6 +95,14 @@ ohos_shared_library("media") {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_callback.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_napi.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_metadata) {
+    sources += [
+      "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avimagegenerator_napi.cpp",
+      "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadataextractor_napi.cpp",
+      "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadatahelper_callback.cpp",
     ]
   }
 
@@ -144,6 +155,8 @@ ohos_shared_library("media") {
     "audio_framework:audio_renderer",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image",
+    "image_framework:image_native",
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
