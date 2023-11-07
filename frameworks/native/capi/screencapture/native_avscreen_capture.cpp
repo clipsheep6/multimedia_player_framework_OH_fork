@@ -16,7 +16,7 @@
 #include <mutex>
 #include "media_log.h"
 #include "media_errors.h"
-#include "native_avscreen_capture_magic.h"
+#include "native_player_magic.h"
 #include "surface_buffer_impl.h"
 #include "native_avscreen_capture.h"
 
