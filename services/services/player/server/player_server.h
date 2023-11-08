@@ -196,6 +196,7 @@ private:
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
+    std::atomic<bool> inReleasing_ = false;
 };
 } // namespace Media
 } // namespace OHOS

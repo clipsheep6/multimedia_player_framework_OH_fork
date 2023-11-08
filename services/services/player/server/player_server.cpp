@@ -279,6 +279,10 @@ int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerServer::Prepare()
 {
+    if (inReleasing_.load()) {
+        MEDIA_LOGE("Can not Prepare, now in releasing");
+        return MSERR_INVALID_OPERATION;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("KPI-TRACE: PlayerServer Prepare in");
 
@@ -292,6 +296,10 @@ int32_t PlayerServer::Prepare()
 
 int32_t PlayerServer::PrepareAsync()
 {
+    if (inReleasing_.load()) {
+        MEDIA_LOGE("Can not Prepare, now in releasing");
+        return MSERR_INVALID_OPERATION;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("KPI-TRACE: PlayerServer PrepareAsync in");
 
@@ -572,6 +580,7 @@ int32_t PlayerServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::Release");
+    inReleasing_ = true;
     {
         std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = nullptr;
