@@ -67,6 +67,7 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
 
+    (void)cancelTask;
     if (type == PlayerServerTaskType::STATE_CHANGE) {
         if (currTwoPhaseTask_ == nullptr) {
             return EnqueueTask(task, type, taskName);
