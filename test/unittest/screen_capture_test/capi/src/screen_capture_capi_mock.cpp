@@ -82,9 +82,9 @@ OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig co
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<OH_VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
     config_.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<OH_VideoCodecFormat>(config_.videoInfo.videoEncInfo.videoCodec),
-        .videoBitrate = static_cast<OH_VideoCodecFormat>(config_.videoInfo.videoEncInfo.videoBitrate),
-        .videoFrameRate = static_cast<OH_VideoCodecFormat>(config_.videoInfo.videoEncInfo.videoFrameRate)
+        .videoCodec = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec),
+        .videoBitrate = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoBitrate),
+        .videoFrameRate = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoFrameRate)
     };
     std::string url = config.recorderInfo.url;
     if (!(url.empty())) {

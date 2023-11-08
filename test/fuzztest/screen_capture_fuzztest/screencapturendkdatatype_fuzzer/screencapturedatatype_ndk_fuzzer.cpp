@@ -17,6 +17,7 @@
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
+#include "media_log.h"
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screencapturedatatype_ndk_fuzzer.h"
@@ -24,6 +25,10 @@
 using namespace std;
 using namespace OHOS;
 using namespace Media;
+
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureDataTypeNdkFuzzer"};
+}
 
 namespace OHOS {
 namespace Media {
@@ -43,18 +48,31 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
         .audioSource = OH_SOURCE_DEFAULT
     };
 
+    OH_AudioEncInfo audioEncInfo = {
+        .audioBitrate = 48000,
+        .audioCodecformat = OH_AudioCodecFormat::OH_AAC_LC
+    };
+
     OH_VideoCaptureInfo videocapinfo = {
         .videoFrameWidth = 720,
-        .videoFrameHeight = 1280,
+        .videoFrameHeight = 1080,
         .videoSource = OH_VIDEO_SOURCE_SURFACE_RGBA
     };
 
+    OH_VideoEncInfo videoEncInfo = {
+        .videoCodec = OH_VideoCodecFormat::OH_MPEG4,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+
     OH_AudioInfo audioinfo = {
-        .micCapInfo = miccapinfo
+        .micCapInfo = miccapinfo,
+        .audioEncInfo = audioEncInfo
     };
 
     OH_VideoInfo videoinfo = {
-        .videoCapInfo = videocapinfo
+        .videoCapInfo = videocapinfo,
+        .videoEncInfo = videoEncInfo
     };
 
     config = {
@@ -75,6 +93,7 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
+    constexpr int32_t dataTypeCaptureFile = 2;
     constexpr uint32_t recorderTime = 3;
     const OH_DataType dataType_[dataTypeList] {
         OH_ORIGINAL_STREAM,
@@ -82,8 +101,21 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
         OH_CAPTURE_FILE,
         OH_INVAILD
     };
-    int32_t datatypesubscript = *reinterpret_cast<int32_t *>(data) % (dataTypeList);
-    config.dataType = dataType_[datatypesubscript];
+    int32_t datatypesubscript = (static_cast<int32_t>(*data)) % (dataTypeList);
+    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer datatypesubscript: %{public}d ", datatypesubscript);
+    if (datatypesubscript == dataTypeCaptureFile) {
+        config.dataType = dataType_[datatypesubscript];
+        OH_RecorderInfo recorderInfo;
+        const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
+        int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_fuzz_ndk_datatype_file_01.mp4").c_str(),
+            O_RDWR | O_CREAT, 0777);
+        std::string fileUrl = "fd://" + to_string(outputFd);
+        recorderInfo.url = const_cast<char *>(fileUrl.c_str());
+        recorderInfo.fileFormat = OH_ContainerFormatType::CFT_MPEG_4;
+        config.recorderInfo = recorderInfo;
+    } else {
+        config.dataType = dataType_[datatypesubscript];
+    }
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
@@ -117,7 +149,10 @@ bool FuzzTestScreenCaptureDataTypeNdk(uint8_t *data, size_t size)
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
+    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer start");
+    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer data: %{public}d ", static_cast<int32_t>(*data));
     /* Run your code on data */
     OHOS::FuzzTestScreenCaptureDataTypeNdk(data, size);
+    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer end");
     return 0;
 }

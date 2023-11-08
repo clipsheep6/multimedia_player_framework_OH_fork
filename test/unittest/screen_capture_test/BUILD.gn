@@ -49,6 +49,8 @@ ohos_unittest("screen_capture_native_unit_test") {
     "player_framework:media_client",
     "window_manager:libdm",
   ]
+
+  resource_config_file = "../resources/ohos_test.xml"
 }
 
 ##################################################################################################################
@@ -90,4 +92,6 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "player_framework:media_client",
     "window_manager:libdm",
   ]
+
+  resource_config_file = "../resources/ohos_test.xml"
 }

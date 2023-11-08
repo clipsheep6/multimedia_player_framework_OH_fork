@@ -33,7 +33,12 @@ public:
     virtual void Release() = 0;
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetCaptureMode(CaptureMode captureMode) = 0;
+    virtual int32_t SetDataType(DataType dataType) = 0;
+    virtual int32_t SetRecorderInfo(RecorderInfo recorderInfo) = 0;
+    virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) = 0;
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
+    virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StopScreenCapture() = 0;
@@ -53,7 +58,12 @@ public:
         RELEASE,
         DESTROY,
         SET_CAPTURE_MODE,
+        SET_DATA_TYPE,
+        SET_RECORDER_INFO,
+        SET_OUTPUT_FILE,
+        INIT_AUDIO_ENC_INFO,
         INIT_AUDIO_CAP,
+        INIT_VIDEO_ENC_INFO,
         INIT_VIDEO_CAP,
         ACQUIRE_AUDIO_BUF,
         ACQUIRE_VIDEO_BUF,

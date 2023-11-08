@@ -74,6 +74,7 @@ static GType gst_audio_capture_src_source_type_get_type(void)
     static const GEnumValue source_types[] = {
         {AUDIO_SOURCE_TYPE_DEFAULT, "MIC", "MIC"},
         {AUDIO_SOURCE_TYPE_MIC, "MIC", "MIC"},
+        {AUDIO_SOURCE_TYPE_INNER, "INNER", "INNER"},
         {0, nullptr, nullptr}
     };
     if (!audio_capture_src_source_type) {
@@ -333,7 +334,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             appInfo.appTokenId = src->token_id;
             appInfo.appFullTokenId = src->full_token_id;
             CHECK_AND_BREAK_REP_ERR(src->audio_capture->SetCaptureParameter(src->bitrate, src->channels,
-                src->sample_rate, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
+                src->sample_rate, src->source_type, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {

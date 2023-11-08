@@ -14,6 +14,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -84,7 +85,7 @@ bool ScreenCaptureVideoSourceTypeFuzzer::FuzzScreenCaptureVideoSourceType(uint8_
         VIDEO_SOURCE_SURFACE_RGBA,
         VIDEO_SOURCE_BUTT
     };
-    int32_t vsourcesubscript = *reinterpret_cast<int32_t *>(data) % (videoSourceTypeList);
+    int32_t vsourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (videoSourceTypeList));
     config.videoInfo.videoCapInfo.videoSource = videoSourceType[vsourcesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj

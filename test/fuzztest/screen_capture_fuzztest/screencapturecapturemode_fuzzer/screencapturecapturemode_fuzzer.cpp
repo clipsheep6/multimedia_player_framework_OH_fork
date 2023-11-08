@@ -14,6 +14,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -84,7 +85,7 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
         CAPTURE_SPECIFIED_WINDOW,
         CAPTURE_INVAILD
     };
-    int32_t capturemodesubscript = *reinterpret_cast<int32_t *>(data) % (captureModeList);
+    int32_t capturemodesubscript = abs(*reinterpret_cast<int32_t *>(data) % (captureModeList));
     config.captureMode = captureMode_[capturemodesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj

@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-#include "screen_capture_unit_test.h"
+#include <fcntl.h>
+#include <iostream>
+#include <string>
 #include "media_errors.h"
+#include "screen_capture_unit_test.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -135,7 +138,45 @@ int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
         .captureMode = CAPTURE_HOME_SCREEN,
         .dataType = ORIGINAL_STREAM,
         .audioInfo = audioinfo,
-        .videoInfo = videoinfo,
+        .videoInfo = videoinfo
+    };
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo)
+{
+    AudioEncInfo audioEncInfo = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+
+    VideoCaptureInfo videoCapInfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+
+    AudioInfo audioInfo = {
+        .audioEncInfo = audioEncInfo
+    };
+
+    VideoInfo videoInfo = {
+        .videoCapInfo = videoCapInfo,
+        .videoEncInfo = videoEncInfo
+    };
+
+    config = {
+        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
+        .dataType = DataType::CAPTURE_FILE,
+        .audioInfo = audioInfo,
+        .videoInfo = videoInfo,
+        .recorderInfo = recorderInfo
     };
     return MSERR_OK;
 }
@@ -225,6 +266,378 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
         }
         index_--;
     }
+}
+
+/**
+ * @tc.name: screen_capture_save_file_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_02
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_02 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_02.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_02 after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_03
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_03 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_get_screen_capture_03.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_03 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_01 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfoRateSmall = {
+        .audioSampleRate = 0,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfoRateSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioCaptureInfo micCapInfoRateBig = {
+        .audioSampleRate = 8000000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfoRateBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioCaptureInfo micCapInfoChannelSmall = {
+        .audioSampleRate = 16000,
+        .audioChannels = 0,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfoChannelSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioCaptureInfo micCapInfoChannelBig = {
+        .audioSampleRate = 16000,
+        .audioChannels = 200,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfoChannelBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioCaptureInfo micCapInfoTypeError = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.micCapInfo = micCapInfoTypeError;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_INVALID;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_02
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_02 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_02.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioEncInfo audioEncInfoBitSmall = {
+        .audioBitrate = 0,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+    config_.audioInfo.audioEncInfo = audioEncInfoBitSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioEncInfo audioEncInfoBitBig = {
+        .audioBitrate = 4800000,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+    config_.audioInfo.audioEncInfo = audioEncInfoBitBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    AudioEncInfo audioEncInfoFormatError = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT
+    };
+    config_.audioInfo.audioEncInfo = audioEncInfoFormatError;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_02 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_03
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_03 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_03.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    VideoCaptureInfo videoCapInfoWidthSmall = {
+        .videoFrameWidth = 0,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    config_.videoInfo.videoCapInfo = videoCapInfoWidthSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoCaptureInfo videoCapInfoWidthBig = {
+        .videoFrameWidth = 7200,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    config_.videoInfo.videoCapInfo = videoCapInfoWidthBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoCaptureInfo videoCapInfoHeightSmall = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 0,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    config_.videoInfo.videoCapInfo = videoCapInfoHeightSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoCaptureInfo videoCapInfoHeightBig = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 10800,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+    config_.videoInfo.videoCapInfo = videoCapInfoHeightBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoCaptureInfo videoCapInfoSourceError = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VideoSourceType::VIDEO_SOURCE_BUTT
+    };
+    config_.videoInfo.videoCapInfo = videoCapInfoSourceError;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_03 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_04
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_04, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_04 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_04.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    VideoEncInfo videoEncInfoBitSmall = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 0,
+        .videoFrameRate = 30
+    };
+    config_.videoInfo.videoEncInfo = videoEncInfoBitSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoEncInfo videoEncInfoBitBig = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 20000000,
+        .videoFrameRate = 30
+    };
+    config_.videoInfo.videoEncInfo = videoEncInfoBitBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoEncInfo videoEncInfoRateSmall = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 0
+    };
+    config_.videoInfo.videoEncInfo = videoEncInfoRateSmall;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoEncInfo videoEncInfoRateBig = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 300
+    };
+    config_.videoInfo.videoEncInfo = videoEncInfoRateBig;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    VideoEncInfo videoEncInfoCodecError = {
+        .videoCodec = VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
+    config_.videoInfo.videoEncInfo = videoEncInfoCodecError;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_04 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_05
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_05.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    config_.dataType = DataType::ENCODED_STREAM;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    config_.dataType = DataType::INVAILD;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    config_.dataType = DataType::CAPTURE_FILE;
+    config_.captureMode = CaptureMode::CAPTURE_INVAILD;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 after");
+}
+
+/**
+ * @tc.name: screen_capture_check_param_06
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_check_param_06.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "avi";
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    recorderInfo.fileFormat = "mp4";
+    recorderInfo.url = "http://" + to_string(outputFd);
+    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 after");
 }
 
 /**

@@ -56,7 +56,12 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE] = &ScreenCaptureServiceStub::Release;
     screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
     screenCaptureStubFuncs_[SET_CAPTURE_MODE] = &ScreenCaptureServiceStub::SetCaptureMode;
+    screenCaptureStubFuncs_[SET_DATA_TYPE] = &ScreenCaptureServiceStub::SetDataType;
+    screenCaptureStubFuncs_[SET_RECORDER_INFO] = &ScreenCaptureServiceStub::SetRecorderInfo;
+    screenCaptureStubFuncs_[SET_OUTPUT_FILE] = &ScreenCaptureServiceStub::SetOutputFile;
+    screenCaptureStubFuncs_[INIT_AUDIO_ENC_INFO] = &ScreenCaptureServiceStub::InitAudioEncInfo;
     screenCaptureStubFuncs_[INIT_AUDIO_CAP] = &ScreenCaptureServiceStub::InitAudioCap;
+    screenCaptureStubFuncs_[INIT_VIDEO_ENC_INFO] = &ScreenCaptureServiceStub::InitVideoEncInfo;
     screenCaptureStubFuncs_[INIT_VIDEO_CAP] = &ScreenCaptureServiceStub::InitVideoCap;
     screenCaptureStubFuncs_[START_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StartScreenCapture;
     screenCaptureStubFuncs_[STOP_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StopScreenCapture;
@@ -110,11 +115,46 @@ int32_t ScreenCaptureServiceStub::SetCaptureMode(CaptureMode captureMode)
     return screenCaptureServer_->SetCaptureMode(captureMode);
 }
 
+int32_t ScreenCaptureServiceStub::SetDataType(DataType dataType)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetDataType(dataType);
+}
+
+int32_t ScreenCaptureServiceStub::SetRecorderInfo(RecorderInfo recorderInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetRecorderInfo(recorderInfo);
+}
+
+int32_t ScreenCaptureServiceStub::SetOutputFile(int32_t fd)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->SetOutputFile(fd);
+}
+
+int32_t ScreenCaptureServiceStub::InitAudioEncInfo(AudioEncInfo audioEncInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->InitAudioEncInfo(audioEncInfo);
+}
+
 int32_t ScreenCaptureServiceStub::InitAudioCap(AudioCaptureInfo audioInfo)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
     return screenCaptureServer_->InitAudioCap(audioInfo);
+}
+
+int32_t ScreenCaptureServiceStub::InitVideoEncInfo(VideoEncInfo videoEncInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->InitVideoEncInfo(videoEncInfo);
 }
 
 int32_t ScreenCaptureServiceStub::InitVideoCap(VideoCaptureInfo videoInfo)
@@ -212,6 +252,53 @@ int32_t ScreenCaptureServiceStub::SetCaptureMode(MessageParcel &data, MessagePar
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServiceStub::SetDataType(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    DataType dataType = static_cast<DataType>(data.ReadInt32());
+    int32_t ret = SetDataType(dataType);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetRecorderInfo(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    RecorderInfo recorderInfo;
+    recorderInfo.url = data.ReadString();
+    recorderInfo.fileFormat = data.ReadString();
+    int32_t ret = SetRecorderInfo(recorderInfo);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    int32_t fd = data.ReadFileDescriptor();
+    int32_t ret = SetOutputFile(fd);
+    reply.WriteInt32(ret);
+    (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::InitAudioEncInfo(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    AudioEncInfo audioEncInfo;
+    audioEncInfo.audioBitrate = data.ReadInt32();
+    audioEncInfo.audioCodecformat = static_cast<AudioCodecFormat>(data.ReadInt32());
+    int32_t ret = InitAudioEncInfo(audioEncInfo);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServiceStub::InitAudioCap(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
@@ -222,6 +309,20 @@ int32_t ScreenCaptureServiceStub::InitAudioCap(MessageParcel &data, MessageParce
     audioInfo.audioChannels = data.ReadInt32();
     audioInfo.audioSource = static_cast<AudioCaptureSourceType>(data.ReadInt32());
     int32_t ret = InitAudioCap(audioInfo);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::InitVideoEncInfo(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    (void)data;
+    VideoEncInfo videoEncInfo;
+    videoEncInfo.videoCodec = static_cast<VideoCodecFormat>(data.ReadInt32());
+    videoEncInfo.videoBitrate = data.ReadInt32();
+    videoEncInfo.videoFrameRate = data.ReadInt32();
+    int32_t ret = InitVideoEncInfo(videoEncInfo);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

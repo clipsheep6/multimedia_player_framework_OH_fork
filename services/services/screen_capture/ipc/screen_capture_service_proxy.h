@@ -28,7 +28,12 @@ public:
     void Release() override;
     int32_t DestroyStub() override;
     int32_t SetCaptureMode(CaptureMode captureMode) override;
+    int32_t SetDataType(DataType dataType) override;
+    int32_t SetRecorderInfo(RecorderInfo recorderInfo) override;
+    int32_t SetOutputFile(int32_t fd) override;
+    int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) override;
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
+    int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
     int32_t StartScreenCapture() override;
     int32_t StopScreenCapture() override;

@@ -84,6 +84,41 @@ bool AudioCaptureAsImpl::CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t 
     return true;
 }
 
+bool AudioCaptureAsImpl::CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    AudioStandard::AudioCapturerOptions &options)
+{
+    (void)bitrate;
+    auto supportedSampleList = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
+    CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, false);
+    bool isValidSampleRate = false;
+    for (auto iter = supportedSampleList.cbegin(); iter != supportedSampleList.cend(); ++iter) {
+        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, false);
+        uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
+        if (sampleRate <= supportedSampleRate) {
+            options.streamInfo.samplingRate = *iter;
+            isValidSampleRate = true;
+            break;
+        }
+    }
+    CHECK_AND_RETURN_RET(isValidSampleRate, false);
+
+    auto supportedChannelsList = AudioStandard::AudioCapturer::GetSupportedChannels();
+    CHECK_AND_RETURN_RET(supportedChannelsList.size() > 0, false);
+    bool isValidChannels = false;
+    for (auto iter = supportedChannelsList.cbegin(); iter != supportedChannelsList.cend(); ++iter) {
+        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, false);
+        uint32_t supportedChannels = static_cast<uint32_t>(*iter);
+        if (channels == supportedChannels) {
+            options.streamInfo.channels = *iter;
+            isValidChannels = true;
+            break;
+        }
+    }
+    CHECK_AND_RETURN_RET(isValidChannels, false);
+
+    return true;
+}
+
 bool AudioCaptureAsImpl::IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate)
 {
     AudioStandard::AudioCapturerParams params;
@@ -94,7 +129,7 @@ bool AudioCaptureAsImpl::IsSupportedCaptureParameter(uint32_t bitrate, uint32_t 
 }
 
 int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
-    const AppInfo &appInfo)
+    AudioSourceType sourceType, const AppInfo &appInfo)
 {
     if (audioCapturer_ == nullptr) {
         AudioStandard::AppInfo audioAppInfo = {};
@@ -102,23 +137,42 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         audioAppInfo.appPid = appInfo.appPid;
         audioAppInfo.appTokenId = appInfo.appTokenId;
         audioAppInfo.appFullTokenId = appInfo.appFullTokenId;
+        if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_DEFAULT ||
+            sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_MIC) {
+            AudioStandard::AudioCapturerParams params;
+            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params),
+                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
 
-        audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
-                                                              audioAppInfo);
-        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
+            params.audioSampleFormat = AudioStandard::SAMPLE_S16LE;
+            params.audioEncoding = AudioStandard::ENCODING_PCM;
+            MEDIA_LOGD("SetCaptureParameter out, channels:%{public}d, sampleRate:%{public}d",
+                params.audioChannel, params.samplingRate);
+                
+            audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
+                audioAppInfo);
+            CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
+
+            CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
+        } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
+            AudioStandard::AudioCapturerOptions options;
+            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
+                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
+            options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
+            options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
+            options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
+            MEDIA_LOGD("SetCaptureParameterOptions out, channels:%{public}d, sampleRate:%{public}d",
+                options.streamInfo.channels, options.streamInfo.samplingRate);
+            
+            audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
+            CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+        } else {
+            MEDIA_LOGE("Set sourceType invaild");
+            return MSERR_INVALID_OPERATION;
+        }
     }
     audioCacheCtrl_ = std::make_unique<AudioCacheCtrl>();
     CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_NO_MEMORY, "create audio cache ctrl failed");
 
-    AudioStandard::AudioCapturerParams params;
-    CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params),
-        MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
-
-    params.audioSampleFormat = AudioStandard::SAMPLE_S16LE;
-    params.audioEncoding = AudioStandard::ENCODING_PCM;
-    MEDIA_LOGD("SetCaptureParameter out, channels:%{public}d, sampleRate:%{public}d",
-        params.audioChannel, params.samplingRate);
-    CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(audioCapturer_->GetBufferSize(bufferSize_) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     MEDIA_LOGD("audio buffer size is: %{public}zu", bufferSize_);
     CHECK_AND_RETURN_RET_LOG(bufferSize_ < MAXIMUM_BUFFER_SIZE, MSERR_UNKNOWN, "audio buffer size too long");

@@ -45,7 +45,7 @@ public:
     AudioCaptureAsImpl();
     virtual ~AudioCaptureAsImpl();
 
-    int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate, AudioSourceType sourceType,
         const AppInfo &appInfo) override;
     bool IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate) override;
     int32_t GetCaptureParameter(uint32_t &bitrate, uint32_t &channels, uint32_t &sampleRate) override;
@@ -59,6 +59,8 @@ public:
 
     bool CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerParams &params);
+    bool CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+        AudioStandard::AudioCapturerOptions &options);
 
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;

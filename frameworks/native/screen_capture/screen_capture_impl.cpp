@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "i_media_service.h"
+#include "string_ex.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureImpl"};
@@ -101,29 +102,87 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
     int32_t ret = MSERR_OK;
     ret = screenCaptureService_->SetCaptureMode(config.captureMode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetCaptureMode failed");
+
+    ret = screenCaptureService_->SetDataType(config.dataType);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetDataType failed");
+
     switch (config.dataType) {
         case ORIGINAL_STREAM: {
-            ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
-            ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initVideoCap failed");
-
-            if (NeedStartInnerAudio(config.audioInfo.innerCapInfo.audioSource)) {
-                ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initInnerAudioCap failed");
-            }
+            ret = InitOriginalStream(config);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitOriginalStream failed");
             break;
         }
         case ENCODED_STREAM:
             MEDIA_LOGI("start cap encoded stream,still not support");
             return MSERR_UNSUPPORT;
-        case CAPTURE_FILE:
-            MEDIA_LOGI("record to the file still not support");
-            return MSERR_UNSUPPORT;
+        case CAPTURE_FILE: {
+            ret = InitCaptureFile(config);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitCaptureFile failed");
+            break;
+        }
         default:
             MEDIA_LOGI("invaild type");
             return MSERR_INVALID_VAL;
     }
+    return ret;
+}
+
+int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
+{
+    CHECK_AND_RETURN_RET_LOG(config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
+        config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::MIC, MSERR_INVALID_VAL,
+        "audioSource source type error");
+    int32_t ret = MSERR_OK;
+    ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
+    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initVideoCap failed");
+
+    if (NeedStartInnerAudio(config.audioInfo.innerCapInfo.audioSource)) {
+        ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initInnerAudioCap failed");
+    }
+    return ret;
+}
+
+int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
+{
+    int32_t ret = MSERR_OK;
+    ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
+    const std::string fdHead = "fd://";
+    CHECK_AND_RETURN_RET_LOG(config.recorderInfo.url.find(fdHead) != std::string::npos, MSERR_INVALID_VAL,
+        "check url failed");
+    int32_t outputFd = -1;
+    std::string inputFd = config.recorderInfo.url.substr(fdHead.size());
+    CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_VAL,
+        "open file failed");
+    ret = screenCaptureService_->SetOutputFile(outputFd);
+    close(outputFd);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
+    ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
+    int32_t retMic = MSERR_OK;
+    int32_t retInner = MSERR_OK;
+    AudioCaptureSourceType type = config.audioInfo.micCapInfo.audioSource;
+    if (type == AudioCaptureSourceType::SOURCE_DEFAULT || type == AudioCaptureSourceType::MIC) {
+        config.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::MIC;
+        retMic = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+    } else {
+        return MSERR_INVALID_VAL;
+    }
+    type = config.audioInfo.innerCapInfo.audioSource;
+    if (type == AudioCaptureSourceType::ALL_PLAYBACK || type == AudioCaptureSourceType::APP_PLAYBACK) {
+        retInner = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+    } else if (type == AudioCaptureSourceType::SOURCE_DEFAULT) {
+    } else {
+        return MSERR_INVALID_VAL;
+    }
+    CHECK_AND_RETURN_RET_LOG(retMic == MSERR_OK || retInner == MSERR_OK, ret, "InitAudioCap failed");
+    ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
+    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
     return ret;
 }
 

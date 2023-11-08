@@ -40,13 +40,14 @@ public:
      * @param bitrate Indicates the audio encoding bit rate, in bit/s.
      * @param channels Indicates the number of audio channels to set.
      * @param sampleRate Indicates the sampling rate of the audio per second.
+     * @param sourceType Indicates the audio source type.
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
     virtual int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
-        const AppInfo &appInfo) = 0;
+        AudioSourceType sourceType, const AppInfo &appInfo) = 0;
 
     /**
      * @brief Query whether the recorded encoding bit rate, number of audio channels and sampling rate are supported.

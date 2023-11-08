@@ -30,7 +30,12 @@ class IScreenCaptureService {
 public:
     virtual ~IScreenCaptureService() = default;
     virtual int32_t SetCaptureMode(CaptureMode captureMode) = 0;
+    virtual int32_t SetDataType(DataType dataType) = 0;
+    virtual int32_t SetRecorderInfo(RecorderInfo recorderInfo) = 0;
+    virtual int32_t SetOutputFile(int32_t fd) = 0;
+    virtual int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) = 0;
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
+    virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StopScreenCapture() = 0;

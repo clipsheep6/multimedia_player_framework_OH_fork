@@ -14,6 +14,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -82,7 +83,7 @@ bool ScreenCaptureVideoSourceTypeNdkFuzzer::FuzzScreenCaptureVideoSourceTypeNdk(
         OH_VIDEO_SOURCE_SURFACE_RGBA,
         OH_VIDEO_SOURCE_BUTT
     };
-    int32_t vsourcesubscript = *reinterpret_cast<int32_t *>(data) % (videoSourceTypeList);
+    int32_t vsourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (videoSourceTypeList));
     config.videoInfo.videoCapInfo.videoSource = videoSourceType[vsourcesubscript];
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);

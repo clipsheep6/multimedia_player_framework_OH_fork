@@ -129,9 +129,9 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
     config_.videoInfo.videoCapInfo.videoSource =
         static_cast<VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
     config_.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<VideoCodecFormat>(config_.videoInfo.videoEncInfo.videoCodec),
-        .videoBitrate = config_.videoInfo.videoEncInfo. videoBitrate,
-        .videoFrameRate = config_.videoInfo.videoEncInfo.videoFrameRate
+        .videoCodec = static_cast<VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec),
+        .videoBitrate = config.videoInfo.videoEncInfo. videoBitrate,
+        .videoFrameRate = config.videoInfo.videoEncInfo.videoFrameRate
     };
     if (config.recorderInfo.url != nullptr) {
         config_.recorderInfo.url = config.recorderInfo.url;

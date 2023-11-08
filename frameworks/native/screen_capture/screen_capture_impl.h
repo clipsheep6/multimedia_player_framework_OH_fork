@@ -41,6 +41,8 @@ public:
 
 private:
     bool NeedStartInnerAudio(AudioCaptureSourceType type);
+    int32_t InitOriginalStream(AVScreenCaptureConfig config);
+    int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
 };
 } // namespace Media

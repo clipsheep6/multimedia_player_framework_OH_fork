@@ -40,6 +40,8 @@
 #include "surface.h"
 #include "display_manager.h"
 #include "screen_manager.h"
+#include "i_recorder_service.h"
+#include "recorder_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -113,7 +115,12 @@ public:
     ~ScreenCaptureServer();
 
     int32_t SetCaptureMode(CaptureMode captureMode) override;
+    int32_t SetDataType(DataType dataType) override;
+    int32_t SetRecorderInfo(RecorderInfo recorderInfo) override;
+    int32_t SetOutputFile(int32_t outputFd) override;
+    int32_t InitAudioEncInfo(AudioEncInfo audioEncInfo) override;
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
+    int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
     int32_t StartScreenCapture() override;
     int32_t StopScreenCapture() override;
@@ -133,12 +140,16 @@ private:
     int32_t CheckVideoParam(VideoCaptureInfo videoInfo);
     int32_t CheckAudioParam(AudioCaptureInfo audioInfo);
     std::shared_ptr<AudioCapturer> CreateAudioCapture(AudioCaptureInfo audioInfo);
+    int32_t InitRecorder();
     int32_t StartAudioCapture();
     int32_t StartAudioInnerCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
+    int32_t StartHomeVideoCaptureFile();
+    int32_t CreateVirtualScreen(std::string name, sptr<OHOS::Surface> consumer);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
+    int32_t StopScreenCaptureRecorder();
     void ReleaseAudioCapture();
     void ReleaseVideoCapture();
 
@@ -172,6 +183,24 @@ private:
     VideoCaptureInfo videoInfo_;
     Security::AccessToken::AccessTokenID clientTokenId = 0;
     CaptureMode captureMode_ = CAPTURE_HOME_SCREEN;
+    int32_t outputFd_ = -1;
+    std::shared_ptr<IRecorderService> recorder_ = nullptr;
+    int32_t audioSourceId_;
+    int32_t videoSourceId_;
+    AudioCaptureInfo audioInfo_;
+    DataType dataType_ = ORIGINAL_STREAM;
+    std::string url_;
+    OutputFormatType fileFormat_;
+    AudioEncInfo audioEncInfo_;
+    VideoEncInfo videoEncInfo_;
+    const int32_t audioBitrateMin_ = 8000;
+    const int32_t audioBitrateMax_ = 384000;
+    const int32_t videoBitrateMin_ = 1;
+    const int32_t videoBitrateMax_ = 3000000;
+    const int32_t videoFrameRateMin_ = 1;
+    const int32_t videoFrameRateMax_ = 30;
+    const std::string MP4 = "mp4";
+    const std::string M4A = "m4a";
 
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;

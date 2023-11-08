@@ -269,4 +269,116 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
+    <target name="ScreenCaptureDataTypeFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_datatype_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkDataTypeFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_datatype_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureAudioBitRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_audiobitrate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkAudioBitRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_audiobitrate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureAudioCodecFormatFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_audiocodecformat_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkAudioCodecFormatFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_audiocodecformat_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureVideoCodecFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_videocodec_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkVideoCodecFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_videocodec_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureVideoBitRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_videobitrate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkVideoBitRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_videobitrate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureVideoFrameRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_videoframerate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkVideoFrameRateFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_videoframerate_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureUrlFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_url_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkUrlFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_url_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureFileFormatFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_fileformat_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="ScreenCaptureNdkFileFormatFileFuzzTest">
+        <preparer>
+            <option name="push" value="screencapture/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_fuzz_ndk_fileformat_file_01.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
 </configuration>

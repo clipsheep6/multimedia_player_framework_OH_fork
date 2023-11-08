@@ -14,6 +14,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -83,7 +84,7 @@ bool ScreenCaptureAudioSourceTypeNdkFuzzer::FuzzScreenCaptureAudioSourceTypeNdk(
         OH_ALL_PLAYBACK,
         OH_APP_PLAYBACK,
     };
-    int32_t asourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
+    int32_t asourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
     config.audioInfo.micCapInfo.audioSource = audioSourceType[asourcesubscript];
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);

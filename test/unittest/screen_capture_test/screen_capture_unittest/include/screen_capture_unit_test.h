@@ -48,6 +48,7 @@ public:
     void AudioLoop(void);
     void AudioLoopWithoutRelease(void);
     int32_t SetConfig(AVScreenCaptureConfig &config);
+    int32_t SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo);
     void OpenFile(std::string filename_);
     void CloseFile(void);
     char filename[100] = {0};
@@ -59,6 +60,7 @@ protected:
     std::shared_ptr<ScreenCaptureMock> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureUnitTestCallback> screenCaptureCb_ = nullptr;
     std::unique_ptr<std::thread> audioLoop_ = nullptr;
+    const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
 };
 } // namespace Media
 } // namespace OHOS

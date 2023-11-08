@@ -20,7 +20,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServiceProxy"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServiceProxy"};
 }
 
 namespace OHOS {
@@ -101,6 +101,81 @@ int32_t ScreenCaptureServiceProxy::SetCaptureMode(CaptureMode captureMode)
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::SetDataType(DataType dataType)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(static_cast<int32_t>(dataType));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write SetDataType!");
+
+    int error = Remote()->SendRequest(SET_DATA_TYPE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetDataType failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::SetRecorderInfo(RecorderInfo recorderInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteString(recorderInfo.url) && data.WriteString(recorderInfo.fileFormat);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write recorderInfo!");
+
+    int error = Remote()->SendRequest(SET_RECORDER_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetRecorderInfo failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::SetOutputFile(int32_t fd)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteFileDescriptor(fd);
+
+    int error = Remote()->SendRequest(SET_OUTPUT_FILE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetOutputFile failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::InitAudioEncInfo(AudioEncInfo audioEncInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(audioEncInfo.audioBitrate) && data.WriteInt32(audioEncInfo.audioCodecformat);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write audioEncInfo!");
+
+    int error = Remote()->SendRequest(INIT_AUDIO_ENC_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "InitAudioEncInfo failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::InitAudioCap(AudioCaptureInfo audioInfo)
 {
     MessageParcel data;
@@ -117,6 +192,26 @@ int32_t ScreenCaptureServiceProxy::InitAudioCap(AudioCaptureInfo audioInfo)
     int error = Remote()->SendRequest(INIT_AUDIO_CAP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "InitAudioCap failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::InitVideoEncInfo(VideoEncInfo videoEncInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(videoEncInfo.videoCodec) && data.WriteInt32(videoEncInfo.videoBitrate) &&
+            data.WriteInt32(videoEncInfo.videoFrameRate);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoEncInfo!");
+
+    int error = Remote()->SendRequest(INIT_VIDEO_ENC_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "InitVideoEncInfo failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }
