@@ -17,7 +17,6 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_errors.h"
 #include "gst_surface_mem_sink.h"
 
 namespace {
