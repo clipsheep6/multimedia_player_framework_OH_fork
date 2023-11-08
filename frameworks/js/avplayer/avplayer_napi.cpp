@@ -291,7 +291,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareAtTask(int32_t timeMs
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                               "failed to prepareAt, avplayer enter error status, please check error callback messages!");
+                    "failed to prepareAt, avplayer enter error status, please check error callback messages!");
             }
         } else if (state == AVPlayerState::STATE_PREPARED) {
             MEDIA_LOGI("PrepareAt Time Task In");
@@ -302,7 +302,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareAtTask(int32_t timeMs
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                           "current state is not stopped or initialized, unsupport prepareAt operation");
+                    "current state is not stopped or initialized, unsupport prepareAt operation");
         }
 
         MEDIA_LOGI("PrepareAt Task Out");
@@ -313,7 +313,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareAtTask(int32_t timeMs
     return task;
 }
 
-napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info){
+napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info)
+{
     MediaTrace trace("AVPlayerNapi::prepareAt");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -325,7 +326,7 @@ napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info){
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
     if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support prepareAt time");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support prepareAt");
         return result;
     }
 
