@@ -13,24 +13,46 @@
  * limitations under the License.
  */
 
+/**
+ * @addtogroup AVPlayer
+ * @{
+ *
+ * @brief Provides APIs of Playback capability for Media Source.
+ *
+ * @Syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @since 11
+ * @version 1.0
+ */
+
+/**
+ * @file avplayer.h
+ *
+ * @brief Defines the avplayer APIs. Uses the Native APIs provided by Media AVPlayer
+ *        to play the media source.
+ *
+ * @library libavplayer.so
+ * @since 11
+ * @version 1.0
+ */
+
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVPLAYER_H
 #define MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVPLAYER_H
 
 #include <stdint.h>
 #include <stdio.h>
 #include "native_averrors.h"
-#include "native_avplayer_base.h"
+#include "avplayer_base.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
-* @brief Create a player
-* @syscap SystemCapability.Multimedia.Media.AVPlayer
-* @return Returns a pointer to an OH_AVPlayer instance
-* @since 10
-* @version 1.0
+ * @brief Create a player
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @return Returns a pointer to an OH_AVPlayer instance
+ * @since 11
+ * @version 1.0
 */
 OH_AVPlayer *OH_AVPlayer_Create(void);
 
@@ -40,8 +62,8 @@ OH_AVPlayer *OH_AVPlayer_Create(void);
  * @param player Pointer to an OH_AVPlayer instance
  * @param url Indicates the playback source.
  * @return Returns {@link AV_ERR_OK} if the url is set successfully; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetUrlSource(OH_AVPlayer *player, const char *url);
@@ -54,8 +76,8 @@ OH_AVErrCode OH_AVPlayer_SetUrlSource(OH_AVPlayer *player, const char *url);
  * @param offset Indicates the offset of media source in file descriptor.
  * @param size Indicates the size of media source.
  * @return Returns {@link AV_ERR_OK} if the fd source is set successfully; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetFdSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size);
@@ -69,8 +91,8 @@ OH_AVErrCode OH_AVPlayer_SetFdSource(OH_AVPlayer *player, int32_t fd, int64_t of
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if the playback is started; otherwise returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Play(OH_AVPlayer *player);
@@ -83,8 +105,8 @@ OH_AVErrCode OH_AVPlayer_Play(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if {@link Prepare} is successfully added to the task queue;
- * returns an error code defined in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * returns an error code defined in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Prepare(OH_AVPlayer *player);
@@ -94,8 +116,8 @@ OH_AVErrCode OH_AVPlayer_Prepare(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if {@link Pause} is successfully added to the task queue;
- * returns an error code defined in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * returns an error code defined in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Pause(OH_AVPlayer *player);
@@ -105,8 +127,8 @@ OH_AVErrCode OH_AVPlayer_Pause(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if {@link Stop} is successfully added to the task queue;
- * returns an error code defined in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * returns an error code defined in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Stop(OH_AVPlayer *player);
@@ -120,8 +142,8 @@ OH_AVErrCode OH_AVPlayer_Stop(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if {@link Reset} is successfully added to the task queue;
- * returns an error code defined in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * returns an error code defined in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Reset(OH_AVPlayer *player);
@@ -136,8 +158,8 @@ OH_AVErrCode OH_AVPlayer_Reset(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if {@link Release} is successfully added to the task queue;
- * returns an error code defined in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * returns an error code defined in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player);
@@ -152,8 +174,8 @@ OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if the playback is released; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player);
@@ -172,8 +194,8 @@ OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player);
  * @param rightVolume Indicates the target volume of the right audio channel to set,
  *        ranging from 0 to 1. each step is 0.01.
  * @return Returns {@link AV_ERR_OK} if the volume is set; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetVolume(OH_AVPlayer *player, float leftVolume, float rightVolume);
@@ -186,13 +208,13 @@ OH_AVErrCode OH_AVPlayer_SetVolume(OH_AVPlayer *player, float leftVolume, float 
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @param mSeconds Indicates the target playback position, accurate to milliseconds.
- * @param mode Indicates the player seek mode. For details, see {@link PlayerSeekMode}.
+ * @param mode Indicates the player seek mode. For details, see {@link AVPlayerSeekMode}.
  * @return Returns {@link AV_ERR_OK} if the seek is done; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
 */
-OH_AVErrCode OH_AVPlayer_Seek(OH_AVPlayer *player, int32_t mSeconds, OH_PlayerSeekMode mode);
+OH_AVErrCode OH_AVPlayer_Seek(OH_AVPlayer *player, int32_t mSeconds, AVPlayerSeekMode mode);
 
 /**
  * @brief Obtains the playback position, accurate to millisecond.
@@ -200,8 +222,8 @@ OH_AVErrCode OH_AVPlayer_Seek(OH_AVPlayer *player, int32_t mSeconds, OH_PlayerSe
  * @param player Pointer to an OH_AVPlayer instance
  * @param currentTime Indicates the playback position.
  * @return Returns {@link AV_ERR_OK} if the current position is get; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_GetCurrentTime(OH_AVPlayer *player, int32_t *currentTime);
@@ -211,7 +233,7 @@ OH_AVErrCode OH_AVPlayer_GetCurrentTime(OH_AVPlayer *player, int32_t *currentTim
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns width if success; else returns 0
- * @since 1.0
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_GetVideoWidth(OH_AVPlayer *player, int32_t *videoWidth);
@@ -221,7 +243,7 @@ OH_AVErrCode OH_AVPlayer_GetVideoWidth(OH_AVPlayer *player, int32_t *videoWidth)
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns height if success; else returns 0
- * @since 1.0
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_GetVideoHeight(OH_AVPlayer *player, int32_t *videoHeight);
@@ -230,25 +252,25 @@ OH_AVErrCode OH_AVPlayer_GetVideoHeight(OH_AVPlayer *player, int32_t *videoHeigh
  * @brief set the player playback rate
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
- * @param mode the rate mode {@link PlaybackRateMode} which can set.
+ * @param mode the rate mode {@link AVPlaybackRateMode} which can set.
  * @return Returns {@link AV_ERR_OK} if the playback rate is set successful; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
-OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, OH_PlaybackRateMode mode);
+OH_AVErrCode OH_AVPlayer_SetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackRateMode mode);
 
 /**
  * @brief get the current player playback rate
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
- * @param mode the rate mode {@link PlaybackRateMode} which can get.
+ * @param mode the rate mode {@link AVPlaybackRateMode} which can get.
  * @return Returns {@link AV_ERR_OK} if the current player playback rate is get; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
-OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, OH_PlaybackRateMode *mode);
+OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackRateMode *mode);
 
 /**
  * @brief set the bit rate use for hls player
@@ -260,12 +282,12 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, OH_PlaybackRateMo
  * set and select the specified bit rate, and select the bit rate that is less than and closest
  * to the specified bit rate for playback. When ready, read it to query the currently selected bit rate.
  *
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
- * @param mode the rate mode {@link PlaybackRateMode} which can get.
  * @param bitRate the bit rate, The unit is bps.
  * @return Returns {@link AV_ERR_OK} if the bit rate is set successfully; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SelectBitRate(OH_AVPlayer *player, uint32_t bitRate);
@@ -274,12 +296,12 @@ OH_AVErrCode OH_AVPlayer_SelectBitRate(OH_AVPlayer *player, uint32_t bitRate);
 #else
 /**
  * @brief Method to set the surface.
- *
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @param window A pointer to a OHNativeWindow instance, see {@link OHNativeWindow}
  * @return Returns {@link AV_ERR_OK} if the surface is set; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode  OH_AVPlayer_SetVideoSurface(OH_AVPlayer *player, OHNativeWindow *window);
@@ -292,8 +314,8 @@ OH_AVErrCode  OH_AVPlayer_SetVideoSurface(OH_AVPlayer *player, OHNativeWindow *w
  * @param player Pointer to an OH_AVPlayer instance
  * @param duration Indicates the total duration of media files.
  * @return Returns {@link AV_ERR_OK} if the current duration is get; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_GetDuration(OH_AVPlayer *player, int32_t *duration);
@@ -303,18 +325,18 @@ OH_AVErrCode OH_AVPlayer_GetDuration(OH_AVPlayer *player, int32_t *duration);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if the current duration is get; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
-OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, OH_PlayerStates *state);
+OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerStates *state);
 
 /**
  * @brief Checks whether the player is playing.
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns true if the playback is playing; false otherwise.
- * @since 1.0
+ * @since 11
  * @version 1.0
  */
 bool OH_AVPlayer_IsPlaying(OH_AVPlayer *player);
@@ -324,7 +346,7 @@ bool OH_AVPlayer_IsPlaying(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns true if the playback is single looping; false otherwise.
- * @since 1.0
+ * @since 11
  * @version 1.0
  */
 bool OH_AVPlayer_IsLooping(OH_AVPlayer *player);
@@ -334,8 +356,8 @@ bool OH_AVPlayer_IsLooping(OH_AVPlayer *player);
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @param player Pointer to an OH_AVPlayer instance
  * @return Returns {@link AV_ERR_OK} if the single looping is set; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_SetLooping(OH_AVPlayer *player, bool loop);
@@ -346,11 +368,11 @@ OH_AVErrCode OH_AVPlayer_SetLooping(OH_AVPlayer *player, bool loop);
  * @param player Pointer to an OH_AVPlayer instance
  * @param callback object pointer.
  * @return Returns {@link AV_ERR_OK} if the playercallback is set; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
-OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, OH_AVPlayerCallback callback);
+OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback callback);
 
 /**
  * @brief Select audio or subtitle track.
@@ -363,8 +385,8 @@ OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, OH_AVPlayerCallb
  * @param player Pointer to an OH_AVPlayer instance
  * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
  * @return Returns {@link AV_ERR_OK} if selected successfully; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
 */
 OH_AVErrCode OH_AVPlayer_SelectTrack(OH_AVPlayer *player, int32_t index);
@@ -380,8 +402,8 @@ OH_AVErrCode OH_AVPlayer_SelectTrack(OH_AVPlayer *player, int32_t index);
  * @param player Pointer to an OH_AVPlayer instance
  * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
  * @return Returns {@link AV_ERR_OK} if selected successfully; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
 */
 OH_AVErrCode OH_AVPlayer_DeselectTrack(OH_AVPlayer *player, int32_t index);
@@ -396,8 +418,8 @@ OH_AVErrCode OH_AVPlayer_DeselectTrack(OH_AVPlayer *player, int32_t index);
  * @param trackType Media type.
  * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
  * @return Returns {@link AV_ERR_OK} if the track index is get; returns an error code defined
- * in {@link native_player_errors.h} otherwise.
- * @since 1.0
+ * in {@link native_averrors.h} otherwise.
+ * @since 11
  * @version 1.0
  */
 OH_AVErrCode OH_AVPlayer_GetCurrentTrack(OH_AVPlayer *player, int32_t trackType, int32_t *index);
