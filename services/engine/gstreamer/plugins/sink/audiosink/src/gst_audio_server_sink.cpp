@@ -606,8 +606,11 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
                                      gst_audio_server_sink_service_died_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
-    sink->pre_power_on = TRUE;
+    sink->pre_power_on = sink->audio_sink->IsMediaAudioActive();
+    if (!sink->pre_power_on) {
+        g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
+        sink->pre_power_on = TRUE;
+    }
     return TRUE;
 }
 

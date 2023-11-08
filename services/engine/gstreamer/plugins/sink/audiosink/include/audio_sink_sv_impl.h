@@ -21,6 +21,7 @@
 #include "audio_system_manager.h"
 #include "audio_errors.h"
 #include "task_queue.h"
+#include "audio_stream_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -86,6 +87,7 @@ public:
     int32_t SetAudioEffectMode(int32_t effectMode) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     bool Writeable() const override;
+    bool IsMediaAudioActive() override;
 
 private:
     void OnError(std::string errMsg);
@@ -226,6 +228,10 @@ public:
     bool Writeable() const override
     {
         return true;
+    }
+    bool IsMediaAudioActive() override
+    {
+        return false;
     }
 };
 } // namespace Media
