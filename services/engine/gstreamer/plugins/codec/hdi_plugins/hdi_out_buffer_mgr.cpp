@@ -90,33 +90,27 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     MEDIA_LOGD("Enter PullBuffer");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    static constexpr int32_t timeout = 5;
-    if (bufferCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isFormatChange_; })) {
-        if (isFormatChange_ && !mBuffers.empty()) {
-            MEDIA_LOGD("format change, waiting mBuffers empty");
-        } else if (isFlushed_ || !isStart_) {
-            MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
-            return GST_CODEC_FLUSH;
+    bufferCond_.wait_for(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isFormatChange_; });
+    if (isFormatChange_ && !mBuffers.empty()) {
+        MEDIA_LOGD("format change, waiting mBuffers empty");
+    } else if (isFlushed_ || !isStart_) {
+        MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
+        return GST_CODEC_FLUSH;
+    }
+    if (!mBuffers.empty()) {
+        MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
+        MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
+        GstBufferWrap bufferWarp = mBuffers.front();
+        mBuffers.pop_front();
+        if (bufferWarp.isEos) {
+            gst_buffer_unref(bufferWarp.gstBuffer);
+            MEDIA_LOGD("buffer is in eos");
+            return GST_CODEC_EOS;
         }
-        if (!mBuffers.empty()) {
-            MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
-            MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
-            GstBufferWrap bufferWarp = mBuffers.front();
-            mBuffers.pop_front();
-            if (bufferWarp.isEos) {
-                gst_buffer_unref(bufferWarp.gstBuffer);
-                MEDIA_LOGD("buffer is in eos");
-                return GST_CODEC_EOS;
-            }
-            (*buffer) = bufferWarp.gstBuffer;
-            return GST_CODEC_OK;
-        }
-        return GST_CODEC_ERROR;
-    } else {
-        MEDIA_LOGI("PullBuffer bufferCond timeout");
+        (*buffer) = bufferWarp.gstBuffer;
         return GST_CODEC_OK;
     }
+    return GST_CODEC_ERROR;
 }
 
 int32_t HdiOutBufferMgr::FreeBuffers()
