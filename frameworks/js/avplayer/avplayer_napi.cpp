@@ -249,7 +249,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
         state != AVPlayerState::STATE_STOPPED &&
         state != AVPlayerState::STATE_PREPARED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not stopped or initialized, unsupport prepare operation");
+                              "current state is not stopped or initialized, unsupport prepare operation");
     } else {
         promiseCtx->asyncTask = jsPlayer->PrepareTask();
     }
@@ -344,8 +344,7 @@ napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_INITIALIZED &&
-        state != AVPlayerState::STATE_STOPPED &&
+    if (state != AVPlayerState::STATE_INITIALIZED && state != AVPlayerState::STATE_STOPPED &&
         state != AVPlayerState::STATE_PREPARED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                       "current state is not stopped or initialized, unsupport prepareAt operation");
