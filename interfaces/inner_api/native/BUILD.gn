@@ -48,6 +48,7 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/memsink",
   ]
 }
 
@@ -59,6 +60,7 @@ config("media_client_base_config") {
     "//utils/system/safwk/native/include",
     "//commonlibrary/c_utils/base/include",
     "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/memsink",
   ]
 
   cflags = [

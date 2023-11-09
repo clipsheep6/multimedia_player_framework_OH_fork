@@ -58,6 +58,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
+        DECLARE_NAPI_FUNCTION("prepareAt", JsPrepareAt),
         DECLARE_NAPI_FUNCTION("play", JsPlay),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
         DECLARE_NAPI_FUNCTION("stop", JsStop),
@@ -267,6 +268,106 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPrepare Out");
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareAtTask(int32_t timeMs)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, timeMs]() {
+        MEDIA_LOGI("PrepareAt Task In");
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_INITIALIZED ||
+            state == AVPlayerState::STATE_STOPPED) {
+            int32_t ret = player_->PrepareAtAsync(timeMs);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to prepareAt");
+            }
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait_for(lock, std::chrono::seconds(waitsecond),
+                [this]() { return stopWait_.load(); }), "PrepareAtTask", false)
+
+            if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "failed to prepareAt, avplayer enter error status, please check error callback messages!");
+            }
+        } else if (state == AVPlayerState::STATE_PREPARED) {
+            MEDIA_LOGI("PrepareAt Time Task In");
+            int32_t ret = player_->Seek(timeMs, PlayerSeekMode::SEEK_NEXT_SYNC);
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to prepareAt time");
+            }
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state is not stopped or initialized, unsupport prepareAt operation");
+        }
+
+        MEDIA_LOGI("PrepareAt Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+napi_value AVPlayerNapi::JsPrepareAt(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::prepareAt");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support prepareAt");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "prepareAt time is not number");
+        return result;
+    }
+
+    int32_t time = -1;
+    napi_status status = napi_get_value_int32(env, args[0], &time);
+    if (status != napi_ok || time < 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check prepareAt time");
+        return result;
+    }
+
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    auto state = jsPlayer->GetCurrentState();
+    if (state != AVPlayerState::STATE_INITIALIZED &&
+        state != AVPlayerState::STATE_STOPPED &&
+        state != AVPlayerState::STATE_PREPARED) {
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                              "current state is not stopped or initialized, unsupport prepareAt operation");
+    } else {
+        promiseCtx->asyncTask = jsPlayer->PrepareAtTask(time);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsPrepareAt", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+         [](napi_env env, void *data) {
+         MEDIA_LOGI("Wait PrepareAt Task Start");
+         auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+         CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+         promiseCtx->CheckTaskResult();
+         MEDIA_LOGI("Wait PrepareAt Task End");
+         },
+           MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("JsPrepareAt Out");
     return result;
 }
 

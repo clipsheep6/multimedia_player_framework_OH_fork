@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "gst_surface_mem_sink.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
@@ -114,6 +115,19 @@ int32_t PlayerImpl::PrepareAsync()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->PrepareAsync();
+}
+
+int32_t PlayerImpl::PrepareAtAsync(int32_t timeMs)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAt in, PrepareAt to %{public}d ms",
+            FAKE_POINTER(this), timeMs);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    FirstRenderFlag::setFirstRenderFlag(true);
+    int32_t ret = playerService_->PrepareAsync();
+    if (ret == MSERR_OK) {
+        ret = playerService_->Seek(timeMs, PlayerSeekMode::SEEK_NEXT_SYNC);
+    }
+    return ret;
 }
 
 int32_t PlayerImpl::Pause()
