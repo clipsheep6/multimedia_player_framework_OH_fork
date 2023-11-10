@@ -135,7 +135,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer start");
     MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer data: %{public}d ", *data);
-    MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer size: %{public}d ", size);
     /* Run your code on data */
     OHOS::FuzzTestScreenCaptureAudioBitrateFileNdk(data, size);
     MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer end");

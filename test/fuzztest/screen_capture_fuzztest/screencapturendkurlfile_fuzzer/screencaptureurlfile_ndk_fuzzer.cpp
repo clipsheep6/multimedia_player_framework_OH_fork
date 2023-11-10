@@ -142,7 +142,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer start");
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer data: %{public}d ", *data);
-    MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer size: %{public}d ", size);
     /* Run your code on data */
     OHOS::FuzzTestScreenCaptureUrlFileNdk(data, size);
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer end");

@@ -136,7 +136,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer start");
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer data: %{public}d ", *data);
-    MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer size: %{public}d ", size);
     /* Run your code on data */
     OHOS::FuzzTestScreenCaptureVideoFrameRateFile(data, size);
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer end");
