@@ -34,17 +34,6 @@ G_BEGIN_DECLS
 #define GST_SURFACE_MEM_SINK_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_SURFACE_MEM_SINK, GstSurfaceMemSinkClass))
 
-class FirstRenderFlag
-{
-public:
-    static bool firstRenderFrame;
-    static void setFirstRenderFlag(bool flag)
-    {
-        firstRenderFrame = flag;
-    }
-};
-bool FirstRenderFlag::firstRenderFrame;
-
 typedef struct _GstSurfaceMemSink GstSurfaceMemSink;
 typedef struct _GstSurfaceMemSinkClass GstSurfaceMemSinkClass;
 typedef struct _GstSurfaceMemSinkPrivate GstSurfaceMemSinkPrivate;
