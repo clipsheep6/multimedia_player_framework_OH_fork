@@ -102,7 +102,7 @@ protected:
     void ClearCodingBuffers();
     std::atomic<bool> bufferReleased_ = false;
     bool isFlushing_ = false;
-    bool isFlushed_ = false;
+    std::atomic<bool> isFlushed_ = false;
     bool isStart_ = false;
     bool isFormatChange_ = false;
     int32_t mPortIndex_ = 0;

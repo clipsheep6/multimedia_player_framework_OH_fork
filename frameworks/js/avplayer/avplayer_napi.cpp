@@ -996,6 +996,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
         if (player_ != nullptr) {
             if (player_->SetSource(url) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
+                return;
             }
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
@@ -1017,6 +1018,7 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
         if (player_ != nullptr) {
             if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+                return;
             }
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)

@@ -275,7 +275,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     audioIndex_ = -1;
 
     if (GetCurrState() == preparingState_ && needWait) {
-        MEDIA_LOGD("begin wait stop for current status is preparing");
+        MEDIA_LOGI("begin wait stop for current status is preparing");
         static constexpr int32_t timeout = 2;
         preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
         MEDIA_LOGD("end wait stop for current status is preparing");
