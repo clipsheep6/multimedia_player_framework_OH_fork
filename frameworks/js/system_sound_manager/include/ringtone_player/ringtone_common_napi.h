@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RINGTONE_COMMON_NAPI_H_
-#define RINGTONE_COMMON_NAPI_H_
+#ifndef RINGTONE_COMMON_NAPI_H
+#define RINGTONE_COMMON_NAPI_H
 
 #include <string>
 
@@ -22,7 +22,6 @@
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-
 
 #define THROW_ERROR_ASSERT(env, assertion, code)        \
     do {                                                \
@@ -69,4 +68,4 @@ struct AutoRef {
 };
 } // namespace Media
 } // namespace OHOS
-#endif /* RINGTONE_COMMON_NAPI_H_ */
+#endif // RINGTONE_COMMON_NAPI_H

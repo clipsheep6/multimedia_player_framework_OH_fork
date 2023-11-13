@@ -17,31 +17,39 @@ import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
 ohos_shared_library("systemsoundmanager") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/include",
-    "${multimedia_player_framework_path}/interfaces/inner_api/native",
-    "${multimedia_player_framework_path}/interfaces/inner_api/native/audio_ringtone/include",
-    "${multimedia_player_framework_path}/services/utils/include",
-    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiocommon/include",
+    "./include",
+    "./include/ringtone_player",
+    "./../../native/system_sound_manager",
+    "./../../../interfaces/inner_api/native",
+    "./../../../interfaces/inner_api/native/system_sound_manager/include",
+    "./../../../services/utils/include",
     "//third_party/libuv/include",
   ]
 
   sources = [
-    "./src/audio_renderer_info_napi.cpp",
-    "./src/ringtone_common_napi.cpp",
-    "./src/ringtone_options_napi.cpp",
-    "./src/ringtone_player_callback_napi.cpp",
-    "./src/ringtone_player_napi.cpp",
+    "./src/ringtone_player/audio_renderer_info_napi.cpp",
+    "./src/ringtone_player/ringtone_common_napi.cpp",
+    "./src/ringtone_player/ringtone_options_napi.cpp",
+    "./src/ringtone_player/ringtone_player_callback_napi.cpp",
+    "./src/ringtone_player/ringtone_player_napi.cpp",
     "./src/system_sound_manager_napi.cpp",
   ]
 
-  deps = [ "./../../native/system_sound:audio_ringtone_client" ]
+  deps = [ "./../../native/system_sound_manager:system_sound_client" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",

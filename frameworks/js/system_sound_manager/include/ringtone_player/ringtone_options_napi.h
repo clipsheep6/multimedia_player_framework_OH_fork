@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RINGTONE_OPTIONS_NAPI_H_
-#define RINGTONE_OPTIONS_NAPI_H_
+#ifndef RINGTONE_OPTIONS_NAPI_H
+#define RINGTONE_OPTIONS_NAPI_H
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -50,4 +50,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif /* RINGTONE_OPTIONS_NAPI_H_ */
+#endif // RINGTONE_OPTIONS_NAPI_H

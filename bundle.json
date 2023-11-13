@@ -136,13 +136,13 @@
           },
           {
             "type": "none",
-            "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound:audio_ringtone_client",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound_manager:system_sound_client",
             "header": {
               "header_files": [
-                "iringtone_player.h",
-                "iringtone_sound_manager.h"
+                "ringtone_player.h",
+                "system_sound_manager.h"
               ],
-              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_ringtone/include"
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
             }
           }
         ],

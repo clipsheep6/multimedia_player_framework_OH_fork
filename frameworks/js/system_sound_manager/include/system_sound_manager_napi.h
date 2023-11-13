@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef SYSTEM_SOUND_MNGR_NAPI_H_
-#define SYSTEM_SOUND_MNGR_NAPI_H_
+#ifndef SYSTEM_SOUND_MNGR_NAPI_H
+#define SYSTEM_SOUND_MNGR_NAPI_H
 
-#include "iringtone_sound_manager.h"
+#include "system_sound_manager.h"
+
 #include "ringtone_player_napi.h"
+
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_base_context.h"
@@ -28,8 +30,10 @@ namespace Media {
 static const std::string SYSTEM_SND_MNGR_NAPI_CLASS_NAME = "SystemSoundManager";
 
 static const std::map<std::string, RingtoneType> ringtoneTypeMap = {
-    {"RINGTONE_TYPE_DEFAULT", RINGTONE_TYPE_DEFAULT},
-    {"RINGTONE_TYPE_MULTISIM", RINGTONE_TYPE_MULTISIM}
+    {"RINGTONE_TYPE_DEFAULT", RINGTONE_TYPE_SIM_CARD_0}, // deprecated
+    {"RINGTONE_TYPE_MULTISIM", RINGTONE_TYPE_SIM_CARD_1}, // deprecated
+    {"RINGTONE_TYPE_SIM_CARD_0", RINGTONE_TYPE_SIM_CARD_0},
+    {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1}
 };
 
 class SystemSoundManagerNapi {
@@ -43,20 +47,23 @@ private:
     static void Destructor(napi_env env, void* nativeObject, void* finalize_hint);
     static napi_value Construct(napi_env env, napi_callback_info info);
     static napi_value GetSystemSoundManager(napi_env env, napi_callback_info info);
-    static napi_value SetSystemRingtoneUri(napi_env env, napi_callback_info info);
-    static napi_value GetSystemRingtoneUri(napi_env env, napi_callback_info info);
-    static napi_value GetSystemRingtonePlayer(napi_env env, napi_callback_info info);
-    static void AsyncGetSystemRingtonePlayer(napi_env env, void *data);
-    static napi_value SetSystemNotificationUri(napi_env env, napi_callback_info info);
-    static void AsyncSetSystemNotificationUri(napi_env env, void *data);
-    static napi_value GetSystemNotificationUri(napi_env env, napi_callback_info info);
-    static napi_value SetSystemAlarmUri(napi_env env, napi_callback_info info);
-    static void AsyncSetSystemAlarmUri(napi_env env, void *data);
-    static napi_value GetSystemAlarmUri(napi_env env, napi_callback_info info);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value CreateRingtoneTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
+
+    static napi_value SetRingtoneUri(napi_env env, napi_callback_info info);
+    static void AsyncSetRingtoneUri(napi_env env, void *data);
+    static napi_value GetRingtoneUri(napi_env env, napi_callback_info info);
+    static void AsyncGetRingtoneUri(napi_env env, void *data);
+    static napi_value GetRingtonePlayer(napi_env env, napi_callback_info info);
+    static void AsyncGetRingtonePlayer(napi_env env, void *data);
+
+    static napi_value SetSystemToneUri(napi_env env, napi_callback_info info);
+    static void AsyncSetSystemToneUri(napi_env env, void *data);
+    static napi_value GetSystemToneUri(napi_env env, napi_callback_info info);
+    static napi_value GetSystemTonePlayer(napi_env env, napi_callback_info info);
+
     static void SetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
@@ -66,7 +73,7 @@ private:
 
     napi_env env_;
 
-    std::shared_ptr<IRingtoneSoundManager> sysSoundMgrClient_ = nullptr;
+    std::shared_ptr<SystemSoundManager> sysSoundMgrClient_ = nullptr;
 };
 
 struct SystemSoundManagerAsyncContext {
@@ -78,9 +85,9 @@ struct SystemSoundManagerAsyncContext {
     SystemSoundManagerNapi *objectInfo;
     std::shared_ptr<AbilityRuntime::Context> abilityContext_;
     std::string uri;
-    std::shared_ptr<IRingtonePlayer> ringtonePlayer;
+    std::shared_ptr<RingtonePlayer> ringtonePlayer;
     int32_t ringtoneType;
 };
 } // namespace Media
 } // namespace OHOS
-#endif /* SYSTEM_SOUND_MNGR_NAPI_H_ */
+#endif // SYSTEM_SOUND_MNGR_NAPI_H

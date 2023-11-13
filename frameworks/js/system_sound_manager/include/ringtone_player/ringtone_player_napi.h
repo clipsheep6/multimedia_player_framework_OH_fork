@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef RINGTONE_PLAYER_NAPI_H_
-#define RINGTONE_PLAYER_NAPI_H_
+#ifndef RINGTONE_PLAYER_NAPI_H
+#define RINGTONE_PLAYER_NAPI_H
 
 #include <map>
 
-#include "iringtone_player.h"
+#include "ringtone_player.h"
 #include "ringtone_common_napi.h"
 #include "ringtone_options_napi.h"
 #include "ringtone_player_callback_napi.h"
@@ -35,7 +35,7 @@ static const std::string RINGTONE_PLAYER_NAPI_CLASS_NAME = "RingtonePlayer";
 class RingtonePlayerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
-    static napi_value GetRingtonePlayerInstance(napi_env env, std::shared_ptr<IRingtonePlayer> &iRingtonePlayer);
+    static napi_value GetRingtonePlayerInstance(napi_env env, std::shared_ptr<RingtonePlayer> &iRingtonePlayer);
 
     RingtonePlayerNapi();
     ~RingtonePlayerNapi();
@@ -46,6 +46,7 @@ private:
     static napi_value GetTitle(napi_env env, napi_callback_info info);
     static napi_value GetAudioRendererInfo(napi_env env, napi_callback_info info);
     static napi_value Configure(napi_env env, napi_callback_info info);
+    static void AsyncConfigure(napi_env env, void *data);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
@@ -64,11 +65,11 @@ private:
     static void GetAudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, void *data);
 
     napi_env env_;
-    std::shared_ptr<IRingtonePlayer> iRingtonePlayer_;
+    std::shared_ptr<RingtonePlayer> iRingtonePlayer_;
     std::shared_ptr<RingtonePlayerInterruptCallback> callbackNapi_ = nullptr;
 
     static napi_ref sConstructor_;
-    static std::shared_ptr<IRingtonePlayer> sIRingtonePlayer_;
+    static std::shared_ptr<RingtonePlayer> sRingtonePlayer_;
 };
 
 struct RingtonePlayerAsyncContext {
@@ -88,4 +89,4 @@ struct RingtonePlayerAsyncContext {
 };
 } // namespace Media
 } // namespace OHOS
-#endif /* RINGTONE_PLAYER_NAPI_H_ */
+#endif // RINGTONE_PLAYER_NAPI_H

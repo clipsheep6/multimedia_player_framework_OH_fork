@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef IRINGTONE_PLAYER_H
-#define IRINGTONE_PLAYER_H
+#ifndef RINGTONE_PLAYER_H
+#define RINGTONE_PLAYER_H
 
 #include <cstdint>
 #include <memory>
@@ -43,9 +43,9 @@ enum RingtoneState {
 
 class RingtonePlayerInterruptCallback;
 
-class IRingtonePlayer {
+class RingtonePlayer {
 public:
-    virtual ~IRingtonePlayer() = default;
+    virtual ~RingtonePlayer() = default;
 
     /**
      * @brief Returns the current ringtone state
@@ -144,4 +144,4 @@ public:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // IRINGTONE_PLAYER_H
+#endif // RINGTONE_PLAYER_H

@@ -13,37 +13,38 @@
  * limitations under the License.
  */
 
-#ifndef IRINGTONE_SOUND_MANAGER_H
-#define IRINGTONE_SOUND_MANAGER_H
+#ifndef SYSTEM_SOUND_MANAGER_H
+#define SYSTEM_SOUND_MANAGER_H
 
 #include <cstdint>
 #include <memory>
 #include <string>
 
-#include "iringtone_player.h"
 #include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
+
+#include "ringtone_player.h"
 
 namespace OHOS {
 namespace Media {
 enum RingtoneType {
-    RINGTONE_TYPE_DEFAULT = 0,
-    RINGTONE_TYPE_MULTISIM
+    RINGTONE_TYPE_SIM_CARD_0 = 0,
+    RINGTONE_TYPE_SIM_CARD_1
 };
 
-class IRingtoneSoundManager {
+class SystemSoundManager {
 public:
-    virtual ~IRingtoneSoundManager() = default;
+    virtual ~SystemSoundManager() = default;
 
     /**
      * @brief Returns the ringtone player instance
      *
      * @param context Indicates the Context object on OHOS.
      * @param type Indicates the type of tone for which player instance has to be returned
-     * @return Returns IRingtonePlayer
+     * @return Returns RingtonePlayer
      * @since 1.0
      * @version 1.0
      */
-    virtual std::shared_ptr<IRingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
+    virtual std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType type) = 0;
 
     /**
@@ -51,11 +52,11 @@ public:
      *
      * @param ctx Indicates the Context object on OHOS.
      * @param uri Indicates which uri to be set for the tone type
-     * @return Returns IRingtonePlayer
+     * @return Returns RingtonePlayer
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetSystemRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri,
+    virtual int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri,
         RingtoneType type) = 0;
 
     /**
@@ -66,28 +67,8 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual std::string GetSystemRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+    virtual std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType type) = 0;
-
-    /**
-     * @brief Returns the current notification uri
-     *
-     * @param context Indicates the Context object on OHOS.
-     * @return Returns the system notification uri
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::string GetSystemNotificationUri(const std::shared_ptr<AbilityRuntime::Context> &context)= 0;
-
-    /**
-     * @brief Returns the current system uri
-     *
-     * @param context Indicates the Context object on OHOS.
-     * @return Returns system alarm uri
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::string GetSystemAlarmUri(const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
 
     /**
      * @brief API used for setting the notification uri
@@ -97,29 +78,28 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetSystemNotificationUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+    virtual int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) = 0;
 
     /**
-     * @brief API used for setting the Alarm uri
+     * @brief Returns the current notification uri
      *
-     * @param ctx Indicates the Context object on OHOS.
-     * @param uri indicates which uri to be set for alarm
-     * @return Returns IRingtonePlayer
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the system notification uri
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetSystemAlarmUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri) = 0;
+    virtual std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)= 0;
 };
 
-class __attribute__((visibility("default"))) RingtoneFactory {
+class __attribute__((visibility("default"))) SystemSoundManagerFactory {
 public:
-    static std::unique_ptr<IRingtoneSoundManager> CreateRingtoneManager();
+    static std::unique_ptr<SystemSoundManager> CreateSystemSoundManager();
 
 private:
-    RingtoneFactory() = default;
-    ~RingtoneFactory() = default;
+    SystemSoundManagerFactory() = default;
+    ~SystemSoundManagerFactory() = default;
 };
 } // Media
 } // OHOS
-#endif // IRINGTONE_SOUND_MANAGER_H
+#endif // SYSTEM_SOUND_MANAGER_H

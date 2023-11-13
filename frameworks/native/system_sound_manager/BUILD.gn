@@ -15,19 +15,23 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
-ohos_shared_library("audio_ringtone_client") {
+ohos_shared_library("system_sound_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   install_enable = true
-  sources = [ "audio_ringtone_manager.cpp" ]
+  sources = [
+    "./ringtone_player/ringtone_player_impl.cpp",
+    "system_sound_manager_impl.cpp"
+  ]
 
   include_dirs = [
-    "${multimedia_player_framework_path}/interfaces/inner_api/native/audio_ringtone/include",
-    "${multimedia_player_framework_path}/services/utils/include",
-    "${multimedia_audio_framework_path}/frameworks/native/ringtoneplayer/include",
-    "${multimedia_audio_framework_path}/services/audio_service/client/include",
-    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiocommon/include",
-    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiomanager/include",
-    "${multimedia_media_library_path}/interfaces/inner_api/media_library_helper/include",
-    "${multimedia_media_library_path}/frameworks/utils/include",
+    "./ringtone_player",
+    "./../../../interfaces/inner_api/native/system_sound_manager/include",
+    "./../../../services/utils/include",
   ]
 
   deps = [ "./../../../interfaces/inner_api/native:media_client" ]

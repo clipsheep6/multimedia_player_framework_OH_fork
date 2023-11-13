@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef AUDIO_RENDERER_INFO_NAPI_H_
-#define AUDIO_RENDERER_INFO_NAPI_H_
+#ifndef AUDIO_RENDERER_INFO_NAPI_H
+#define AUDIO_RENDERER_INFO_NAPI_H
 
 #include "audio_info.h"
 #include "napi/native_api.h"
@@ -52,4 +52,4 @@ private:
 };
 } // namespace media
 } // namespace OHOS
-#endif /* AUDIO_RENDERER_INFO_NAPI_H_ */
+#endif // AUDIO_RENDERER_INFO_NAPI_H

@@ -20,7 +20,7 @@ group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
     deps += [
-      "${multimedia_player_framework_path}/frameworks/js/ringtone_manager:systemsoundmanager",
+      "${multimedia_player_framework_path}/frameworks/js/system_sound_manager:systemsoundmanager",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
     ]
