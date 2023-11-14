@@ -332,6 +332,18 @@ public:
     virtual int32_t PrepareAsync() = 0;
 
     /**
+     * @brief Prepares the playback environment and buffers media data, Changes the playback position.
+     *
+     * This function must be called after {@link SetSource}.
+     *
+     * @param timeMs Indicates the target playback position, accurate to milliseconds.
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 9.0
+     * @version 9.0
+     */
+    virtual int32_t PrepareAtAsync(int32_t timeMs) = 0;
+
+    /**
      * @brief Pauses playback.
      *
      * @return Returns {@link MSERR_OK} if {@link Pause} is successfully added to the task queue;
