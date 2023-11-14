@@ -162,6 +162,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchArtPicture()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to call ExtractMetadata");
 
     auto result = metaCollector_->FetchArtPicture();
+    if (result == nullptr) {
+        MEDIA_LOGE("FetchArtPicture result is nullptr.");
+    }
     MEDIA_LOGD("exit FetchArtPicture");
     return result;
 }

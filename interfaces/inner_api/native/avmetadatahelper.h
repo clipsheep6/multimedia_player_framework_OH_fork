@@ -34,6 +34,8 @@ namespace Media {
 enum HelperErrorType : int32_t {
     /* State error, current operation is invalid. */
     INVALID_OPERATION,
+    /* Result error, current result is invalid. */
+    INVALID_RESULT,
 };
 
 /**

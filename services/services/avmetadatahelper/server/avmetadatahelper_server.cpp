@@ -207,6 +207,11 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    if (result.Value() == nullptr) {
+        MEDIA_LOGE("FetchArtPicture result is nullptr.");
+        NotifyErrorCallback(HelperErrorType::INVALID_RESULT, "FetchArtPicture result is nullptr.");
+        return nullptr;
+    }
     ChangeState(HelperStates::HELPER_CALL_DONE);
     return result.Value();
 }

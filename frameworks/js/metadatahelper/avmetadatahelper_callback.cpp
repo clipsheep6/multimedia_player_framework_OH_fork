@@ -147,16 +147,12 @@ AVMetadataHelperCallback::~AVMetadataHelperCallback()
 
 void AVMetadataHelperCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
-    if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
-        errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
-        errorCodeApi9 == MSERR_EXT_API9_TIMEOUT ||
-        errorCodeApi9 == MSERR_EXT_API9_SERVICE_DIED ||
-        errorCodeApi9 == MSERR_EXT_API9_UNSUPPORT_FORMAT) {
-        Format infoBody;
-        AVMetadataHelperCallback::OnInfo(
-            HelperOnInfoType::HELPER_INFO_TYPE_STATE_CHANGE, HELPER_STATE_ERROR, infoBody);
+    if (errorCode == HelperErrorType::INVALID_RESULT) {
+        MEDIA_LOGE("OnError: errorCode %{public}d, errorMsg %{public}s", errorCode, errorMsg.c_str());
+        AVMetadataHelperCallback::OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, errorMsg);
+        return;
     }
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     AVMetadataHelperCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 

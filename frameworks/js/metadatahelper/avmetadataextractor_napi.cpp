@@ -285,7 +285,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             }
         }
     } else {
-        promiseCtx->status = MSERR_INVALID_VAL;
+        promiseCtx->status = promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
         napi_get_undefined(env, &result);
     }
@@ -303,6 +303,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::FetchArtPictureTa
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
             auto mem = helper_->FetchArtPicture();
+            if (mem == nullptr) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "FetchArtPicture result is nullptr.");
+            }
             MEDIA_LOGD("FetchArtPicture Task end size: %{public}d", mem->GetSize());
             SourceOptions options;
             uint32_t errCode;
@@ -397,7 +401,7 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
     if (status == napi_ok) {
         result = Media::PixelMapNapi::CreatePixelMap(env, context->artPicture_);
     } else {
-        context->status = MSERR_INVALID_VAL;
+        context->status = context->errCode;
         napi_get_undefined(env, &result);
     }
 
