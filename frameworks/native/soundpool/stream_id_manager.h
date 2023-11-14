@@ -34,6 +34,8 @@ public:
 
     std::shared_ptr<CacheBuffer> FindCacheBuffer(const int32_t streamID);
 
+    int32_t GetStreamIDBySoundID(const int32_t soundID);
+
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
 
 private:

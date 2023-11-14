@@ -160,12 +160,19 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 
 int32_t SoundPool::Unload(int32_t soundID)
 {
+    std::lock_guard lock(soundPoolLock_);
+    std::shared_ptr<CacheBuffer> cacheBuffer =
+        streamIdManager_->FindCacheBuffer(streamIdManager_->GetStreamIDBySoundID(soundID));
+    if (cacheBuffer != nullptr) {
+        cacheBuffer->Release();
+    }
     return soundIDManager_->Unload(soundID);
 }
 
 int32_t SoundPool::Release()
 {
     MEDIA_INFO_LOG("Release SoundPool.");
+    std::lock_guard lock(soundPoolLock_);
     SoundPoolManager::GetInstance().Release(getpid());
 
     if (streamIdManager_ != nullptr) {

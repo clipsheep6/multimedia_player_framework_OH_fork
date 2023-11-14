@@ -276,6 +276,12 @@ std::shared_ptr<CacheBuffer> StreamIDManager::FindCacheBuffer(const int32_t stre
     return nullptr;
 }
 
+int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
+{
+    PlayParams playParameters;
+    return GetFreshStreamID(soundID, playParameters);
+}
+
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
 {
     int32_t streamID = 0;

@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "sound_id_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "parameter.h"
 #include "string_ex.h"
+#include "sound_id_manager.h"
 
 namespace {
     static const std::string THREAD_POOL_NAME = "SoundParserThreadPool";
@@ -27,6 +28,21 @@ namespace Media {
 SoundIDManager::SoundIDManager() : isParsingThreadPoolStarted_(false), quitQueue_(false)
 {
     MEDIA_INFO_LOG("Construction SoundIDManager");
+#ifdef SOUNDPOOL_SUPPORT_LOW_LATENCY
+    char hardwareName[10] = {0};
+    GetParameter("ohos.boot.hardware", "rk3568", hardwareName, sizeof(hardwareName));
+    if (strcmp(hardwareName, "baltimore") != 0) {
+        MEDIA_INFO_LOG("Device unsupport low-latency, force set to normal play.");
+        maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_NORMAL;
+    } else {
+        MEDIA_INFO_LOG("Device support low-latency, set renderer by user.");
+        maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_LOW_LATENCY;
+    }
+#else
+    // Force all play to normal.
+    maxLoadNumAtSameTime_ = MAX_STREAM_NUM_FOR_NORMAL;
+    MEDIA_INFO_LOG("SoundPool unsupport low-latency.");
+#endif
     InitThreadPool();
 }
 
@@ -76,6 +92,10 @@ int32_t SoundIDManager::Load(std::string url)
     int32_t soundID;
     {
         std::lock_guard lock(soundManagerLock_);
+        if (soundParsers_.size() >= maxLoadNumAtSameTime_) {
+            MEDIA_INFO_LOG("SoundPool maxLoadNumAtSameTime_:%{public}zu.", maxLoadNumAtSameTime_);
+            return invalidSoundIDFlag;
+        }
         const std::string fdHead = "fd://";
         if (url.find(fdHead) == std::string::npos) {
             return invalidSoundIDFlag;
