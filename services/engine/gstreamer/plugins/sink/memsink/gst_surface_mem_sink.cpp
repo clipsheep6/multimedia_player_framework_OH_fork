@@ -24,7 +24,6 @@
 #include "scope_guard.h"
 #include "media_dfx.h"
 #include "av_common.h"
-#include "first_render_flag.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -415,8 +414,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     if ((surface_sink->firstRenderFrame || surface_sink->setRateEvent) && is_preroll) {
         MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
         GST_DEBUG_OBJECT(surface_sink, "first render frame or discard set rate preroll frame");
-        auto itemFlag = FirstRenderFlag::GetInstance();
-        surface_sink->firstRenderFrame = itemFlag->getFirstFlag();
+        surface_sink->firstRenderFrame = FALSE;
         surface_sink->setRateEvent = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);
         return GST_FLOW_OK;
