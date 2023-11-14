@@ -62,7 +62,8 @@
           "bundle_framework",
           "relational_store",
           "resource_management",
-          "av_codec"
+          "av_codec",
+          "miscdevice"
         ],
         "third_party": [
           "glib",

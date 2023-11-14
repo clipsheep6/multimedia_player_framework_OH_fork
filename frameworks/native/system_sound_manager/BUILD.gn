@@ -25,7 +25,7 @@ ohos_shared_library("system_sound_client") {
   install_enable = true
   sources = [
     "./ringtone_player/ringtone_player_impl.cpp",
-    "system_sound_manager_impl.cpp"
+    "system_sound_manager_impl.cpp",
   ]
 
   include_dirs = [
@@ -47,6 +47,7 @@ ohos_shared_library("system_sound_client") {
     "bundle_framework:appexecfwk_base",
     "graphic_2d:surface",
     "hilog:libhilog",
+    "miscdevice:vibrator_interface_native",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]

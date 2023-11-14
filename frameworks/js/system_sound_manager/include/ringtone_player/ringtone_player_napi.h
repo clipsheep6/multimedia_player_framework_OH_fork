@@ -45,6 +45,7 @@ private:
     static napi_value RingtonePlayerNapiConstructor(napi_env env, napi_callback_info info);
     static napi_value GetTitle(napi_env env, napi_callback_info info);
     static napi_value GetAudioRendererInfo(napi_env env, napi_callback_info info);
+    static void AsyncGetAudioRendererInfo(napi_env env, void *data);
     static napi_value Configure(napi_env env, napi_callback_info info);
     static void AsyncConfigure(napi_env env, void *data);
     static napi_value Start(napi_env env, napi_callback_info info);

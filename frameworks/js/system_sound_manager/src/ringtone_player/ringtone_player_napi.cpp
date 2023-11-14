@@ -322,10 +322,8 @@ napi_value RingtonePlayerNapi::GetAudioRendererInfo(napi_env env, napi_callback_
 
     status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
-    if (status != napi_ok || thisVar == nullptr) {
-        MEDIA_LOGE("GetAudioRendererInfo: Failed to retrieve details about the callback");
-        return result;
-    }
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetAudioRendererInfo: Failed to retrieve details about the callback");
 
     NAPI_ASSERT(env, argc <= ARGS_ONE, "GetAudioRendererInfo: requires 1 parameter maximum");
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext = std::make_unique<RingtonePlayerAsyncContext>();
@@ -342,18 +340,7 @@ napi_value RingtonePlayerNapi::GetAudioRendererInfo(napi_env env, napi_callback_
         }
 
         napi_create_string_utf8(env, "GetAudioRendererInfo", NAPI_AUTO_LENGTH, &resource);
-        status = napi_create_async_work(env, nullptr, resource,
-            [](napi_env env, void *data) {
-                RingtonePlayerAsyncContext *context = static_cast<RingtonePlayerAsyncContext *>(data);
-                AudioStandard::AudioRendererInfo rendererInfo;
-                context->status
-                    = context->objectInfo->iRingtonePlayer_->GetAudioRendererInfo(rendererInfo);
-                if (context->status == SUCCESS) {
-                    context->contentType = rendererInfo.contentType;
-                    context->streamUsage = rendererInfo.streamUsage;
-                    context->rendererFlags  = rendererInfo.rendererFlags;
-                }
-            },
+        status = napi_create_async_work(env, nullptr, resource, AsyncGetAudioRendererInfo,
             GetAudioRendererInfoAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_LOGE("GetAudioRendererInfo: Failed to get create async work");
@@ -367,6 +354,18 @@ napi_value RingtonePlayerNapi::GetAudioRendererInfo(napi_env env, napi_callback_
     return result;
 }
 
+void RingtonePlayerNapi::AsyncGetAudioRendererInfo(napi_env env, void *data)
+{
+    RingtonePlayerAsyncContext *context = static_cast<RingtonePlayerAsyncContext *>(data);
+    AudioStandard::AudioRendererInfo rendererInfo;
+    context->status = context->objectInfo->iRingtonePlayer_->GetAudioRendererInfo(rendererInfo);
+    if (context->status == SUCCESS) {
+        context->contentType = rendererInfo.contentType;
+        context->streamUsage = rendererInfo.streamUsage;
+        context->rendererFlags  = rendererInfo.rendererFlags;
+    }
+}
+
 napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -376,7 +375,7 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_TWO] = {0};
     napi_value thisVar = nullptr;
     const int32_t refCount = 1;
-    double volume;
+    double volume = 1.0;
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
@@ -391,15 +390,13 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
         if (valueType == napi_object) {
             if ((napi_get_named_property(env, argv[PARAM0], "volume", &property) != napi_ok)
                 || napi_get_value_double(env, property, &volume) != napi_ok) {
-                MEDIA_LOGE("Configure: Could not get the volume argument!");
-                NAPI_ASSERT(env, false, "missing properties");
+                NAPI_ASSERT(env, false, "missing volume properties");
             }
             asyncContext->volume = (float)volume;
 
             if ((napi_get_named_property(env, argv[PARAM0], "loop", &property) != napi_ok)
                 || napi_get_value_bool(env, property, &asyncContext->loop) != napi_ok) {
-                MEDIA_LOGE("Configure: Could not get the loop argument!");
-                NAPI_ASSERT(env, false, "missing properties");
+                NAPI_ASSERT(env, false, "missing loop properties");
             }
         }
 
@@ -416,7 +413,7 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource, AsyncConfigure,
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            MEDIA_LOGE("Configure: Failed to get create async work");
+            MEDIA_LOGE("Configure: Failed to create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

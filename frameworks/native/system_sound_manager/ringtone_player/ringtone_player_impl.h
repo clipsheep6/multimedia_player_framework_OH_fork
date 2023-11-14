@@ -50,6 +50,9 @@ public:
 private:
     void InitPlayer();
     int32_t PrepareRingtonePlayer(bool isReInitNeeded);
+    int32_t StartVibrate();
+    int32_t StopVibrate();
+    int32_t ApplyDefaultRingtoneUri(std::string &defaultUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;

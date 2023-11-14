@@ -17,6 +17,7 @@
 
 #include "media_log.h"
 #include "media_errors.h"
+#include "vibrator_agent.h"
 
 using namespace std;
 using namespace OHOS::AbilityRuntime;
@@ -24,6 +25,10 @@ using namespace OHOS::AbilityRuntime;
 namespace {
     const float HIGH_VOL = 1.0f;
     const float LOW_VOL = 0.0f;
+    const std::string DEFAULT_RINGTONE_URI_1 =
+        "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
+    const std::string DEFAULT_RINGTONE_URI_2 =
+        "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayer"};
 }
 
@@ -45,6 +50,7 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
 {
     if (player_ != nullptr) {
         player_->Release();
+        (void)StopVibrate();
         player_ = nullptr;
         callback_ = nullptr;
     }
@@ -70,13 +76,23 @@ int32_t RingtonePlayerImpl::PrepareRingtonePlayer(bool isReInitNeeded)
 
     // fetch uri from kvstore
     auto kvstoreUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
-    CHECK_AND_RETURN_RET_LOG(!kvstoreUri.empty(), MSERR_INVALID_VAL, "Failed to obtain ringtone uri for playing");
+    if (kvstoreUri.empty()) {
+        // if kvstoreUri == "", try to use default path.
+        isReInitNeeded = true;
+    }
 
     // If uri is different from from configure uri, reset the player
     if (kvstoreUri != configuredUri_ || isReInitNeeded) {
         (void)player_->Reset();
 
-        auto ret = player_->SetSource(kvstoreUri);
+        int32_t ret = MSERR_OK;
+        if (kvstoreUri.empty()) {
+            ret = ApplyDefaultRingtoneUri(kvstoreUri);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source to default uri failed %{public}d", ret);
+            systemSoundMgr_.SetRingtoneUri(context_, kvstoreUri, type_);
+        } else {
+            ret = player_->SetSource(kvstoreUri);
+        }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source failed %{public}d", ret);
 
         Format format;
@@ -93,6 +109,27 @@ int32_t RingtonePlayerImpl::PrepareRingtonePlayer(bool isReInitNeeded)
     }
 
     return MSERR_OK;
+}
+
+int32_t RingtonePlayerImpl::ApplyDefaultRingtoneUri(std::string &defaultUri)
+{
+    // kvstoreUri == "", try to use default ringtone uri 1.
+    int32_t ret = player_->SetSource(DEFAULT_RINGTONE_URI_1);
+    if (ret == MSERR_OK) {
+        defaultUri = DEFAULT_RINGTONE_URI_1;
+        MEDIA_LOGI("ApplyDefaultRingtoneUri: Set source to default ringtone uri 1.");
+        return ret;
+    }
+
+    // try to use default ringtone uri 2.
+    ret = player_->SetSource(DEFAULT_RINGTONE_URI_2);
+    if (ret == MSERR_OK) {
+        defaultUri = DEFAULT_RINGTONE_URI_2;
+        MEDIA_LOGI("ApplyDefaultRingtoneUri: Set source to default ringtone uri 2.");
+        return ret;
+    }
+
+    return ret;
 }
 
 int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
@@ -141,10 +178,21 @@ int32_t RingtonePlayerImpl::Start()
 
     auto ret = player_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
+    (void)StartVibrate();
 
     ringtoneState_ = STATE_RUNNING;
 
     return MSERR_OK;
+}
+
+int32_t RingtonePlayerImpl::StartVibrate()
+{
+    bool setUsageRet = Sensors::SetUsage(VibratorUsage::USAGE_RING);
+    bool setLoopRet = Sensors::SetLoopCount(10); // set default loop count to 10
+    int32_t result = Sensors::StartVibrator("haptic.ringtone.Dream_It_Possible"); // default effectId
+    MEDIA_LOGI("RingtonePlayerImpl::StartVibrate: setUsageRet %{public}d, setLoopRet %{public}d, startRet %{public}d",
+        setUsageRet, setLoopRet, result);
+    return result;
 }
 
 int32_t RingtonePlayerImpl::Stop()
@@ -155,11 +203,19 @@ int32_t RingtonePlayerImpl::Stop()
     if (ringtoneState_ != STATE_STOPPED && player_->IsPlaying()) {
         (void)player_->Stop();
     }
+    (void)StopVibrate();
 
     ringtoneState_ = STATE_STOPPED;
     isStartQueued_ = false;
 
     return MSERR_OK;
+}
+
+int32_t RingtonePlayerImpl::StopVibrate()
+{
+    int32_t result = Sensors::Cancel();
+    MEDIA_LOGI("RingtonePlayerImpl::StopVibrate: %{public}d", result);
+    return result;
 }
 
 int32_t RingtonePlayerImpl::Release()
@@ -169,6 +225,7 @@ int32_t RingtonePlayerImpl::Release()
     if (player_ != nullptr) {
         (void)player_->Release();
     }
+    (void)StopVibrate();
 
     ringtoneState_ = STATE_RELEASED;
     player_ = nullptr;
@@ -201,6 +258,7 @@ void RingtonePlayerImpl::SetPlayerState(RingtoneState ringtoneState)
             isStartQueued_ = false;
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Play failed %{public}d", ret);
             ringtoneState_ = RingtoneState::STATE_RUNNING;
+            (void)StartVibrate();
         }
     }
 }
