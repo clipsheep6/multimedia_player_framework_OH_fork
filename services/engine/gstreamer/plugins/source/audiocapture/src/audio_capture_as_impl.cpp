@@ -165,6 +165,8 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             
             audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+        } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
+            // not sure
         } else {
             MEDIA_LOGE("Set sourceType invaild");
             return MSERR_INVALID_OPERATION;
