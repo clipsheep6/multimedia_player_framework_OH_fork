@@ -111,8 +111,6 @@ bool ScreenCaptureAcquireVideoBufferNdkFuzzer::FuzzScreenCaptureAcquireVideoBuff
     if (nativeBuffer != nullptr) {
         OH_NativeBuffer_Unreference(nativeBuffer);
         OH_AVScreenCapture_ReleaseVideoBuffer(screenCapture);
-    } else {
-        return false;
     }
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

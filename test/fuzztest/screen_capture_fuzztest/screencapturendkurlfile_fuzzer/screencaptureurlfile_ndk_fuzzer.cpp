@@ -93,9 +93,9 @@ bool ScreenCaptureUrlFileNdkFuzzer::FuzzScreenCaptureUrlFileNdk(uint8_t *data, s
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-    constexpr int32_t urlRange = 20;
+    constexpr int32_t urlRange = 4096;
     constexpr int32_t urlRangeMin = 0;
-    constexpr int32_t urlRangeMax = 9;
+    constexpr int32_t urlRangeMax = 1024;
 
     int32_t randomUrl = (*reinterpret_cast<int32_t *>(data)) % (urlRange);
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer randomUrl: %{public}d ", randomUrl);
