@@ -145,6 +145,10 @@ int32_t CacheBuffer::ReCombineCacheData()
             continue;
         }
         for (size_t bufferNum = 0; bufferNum < bufferSize; bufferNum++) {
+            if (preAudioBuffer == nullptr) {
+                MEDIA_ERR_LOG("Invalid pre audio buffer.");
+                continue;
+            }
             if (cacheData_.size() > 1 && (preAudioBufferIndex == static_cast<size_t>(preAudioBuffer->size))) {
                 cacheData_.pop_front();
                 preAudioBuffer = cacheData_.front();

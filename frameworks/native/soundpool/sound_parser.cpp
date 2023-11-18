@@ -218,7 +218,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
     CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain demuxer");
     CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
 
-    if (isRawFile_ && !decodeShouldCompleted_) {
+    if (buffer != nullptr && isRawFile_ && !decodeShouldCompleted_) {
         if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
             MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
             return;
@@ -248,7 +248,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
         return;
     }
 
-    if (!eosFlag_ && !decodeShouldCompleted_) {
+    if (buffer != nullptr && !eosFlag_ && !decodeShouldCompleted_) {
         if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
             MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
             return;

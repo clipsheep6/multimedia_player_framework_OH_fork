@@ -74,6 +74,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
 int32_t SoundPool::Load(const std::string url)
 {
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
+    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
     std::lock_guard lock(soundPoolLock_);
     return soundIDManager_->Load(url);
 }
@@ -81,6 +82,7 @@ int32_t SoundPool::Load(const std::string url)
 int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 {
     CHECK_AND_RETURN_RET_LOG((fd > 0 && length > 0 && offset >= 0), -1, "Invalid fd param.");
+    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
     std::lock_guard lock(soundPoolLock_);
     return soundIDManager_->Load(fd, offset, length);
 }
@@ -88,6 +90,7 @@ int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
 {
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
+    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
     std::lock_guard lock(soundPoolLock_);
     std::shared_ptr<SoundParser> soundParser = soundIDManager_->FindSoundParser(soundID);
 
@@ -160,10 +163,10 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 
 int32_t SoundPool::Unload(int32_t soundID)
 {
-    std::lock_guard lock(soundPoolLock_);
-    std::shared_ptr<CacheBuffer> cacheBuffer =
-        streamIdManager_->FindCacheBuffer(streamIdManager_->GetStreamIDBySoundID(soundID));
-    if (cacheBuffer != nullptr) {
+    CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
+    CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
+    if (std::shared_ptr<CacheBuffer> cacheBuffer =
+        streamIdManager_->FindCacheBuffer(streamIdManager_->GetStreamIDBySoundID(soundID))) {
         cacheBuffer->Release();
     }
     return soundIDManager_->Unload(soundID);
@@ -172,9 +175,6 @@ int32_t SoundPool::Unload(int32_t soundID)
 int32_t SoundPool::Release()
 {
     MEDIA_INFO_LOG("Release SoundPool.");
-    std::lock_guard lock(soundPoolLock_);
-    SoundPoolManager::GetInstance().Release(getpid());
-
     if (streamIdManager_ != nullptr) {
         streamIdManager_.reset();
     }
@@ -184,6 +184,7 @@ int32_t SoundPool::Release()
     if (callback_ != nullptr) {
         callback_.reset();
     }
+    SoundPoolManager::GetInstance().Release(getpid());
     return MSERR_OK;
 }
 

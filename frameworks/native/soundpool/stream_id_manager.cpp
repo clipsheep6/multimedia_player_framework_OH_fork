@@ -96,6 +96,7 @@ int32_t StreamIDManager::InitThreadPool()
 
 int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayParams playParameters)
 {
+    CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Invalid soundParser.");
     int32_t soundID = soundParser->GetSoundID();
     int32_t streamID = GetFreshStreamID(soundID, playParameters);
     {
@@ -141,6 +142,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         currentTaskNum_, maxStreams_);
     // CacheBuffer must prepare before play.
     std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
+    CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
     freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
     int32_t tempMaxStream = maxStreams_;
     if (currentTaskNum_ < static_cast<size_t>(tempMaxStream)) {
@@ -148,6 +150,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
         std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
+        CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
         MEDIA_INFO_LOG("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
             freshCacheBuffer->GetPriority(), playingCacheBuffer->GetPriority());
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
@@ -246,6 +249,8 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
 int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams playParameters)
 {
     ThreadPool::Task streamPlayTask = std::bind(&StreamIDManager::DoPlay, this, streamID);
+    CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
+        "Failed to obtain playing ThreadPool");
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain stream play Task");
     streamPlayingThreadPool_->AddTask(streamPlayTask);
     currentTaskNum_++;
@@ -284,12 +289,17 @@ int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
 
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
 {
+    std::lock_guard lock(streamIDManagerLock_);
     int32_t streamID = 0;
     if (cacheBuffers_.empty()) {
         MEDIA_INFO_LOG("StreamIDManager cacheBuffers_ empty");
         return streamID;
     }
     for (auto cacheBuffer : cacheBuffers_) {
+        if (cacheBuffer.second == nullptr) {
+            MEDIA_ERR_LOG("Invalid cacheBuffer, soundID:%{public}d", soundID);
+            continue;
+        }
         if (soundID == cacheBuffer.second->GetSoundID()) {
             streamID = cacheBuffer.second->GetStreamID();
             MEDIA_INFO_LOG("Have cache soundID:%{public}d, streamID:%{public}d", soundID, streamID);
