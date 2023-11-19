@@ -64,6 +64,7 @@
           "resource_management",
           "av_codec",
           "miscdevice"
+          "drm_framework"
         ],
         "third_party": [
           "glib",

@@ -16,7 +16,7 @@
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
 import type image from './@ohos.multimedia.image';
-
+import drm from "./@ohos.multimedia.drm";
 /**
  * @name media
  * @since 6
@@ -1004,6 +1004,25 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
+
+    /**
+     * Set MediaKeySession object and svp flag if the media content is encrypted for decryption.
+     * Note, Call this function when the app received a "drmInfoUpdate" event.
+     * @param handle A Media MediaKeySession instance.
+     * @param svp Secure Video Path.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    setDecryptConfig(handle:drm.MediaKeySession, svp:boolean) :void;
+
+    /**
+     * Get the latest drmInfos.
+     * @returns A Promise instance used to return the drm info in DrmInfoPair.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    getDrmInfo() :Array<DrmInfoPair>;
+
     url ?: string;
 
     /**
@@ -1258,6 +1277,16 @@ declare namespace media {
      */
     on(type: 'error', callback: ErrorCallback): void;
     off(type: 'error'): void;
+    /**
+     * Register or unregister listens for drm info.
+     * This event will be reported after the {@link #prepare} called.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return drminfos.
+     */
+    on(type: 'drmInfoUpdate', callback: (drmInfo: Array<DrmInfoPair>) => void): void;
+    off(type: 'drmInfoUpdate'): void;
   }
 
   /**
@@ -3363,6 +3392,20 @@ declare namespace media {
     [key : string]: Object;
   }
 
+  /**
+   * Provides the container definition for drm info key-value pairs.
+   * @since 8
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  interface DrmInfoPair {
+    /**
+     * uuid: which means unique media key system id.
+     * pssh: pssh data.
+     * @since 8
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    [uuid : string]: [pssh : Uint8Array];
+  }
   /**
    * Enumerates seek mode.
    * @since 8

@@ -18,6 +18,7 @@
 #include "player_listener_proxy.h"
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
+#include "key_session_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -107,6 +108,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
     playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
     playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
+    playerFuncs_[SET_DECRYPT_CONFIG] = { &PlayerServiceStub::SetDecryptConfig, "Player::SetDecryptConfig" };
 
     (void)RegisterMonitor(appPid_);
 }
@@ -371,6 +373,15 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
     return playerServer_->SetVideoSurface(surface);
 }
 #endif
+
+int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    bool svp)
+{
+    MediaTrace trace("binder::SetDecryptConfig");
+    MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetDecryptConfig(keySessionProxy, svp);
+}
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -714,6 +725,24 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
     return MSERR_OK;
 }
 #endif
+
+int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &reply)
+{
+    MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "KeySessionServiceProxy object is nullptr");
+    bool svp = data.ReadBool();
+
+    sptr<DrmStandard::MediaKeySessionServiceProxy> keySessionServiceProxy =
+        iface_cast<DrmStandard::MediaKeySessionServiceProxy>(object);
+    if (keySessionServiceProxy != nullptr) {
+        MEDIA_LOGD("And it's count is: %{public}d", keySessionServiceProxy->GetSptrRefCount());
+        reply.WriteInt32(SetDecryptConfig(keySessionServiceProxy, svp));
+        return MSERR_OK;
+    }
+    MEDIA_LOGE("PlayerServiceStub keySessionServiceProxy is nullptr!");
+    return MSERR_INVALID_VAL;
+}
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

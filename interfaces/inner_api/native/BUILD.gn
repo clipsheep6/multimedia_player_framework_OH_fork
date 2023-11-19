@@ -15,6 +15,7 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
+DRM_ROOT_DIR = "//foundation/multimedia/drm_framework"
 
 config("media_public_config") {
   include_dirs = [
@@ -48,6 +49,7 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
+    "$DRM_ROOT_DIR/services/drm_service/ipc",
   ]
 }
 
@@ -120,6 +122,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/player/client/player_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
+      "$DRM_ROOT_DIR/services/drm_service/client/src/key_session_service_proxy.cpp",
     ]
   }
   if (multimedia_player_framework_support_recorder) {
@@ -183,6 +186,8 @@ ohos_shared_library("media_client") {
     "image_framework:image_native",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
+    "hitrace:hitrace_meter",
+    "drm_framework:drm_framework",
   ]
 
   if (multimedia_player_framework_support_video) {
