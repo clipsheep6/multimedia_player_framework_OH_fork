@@ -64,6 +64,8 @@ config("media_engine_gst_avmeta_config") {
     "//third_party/glib",
     "//third_party/glib/gmodule",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    "//foundation/multimedia/drm_framework/services/drm_service/client/include",
+    "//foundation/multimedia/drm_framework/services/drm_service/ipc",
   ]
 }
 
