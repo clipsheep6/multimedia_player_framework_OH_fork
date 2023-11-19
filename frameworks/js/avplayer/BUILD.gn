@@ -27,6 +27,11 @@ ohos_shared_library("media_avplayer") {
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/drm_framework/interfaces/kits/js/drm_napi/include",
+    "//foundation/multimedia/drm_framework/interfaces/inner_api/native/drm",
+    "//foundation/multimedia/drm_framework/services/drm_service/client/include",
+    "//foundation/multimedia/drm_framework/services/drm_service/ipc",
+    "//foundation/multimedia/drm_framework/services/utils/include",
     "//third_party/libuv/include",
   ]
 
@@ -72,6 +77,8 @@ ohos_shared_library("media_avplayer") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "napi:ace_napi",
+    "hitrace:hitrace_meter",
+    "drm_framework:drm_framework",
   ]
 
   if (multimedia_player_framework_support_video) {
