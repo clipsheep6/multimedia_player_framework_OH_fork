@@ -17,23 +17,23 @@
 
 #include "media_log.h"
 #include "media_errors.h"
-#include "vibrator_agent.h"
 
 using namespace std;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
-    const float HIGH_VOL = 1.0f;
-    const float LOW_VOL = 0.0f;
-    const std::string DEFAULT_RINGTONE_URI_1 =
-        "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
-    const std::string DEFAULT_RINGTONE_URI_2 =
-        "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayer"};
 }
 
 namespace OHOS {
 namespace Media {
+const float HIGH_VOL = 1.0f;
+const float LOW_VOL = 0.0f;
+const std::string DEFAULT_RINGTONE_URI_1 =
+    "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
+const std::string DEFAULT_RINGTONE_URI_2 =
+    "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
+
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManager &sysSoundMgr, RingtoneType type)
     : volume_(HIGH_VOL),
@@ -50,7 +50,7 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
 {
     if (player_ != nullptr) {
         player_->Release();
-        (void)StopVibrate();
+        (void)SystemSoundVibrator::StopVibrator();
         player_ = nullptr;
         callback_ = nullptr;
     }
@@ -178,21 +178,11 @@ int32_t RingtonePlayerImpl::Start()
 
     auto ret = player_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
-    (void)StartVibrate();
+    (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
 
     ringtoneState_ = STATE_RUNNING;
 
     return MSERR_OK;
-}
-
-int32_t RingtonePlayerImpl::StartVibrate()
-{
-    bool setUsageRet = Sensors::SetUsage(VibratorUsage::USAGE_RING);
-    bool setLoopRet = Sensors::SetLoopCount(10); // set default loop count to 10
-    int32_t result = Sensors::StartVibrator("haptic.ringtone.Dream_It_Possible"); // default effectId
-    MEDIA_LOGI("RingtonePlayerImpl::StartVibrate: setUsageRet %{public}d, setLoopRet %{public}d, startRet %{public}d",
-        setUsageRet, setLoopRet, result);
-    return result;
 }
 
 int32_t RingtonePlayerImpl::Stop()
@@ -203,19 +193,12 @@ int32_t RingtonePlayerImpl::Stop()
     if (ringtoneState_ != STATE_STOPPED && player_->IsPlaying()) {
         (void)player_->Stop();
     }
-    (void)StopVibrate();
+    (void)SystemSoundVibrator::StopVibrator();
 
     ringtoneState_ = STATE_STOPPED;
     isStartQueued_ = false;
 
     return MSERR_OK;
-}
-
-int32_t RingtonePlayerImpl::StopVibrate()
-{
-    int32_t result = Sensors::Cancel();
-    MEDIA_LOGI("RingtonePlayerImpl::StopVibrate: %{public}d", result);
-    return result;
 }
 
 int32_t RingtonePlayerImpl::Release()
@@ -225,7 +208,7 @@ int32_t RingtonePlayerImpl::Release()
     if (player_ != nullptr) {
         (void)player_->Release();
     }
-    (void)StopVibrate();
+    (void)SystemSoundVibrator::StopVibrator();
 
     ringtoneState_ = STATE_RELEASED;
     player_ = nullptr;
@@ -258,7 +241,7 @@ void RingtonePlayerImpl::SetPlayerState(RingtoneState ringtoneState)
             isStartQueued_ = false;
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Play failed %{public}d", ret);
             ringtoneState_ = RingtoneState::STATE_RUNNING;
-            (void)StartVibrate();
+            (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
         }
     }
 }

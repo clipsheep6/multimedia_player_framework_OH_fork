@@ -16,8 +16,6 @@
 #ifndef RINGTONE_PLAYER_H
 #define RINGTONE_PLAYER_H
 
-#include <cstdint>
-#include <memory>
 #include <string>
 
 #include "audio_info.h"

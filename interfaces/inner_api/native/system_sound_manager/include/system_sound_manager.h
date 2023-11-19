@@ -16,19 +16,24 @@
 #ifndef SYSTEM_SOUND_MANAGER_H
 #define SYSTEM_SOUND_MANAGER_H
 
-#include <cstdint>
-#include <memory>
 #include <string>
 
 #include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
 
 #include "ringtone_player.h"
+#include "system_tone_player.h"
 
 namespace OHOS {
 namespace Media {
 enum RingtoneType {
     RINGTONE_TYPE_SIM_CARD_0 = 0,
-    RINGTONE_TYPE_SIM_CARD_1
+    RINGTONE_TYPE_SIM_CARD_1 = 1,
+};
+
+enum SystemToneType {
+    SYSTEM_TONE_TYPE_SIM_CARD_0 = 0,
+    SYSTEM_TONE_TYPE_SIM_CARD_1 = 1,
+    SYSTEM_TONE_TYPE_NOTIFICAION = 32,
 };
 
 class SystemSoundManager {
@@ -36,60 +41,73 @@ public:
     virtual ~SystemSoundManager() = default;
 
     /**
-     * @brief Returns the ringtone player instance
+     * @brief Returns the ringtone player instance.
      *
      * @param context Indicates the Context object on OHOS.
-     * @param type Indicates the type of tone for which player instance has to be returned
-     * @return Returns RingtonePlayer
-     * @since 1.0
-     * @version 1.0
+     * @param ringtoneType Indicates the ringtone type for which player instance has to be returned.
+     * @return Returns RingtonePlayer.
+     * @since 10
      */
     virtual std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType type) = 0;
+        RingtoneType ringtoneType) = 0;
 
     /**
-     * @brief API used for setting the system ringtone uri
-     *
-     * @param ctx Indicates the Context object on OHOS.
-     * @param uri Indicates which uri to be set for the tone type
-     * @return Returns RingtonePlayer
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri,
-        RingtoneType type) = 0;
-
-    /**
-     * @brief Returns the current ringtone uri
+     * @brief API used for setting the ringtone uri.
      *
      * @param context Indicates the Context object on OHOS.
-     * @return Returns the system ringtone uri
-     * @since 1.0
-     * @version 1.0
+     * @param uri Indicates which uri to be set for the tone type.
+     * @param ringtoneType Indicates the ringtone type.
+     * @return Returns {@link MSERR_OK} if set the ringtone uri successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 10
+     */
+    virtual int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
+        RingtoneType ringtoneType) = 0;
+
+    /**
+     * @brief Returns the current ringtone uri.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param ringtoneType Indicates the ringtone type.
+     * @return Returns the current ringtone uri.
+     * @since 10
      */
     virtual std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType type) = 0;
+        RingtoneType ringtoneType) = 0;
 
     /**
-     * @brief API used for setting the notification uri
+     * @brief Returns the system tone player instance
      *
      * @param context Indicates the Context object on OHOS.
-     * @param uri indicates which uri to be set for notification
-     * @since 1.0
-     * @version 1.0
+     * @param systemToneType Indicates the system tone type for which player instance has to be returned.
+     * @return Returns SystemTonePlayer.
+     * @since 11
      */
-    virtual int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-        const std::string &uri) = 0;
+    virtual std::shared_ptr<SystemTonePlayer> GetSystemTonePlayer(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType) = 0;
 
     /**
-     * @brief Returns the current notification uri
+     * @brief API used for setting the system tone uri
      *
      * @param context Indicates the Context object on OHOS.
-     * @return Returns the system notification uri
-     * @since 1.0
-     * @version 1.0
+     * @param uri indicates which uri to be set for system tone.
+     * @param systemToneType Indicates the system tone type.
+     * @return Returns {@link MSERR_OK} if set the system tone uri successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 11
      */
-    virtual std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)= 0;
+    virtual int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
+        SystemToneType systemToneType) = 0;
+
+    /**
+     * @brief Returns the current system tone uri
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the system tone uri
+     * @since 11
+     */
+    virtual std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemToneType systemToneType)= 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

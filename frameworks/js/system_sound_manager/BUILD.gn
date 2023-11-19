@@ -26,6 +26,7 @@ ohos_shared_library("systemsoundmanager") {
   include_dirs = [
     "./include",
     "./include/ringtone_player",
+    "./include/system_tone_player",
     "./../../native/system_sound_manager",
     "./../../../interfaces/inner_api/native",
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
@@ -40,6 +41,8 @@ ohos_shared_library("systemsoundmanager") {
     "./src/ringtone_player/ringtone_player_callback_napi.cpp",
     "./src/ringtone_player/ringtone_player_napi.cpp",
     "./src/system_sound_manager_napi.cpp",
+    "./src/system_tone_player/system_tone_options_napi.cpp",
+    "./src/system_tone_player/system_tone_player_napi.cpp",
   ]
 
   deps = [ "./../../native/system_sound_manager:system_sound_client" ]

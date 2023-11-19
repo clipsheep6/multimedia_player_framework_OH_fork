@@ -19,6 +19,7 @@
 #include "system_sound_manager.h"
 
 #include "ringtone_player_napi.h"
+#include "system_tone_player_napi.h"
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -36,6 +37,12 @@ static const std::map<std::string, RingtoneType> ringtoneTypeMap = {
     {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1}
 };
 
+static const std::map<std::string, SystemToneType> systemToneTypeMap = {
+    {"SYSTEM_TONE_TYPE_SIM_CARD_0", SYSTEM_TONE_TYPE_SIM_CARD_0},
+    {"SYSTEM_TONE_TYPE_SIM_CARD_1", SYSTEM_TONE_TYPE_SIM_CARD_1},
+    {"SYSTEM_TONE_TYPE_NOTIFICAION", SYSTEM_TONE_TYPE_NOTIFICAION}
+};
+
 class SystemSoundManagerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -49,6 +56,7 @@ private:
     static napi_value GetSystemSoundManager(napi_env env, napi_callback_info info);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value CreateRingtoneTypeObject(napi_env env);
+    static napi_value CreateSystemToneTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
 
@@ -62,14 +70,17 @@ private:
     static napi_value SetSystemToneUri(napi_env env, napi_callback_info info);
     static void AsyncSetSystemToneUri(napi_env env, void *data);
     static napi_value GetSystemToneUri(napi_env env, napi_callback_info info);
+    static void AsyncGetSystemToneUri(napi_env env, void *data);
     static napi_value GetSystemTonePlayer(napi_env env, napi_callback_info info);
+    static void AsyncGetSystemTonePlayer(napi_env env, void *data);
 
     static void SetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
-
-    static napi_ref ringtoneType_;
+    static void GetSystemTonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static napi_ref sConstructor_;
+    static napi_ref ringtoneType_;
+    static napi_ref systemToneType_;
 
     napi_env env_;
 
@@ -87,6 +98,8 @@ struct SystemSoundManagerAsyncContext {
     std::string uri;
     std::shared_ptr<RingtonePlayer> ringtonePlayer;
     int32_t ringtoneType;
+    std::shared_ptr<SystemTonePlayer> systemTonePlayer;
+    int32_t systemToneType;
 };
 } // namespace Media
 } // namespace OHOS

@@ -18,15 +18,16 @@
 
 #include <map>
 
-#include "ringtone_player.h"
-#include "ringtone_common_napi.h"
-#include "ringtone_options_napi.h"
-#include "ringtone_player_callback_napi.h"
+#include "audio_info.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+
 #include "media_errors.h"
 #include "media_log.h"
-#include "audio_info.h"
+#include "ringtone_common_napi.h"
+#include "ringtone_options_napi.h"
+#include "ringtone_player.h"
+#include "ringtone_player_callback_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -35,7 +36,7 @@ static const std::string RINGTONE_PLAYER_NAPI_CLASS_NAME = "RingtonePlayer";
 class RingtonePlayerNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
-    static napi_value GetRingtonePlayerInstance(napi_env env, std::shared_ptr<RingtonePlayer> &iRingtonePlayer);
+    static napi_value GetRingtonePlayerInstance(napi_env env, std::shared_ptr<RingtonePlayer> &ringtonePlayer);
 
     RingtonePlayerNapi();
     ~RingtonePlayerNapi();
@@ -66,7 +67,7 @@ private:
     static void GetAudioRendererInfoAsyncCallbackComplete(napi_env env, napi_status status, void *data);
 
     napi_env env_;
-    std::shared_ptr<RingtonePlayer> iRingtonePlayer_;
+    std::shared_ptr<RingtonePlayer> ringtonePlayer_;
     std::shared_ptr<RingtonePlayerInterruptCallback> callbackNapi_ = nullptr;
 
     static napi_ref sConstructor_;
