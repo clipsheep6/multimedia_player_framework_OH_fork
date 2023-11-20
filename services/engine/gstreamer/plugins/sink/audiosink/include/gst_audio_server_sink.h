@@ -64,6 +64,8 @@ struct _GstAudioServerSink {
     gboolean pre_power_on;
     gboolean start_first_render;
     guint delay_time;
+    guint buffer_size_written;
+    gboolean is_need_write_empty_buffer;
 };
 
 struct _GstAudioServerSinkClass {
