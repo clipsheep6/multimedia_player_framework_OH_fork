@@ -49,6 +49,15 @@ static bool DoMarshalling(MessageParcel &parcel, const Format &format)
                 (void)parcel.WriteInt32(static_cast<int32_t>(it->second.size));
                 (void)parcel.WriteBuffer(reinterpret_cast<const void *>(it->second.addr), it->second.size);
                 break;
+            case FORMAT_TYPE_INFOMAP: {
+                (void)parcel.WriteUint32(it->second.infoMap.size());
+                for (auto item : it->second.infoMap) {
+                    (void)parcel.WriteString(item.first);
+                    (void)parcel.WriteUint32(item.second.size());
+                    (void)parcel.WriteBuffer(item.second.data(), item.second.size());
+                }
+                break;
+            }
             default:
                 MEDIA_LOGE("fail to Marshalling Key: %{public}s", it->first.c_str());
                 return false;
@@ -116,6 +125,23 @@ static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
                     return false;
                 }
                 (void)format.PutBuffer(key, addr, static_cast<size_t>(addrSize));
+                break;
+            }
+            case FORMAT_TYPE_INFOMAP: {
+                uint32_t mapSize = parcel.ReadUint32();
+                std::map<std::string, std::vector<uint8_t>> drmInfo;
+                for (uint32_t i = 0; i < mapSize; i++) {
+                    std::string uuid =  parcel.ReadString();
+                    uint32_t psshSize = parcel.ReadUint32();
+                    const uint8_t *psshAddr = parcel.ReadBuffer(static_cast<size_t>(psshSize));
+                    if (psshAddr == nullptr) {
+                        MEDIA_LOGE("fail to ReadBuffer Key: %{public}s", key.c_str());
+                        return false;
+                    }
+                    std::vector<uint8_t> pssh(psshAddr, psshAddr + psshSize);
+                    drmInfo.insert({ uuid, pssh });
+                }
+                (void)format.PutInfoMap(key, drmInfo);
                 break;
             }
             default:
