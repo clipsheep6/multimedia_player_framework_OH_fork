@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "player.h"
 #include "recorder.h"
+#include "avmetadatahelper.h"
 #include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "recorder_profiles.h"
@@ -160,6 +161,19 @@ static const std::vector<struct JsEnumInt> g_AACProfile = {
     { "AAC_PROFILE_HE_V2", AACProfile::AAC_PROFILE_HE_V2 },
     { "AAC_PROFILE_LD", AACProfile::AAC_PROFILE_LD },
     { "AAC_PROFILE_MAIN", AACProfile::AAC_PROFILE_MAIN },
+};
+
+static const std::vector<struct JsEnumInt> g_avImageQueryOptions = {
+    { "AV_IMAGE_QUERY_NEXT_SYNC", AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC },
+    { "AV_IMAGE_QUERY_PREVIOUS_SYNC", AVMetadataQueryOption::AV_META_QUERY_PREVIOUS_SYNC },
+    { "AV_IMAGE_QUERY_CLOSEST_SYNC", AVMetadataQueryOption::AV_META_QUERY_CLOSEST_SYNC },
+    { "AV_IMAGE_QUERY_CLOSEST", AVMetadataQueryOption::AV_META_QUERY_CLOSEST },
+};
+
+static const std::vector<struct JsEnumInt> g_pixelFormat = {
+    { "RGB_565", 2 }, // PixelFormat::RGB_565
+    { "RGBA_8888", 3 }, // PixelFormat::RGBA_8888
+    { "RGB_888", 5 }, // PixelFormat::RGB_888
 };
 
 static const std::vector<struct JsEnumInt> g_videoEncodeBitrateMode = {
@@ -311,6 +325,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
     { "PlaybackSpeed", g_playbackSpeed },
+    { "AVImageQueryOptions", g_avImageQueryOptions },
+    { "PixelFormat", g_pixelFormat },
     { "MediaType", g_mediaType },
     { "VideoRecorderQualityLevel", g_videoRecorderQualityLevel },
     { "AudioSourceType", g_audioSourceType },

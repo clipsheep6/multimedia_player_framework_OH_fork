@@ -188,8 +188,10 @@ int32_t AVMetadataHelperImpl::SetSource(int32_t fd, int64_t offset, int64_t size
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "avmetadatahelper service does not exist..");
-
-    CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size > 0, MSERR_INVALID_VAL, "invalid param");
+    MEDIA_LOGI("Set file source fd: %{public}d, offset: %{public}" PRIu64 ", size: %{public}" PRIu64,
+        fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL,
+        "invalid param");
 
     return avMetadataHelperService_->SetSource(fd, offset, size, usage);
 }
