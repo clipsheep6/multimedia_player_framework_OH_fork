@@ -74,11 +74,11 @@ ohos_shared_library("media_avplayer") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "napi:ace_napi",
     "hitrace:hitrace_meter",
-    "drm_framework:drm_framework",
+    "napi:ace_napi",
   ]
 
   if (multimedia_player_framework_support_video) {

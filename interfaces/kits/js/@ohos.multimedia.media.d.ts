@@ -16,7 +16,7 @@
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
 import type image from './@ohos.multimedia.image';
-import drm from "./@ohos.multimedia.drm";
+import drm from './@ohos.multimedia.drm';
 /**
  * @name media
  * @since 6
@@ -1017,11 +1017,11 @@ declare namespace media {
 
     /**
      * Get the latest drmInfos.
-     * @returns A Promise instance used to return the drm info in DrmInfoPair.
+     * @returns A Promise instance used to return the drm info in DrmInfo Pair.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
-    getDrmInfo() :Array<DrmInfoPair>;
+    getDrmInfo() :Array<Object>;
 
     url ?: string;
 
@@ -1285,7 +1285,7 @@ declare namespace media {
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return drminfos.
      */
-    on(type: 'drmInfoUpdate', callback: (drmInfo: Array<DrmInfoPair>) => void): void;
+    on(type: 'drmInfoUpdate', callback: (drmInfo: Array<Object>) => void): void;
     off(type: 'drmInfoUpdate'): void;
   }
 
@@ -3392,20 +3392,6 @@ declare namespace media {
     [key : string]: Object;
   }
 
-  /**
-   * Provides the container definition for drm info key-value pairs.
-   * @since 8
-   * @syscap SystemCapability.Multimedia.Media.Core
-   */
-  interface DrmInfoPair {
-    /**
-     * uuid: which means unique media key system id.
-     * pssh: pssh data.
-     * @since 8
-     * @syscap SystemCapability.Multimedia.Media.Core
-     */
-    [uuid : string]: [pssh : Uint8Array];
-  }
   /**
    * Enumerates seek mode.
    * @since 8

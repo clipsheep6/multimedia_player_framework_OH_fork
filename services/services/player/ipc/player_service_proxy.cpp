@@ -594,7 +594,7 @@ int32_t PlayerServiceProxy::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySe
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    if(data.WriteRemoteObject(object)) {
+    if (data.WriteRemoteObject(object)) {
         MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig WriteRemoteObject successfully");
     } else {
         MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig WriteRemoteObject failed");

@@ -14,8 +14,8 @@
  */
 
 #include <map>
-#include "avplayer_callback.h"
 #include <uv.h>
+#include "avplayer_callback.h"
 #include "avplayer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"

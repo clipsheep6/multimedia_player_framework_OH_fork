@@ -309,7 +309,7 @@ public:
      * @since
      * @version
      */
-     virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) = 0;
 
 #ifdef SUPPORT_VIDEO

@@ -15,11 +15,11 @@
 
 #include <map>
 #include <unordered_set>
-#include "player_server.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
+#include "player_server.h"
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"

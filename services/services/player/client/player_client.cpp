@@ -357,6 +357,5 @@ int32_t PlayerClient::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_NO_MEMORY, "keySessionProxy is nullptr..");
     return playerProxy_->SetDecryptConfig(keySessionProxy, svp);
 }
-
 } // namespace Media
 } // namespace OHOS

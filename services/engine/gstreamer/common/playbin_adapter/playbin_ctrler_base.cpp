@@ -15,7 +15,6 @@
 
 #include <iostream>
 #include <sstream>
-#include "playbin_ctrler_base.h"
 #include <gst/playback/gstplay-enum.h>
 #include "nocopyable.h"
 #include "string_ex.h"
@@ -30,6 +29,7 @@
 #include "media_dfx.h"
 #include "player_xcollie.h"
 #include "param_wrapper.h"
+#include "playbin_ctrler_base.h"
 #include "key_session_service_proxy.h"
 
 namespace {
@@ -52,11 +52,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 struct DrmInfoItem {
     uint8_t uuid[DRM_MAX_M3U8_DRM_UUID_LEN];
     uint8_t pssh[DRM_MAX_M3U8_DRM_PSSH_LEN];
-    uint32_t pssh_len;
+    uint32_t psshLen;
 };
 
 static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS = {
@@ -453,7 +452,11 @@ int32_t PlayBinCtrlerBase::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySes
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_OPERATION, "keySessionProxy is nullptr");
 
     keySessionServiceProxy_ = keySessionProxy;
-    svpMode_ = svp == true ? SVP_TRUE : SVP_FALSE;
+    if (svp) {
+        svpMode_ = SVP_TRUE;
+    } else {
+        svpMode_ = SVP_FALSE;
+    }
     keySessionServiceProxy_->CreateMediaDecryptModule(decryptModuleProxy_);
     CHECK_AND_RETURN_RET_LOG(decryptModuleProxy_ != nullptr, MSERR_INVALID_OPERATION, "can not get DRM decryptModule");
     PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SET_DRM_CONFIG_DONE, 0, {} };
@@ -1273,12 +1276,12 @@ int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demu
         DrmInfoItem temp = drmInfos[i];
         std::stringstream ssConverter;
         std::string uuid;
-        for (uint32_t index = 0; index < DRM_MAX_M3U8_DRM_UUID_LEN; index ++) {
+        for (uint32_t index = 0; index < DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
             ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
             uuid = ssConverter.str();
         }
-        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.pssh_len);
-        drmInfoMap.insert({uuid, pssh});
+        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
+        drmInfoMap.insert({ uuid, pssh });
     }
 
     std::unique_lock<std::mutex> drmInfoLock(thizStrong->drmInfoMutex_);
@@ -1325,8 +1328,8 @@ int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, 
     DrmStandard::IMediaDecryptModuleService::SubSample *subSamples =
         static_cast<DrmStandard::IMediaDecryptModuleService::SubSample*>(subsamples);
     for (uint32_t i = 0; i < subsampleCount; i++) {
-        DrmStandard::IMediaDecryptModuleService::SubSample temp({subSamples[i].clearHeaderLen,
-			subSamples[i].payLoadLen});
+        DrmStandard::IMediaDecryptModuleService::SubSample temp({ subSamples[i].clearHeaderLen,
+            subSamples[i].payLoadLen });
         cryptInfo.subSample.emplace_back(temp);
     }
     uint64_t srcBuffer = static_cast<uint64_t>(inputBuffer);
@@ -1394,7 +1397,8 @@ void PlayBinCtrlerBase::OnDecryptElementSetup(GstElement &elem)
     MEDIA_LOGI("OnDecryptElementSetup element is : %{public}s", ELEM_NAME(&elem));
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-    gulong id = g_signal_connect_data(&elem, "media-decrypt", G_CALLBACK(&PlayBinCtrlerBase::OnMediaDecryptSignalReceived), wrapper,
+    gulong id = g_signal_connect_data(&elem, "media-decrypt",
+        G_CALLBACK(&PlayBinCtrlerBase::OnMediaDecryptSignalReceived), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
     CheckAndAddSignalIds(id, wrapper, &elem);
 }

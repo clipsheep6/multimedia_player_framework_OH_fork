@@ -37,7 +37,7 @@ enum FormatDataType : uint32_t {
     FORMAT_TYPE_STRING,
     /* Addr */
     FORMAT_TYPE_ADDR,
-    /* add for drm, Map: string, vector<uint8>*/
+    /* add for drm, Map: string, vector<uint8> */
     FORMAT_TYPE_INFOMAP,
 };
 

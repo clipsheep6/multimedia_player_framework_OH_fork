@@ -1068,12 +1068,10 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetDecryptConfig In");
-
     napi_value args[2] = { nullptr }; // args[0]:MediaKeySession, args[1]:svp
     size_t argCount = 2; // args[0]:int64, args[1]:bool
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-
     bool svp = 0;
     napi_status status = napi_get_value_bool(env, args[1], &svp);
     if (status != napi_ok) {
@@ -1081,7 +1079,6 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
             "invalid parameters, please check the svp");
         return result;
     }
-
     napi_value sessionObj;
     status = napi_coerce_to_object(env, args[0], &sessionObj);
     if (status != napi_ok) {
@@ -1093,7 +1090,6 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "keysession is not napi_object");
         return result;
     }
-
     napi_value nativePointer = nullptr;
     std::string type = "MediaKeySessionNative";
     bool exist = false;
@@ -1111,7 +1107,6 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
         MEDIA_LOGE("get %{public}s property value fail", type.c_str());
         return result;
     }
-
     DrmStandard::MediaKeySessionImpl* keySessionImpl =
         reinterpret_cast<DrmStandard::MediaKeySessionImpl*>(nativePointerInt);
     if (keySessionImpl != nullptr) {
@@ -1121,7 +1116,6 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetDecryptConfig(keySessionServiceProxy, svp);
         }
-
     } else {
         MEDIA_LOGE("SetDecryptConfig keySessionImpl is nullptr!");
     }

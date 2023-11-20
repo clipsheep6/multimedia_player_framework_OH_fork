@@ -139,7 +139,7 @@ static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
                         return false;
                     }
                     std::vector<uint8_t> pssh(psshAddr, psshAddr + psshSize);
-                    drmInfo.insert({uuid, pssh});
+                    drmInfo.insert({ uuid, pssh });
                 }
                 (void)format.PutInfoMap(key, drmInfo);
                 break;
