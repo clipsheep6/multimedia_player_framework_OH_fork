@@ -71,6 +71,8 @@ public:
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
     int32_t SetAudioEffectMode(const int32_t effectMode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) override;
 
     void SetElemSetupListener(ElemSetupListener listener) final;
     void SetElemUnSetupListener(ElemSetupListener listener) final;
@@ -100,6 +102,11 @@ private:
     class StoppedState;
     class StoppingState;
     class PlaybackCompletedState;
+    enum SvpMode : int32_t {
+        SVP_CLEAR = -1, /* it's not a protection video */
+        SVP_FALSE, /* it's a protection video but not need secure decoder */
+        SVP_TRUE, /* it's a protection video and need secure decoder */
+    };
 
     int32_t EnterInitializedState();
     void ExitInitializedState();
@@ -128,6 +135,12 @@ private:
     static void OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     static void AudioChanged(const GstElement *playbin, gpointer userData);
+    static int32_t OnDrmInfoUpdatedSignalReceived(const GstElement *demux, gpointer drmInfoArray, uint32_t infoCount,
+        gpointer userData);
+    static int32_t OnMediaDecryptSignalReceived(const GstElement *elem, int64_t inputBuffer,
+        int64_t outputBuffer, uint32_t length, gpointer keyId, uint32_t keyIdLength, gpointer iv, uint32_t ivLength,
+        uint32_t subsampleCount, gpointer subsamples, uint32_t mode, uint32_t svp, uint32_t cryptByteBlock,
+        uint32_t skipByteBlock, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioSegmentEventCb();
     void SetupAudioDiedEventCb();
@@ -158,6 +171,9 @@ private:
     void OnError(int32_t errorCode, std::string message);
     void CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem);
     bool SetPlayerState(GstPlayerStatus status);
+    void OnDemuxElementSetup(GstElement &elem);
+    void OnCodecElementSetup(GstElement &elem);
+    void OnDecryptElementSetup(GstElement &elem);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {
@@ -192,6 +208,20 @@ private:
     std::string uri_;
     std::shared_ptr<PlayerTrackParse> trackParse_;
 
+    int32_t svpMode_ = SVP_CLEAR;
+    std::mutex drmInfoMutex_;
+    /* drmInfo Will be Updated when received a drminfo-update signal,
+       and cleared when the source uri is changed. */
+    std::map<std::string, std::vector<uint8_t>> drmInfo_;
+    sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_;
+    sptr<DrmStandard::IMediaDecryptModuleService> decryptModuleProxy_;
+    enum DrmSignalRetCode : int32_t {
+        DRM_SIGNAL_OK = 0,
+        DRM_SIGNAL_INVALID_PARAM,
+        DRM_SIGNAL_INVALID_OPERATOR,
+        DRM_SIGNAL_SERVICE_WRONG,
+        DRM_SIGNAL_UNKNOWN,
+    };
     std::map<GstElement *, std::vector<gulong>> signalIds_;
     std::vector<uint32_t> bitRateVec_;
     bool isInitialized_ = false;
@@ -201,6 +231,9 @@ private:
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
+    std::condition_variable drmPreparedCond_;
+    bool isDrmPrepared_ = false;
+    std::mutex drmMutex_;
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;
     PlayBinSinkProvider::SinkPtr videoSink_ = nullptr;

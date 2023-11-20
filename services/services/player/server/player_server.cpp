@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "player_server.h"
 #include <map>
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
+#include "player_server.h"
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"
@@ -960,6 +960,21 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 #endif
+
+int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    bool svp)
+{
+    MEDIA_LOGI("PlayerServer SetDecryptConfig");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
+
+    int32_t res = playerEngine_->SetDecryptConfig(keySessionProxy, svp);
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+        static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetDecryptConfig Failed!");
+
+    MEDIA_LOGI("PlayerServer SetDecryptConfig out");
+    return MSERR_OK;
+}
 
 bool PlayerServer::IsPlaying()
 {

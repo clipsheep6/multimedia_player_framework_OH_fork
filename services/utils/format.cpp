@@ -155,6 +155,27 @@ bool Format::PutStringValue(const std::string_view &key, const std::string_view 
     return ret.second;
 }
 
+bool Format::PutInfoMap(const std::string_view &key, std::map<std::string, std::vector<uint8_t>> &value)
+{
+    FormatData data;
+    data.type = FORMAT_TYPE_INFOMAP;
+    data.infoMap = value;
+    RemoveKey(key);
+    auto ret = formatMap_.insert(std::make_pair(key, data));
+    return ret.second;
+}
+
+bool Format::GetInfoMap(const std::string_view &key, std::map<std::string, std::vector<uint8_t>> &value) const
+{
+    auto iter = formatMap_.find(key);
+    CHECK_AND_RETURN_RET_LOG(iter != formatMap_.end(), false,
+        "Format::GetFormat iter failed. Key: %{public}s", key.data());
+    CHECK_AND_RETURN_RET_LOG(iter->second.type == FORMAT_TYPE_INFOMAP, false,
+        "Format::GetFormat type failed. Key: %{public}s", key.data());
+    value = iter->second.infoMap;
+    return true;
+}
+
 bool Format::GetStringValue(const std::string_view &key, std::string &value) const
 {
     auto iter = formatMap_.find(key);
@@ -335,6 +356,8 @@ std::string Format::Stringify() const
                 outString += iter->first + " = " + iter->second.stringVal + " | ";
                 break;
             case FORMAT_TYPE_ADDR:
+                break;
+            case FORMAT_TYPE_INFOMAP:
                 break;
             default:
                 MEDIA_LOGE("Format::Stringify failed. Key: %{public}s", iter->first.c_str());
