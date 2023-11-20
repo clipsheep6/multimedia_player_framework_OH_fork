@@ -102,11 +102,11 @@ ohos_static_library("media_engine_gst_common") {
 
   external_deps = [
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "drm_framework:drm_framework",
   ]
 
   subsystem_name = "multimedia"

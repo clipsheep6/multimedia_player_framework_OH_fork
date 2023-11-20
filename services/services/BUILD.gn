@@ -124,13 +124,13 @@ ohos_shared_library("media_service") {
   ]
   if (multimedia_player_framework_support_player) {
     sources += [
+      "//foundation/multimedia/drm_framework/services/drm_service/client/src/key_session_service_proxy.cpp",
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
       "player/server/player_server.cpp",
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
-      "//foundation/multimedia/drm_framework/services/drm_service/client/src/key_session_service_proxy.cpp",
     ]
     if (use_memmgr_plugin || use_memmgr) {
       sources += [
@@ -198,15 +198,15 @@ ohos_shared_library("media_service") {
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "c_utils:utils",
+    "hdf_core:libhdi",
+    "hicollie:libhicollie",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "safwk:system_ability_fwk",
-    "hdf_core:libhdi",
     "napi:ace_napi",
-    "hitrace:hitrace_meter",
-    "hicollie:libhicollie",
+    "safwk:system_ability_fwk",
   ]
 
   if (multimedia_player_framework_support_video) {

@@ -16,7 +16,7 @@
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
 import type image from './@ohos.multimedia.image';
-import drm from './@ohos.multimedia.drm';
+import type drm from './@ohos.multimedia.drm';
 /**
  * @name media
  * @since 6
@@ -1013,7 +1013,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
-    setDecryptConfig(handle:drm.MediaKeySession, svp:boolean) :void;
+    setDecryptConfig(handle:drm.MediaKeySession, svp:boolean): void;
 
     /**
      * Get the latest drmInfos.
@@ -1021,7 +1021,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
-    getDrmInfo() :Array<Object>;
+    getDrmInfo(): Array<Object>;
 
     url ?: string;
 

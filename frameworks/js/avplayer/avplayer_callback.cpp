@@ -15,12 +15,12 @@
 
 #include <map>
 #include <uv.h>
-#include "avplayer_callback.h"
 #include "avplayer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "scope_guard.h"
 #include "event_queue.h"
+#include "avplayer_callback.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCallback"};
