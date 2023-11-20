@@ -15,6 +15,7 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
+#include "key_session_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -66,6 +67,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
+    playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -575,6 +577,35 @@ int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
     return reply.ReadInt32();
 }
 #endif
+
+int32_t PlayerServiceProxy::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    bool svp)
+{
+    MediaTrace trace("binder::SetDecryptConfig");
+    MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_OPERATION, "keySessionProxy is nullptr");
+    sptr<IRemoteObject> object = keySessionProxy->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_INVALID_OPERATION, "keySessionProxy object is nullptr");
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    if (data.WriteRemoteObject(object)) {
+        MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig WriteRemoteObject successfully");
+    } else {
+        MEDIA_LOGI("PlayerServiceProxy SetDecryptConfig WriteRemoteObject failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    data.WriteBool(svp);
+    int32_t error = SendRequest(SET_DECRYPT_CONFIG, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetDecryptConfig failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
 
 bool PlayerServiceProxy::IsPlaying()
 {

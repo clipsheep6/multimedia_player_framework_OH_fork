@@ -97,6 +97,7 @@ ohos_static_library("media_engine_gst_player") {
   external_deps = [
     "audio_framework:audio_client",
     "drivers_peripheral_display:hdi_gralloc_client",
+    "drm_framework:drm_framework",
     "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
