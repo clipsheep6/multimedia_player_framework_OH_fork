@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "avplayer_callback.h"
+#include <map>
 #include <uv.h>
+#include "avplayer_callback.h"
 #include "avplayer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -250,6 +251,56 @@ public:
         }
     };
 
+    struct ObjectArray : public Base {
+        std::map<std::string, std::vector<uint8_t>> infoMap;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> mapRef = callback.lock();
+            CHECK_AND_RETURN_LOG(mapRef != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(mapRef->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(mapRef->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(mapRef->env_, mapRef->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            uint32_t index = 0;
+            napi_value napiMap;
+            napi_create_array_with_length(mapRef->env_, infoMap.size(), &napiMap);
+            for (auto item : infoMap) {
+                napi_value jsObject;
+                napi_value jsUuid;
+                napi_value jsPssh;
+                napi_create_object(mapRef->env_, &jsObject);
+                napi_create_string_utf8(mapRef->env_, item.first.c_str(), NAPI_AUTO_LENGTH, &jsUuid);
+                napi_set_named_property(mapRef->env_, jsObject, "uuid", jsUuid);
+
+                status = napi_create_array_with_length(mapRef->env_, item.second.size(), &jsPssh);
+                for (uint32_t i = 0; i < item.second.size(); i++) {
+                    napi_value number = nullptr;
+                    (void)napi_create_uint32(mapRef->env_, item.second[i], &number);
+                    (void)napi_set_element(mapRef->env_, jsPssh, i, number);
+                }
+                napi_set_named_property(mapRef->env_, jsObject, "pssh", jsPssh);
+                napi_set_element(mapRef->env_, napiMap, index, jsObject);
+                index++;
+            }
+
+            const int32_t argCount = 1;
+            napi_value args[argCount] = { napiMap };
+            napi_value result = nullptr;
+            status = napi_call_function(mapRef->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct PropertyInt : public Base {
         std::map<std::string, int32_t> valueMap;
         void UvWork() override
@@ -448,6 +499,8 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_SUBTITLE_UPDATE] = &AVPlayerCallback::OnSubtitleUpdateCb;
     onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
     onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
+    onInfoFuncs_[INFO_TYPE_DRM_INFO_UPDATED] = &AVPlayerCallback::OnDrmInfoUpdatedCb;
+    onInfoFuncs_[INFO_TYPE_SET_DECRYPT_CONFIG_DONE] = &AVPlayerCallback::OnSetDecryptConfigDoneCb;
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -858,6 +911,49 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
     cb->valueVec = bitrateVec;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    MEDIA_LOGI("AVPlayerCallback OnDrmInfoUpdatedCb is called");
+
+    if (refMap_.find(AVPlayerEvent::EVENT_DRM_INFO_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find drm info updated callback!");
+        return;
+    }
+    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO))) {
+        MEDIA_LOGW("there's no drminfo-update key");
+        return;
+    }
+
+    std::map<std::string, std::vector<uint8_t>> drmInfoMap;
+    infoBody.GetInfoMap(std::string(PlayerKeys::PLAYER_DRM_INFO), drmInfoMap);
+    CHECK_AND_RETURN_LOG(!drmInfoMap.empty(), "drminfoMap is empty");
+
+    NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_DRM_INFO_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_DRM_INFO_UPDATE;
+    cb->infoMap = drmInfoMap;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnSetDecryptConfigDoneCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    MEDIA_LOGI("AVPlayerCallback OnSetDecryptConfigDoneCb is called");
+    if (refMap_.find(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE) == refMap_.end()) {
+        MEDIA_LOGW("can not find SetDecryptConfig Done callback!");
+        return;
+    }
+
+    NapiCallback::Base *cb = new(std::nothrow) NapiCallback::Base();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_SET_DECRYPT_CONFIG_DONE;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

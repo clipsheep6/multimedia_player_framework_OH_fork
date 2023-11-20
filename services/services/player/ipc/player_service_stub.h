@@ -74,6 +74,8 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     bool IsPlaying() override;
     bool IsLooping() override;
+    int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) override;
 
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
@@ -127,6 +129,7 @@ private:
     int32_t SelectTrack(MessageParcel &data, MessageParcel &reply);
     int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
+    int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
 
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;

@@ -134,6 +134,7 @@ struct _GstVdecBase {
     gboolean is_free_codec_buffers;
     gboolean is_eos_state;
     GstBuffer *codec_data;
+    gint svp_mode;
 };
 
 struct _GstVdecBaseClass {
