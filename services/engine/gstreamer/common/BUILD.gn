@@ -63,8 +63,6 @@ config("media_engine_gst_common_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
-    "//foundation/multimedia/drm_framework/services/drm_service/client/include",
-    "//foundation/multimedia/drm_framework/services/drm_service/ipc",
   ]
 }
 

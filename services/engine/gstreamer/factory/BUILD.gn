@@ -63,8 +63,6 @@ config("media_engine_gst_factory_config") {
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
-    "//foundation/multimedia/drm_framework/services/drm_service/client/include",
-    "//foundation/multimedia/drm_framework/services/drm_service/ipc",
   ]
   defines = []
   defines += player_framework_defines
@@ -83,6 +81,7 @@ ohos_static_library("media_engine_gst_factory") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "graphic_2d:surface",
     "hilog:libhilog",
     "image_framework:image_native",

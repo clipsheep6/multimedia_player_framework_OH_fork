@@ -79,11 +79,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
-    "//foundation/multimedia/drm_framework/interfaces/kits/js/drm_napi/include",
-    "//foundation/multimedia/drm_framework/interfaces/inner_api/native/drm",
-    "//foundation/multimedia/drm_framework/services/drm_service/client/include",
-    "//foundation/multimedia/drm_framework/services/drm_service/ipc",
-    "//foundation/multimedia/drm_framework/services/utils/include",
   ]
 
   if (multimedia_player_framework_support_avsession_background) {
@@ -124,7 +119,6 @@ ohos_shared_library("media_service") {
   ]
   if (multimedia_player_framework_support_player) {
     sources += [
-      "//foundation/multimedia/drm_framework/services/drm_service/client/src/key_session_service_proxy.cpp",
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
@@ -198,6 +192,7 @@ ohos_shared_library("media_service") {
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",

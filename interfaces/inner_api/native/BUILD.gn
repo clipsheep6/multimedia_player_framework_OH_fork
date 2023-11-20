@@ -15,7 +15,6 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
-DRM_ROOT_DIR = "//foundation/multimedia/drm_framework"
 
 config("media_public_config") {
   include_dirs = [
@@ -49,7 +48,6 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
-    "$DRM_ROOT_DIR/services/drm_service/ipc",
   ]
 }
 
