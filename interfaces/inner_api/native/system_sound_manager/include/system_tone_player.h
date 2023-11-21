@@ -65,7 +65,7 @@ public:
      * @return Returns a non-zero streamID if successful, zero if it fails.
      * @since 11
      */
-    virtual int32_t Start(SystemToneOptions systemToneOptions) = 0;
+    virtual int32_t Start(const SystemToneOptions &systemToneOptions) = 0;
 
     /**
      * @brief Stop playing system tone
@@ -75,7 +75,7 @@ public:
      * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 11
      */
-    virtual int32_t Stop(int32_t streamID) = 0;
+    virtual int32_t Stop(const int32_t &streamID) = 0;
 
     /**
      * @brief Releases the system tone client resources

@@ -19,7 +19,7 @@
 using namespace std;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemToneOptionsNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemToneOptionsNapi"};
 }
 
 namespace OHOS {
@@ -52,8 +52,8 @@ napi_value SystemToneOptionsNapi::Init(napi_env env, napi_value exports)
     napi_get_undefined(env, &result);
 
     napi_property_descriptor system_tone_options_properties[] = {
-        DECLARE_NAPI_GETTER_SETTER("muteAudio", GetMuteAudio, SetMuteAudio),
-        DECLARE_NAPI_GETTER_SETTER("muteHaptics", GetMuteHaptics, SetMuteHaptics)
+        DECLARE_NAPI_GETTER_SETTER("muteAudio", IsAudioMute, SetAudioMute),
+        DECLARE_NAPI_GETTER_SETTER("muteHaptics", IsHapticsMute, SetHapticsMute)
     };
 
     status = napi_define_class(env, SYSTEM_TONE_OPTIONS_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Construct,
@@ -125,7 +125,7 @@ napi_value SystemToneOptionsNapi::CreateSystemToneOptionsWrapper(napi_env env, b
     return result;
 }
 
-napi_value SystemToneOptionsNapi::GetMuteAudio(napi_env env, napi_callback_info info)
+napi_value SystemToneOptionsNapi::IsAudioMute(napi_env env, napi_callback_info info)
 {
     napi_status status;
     SystemToneOptionsNapi *systemToneOptionsNapi = nullptr;
@@ -136,7 +136,7 @@ napi_value SystemToneOptionsNapi::GetMuteAudio(napi_env env, napi_callback_info 
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        MEDIA_LOGE("GetMuteAudio: failed for napi_get_cb_info");
+        MEDIA_LOGE("IsAudioMute: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -151,7 +151,7 @@ napi_value SystemToneOptionsNapi::GetMuteAudio(napi_env env, napi_callback_info 
     return jsResult;
 }
 
-napi_value SystemToneOptionsNapi::SetMuteAudio(napi_env env, napi_callback_info info)
+napi_value SystemToneOptionsNapi::SetAudioMute(napi_env env, napi_callback_info info)
 {
     napi_status status;
     SystemToneOptionsNapi *systemToneOptionsNapi = nullptr;
@@ -164,7 +164,7 @@ napi_value SystemToneOptionsNapi::SetMuteAudio(napi_env env, napi_callback_info 
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        MEDIA_LOGE("SetMuteAudio: failed for napi_get_cb_info");
+        MEDIA_LOGE("SetAudioMute: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -172,7 +172,7 @@ napi_value SystemToneOptionsNapi::SetMuteAudio(napi_env env, napi_callback_info 
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
-            MEDIA_LOGE("SetMuteAudio: failed for wrong data type");
+            MEDIA_LOGE("SetAudioMute: failed for wrong data type");
             return jsResult;
         }
     }
@@ -185,7 +185,7 @@ napi_value SystemToneOptionsNapi::SetMuteAudio(napi_env env, napi_callback_info 
     return jsResult;
 }
 
-napi_value SystemToneOptionsNapi::GetMuteHaptics(napi_env env, napi_callback_info info)
+napi_value SystemToneOptionsNapi::IsHapticsMute(napi_env env, napi_callback_info info)
 {
     napi_status status;
     SystemToneOptionsNapi *systemToneOptionsNapi = nullptr;
@@ -196,7 +196,7 @@ napi_value SystemToneOptionsNapi::GetMuteHaptics(napi_env env, napi_callback_inf
 
     status = napi_get_cb_info(env, info, &argc, nullptr, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        MEDIA_LOGE("GetMuteHaptics: failed for napi_get_cb_info");
+        MEDIA_LOGE("IsHapticsMute: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -211,7 +211,7 @@ napi_value SystemToneOptionsNapi::GetMuteHaptics(napi_env env, napi_callback_inf
     return jsResult;
 }
 
-napi_value SystemToneOptionsNapi::SetMuteHaptics(napi_env env, napi_callback_info info)
+napi_value SystemToneOptionsNapi::SetHapticsMute(napi_env env, napi_callback_info info)
 {
     napi_status status;
     SystemToneOptionsNapi *ringtoneOptionsNapi = nullptr;
@@ -224,7 +224,7 @@ napi_value SystemToneOptionsNapi::SetMuteHaptics(napi_env env, napi_callback_inf
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        MEDIA_LOGE("SetMuteHaptics: failed for napi_get_cb_info");
+        MEDIA_LOGE("SetHapticsMute: failed for napi_get_cb_info");
         return jsResult;
     }
 
@@ -232,7 +232,7 @@ napi_value SystemToneOptionsNapi::SetMuteHaptics(napi_env env, napi_callback_inf
     if (status == napi_ok) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
-            MEDIA_LOGE("SetMuteHaptics: failed for wrong data type");
+            MEDIA_LOGE("SetHapticsMute: failed for wrong data type");
             return jsResult;
         }
     }

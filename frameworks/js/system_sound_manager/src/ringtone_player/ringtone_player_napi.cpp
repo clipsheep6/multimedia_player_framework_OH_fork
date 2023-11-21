@@ -21,19 +21,19 @@
 using namespace std;
 
 namespace {
-    /* Constants for array index */
-    const int32_t PARAM0 = 0;
-    const int32_t PARAM1 = 1;
+/* Constants for array index */
+const int32_t PARAM0 = 0;
+const int32_t PARAM1 = 1;
 
-    /* Constants for array size */
-    const int32_t ARGS_ONE = 1;
-    const int32_t ARGS_TWO = 2;
+/* Constants for array size */
+const int32_t ARGS_ONE = 1;
+const int32_t ARGS_TWO = 2;
 
-    const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
+const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerNapi"};
 
-    const int SUCCESS = 0;
+const int SUCCESS = 0;
 }
 
 namespace OHOS {

@@ -20,9 +20,9 @@
 #include "media_log.h"
 
 namespace {
-    const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
+const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerCallbackNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerCallbackNapi"};
 }
 
 namespace OHOS {

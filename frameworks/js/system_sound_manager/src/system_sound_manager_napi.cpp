@@ -26,22 +26,22 @@ using namespace std;
 using OHOS::Security::AccessToken::AccessTokenKit;
 
 namespace {
-    /* Constants for array index */
-    const int32_t PARAM0 = 0;
-    const int32_t PARAM1 = 1;
-    const int32_t PARAM2 = 2;
-    const int32_t PARAM3 = 3;
+/* Constants for array index */
+const int32_t PARAM0 = 0;
+const int32_t PARAM1 = 1;
+const int32_t PARAM2 = 2;
+const int32_t PARAM3 = 3;
 
-    /* Constants for array size */
-    const int32_t ARGS_TWO = 2;
-    const int32_t ARGS_THREE = 3;
-    const int32_t ARGS_FOUR = 4;
-    const int32_t SIZE = 100;
+/* Constants for array size */
+const int32_t ARGS_TWO = 2;
+const int32_t ARGS_THREE = 3;
+const int32_t ARGS_FOUR = 4;
+const int32_t SIZE = 100;
 
-    const int ERROR = -1;
-    const int SUCCESS = 0;
+const int ERROR = -1;
+const int SUCCESS = 0;
 
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerNapi"};
 }
 
 namespace OHOS {

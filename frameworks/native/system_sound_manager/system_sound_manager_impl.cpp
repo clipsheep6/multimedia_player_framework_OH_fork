@@ -25,13 +25,13 @@ using namespace std;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
-    const std::string RINGTONE = "ringtone";
-    const std::string SYSTEM_TONE = "system_tone";
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerImpl"};
 }
 
 namespace OHOS {
 namespace Media {
+const std::string RING_TONE = "ring_tone";
+const std::string SYSTEM_TONE = "system_tone";
 unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
 {
     unique_ptr<SystemSoundManagerImpl> systemSoundMgr = make_unique<SystemSoundManagerImpl>();
@@ -75,9 +75,9 @@ bool SystemSoundManagerImpl::isSystemToneTypeValid(SystemToneType systemToneType
 void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
 {
     ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
-        GetUriFromDatabase(GetKeyForDatabase(RINGTONE, RINGTONE_TYPE_SIM_CARD_0));
+        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
     ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
-        GetUriFromDatabase(GetKeyForDatabase(RINGTONE, RINGTONE_TYPE_SIM_CARD_1));
+        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_1));
 
     systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
@@ -89,9 +89,9 @@ void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
 
 void SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
 {
-    MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s", key.c_str(), uri.c_str());
     int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
-    MEDIA_LOGI("WriteUriToDatabase: result: %{public}d", result);
+    MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
+        key.c_str(), uri.c_str(), result);
 }
 
 std::string SystemSoundManagerImpl::GetUriFromDatabase(const std::string &key)
@@ -104,7 +104,7 @@ std::string SystemSoundManagerImpl::GetUriFromDatabase(const std::string &key)
 
 std::string SystemSoundManagerImpl::GetKeyForDatabase(const std::string &systemSoundType, int32_t type)
 {
-    if (systemSoundType == RINGTONE) {
+    if (systemSoundType == RING_TONE) {
         switch (static_cast<RingtoneType>(type)) {
             case RINGTONE_TYPE_SIM_CARD_0:
                 return "ringtone_for_sim_card_0";
@@ -138,7 +138,7 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "invalid ringtone type");
     MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
     ringtoneUriMap_[ringtoneType] = uri;
-    WriteUriToDatabase(GetKeyForDatabase(RINGTONE, ringtoneType), uri);
+    WriteUriToDatabase(GetKeyForDatabase(RING_TONE, ringtoneType), uri);
     return MSERR_OK;
 }
 
@@ -176,15 +176,14 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
-    if (systemTonePlayerMap_[systemToneType] != nullptr) { // to do: released?
+    if (systemTonePlayerMap_[systemToneType] != nullptr) {
+        systemTonePlayerMap_[systemToneType]->Release();
         systemTonePlayerMap_[systemToneType] = nullptr;
     }
 
-    if (systemTonePlayerMap_[systemToneType] == nullptr) {
-        systemTonePlayerMap_[systemToneType] = make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
-        CHECK_AND_RETURN_RET_LOG(systemTonePlayerMap_[systemToneType] != nullptr, nullptr,
-            "Failed to create system tone player object");
-    }
+    systemTonePlayerMap_[systemToneType] = make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerMap_[systemToneType] != nullptr, nullptr,
+        "Failed to create system tone player object");
 
     return systemTonePlayerMap_[systemToneType];
 }
