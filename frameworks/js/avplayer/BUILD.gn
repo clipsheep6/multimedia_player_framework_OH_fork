@@ -69,8 +69,10 @@ ohos_shared_library("media_avplayer") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "napi:ace_napi",
   ]
 
