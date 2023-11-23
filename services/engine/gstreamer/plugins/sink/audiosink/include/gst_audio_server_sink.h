@@ -66,6 +66,7 @@ struct _GstAudioServerSink {
     guint delay_time;
     guint buffer_size_written;
     gboolean is_need_write_empty_buffer;
+    gboolean is_seeking;
 };
 
 struct _GstAudioServerSinkClass {
