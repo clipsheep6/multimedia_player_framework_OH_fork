@@ -101,14 +101,15 @@ bool ScreenCaptureUrlFileNdkFuzzer::FuzzScreenCaptureUrlFileNdk(uint8_t *data, s
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer randomUrl: %{public}d ", randomUrl);
 
     OH_RecorderInfo recorderInfo;
+    const std::string screenCaptureRoot = "/data/test/media/";
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_ndk_url_file_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    std::string fileUrl;
     if (randomUrl >= urlRangeMin && randomUrl <= urlRangeMax) {
-        const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
-        int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_fuzz_ndk_url_file_01.mp4").c_str(),
-            O_RDWR | O_CREAT, 0777);
-        std::string fileUrl = "fd://" + to_string(outputFd);
+        fileUrl = "fd://" + to_string(outputFd);
         recorderInfo.url = const_cast<char *>(fileUrl.c_str());
     } else {
-        std::string fileUrl = "fd://" + to_string(randomUrl);
+        fileUrl = "fd://" + to_string(randomUrl);
         recorderInfo.url = const_cast<char *>(fileUrl.c_str());
     }
     recorderInfo.fileFormat = OH_ContainerFormatType::CFT_MPEG_4;

@@ -15,6 +15,9 @@
 
 #include "system_tone_player_impl.h"
 
+#include <fcntl.h>
+#include <thread>
+
 #include "audio_info.h"
 
 #include "media_log.h"
@@ -24,12 +27,13 @@ using namespace std;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemTonePlayer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemTonePlayer"};
 }
 
 namespace OHOS {
 namespace Media {
 const int32_t MAX_STREAMS = 1; // ensure that only one system tone is playing.
+const int32_t LOAD_WAIT_SECONDS = 2;
 const std::string DEFAULT_SYSTEM_TONE_URI_1 =
     "sys_prod/resource/media/audio/notifications/Rise.ogg";
 const std::string DEFAULT_SYSTEM_TONE_URI_2 =
@@ -50,11 +54,18 @@ SystemTonePlayerImpl::~SystemTonePlayerImpl()
         player_->Release();
         (void)SystemSoundVibrator::StopVibrator();
         player_ = nullptr;
+        callback_ = nullptr;
+    }
+
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
     }
 }
 
 void SystemTonePlayerImpl::InitPlayer()
 {
+    MEDIA_LOGI("Enter InitPlayer()");
+
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
     audioRendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
@@ -62,6 +73,10 @@ void SystemTonePlayerImpl::InitPlayer()
 
     player_ = SoundPoolFactory::CreateSoundPool(MAX_STREAMS, audioRendererInfo);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create system tone player instance");
+
+    callback_ = std::make_shared<SystemTonePlayerCallback>(*this);
+    CHECK_AND_RETURN_LOG(callback_ != nullptr, "Failed to create callback object");
+    player_->SetSoundPoolCallback(callback_);
 
     configuredUri_ = "";
 }
@@ -71,30 +86,37 @@ int32_t SystemTonePlayerImpl::Prepare()
     MEDIA_LOGI("Enter Prepare()");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
-    int32_t soundID = -1;
     auto systemToneUri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
-    if (systemToneUri.empty()) {
-        // if systemToneUri == "", try to use default path.
-        soundID = ApplyDefaultSystemToneUri(systemToneUri);
-        if (soundID < 0) {
-            MEDIA_LOGE("Prepare: Failed to load default system tone uri.");
-            return MSERR_OPEN_FILE_FAILED;
-        }
-        systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
-        soundID_ = soundID;
-        configuredUri_ = systemToneUri;
-    }
-
-    if (configuredUri_ == systemToneUri) {
+    if (!configuredUri_.empty() && configuredUri_ == systemToneUri) {
         MEDIA_LOGI("Prepare: The system tone uri has been loaded. Return directly.");
         return MSERR_OK;
     }
 
-    soundID = player_->Load(systemToneUri);
+    fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
+    if (fileDes_ == -1) {
+        // open file failed, try to use default path.
+        int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
+        if (ret == MSERR_OK) {
+            systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
+        } else {
+            return ret;
+        }
+    }
+    std::string uri = "fd://" + to_string(fileDes_);
+
+    int32_t soundID = player_->Load(uri);
     if (soundID < 0) {
         MEDIA_LOGE("Prepare: Failed to load system tone uri.");
         return MSERR_OPEN_FILE_FAILED;
     }
+    std::unique_lock<std::mutex> lockWait(loadUriMutex_);
+    bool waitResult = condLoadUri_.wait_for(lockWait, std::chrono::seconds(LOAD_WAIT_SECONDS),
+        [this]() { return loadCompleted_; });
+    if (!waitResult) {
+        MEDIA_LOGE("Prepare: Failed to load system tone uri (time out).");
+        return MSERR_OPEN_FILE_FAILED;
+    }
+
     soundID_ = soundID;
     configuredUri_ = systemToneUri;
 
@@ -104,22 +126,30 @@ int32_t SystemTonePlayerImpl::Prepare()
 int32_t SystemTonePlayerImpl::ApplyDefaultSystemToneUri(std::string &defaultUri)
 {
     // systemToneUri == "", try to use default system tone uri 1.
-    int32_t soundID = player_->Load(DEFAULT_SYSTEM_TONE_URI_1);
-    if (soundID >= 0) {
-        defaultUri = DEFAULT_SYSTEM_TONE_URI_1;
+    fileDes_ = open(DEFAULT_SYSTEM_TONE_URI_1.c_str(), O_RDONLY);
+    if (fileDes_ != -1) {
         MEDIA_LOGI("ApplyDefaultSystemToneUri: Set source to default system tone uri 1.");
-        return soundID;
+        defaultUri = DEFAULT_SYSTEM_TONE_URI_1;
+        return MSERR_OK;
     }
 
     // try to use default system tone uri 2.
-    soundID = player_->Load(DEFAULT_SYSTEM_TONE_URI_2);
-    if (soundID >= 0) {
-        defaultUri = DEFAULT_SYSTEM_TONE_URI_2;
+    fileDes_ = open(DEFAULT_SYSTEM_TONE_URI_2.c_str(), O_RDONLY);
+    if (fileDes_ != -1) {
         MEDIA_LOGI("ApplyDefaultSystemToneUri: Set source to default system tone uri 2.");
-        return soundID;
+        defaultUri = DEFAULT_SYSTEM_TONE_URI_2;
+        return MSERR_OK;
     }
 
-    return soundID;
+    return MSERR_OPEN_FILE_FAILED;
+}
+
+int32_t SystemTonePlayerImpl::NotifyLoadCompleted()
+{
+    std::lock_guard<std::mutex> lock(loadStatusMutex_);
+    loadCompleted_ = true;
+    condLoadUri_.notify_one();
+    return MSERR_OK;
 }
 
 int32_t SystemTonePlayerImpl::Start()
@@ -142,7 +172,7 @@ int32_t SystemTonePlayerImpl::Start()
     return streamID;
 }
 
-int32_t SystemTonePlayerImpl::Start(SystemToneOptions systemToneOptions)
+int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 {
     MEDIA_LOGI("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
         systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
@@ -167,7 +197,7 @@ int32_t SystemTonePlayerImpl::Start(SystemToneOptions systemToneOptions)
     return streamID;
 }
 
-int32_t SystemTonePlayerImpl::Stop(int32_t streamID)
+int32_t SystemTonePlayerImpl::Stop(const int32_t &streamID)
 {
     MEDIA_LOGI("Enter Stop() with streamID");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
@@ -188,6 +218,15 @@ int32_t SystemTonePlayerImpl::Release()
     (void)SystemSoundVibrator::StopVibrator();
 
     player_ = nullptr;
+    callback_ = nullptr;
+
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
+
+    std::lock_guard<std::mutex> lock(loadStatusMutex_);
+    loadCompleted_ = false;
 
     return MSERR_OK;
 }
@@ -197,6 +236,26 @@ std::string SystemTonePlayerImpl::GetTitle() const
     MEDIA_LOGI("Enter GetTitle()");
     std::string uri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
     return uri.substr(uri.find_last_of("/") + 1);
+}
+
+// Callback class symbols
+SystemTonePlayerCallback::SystemTonePlayerCallback(SystemTonePlayerImpl &systemTonePlayerImpl)
+    : systemTonePlayerImpl_(systemTonePlayerImpl) {}
+
+void SystemTonePlayerCallback::OnLoadCompleted(int32_t soundId)
+{
+    MEDIA_LOGI("OnLoadCompleted reported from sound pool.");
+    systemTonePlayerImpl_.NotifyLoadCompleted();
+}
+
+void SystemTonePlayerCallback::OnPlayFinished()
+{
+    MEDIA_LOGI("OnPlayFinished reported from sound pool.");
+}
+
+void SystemTonePlayerCallback::OnError(int32_t errorCode)
+{
+    MEDIA_LOGE("Error reported from sound pool: %{public}d", errorCode);
 }
 } // namesapce AudioStandard
 } // namespace OHOS

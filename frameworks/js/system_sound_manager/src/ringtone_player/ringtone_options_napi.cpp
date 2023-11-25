@@ -19,7 +19,7 @@
 using namespace std;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtoneOptionsNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtoneOptionsNapi"};
 }
 
 namespace OHOS {

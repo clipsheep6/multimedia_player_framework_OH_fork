@@ -109,8 +109,8 @@ bool ScreenCaptureVideoCodecFileFuzzer::FuzzScreenCaptureVideoCodecFile(uint8_t 
     config.videoInfo.videoEncInfo.videoCodec = videoCodec[randomNum];
 
     RecorderInfo recorderInfo;
-    const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_fuzz_videocodec_file_01.mp4").c_str(),
+    const std::string screenCaptureRoot = "/data/test/media/";
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_videocodec_file_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     recorderInfo.url = "fd://" + to_string(outputFd);
     recorderInfo.fileFormat = "mp4";

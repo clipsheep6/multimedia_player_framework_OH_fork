@@ -88,8 +88,8 @@ OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig co
     };
     std::string url = config.recorderInfo.url;
     if (!(url.empty())) {
-        config_.recorderInfo.url = static_cast<char*>(url.data());
-        config_.recorderInfo.urlLen = url.size();
+        config_.recorderInfo.url = const_cast<char *>(config.recorderInfo.url.c_str());
+        config_.recorderInfo.urlLen = config.recorderInfo.url.size();
     }
     if (config.recorderInfo.fileFormat == ContainerFormatType::CFT_MPEG_4A) {
         config_.recorderInfo.fileFormat = OH_ContainerFormatType::CFT_MPEG_4A;
