@@ -63,7 +63,8 @@
           "relational_store",
           "resource_management",
           "av_codec",
-          "miscdevice"
+          "miscdevice",
+          "drm_framework"
         ],
         "third_party": [
           "glib",
@@ -141,8 +142,7 @@
             "header": {
               "header_files": [
                 "ringtone_player.h",
-                "system_sound_manager.h",
-                "system_tone_plyaer.h"
+                "system_sound_manager.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
             }

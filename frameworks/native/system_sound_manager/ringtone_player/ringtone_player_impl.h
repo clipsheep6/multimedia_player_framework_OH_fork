@@ -16,10 +16,11 @@
 #ifndef RINGTONE_PLAYER_IMPL_H
 #define RINGTONE_PLAYER_IMPL_H
 
-#include "player.h"
-#include "system_sound_manager.h"
-#include "system_sound_vibrator.h"
+#include "ringtone_player.h"
 
+#include "system_sound_manager.h"
+#include "media_log.h"
+#include "player.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,7 +30,7 @@ class RingtonePlayerInterruptCallback;
 
 class RingtonePlayerImpl : public RingtonePlayer {
 public:
-    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context, SystemSoundManager &sysSoundMgr,
+    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &ctx, SystemSoundManager &sysSoundMgr,
         RingtoneType type);
     ~RingtonePlayerImpl();
     void SetPlayerState(RingtoneState ringtoneState);
@@ -49,6 +50,8 @@ public:
 private:
     void InitPlayer();
     int32_t PrepareRingtonePlayer(bool isReInitNeeded);
+    int32_t StartVibrate();
+    int32_t StopVibrate();
     int32_t ApplyDefaultRingtoneUri(std::string &defaultUri);
 
     float volume_ = 1.0f;

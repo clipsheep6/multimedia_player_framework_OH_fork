@@ -24,6 +24,8 @@
 #include "want.h"
 
 #include "audio_system_manager.h"
+#include "media_log.h"
+#include "player.h"
 
 #include "system_sound_manager.h"
 
@@ -35,33 +37,25 @@ public:
     ~SystemSoundManagerImpl();
 
     // SystemSoundManager override
-    int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
-        RingtoneType ringtoneType) override;
-    std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType ringtoneType) override;
-    std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
-        RingtoneType ringtoneType) override;
+    int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri,
+        RingtoneType type) override;
+    std::string GetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, RingtoneType type) override;
+    std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &ctx,
+        RingtoneType type) override;
 
-    int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
-        SystemToneType systemToneType) override;
-    std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemToneType systemToneType) override;
-    std::shared_ptr<SystemTonePlayer> GetSystemTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
-        SystemToneType systemToneType) override;
+    int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx, const std::string &uri) override;
+    std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &ctx) override;
 
 private:
     void LoadSystemSoundUriMap(void);
-    void WriteUriToDatabase(const std::string &key, const std::string &uri);
-    std::string GetUriFromDatabase(const std::string &key);
-    std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
+    void WriteUriToKvStore(RingtoneType ringtoneType, const std::string &systemSoundType, const std::string &uri);
+    bool LoadUriFromKvStore(RingtoneType ringtoneType, const std::string &systemSoundType);
+    std::string GetKeyForRingtoneKvStore(RingtoneType ringtoneType, const std::string &systemSoundType);
 
-    bool isRingtoneTypeValid(RingtoneType ringtongType);
-    bool isSystemToneTypeValid(SystemToneType systemToneType);
-
-    std::unordered_map<RingtoneType, std::string> ringtoneUriMap_;
-    std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
-    std::unordered_map<SystemToneType, std::string> systemToneUriMap_;
-    std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
+    std::array<std::string, 2> ringtoneUri_ = {}; // 2 is the max number of sim cards.
+    std::unordered_map<RingtoneType, std::unordered_map<std::string, std::string>> ringtoneUriMap_;
+    std::array<std::shared_ptr<RingtonePlayer>, 2> ringtonePlayer_ = {nullptr}; // 2 is the max number of sim cards.
+    std::shared_ptr<AppExecFwk::DataAbilityHelper> abilityHelper_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
