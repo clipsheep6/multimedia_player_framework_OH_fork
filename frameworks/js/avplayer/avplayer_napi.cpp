@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "key_session_impl.h"
 #ifdef SUPPORT_VIDEO
 #include "surface_utils.h"
 #endif
@@ -75,6 +76,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
         DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
+        DECLARE_NAPI_FUNCTION("setDecryptConfig", JsSetDecryptConfig),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -1057,6 +1059,66 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("JsSetUrl Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetDecryptConfig");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetDecryptConfig In");
+    napi_value args[2] = { nullptr }; // args[0]:MediaKeySession, args[1]:svp
+    size_t argCount = 2; // args[0]:int64, args[1]:bool
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+    bool svp = 0;
+    napi_status status = napi_get_value_bool(env, args[1], &svp);
+    if (status != napi_ok) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the svp");
+        return result;
+    }
+    napi_value sessionObj;
+    status = napi_coerce_to_object(env, args[0], &sessionObj);
+    if (status != napi_ok) {
+        MEDIA_LOGE("JsSetDecryptConfig get sessionObj failure!");
+        return result;
+    }
+    napi_valuetype valueType;
+    if (args[0] == nullptr || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "keysession is not napi_object");
+        return result;
+    }
+    napi_value nativePointer = nullptr;
+    std::string type = "MediaKeySessionNative";
+    bool exist = false;
+    status = napi_has_named_property(env, sessionObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return result;
+    }
+    if (napi_get_named_property(env, sessionObj, type.c_str(), &nativePointer) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return result;
+    }
+    int64_t nativePointerInt;
+    if (napi_get_value_int64(env, nativePointer, &nativePointerInt) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+        return result;
+    }
+    DrmStandard::MediaKeySessionImpl* keySessionImpl =
+        reinterpret_cast<DrmStandard::MediaKeySessionImpl*>(nativePointerInt);
+    if (keySessionImpl != nullptr) {
+        sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy =
+            keySessionImpl->GetMediaKeySessionServiceProxy();
+        MEDIA_LOGD("And it's count is: %{public}d", keySessionServiceProxy->GetSptrRefCount());
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SetDecryptConfig(keySessionServiceProxy, svp);
+        }
+    } else {
+        MEDIA_LOGE("SetDecryptConfig keySessionImpl is nullptr!");
+    }
     return result;
 }
 

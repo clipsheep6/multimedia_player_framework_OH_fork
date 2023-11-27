@@ -1,0 +1,9 @@
+{
+    "patches":[
+        {
+            "project":"multimedia_histreamer",
+	    "path":"multimedia/histreamer",
+	    "pr_url":"https://gitee.com/openharmony/multimedia_histreamer/pulls/989"
+	}
+    ]
+}

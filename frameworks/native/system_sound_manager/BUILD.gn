@@ -15,12 +15,6 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
-config("system_sound_client_public_config") {
-  visibility = [ ":*" ]
-  include_dirs =
-      [ "./../../../interfaces/inner_api/native/system_sound_manager/include" ]
-}
-
 ohos_shared_library("system_sound_client") {
   sanitize = {
     cfi = true
@@ -31,25 +25,16 @@ ohos_shared_library("system_sound_client") {
   install_enable = true
   sources = [
     "./ringtone_player/ringtone_player_impl.cpp",
-    "./system_sound_vibrator/system_sound_vibrator.cpp",
-    "./system_tone_player/system_tone_player_impl.cpp",
     "system_sound_manager_impl.cpp",
   ]
 
   include_dirs = [
-    "./",
     "./ringtone_player",
-    "./system_sound_vibrator",
-    "./system_tone_player",
-    "./../../../interfaces/inner_api/native/soundpool/include",
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
     "./../../../services/utils/include",
   ]
 
-  deps = [
-    "./../../../interfaces/inner_api/native:media_client",
-    "./../soundpool:soundpool_client",
-  ]
+  deps = [ "./../../../interfaces/inner_api/native:media_client" ]
 
   external_deps = [
     "ability_base:want",
@@ -71,8 +56,6 @@ ohos_shared_library("system_sound_client") {
     "-Wall",
     "-Werror",
   ]
-
-  public_configs = [ ":system_sound_client_public_config" ]
 
   defines = []
   defines += player_framework_defines
