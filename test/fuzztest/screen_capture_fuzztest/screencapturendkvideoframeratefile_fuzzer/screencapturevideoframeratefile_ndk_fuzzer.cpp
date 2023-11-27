@@ -99,8 +99,8 @@ bool ScreenCaptureVideoFramerateFileNdkFuzzer::FuzzScreenCaptureVideoFramerateFi
     config.videoInfo.videoEncInfo.videoFrameRate = randomFramerate;
 
     OH_RecorderInfo recorderInfo;
-    const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
-    int32_t outputFd = open((SCREEN_CAPTURE_ROOT + "screen_capture_fuzz_ndk_videoframerate_file_01.mp4").c_str(),
+    const std::string screenCaptureRoot = "/data/test/media/";
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_ndk_videoframerate_file_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     std::string fileUrl = "fd://" + to_string(outputFd);
     recorderInfo.url = const_cast<char *>(fileUrl.c_str());

@@ -23,13 +23,7 @@ using namespace std;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
-    const float HIGH_VOL = 1.0f;
-    const float LOW_VOL = 0.0f;
-    const std::string DEFAULT_RINGTONE_URI_1 =
-        "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
-    const std::string DEFAULT_RINGTONE_URI_2 =
-        "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayer"};
 }
 
 namespace OHOS {
@@ -85,13 +79,12 @@ int32_t RingtonePlayerImpl::PrepareRingtonePlayer(bool isReInitNeeded)
     if (kvstoreUri != configuredUri_ || isReInitNeeded) {
         (void)player_->Reset();
 
-        int32_t ret = MSERR_OK;
-        if (kvstoreUri.empty()) {
+        int32_t ret = player_->SetSource(kvstoreUri);
+        if (ret != MSERR_OK) {
+            // failed to set source, try to use default path.
             ret = ApplyDefaultRingtoneUri(kvstoreUri);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source to default uri failed %{public}d", ret);
             systemSoundMgr_.SetRingtoneUri(context_, kvstoreUri, type_);
-        } else {
-            ret = player_->SetSource(kvstoreUri);
         }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source failed %{public}d", ret);
 

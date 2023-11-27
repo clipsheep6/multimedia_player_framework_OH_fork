@@ -288,7 +288,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
 
     if (GetCurrState() == preparingState_ && needWait) {
         MEDIA_LOGI("begin wait stop for current status is preparing");
-        static constexpr int32_t timeout = 2;
+        static constexpr int32_t timeout = 0;  // 0s wait
         preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
         MEDIA_LOGD("end wait stop for current status is preparing");
     }
@@ -305,10 +305,10 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     if (seekFuture_.valid()) {
         (void)seekFuture_.get();
     }
-    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    (void)currState->Stop();
 
-    {
+    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    int stopRes = currState->Stop();
+    if (stopRes == MSERR_OK) {
         MEDIA_LOGD("Stop Start");
         if (GetCurrState() != stoppedState_) {
             LISTENER(stoppingCond_.wait(lock), "stoppingCond_.wait", PlayerXCollie::timerTimeout)
