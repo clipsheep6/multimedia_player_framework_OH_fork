@@ -91,16 +91,16 @@ napi_value RingtonePlayerNapi::RingtonePlayerNapiConstructor(napi_env env, napi_
         if (obj != nullptr) {
             obj->env_ = env;
             if (obj->sRingtonePlayer_ != nullptr) {
-                obj->ringtonePlayer_ = move(obj->sRingtonePlayer_);
+                obj->iRingtonePlayer_ = move(obj->sRingtonePlayer_);
             } else {
                 MEDIA_LOGE("Failed to create sRingtonePlayer_ instance.");
                 return result;
             }
 
-            if (obj->ringtonePlayer_ != nullptr && obj->callbackNapi_ == nullptr) {
+            if (obj->iRingtonePlayer_ != nullptr && obj->callbackNapi_ == nullptr) {
                 obj->callbackNapi_ = std::make_shared<RingtonePlayerCallbackNapi>(env);
                 CHECK_AND_RETURN_RET_LOG(obj->callbackNapi_ != nullptr, result, "No memory");
-                int32_t ret = obj->ringtonePlayer_->SetRingtonePlayerInterruptCallback(obj->callbackNapi_);
+                int32_t ret = obj->iRingtonePlayer_->SetRingtonePlayerInterruptCallback(obj->callbackNapi_);
                 MEDIA_LOGI("AudioRendererNapi::Construct SetRendererCallback %{public}s",
                     ret == 0 ? "succeess" : "failed");
             }
@@ -127,7 +127,7 @@ void RingtonePlayerNapi::RingtonePlayerNapiDestructor(napi_env env, void* native
     }
 }
 
-napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env, shared_ptr<RingtonePlayer> &ringtonePlayer)
+napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env, shared_ptr<RingtonePlayer> &iRingtonePlayer)
 {
     napi_status status;
     napi_value result = nullptr;
@@ -135,7 +135,7 @@ napi_value RingtonePlayerNapi::GetRingtonePlayerInstance(napi_env env, shared_pt
 
     status = napi_get_reference_value(env, sConstructor_, &ctor);
     if (status == napi_ok) {
-        sRingtonePlayer_ = ringtonePlayer;
+        sRingtonePlayer_ = iRingtonePlayer;
         status = napi_new_instance(env, ctor, 0, nullptr, &result);
         if (status == napi_ok) {
             return result;
@@ -251,7 +251,7 @@ napi_value RingtonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void *data) {
                 RingtonePlayerAsyncContext *context = static_cast<RingtonePlayerAsyncContext *>(data);
-                context->title = context->objectInfo->ringtonePlayer_->GetTitle();
+                context->title = context->objectInfo->iRingtonePlayer_->GetTitle();
                 context->status = SUCCESS;
             },
             GetTitleAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
@@ -358,7 +358,7 @@ void RingtonePlayerNapi::AsyncGetAudioRendererInfo(napi_env env, void *data)
 {
     RingtonePlayerAsyncContext *context = static_cast<RingtonePlayerAsyncContext *>(data);
     AudioStandard::AudioRendererInfo rendererInfo;
-    context->status = context->objectInfo->ringtonePlayer_->GetAudioRendererInfo(rendererInfo);
+    context->status = context->objectInfo->iRingtonePlayer_->GetAudioRendererInfo(rendererInfo);
     if (context->status == SUCCESS) {
         context->contentType = rendererInfo.contentType;
         context->streamUsage = rendererInfo.streamUsage;
@@ -427,7 +427,7 @@ napi_value RingtonePlayerNapi::Configure(napi_env env, napi_callback_info info)
 void RingtonePlayerNapi::AsyncConfigure(napi_env env, void *data)
 {
     RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
-    context->status = context->objectInfo->ringtonePlayer_->Configure(context->volume, context->loop);
+    context->status = context->objectInfo->iRingtonePlayer_->Configure(context->volume, context->loop);
 }
 
 napi_value RingtonePlayerNapi::Start(napi_env env, napi_callback_info info)
@@ -465,7 +465,7 @@ napi_value RingtonePlayerNapi::Start(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->ringtonePlayer_->Start();
+                context->status = context->objectInfo->iRingtonePlayer_->Start();
             },
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -515,7 +515,7 @@ napi_value RingtonePlayerNapi::Stop(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->ringtonePlayer_->Stop();
+                context->status = context->objectInfo->iRingtonePlayer_->Stop();
             },
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -565,7 +565,7 @@ napi_value RingtonePlayerNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
                 RingtonePlayerAsyncContext* context = static_cast<RingtonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->ringtonePlayer_->Release();
+                context->status = context->objectInfo->iRingtonePlayer_->Release();
             },
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -598,7 +598,7 @@ napi_value RingtonePlayerNapi::GetAudioState(napi_env env, napi_callback_info in
         = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok) {
-        int32_t state = asyncContext->objectInfo->ringtonePlayer_->GetRingtoneState();
+        int32_t state = asyncContext->objectInfo->iRingtonePlayer_->GetRingtoneState();
         napi_create_int32(env, state, &result);
         if (status == napi_ok) {
             return result;
@@ -652,7 +652,7 @@ napi_value RingtonePlayerNapi::RegisterCallback(napi_env env, napi_value jsThis,
     THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
     THROW_ERROR_ASSERT(env, ringtonePlayerNapi != nullptr, NAPI_ERR_NO_MEMORY);
 
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->ringtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
+    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->iRingtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -708,7 +708,7 @@ napi_value RingtonePlayerNapi::UnregisterCallback(napi_env env, napi_value jsThi
     napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&ringtonePlayerNapi));
     THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
     THROW_ERROR_ASSERT(env, ringtonePlayerNapi != nullptr, NAPI_ERR_NO_MEMORY);
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->ringtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
+    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->iRingtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
 
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         UnregisterRingtonePlayerCallback(ringtonePlayerNapi, cbName);

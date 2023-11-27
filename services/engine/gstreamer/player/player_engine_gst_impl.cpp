@@ -152,6 +152,21 @@ int32_t PlayerEngineGstImpl::SetVideoSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    bool svp)
+{
+    MEDIA_LOGD("SetDecryptConfig ok in");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_VAL, "playBinCtrler_ is nullptr");
+
+    int32_t ret = playBinCtrler_->SetDecryptConfig(keySessionProxy, svp);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "SetDecryptConfig failed");
+
+    MEDIA_LOGD("SetDecryptConfig ok out");
+    return MSERR_OK;
+}
+
 int32_t PlayerEngineGstImpl::PrepareAsync()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -340,6 +355,26 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
     Format format;
     if (notifyObs != nullptr) {
         notifyObs->OnInfo(INFO_TYPE_IS_LIVE_STREAM, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleDrmInfoUpdated(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("HandleDrmInfoUpdated");
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_DRM_INFO_UPDATED, 0, std::any_cast<Format>(msg.extra));
+    }
+}
+
+void PlayerEngineGstImpl::HandleSetDecryptConfigDone(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("HandleSetDecryptConfigDone");
+    (void)msg;
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    Format format;
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_SET_DECRYPT_CONFIG_DONE, 0, format);
     }
 }
 
@@ -543,6 +578,8 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE] = &PlayerEngineGstImpl::HandleTrackNumUpdate;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE] = &PlayerEngineGstImpl::HandleTrackInfoUpdate;
     subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
+    subMsgHandler_[PLAYBIN_SUB_MSG_DRM_INFO_UPDATED] = &PlayerEngineGstImpl::HandleDrmInfoUpdated;
+    subMsgHandler_[PLAYBIN_SUB_MSG_SET_DRM_CONFIG_DONE] = &PlayerEngineGstImpl::HandleSetDecryptConfigDone;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;
