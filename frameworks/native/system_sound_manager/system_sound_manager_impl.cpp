@@ -25,13 +25,13 @@ using namespace OHOS::AbilityRuntime;
 using namespace OHOS::NativeRdb;
 
 namespace {
-    const std::string RINGTONE_URI = "ringtone_uri";
-    const std::string SYSTEM_TONE_URI = "system_tone_uri";
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerImpl"};
 }
 
 namespace OHOS {
 namespace Media {
+const std::string RING_TONE = "ring_tone";
+const std::string SYSTEM_TONE = "system_tone";
 unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
 {
     unique_ptr<SystemSoundManagerImpl> systemSoundMgr = make_unique<SystemSoundManagerImpl>();
@@ -55,22 +55,25 @@ SystemSoundManagerImpl::~SystemSoundManagerImpl()
 
 void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
 {
-    if (!LoadUriFromKvStore(RINGTONE_TYPE_SIM_CARD_0, RINGTONE_URI)) {
-        MEDIA_LOGE("SystemSoundManagerImpl::LoadSystemSoundUriMap: cann't load uri for default ringtone");
-    }
-    if (!LoadUriFromKvStore(RINGTONE_TYPE_SIM_CARD_1, RINGTONE_URI)) {
-        MEDIA_LOGE("SystemSoundManagerImpl::LoadSystemSoundUriMap: cann't load uri for multisim ringtone");
-    }
+    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
+        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
+    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
+        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_1));
+
+    systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
+        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
+    systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] =
+        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
+    systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICAION] =
+        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICAION));
 }
 
 void SystemSoundManagerImpl::WriteUriToKvStore(RingtoneType ringtoneType, const std::string &systemSoundType,
     const std::string &uri)
 {
-    std::string key = GetKeyForRingtoneKvStore(ringtoneType, systemSoundType);
-    MEDIA_LOGI("SystemSoundManagerImpl::WriteUriToKvStore ringtoneType %{public}d, %{public}s: %{public}s",
-        ringtoneType, systemSoundType.c_str(), uri.c_str());
     int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
-    MEDIA_LOGI("SystemSoundManagerImpl::WriteUriToKvStore result: %{public}d", result);
+    MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
+        key.c_str(), uri.c_str(), result);
 }
 
 bool SystemSoundManagerImpl::LoadUriFromKvStore(RingtoneType ringtoneType, const std::string &systemSoundType)
@@ -84,25 +87,41 @@ bool SystemSoundManagerImpl::LoadUriFromKvStore(RingtoneType ringtoneType, const
 std::string SystemSoundManagerImpl::GetKeyForRingtoneKvStore(RingtoneType ringtoneType,
     const std::string &systemSoundType)
 {
-    switch (ringtoneType) {
-        case RINGTONE_TYPE_SIM_CARD_0:
-            return systemSoundType + "_for_sim_card_0";
-        case RINGTONE_TYPE_SIM_CARD_1:
-            return systemSoundType + "_for_sim_card_1";
-        default:
-            MEDIA_LOGE("[GetStreamNameByStreamType] ringtoneType: %{public}d is unavailable", ringtoneType);
-            return "";
+    if (systemSoundType == RING_TONE) {
+        switch (static_cast<RingtoneType>(type)) {
+            case RINGTONE_TYPE_SIM_CARD_0:
+                return "ringtone_for_sim_card_0";
+            case RINGTONE_TYPE_SIM_CARD_1:
+                return "ringtone_for_sim_card_1";
+            default:
+                MEDIA_LOGE("GetKeyForDatabase: ringtoneType %{public}d is unavailable", type);
+                return "";
+        }
+    } else if (systemSoundType == SYSTEM_TONE) {
+        switch (static_cast<SystemToneType>(type)) {
+            case SYSTEM_TONE_TYPE_SIM_CARD_0:
+                return "system_tone_for_sim_card_0";
+            case SYSTEM_TONE_TYPE_SIM_CARD_1:
+                return "system_tone_for_sim_card_1";
+            case SYSTEM_TONE_TYPE_NOTIFICAION:
+                return "system_tone_for_notification";
+            default:
+                MEDIA_LOGE("GetKeyForDatabase: systemToneType %{public}d is unavailable", type);
+                return "";
+        }
+    } else {
+        MEDIA_LOGE("GetKeyForDatabase: systemSoundType %{public}s is unavailable", systemSoundType.c_str());
+        return "";
     }
 }
 
 int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &context, const string &uri,
     RingtoneType type)
 {
-    MEDIA_LOGI("SystemSoundManagerImpl::%{public}s", __func__);
-    CHECK_AND_RETURN_RET_LOG(type >= RINGTONE_TYPE_SIM_CARD_0 && type <= RINGTONE_TYPE_SIM_CARD_1,
-        MSERR_INVALID_VAL, "invalid type");
-    ringtoneUriMap_[type][RINGTONE_URI] = uri;
-    WriteUriToKvStore(type, RINGTONE_URI, uri);
+    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "invalid ringtone type");
+    MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
+    ringtoneUriMap_[ringtoneType] = uri;
+    WriteUriToDatabase(GetKeyForDatabase(RING_TONE, ringtoneType), uri);
     return MSERR_OK;
 }
 
@@ -124,8 +143,19 @@ string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context
 
 string SystemSoundManagerImpl::GetSystemToneUri(const shared_ptr<Context> &context)
 {
-    MEDIA_LOGI("SystemSoundManagerImpl::%{public}s", __func__);
-    return ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0][SYSTEM_TONE_URI];
+    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
+    MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
+
+    if (systemTonePlayerMap_[systemToneType] != nullptr) {
+        systemTonePlayerMap_[systemToneType]->Release();
+        systemTonePlayerMap_[systemToneType] = nullptr;
+    }
+
+    systemTonePlayerMap_[systemToneType] = make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
+    CHECK_AND_RETURN_RET_LOG(systemTonePlayerMap_[systemToneType] != nullptr, nullptr,
+        "Failed to create system tone player object");
+
+    return systemTonePlayerMap_[systemToneType];
 }
 
 shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const shared_ptr<Context> &context,

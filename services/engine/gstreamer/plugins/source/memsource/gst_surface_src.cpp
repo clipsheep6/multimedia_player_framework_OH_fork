@@ -373,21 +373,24 @@ static void gst_surface_src_init_surface(GstSurfaceSrc *src)
         height = static_cast<guint>(info.height);
     }
     GST_OBJECT_UNLOCK(memsrc);
+    if (width <= 0 || height <= 0) {
+        GST_ERROR_OBJECT(src, "width or height is not greater than 0, height: %d, width: %d", height, width);
+    }
     SurfaceError ret = surface->SetUserData("video_width", std::to_string(width));
     if (ret != SURFACE_ERROR_OK) {
-        GST_WARNING_OBJECT(src, "Set video width fail");
+        GST_ERROR_OBJECT(src, "Set video width fail");
     }
     ret = surface->SetUserData("video_height", std::to_string(height));
     if (ret != SURFACE_ERROR_OK) {
-        GST_WARNING_OBJECT(src, "Set video height fail");
+        GST_ERROR_OBJECT(src, "Set video height fail");
     }
     ret = surface->SetUserData("surface_size", std::to_string(DEFAULT_SURFACE_SIZE));
     if (ret != SURFACE_ERROR_OK) {
-        GST_WARNING_OBJECT(src, "Set surface size fail");
+        GST_ERROR_OBJECT(src, "Set surface size fail");
     }
     ret = surface->SetDefaultWidthAndHeight(width, height);
     if (ret != SURFACE_ERROR_OK) {
-        GST_WARNING_OBJECT(src, "Set surface width and height fail");
+        GST_ERROR_OBJECT(src, "Set default width and height fail");
     }
 }
 

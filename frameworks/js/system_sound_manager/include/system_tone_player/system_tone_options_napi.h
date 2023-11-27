@@ -34,10 +34,10 @@ public:
 private:
     static void Destructor(napi_env env, void *nativeObject, void *finalize_hint);
     static napi_value Construct(napi_env env, napi_callback_info info);
-    static napi_value GetMuteAudio(napi_env env, napi_callback_info info);
-    static napi_value SetMuteAudio(napi_env env, napi_callback_info info);
-    static napi_value GetMuteHaptics(napi_env env, napi_callback_info info);
-    static napi_value SetMuteHaptics(napi_env env, napi_callback_info info);
+    static napi_value IsAudioMute(napi_env env, napi_callback_info info);
+    static napi_value SetAudioMute(napi_env env, napi_callback_info info);
+    static napi_value IsHapticsMute(napi_env env, napi_callback_info info);
+    static napi_value SetHapticsMute(napi_env env, napi_callback_info info);
 
     static napi_ref sConstructor_;
 

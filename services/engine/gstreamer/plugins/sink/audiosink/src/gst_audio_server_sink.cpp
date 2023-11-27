@@ -565,6 +565,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             }
             (void)sink->audio_sink->Pause();
             (void)sink->audio_sink->Flush();
+            sink->is_seeking = true;
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
         case GST_EVENT_FLUSH_STOP:
@@ -758,6 +759,12 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
         GstMapInfo map;
         if (gst_buffer_map(buffer, &map, GST_MAP_READ) != TRUE) {
             GST_ERROR_OBJECT(basesink, "unknown error happened during gst_buffer_map");
+            sink->is_need_write_empty_buffer = sink->is_seeking;
+        }
+
+        sink->is_seeking = false;
+        if (write_buffer(sink, basesink, buffer) != GST_FLOW_OK) {
+            GST_ERROR("unknown error happened during write.");
             return GST_FLOW_ERROR;
         }
         if (sink->audio_sink->Write(map.data, map.size) != MSERR_OK) {

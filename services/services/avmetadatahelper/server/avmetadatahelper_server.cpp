@@ -69,6 +69,9 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
 
     uriHelper_ = std::make_unique<UriHelper>(uri);
+    CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
     if (!uriHelper_->AccessCheck(UriHelper::URI_READ)) {
         MEDIA_LOGE("Failed to read the file");
         return MSERR_INVALID_VAL;
@@ -101,6 +104,9 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
                offset, size, usage);
 
     uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(!uriHelper_->FormattedUri().empty(),
+                             MSERR_INVALID_VAL,
+                             "Failed to construct formatted uri");
     CHECK_AND_RETURN_RET_LOG(uriHelper_->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
 
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
