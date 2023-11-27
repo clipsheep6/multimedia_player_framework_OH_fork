@@ -175,10 +175,11 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     if (type == AudioCaptureSourceType::ALL_PLAYBACK || type == AudioCaptureSourceType::APP_PLAYBACK) {
         retInner = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
     } else if (type == AudioCaptureSourceType::SOURCE_DEFAULT) {
+        retInner = MSERR_INVALID_VAL;
     } else {
         return MSERR_INVALID_VAL;
     }
-    CHECK_AND_RETURN_RET_LOG(retMic == MSERR_OK || retInner == MSERR_OK, ret, "InitAudioCap failed");
+    CHECK_AND_RETURN_RET_LOG(retMic == MSERR_OK || retInner == MSERR_OK, MSERR_INVALID_VAL, "InitAudioCap failed");
     ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
     ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
