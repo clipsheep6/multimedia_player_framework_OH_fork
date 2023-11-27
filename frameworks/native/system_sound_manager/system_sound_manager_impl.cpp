@@ -55,14 +55,6 @@ SystemSoundManagerImpl::~SystemSoundManagerImpl()
 
 void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
 {
-<<<<<<< HEAD
-    if (!LoadUriFromKvStore(RINGTONE_TYPE_SIM_CARD_0, RINGTONE_URI)) {
-        MEDIA_LOGE("SystemSoundManagerImpl::LoadSystemSoundUriMap: cann't load uri for default ringtone");
-    }
-    if (!LoadUriFromKvStore(RINGTONE_TYPE_SIM_CARD_1, RINGTONE_URI)) {
-        MEDIA_LOGE("SystemSoundManagerImpl::LoadSystemSoundUriMap: cann't load uri for multisim ringtone");
-    }
-=======
     ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
         GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
     ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
@@ -74,18 +66,23 @@ void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
     systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICAION] =
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICAION));
->>>>>>> 86edd62b3cd201c00746574c9de9a9eee15e08ec
 }
 
 void SystemSoundManagerImpl::WriteUriToKvStore(RingtoneType ringtoneType, const std::string &systemSoundType,
     const std::string &uri)
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
     std::string key = GetKeyForRingtoneKvStore(ringtoneType, systemSoundType);
     MEDIA_LOGI("SystemSoundManagerImpl::WriteUriToKvStore ringtoneType %{public}d, %{public}s: %{public}s",
         ringtoneType, systemSoundType.c_str(), uri.c_str());
     int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
     MEDIA_LOGI("SystemSoundManagerImpl::WriteUriToKvStore result: %{public}d", result);
+=======
+    int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
+    MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
+        key.c_str(), uri.c_str(), result);
+>>>>>>> 86edd62b3cd201c00746574c9de9a9eee15e08ec
 =======
     int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
     MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
@@ -105,6 +102,7 @@ std::string SystemSoundManagerImpl::GetKeyForRingtoneKvStore(RingtoneType ringto
     const std::string &systemSoundType)
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
     switch (ringtoneType) {
         case RINGTONE_TYPE_SIM_CARD_0:
             return systemSoundType + "_for_sim_card_0";
@@ -114,6 +112,8 @@ std::string SystemSoundManagerImpl::GetKeyForRingtoneKvStore(RingtoneType ringto
             MEDIA_LOGE("[GetStreamNameByStreamType] ringtoneType: %{public}d is unavailable", ringtoneType);
             return "";
 =======
+=======
+>>>>>>> 86edd62b3cd201c00746574c9de9a9eee15e08ec
     if (systemSoundType == RING_TONE) {
         switch (static_cast<RingtoneType>(type)) {
             case RINGTONE_TYPE_SIM_CARD_0:
@@ -157,6 +157,9 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
     ringtoneUriMap_[ringtoneType] = uri;
     WriteUriToDatabase(GetKeyForDatabase(RING_TONE, ringtoneType), uri);
+<<<<<<< HEAD
+>>>>>>> 86edd62b3cd201c00746574c9de9a9eee15e08ec
+=======
 >>>>>>> 86edd62b3cd201c00746574c9de9a9eee15e08ec
     return MSERR_OK;
 }
