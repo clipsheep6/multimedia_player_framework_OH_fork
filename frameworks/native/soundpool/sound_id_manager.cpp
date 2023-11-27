@@ -121,6 +121,7 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
 {
     int32_t soundID;
     {
+        MEDIA_INFO_LOG("SoundIDManager startLoad");
         std::lock_guard lock(soundManagerLock_);
         do {
             nextSoundID_ = nextSoundID_ == INT32_MAX ? 1 : nextSoundID_ + 1;

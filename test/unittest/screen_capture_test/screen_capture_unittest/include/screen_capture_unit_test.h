@@ -60,7 +60,7 @@ protected:
     std::shared_ptr<ScreenCaptureMock> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureUnitTestCallback> screenCaptureCb_ = nullptr;
     std::unique_ptr<std::thread> audioLoop_ = nullptr;
-    const std::string SCREEN_CAPTURE_ROOT = "/data/test/media/";
+    const std::string screenCaptureRoot = "/data/test/media/";
 };
 } // namespace Media
 } // namespace OHOS

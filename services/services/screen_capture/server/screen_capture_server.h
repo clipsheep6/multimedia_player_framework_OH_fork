@@ -146,7 +146,7 @@ private:
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StartHomeVideoCaptureFile();
-    int32_t CreateVirtualScreen(std::string name, sptr<OHOS::Surface> consumer);
+    int32_t CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
     int32_t StopScreenCaptureRecorder();

@@ -16,12 +16,17 @@
 #ifndef SYSTEM_TONE_PLAYER_IMPL_H
 #define SYSTEM_TONE_PLAYER_IMPL_H
 
+#include <condition_variable>
+#include <mutex>
+
 #include "isoundpool.h"
 #include "system_sound_manager.h"
 #include "system_sound_vibrator.h"
 
 namespace OHOS {
 namespace Media {
+class SystemTonePlayerCallback;
+
 class SystemTonePlayerImpl : public SystemTonePlayer {
 public:
     SystemTonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context, SystemSoundManager &systemSoundMgr,
@@ -32,20 +37,40 @@ public:
     std::string GetTitle() const override;
     int32_t Prepare() override;
     int32_t Start() override;
-    int32_t Start(SystemToneOptions systemToneOptions) override;
-    int32_t Stop(int32_t streamID) override;
+    int32_t Start(const SystemToneOptions &systemToneOptions) override;
+    int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
+
+    int32_t NotifyLoadCompleted();
 
 private:
     void InitPlayer();
     int32_t ApplyDefaultSystemToneUri(std::string &defaultUri);
 
     std::shared_ptr<Media::ISoundPool> player_ = nullptr;
+    std::shared_ptr<SystemTonePlayerCallback> callback_ = nullptr;
     std::shared_ptr<AbilityRuntime::Context> context_;
     SystemSoundManager &systemSoundMgr_;
     SystemToneType systemToneType_;
     std::string configuredUri_ = "";
     int32_t soundID_ = -1;
+    int32_t fileDes_ = -1;
+    bool loadCompleted_ = false;
+    std::mutex loadStatusMutex_;
+    std::mutex loadUriMutex_;
+    std::condition_variable condLoadUri_;
+};
+
+class SystemTonePlayerCallback : public ISoundPoolCallback {
+public:
+    explicit SystemTonePlayerCallback(SystemTonePlayerImpl &systemTonePlayerImpl);
+    virtual ~SystemTonePlayerCallback() = default;
+    void OnLoadCompleted(int32_t soundId) override;
+    void OnPlayFinished() override;
+    void OnError(int32_t errorCode) override;
+
+private:
+    SystemTonePlayerImpl &systemTonePlayerImpl_;
 };
 } // namespace Media
 } // namespace OHOS
