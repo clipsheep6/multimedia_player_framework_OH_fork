@@ -61,6 +61,7 @@ public:
         AudioStandard::AudioCapturerParams &params);
     bool CheckAndGetCaptureOptions(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerOptions &options);
+    void SetStop(int64_t stopTime);
 
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
@@ -88,6 +89,8 @@ private:
     std::atomic<int32_t> curState_ = RECORDER_INITIALIZED;
     std::atomic<bool> captureLoopErr_ { false };
     uint64_t lastInputTime_ = 0;
+    bool isStop_ = false;
+    int64_t stopTime_;
 };
 } // namespace Media
 } // namespace OHOS

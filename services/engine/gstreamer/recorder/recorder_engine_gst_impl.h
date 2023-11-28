@@ -28,6 +28,7 @@
 #include "recorder_pipeline_ctrler.h"
 #include "recorder_pipeline_builder.h"
 #include "recorder_inner_defines.h"
+#include <condition_variable>
 
 namespace OHOS {
 namespace Media {
@@ -50,10 +51,11 @@ public:
     int32_t Reset() override;
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) override;
     sptr<Surface> GetSurface(int32_t sourceId) override;
+    int32_t StopPipeline(bool isDrainAll);
+    void NotifyStopDone();
 
 private:
     int32_t BuildPipeline();
-    int32_t StopPipeline(bool isDrainAll);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
     int32_t SetSurface();
 
@@ -69,6 +71,7 @@ private:
     uint64_t appFullTokenId_;
     sptr<IConsumerSurface> consumerSurface_ = nullptr;
     int32_t videoSourceId_ = -1;
+    std::condition_variable stopDoneCond_;
 };
 } // namespace Media
 } // namespace OHOS
