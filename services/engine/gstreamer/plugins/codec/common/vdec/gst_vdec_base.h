@@ -137,6 +137,7 @@ struct _GstVdecBase {
     GstStructure *crypto_info;
     gint drm_ashmem_infd;
     gint drm_ashmem_outfd;
+    gint svp_mode;
 };
 
 struct _GstVdecBaseClass {

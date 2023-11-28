@@ -171,6 +171,11 @@ public:
     {
         return 0;
     }
+    int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) override
+    {
+        return 0;
+    }
 private:
     int32_t SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetSource(uint8_t *inputData, size_t size, bool isFuzz);

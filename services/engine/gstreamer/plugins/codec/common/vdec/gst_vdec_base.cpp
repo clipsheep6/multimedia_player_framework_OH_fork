@@ -130,12 +130,19 @@ enum {
     PROP_FREE_CODEC_BUFFERS,
     PROP_RECOVER_CODEC_BUFFERS,
     PROP_STOP_FORMAT_CHANGED,
+    PROP_SVP_MODE,
 };
 
 enum {
     SIGNAL_CAPS_FIX_ERROR,
     SIGNAL_ON_MEDIA_DECRYPT,
     SIGNAL_LAST
+};
+
+enum SvpMode : int32_t {
+    SVP_CLEAR = -1, /* it's not a protection video */
+    SVP_FALSE, /* it's a protection video but not need secure decoder */
+    SVP_TRUE, /* it's a protection video and need secure decoder */
 };
 
 static guint signals[SIGNAL_LAST] = { 0, };
@@ -372,6 +379,10 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
     g_object_class_install_property(gobject_class, PROP_STOP_FORMAT_CHANGED,
         g_param_spec_boolean("stop-format-change", "stop-format-change", "stop-format-change",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_SVP_MODE,
+        g_param_spec_int("svp-mode", "svp-mode", "Svp Mode decides whether need a secure decoder or not",
+        -1, G_MAXINT32, SVP_CLEAR, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
@@ -535,6 +546,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->unsupport_format_changed = g_value_get_boolean(value);
             g_mutex_unlock(&self->format_changed_lock);
             break;
+        case PROP_SVP_MODE:
+            self->svp_mode = g_value_get_int(value);
+            break;
         default:
             break;
     }
@@ -602,6 +616,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->is_support_swap_width_height = FALSE;
     g_mutex_init(&self->format_changed_lock);
     self->unsupport_format_changed = FALSE;
+    self->svp_mode = SVP_CLEAR;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -1668,8 +1683,9 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
         GST_DEBUG_OBJECT(self, "buffer is null");
         return GST_FLOW_OK;
     }
-
-    gst_vdec_base_drm_cenc_decrypt(decoder, buf);
+    if (self->svp_mode != SVP_CLEAR) {
+        gst_vdec_base_drm_cenc_decrypt(decoder, buf);
+    }
 
     GST_VIDEO_DECODER_STREAM_UNLOCK(self);
 
