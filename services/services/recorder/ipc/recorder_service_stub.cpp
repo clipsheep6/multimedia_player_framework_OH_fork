@@ -137,7 +137,6 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             }
             if (AUDIO_REQUEST.count(code) != 0 && reply.ReadInt32() != MSERR_OK) {
                 MEDIA_LOGE("audio memberFunc failed, reset permission check.");
-                needAudioPermissionCheck = false;
             }
             return MSERR_OK;
         }
