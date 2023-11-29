@@ -49,6 +49,7 @@ public:
     void AudioLoopWithoutRelease(void);
     int32_t SetConfig(AVScreenCaptureConfig &config);
     int32_t SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo);
+    int32_t SetRecorderInfo(std::string filename, RecorderInfo &recorderInfo);
     void OpenFile(std::string filename_);
     void CloseFile(void);
     char filename[100] = {0};
