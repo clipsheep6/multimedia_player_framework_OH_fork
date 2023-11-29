@@ -245,6 +245,7 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetSegmentData()
 
 int32_t AudioCaptureAsImpl::AudioCaptureLoop()
 {
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     while (true) {
         if ((curState_.load() != RECORDER_RUNNING) && (curState_ != RECORDER_RESUME)) {
             return MSERR_OK;
@@ -285,6 +286,7 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 {
     MEDIA_LOGD("GetAudioCaptureBuffer");
     pthread_setname_np(pthread_self(), "AudioCapture");
+    CHECK_AND_RETURN_LOG(audioCacheCtrl_ != nullptr, "audioCacheCtrl_ is nullptr!");
     while (true) {
         {
             std::unique_lock<std::mutex> lock(pauseMutex_);
@@ -311,6 +313,7 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 
 std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
 {
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, nullptr, "audioCacheCtrl_ is nullptr!");
     std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
 
     if (curState_.load() == RECORDER_RESUME && audioCacheCtrl_->pausedTime_ == 1) {
@@ -377,6 +380,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
 
     curState_.store(RECORDER_STOP);
 
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     if (captureLoop_ != nullptr && captureLoop_->joinable()) {
         audioCacheCtrl_->pauseCond_.notify_all();
         captureLoop_->join();
@@ -409,7 +413,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
 int32_t AudioCaptureAsImpl::PauseAudioCapture()
 {
     MEDIA_LOGD("PauseAudioCapture");
-
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     curState_.store(RECORDER_PAUSED);
     audioCacheCtrl_->pausedCount_++;
 
@@ -428,7 +432,7 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
-
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     curState_.store(RECORDER_RESUME);
     audioCacheCtrl_->pauseCond_.notify_all();
 
@@ -441,7 +445,7 @@ int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
     MEDIA_LOGD("wake up threads when paused state");
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
-
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     curState_.store(RECORDER_STOP);
     audioCacheCtrl_->pauseCond_.notify_all();
 
@@ -456,6 +460,7 @@ int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
 void AudioCaptureAsImpl::EmptyCaptureQueue()
 {
     MEDIA_LOGD("%{public}zu audio buffer has been dropped", audioCacheCtrl_->captureQueue_.size());
+    CHECK_AND_RETURN_LOG(audioCacheCtrl_ != nullptr, "audioCacheCtrl_ is nullptr!");
     while (!audioCacheCtrl_->captureQueue_.empty()) {
         auto iter = audioCacheCtrl_->captureQueue_.front();
         if (iter != nullptr) {
