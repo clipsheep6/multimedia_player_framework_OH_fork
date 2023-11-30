@@ -183,6 +183,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::FetchFrameAtTimeTask
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
             auto map = helper_->FetchFrameAtTime(napi->timeUs_, napi->option_, napi->param_);
+            if (map == nullptr) {
+                MEDIA_LOGE("FetchFrameAtTime Task pixelMap is nullptr");
+                return TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                    "failed to FetchFrameAtTime, pixelMap is nullptr!");
+            }
             MEDIA_LOGI("FetchFrameAtTime Task end size: %{public}d", map->GetByteCount());
             pixelMap = map;
 
@@ -324,12 +329,12 @@ void AVImageGeneratorNapi::CreatePixelMapComplete(napi_env env, napi_status stat
     MEDIA_LOGI("CreatePixelMapComplete In");
     auto context = static_cast<AVImageGeneratorAsyncContext*>(data);
 
-    if (status == napi_ok) {
+    if (status == napi_ok && context->errCode == napi_ok) {
         MEDIA_LOGI("set pixel map success");
         context->status = MSERR_OK;
         result = Media::PixelMapNapi::CreatePixelMap(env, context->pixel_);
     } else {
-        context->status = MSERR_INVALID_VAL;
+        context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
         MEDIA_LOGW("set pixel map failed");
         napi_get_undefined(env, &result);
     }

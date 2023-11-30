@@ -259,7 +259,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     napi_value result = nullptr;
     napi_create_object(env, &result);
 
-    if (status == napi_ok) {
+    if (status == napi_ok && promiseCtx->errCode == napi_ok) {
         for (auto iter = promiseCtx->metadata_->begin(); iter != promiseCtx->metadata_->end(); ++iter) {
             MEDIA_LOGI("Resolve metadata completed, key: %{public}d, val: %{public}s",
                 iter->first, iter->second.c_str());
@@ -285,7 +285,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             }
         }
     } else {
-        promiseCtx->status = promiseCtx->errCode;
+        promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
         napi_get_undefined(env, &result);
     }
@@ -398,10 +398,10 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
     MEDIA_LOGI("FetchArtPictureComplete In");
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
 
-    if (status == napi_ok) {
+    if (status == napi_ok && context->errCode == napi_ok) {
         result = Media::PixelMapNapi::CreatePixelMap(env, context->artPicture_);
     } else {
-        context->status = context->errCode;
+        context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
         napi_get_undefined(env, &result);
     }
 
