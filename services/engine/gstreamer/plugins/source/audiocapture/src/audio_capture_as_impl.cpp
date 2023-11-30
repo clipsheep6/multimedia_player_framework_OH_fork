@@ -285,8 +285,8 @@ int32_t AudioCaptureAsImpl::AudioCaptureLoop()
 void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 {
     MEDIA_LOGD("GetAudioCaptureBuffer");
-    pthread_setname_np(pthread_self(), "AudioCapture");
     CHECK_AND_RETURN_LOG(audioCacheCtrl_ != nullptr, "audioCacheCtrl_ is nullptr!");
+    pthread_setname_np(pthread_self(), "AudioCapture");
     while (true) {
         {
             std::unique_lock<std::mutex> lock(pauseMutex_);
@@ -377,10 +377,9 @@ int32_t AudioCaptureAsImpl::StartAudioCapture()
 int32_t AudioCaptureAsImpl::StopAudioCapture()
 {
     MEDIA_LOGD("StopAudioCapture");
-
+    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     curState_.store(RECORDER_STOP);
 
-    CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_UNKNOWN, "audioCacheCtrl_ is nullptr!");
     if (captureLoop_ != nullptr && captureLoop_->joinable()) {
         audioCacheCtrl_->pauseCond_.notify_all();
         captureLoop_->join();

@@ -89,7 +89,7 @@ using GstAudioCaptureSrcClass = struct _GstAudioCaptureSrcClass;
         if (!(cond)) {                                 \
             GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE,         \
                 (fmt, ##__VA_ARGS__), (fmt, ##__VA_ARGS__));    \
-            return GST_STATE_CHANGE_FAILURE;                    \
+            break;                                              \
         }                                              \
     } while (0)
 
