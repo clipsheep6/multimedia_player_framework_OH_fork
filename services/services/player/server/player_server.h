@@ -99,8 +99,6 @@ public:
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
-    int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) override;
     bool IsPlaying() override;
     bool IsLooping() override;
     int32_t SetLooping(bool loop) override;

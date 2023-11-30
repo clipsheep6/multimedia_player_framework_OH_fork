@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <sstream>
+#include "playbin_ctrler_base.h"
 #include <gst/playback/gstplay-enum.h>
 #include "nocopyable.h"
 #include "string_ex.h"
@@ -29,8 +28,6 @@
 #include "media_dfx.h"
 #include "player_xcollie.h"
 #include "param_wrapper.h"
-#include "playbin_ctrler_base.h"
-#include "key_session_service_proxy.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -46,18 +43,10 @@ namespace {
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
     constexpr uint64_t CONNECT_SPEED_DEFAULT = 4 * 8 * 1024 * 1024;  // 4Mbps
     constexpr uint32_t MAX_SUBTITLE_TRACK_NUN = 8;
-    constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
-    constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
 }
 
 namespace OHOS {
 namespace Media {
-struct DrmInfoItem {
-    uint8_t uuid[DRM_MAX_M3U8_DRM_UUID_LEN];
-    uint8_t pssh[DRM_MAX_M3U8_DRM_PSSH_LEN];
-    uint32_t psshLen;
-};
-
 static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS = {
     {
         IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC,
@@ -178,7 +167,6 @@ int32_t PlayBinCtrlerBase::SetSource(const std::string &url)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     uri_ = url;
-    drmInfo_.clear();
     if (url.find("http") == 0 || url.find("https") == 0 || EnableBufferingBySysParam()) {
         isNetWorkPlay_ = true;
     }
@@ -444,32 +432,6 @@ int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-    bool svp)
-{
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " is now the playerCtrlerBase for SetDecryptConfig", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_OPERATION, "keySessionProxy is nullptr");
-
-    keySessionServiceProxy_ = keySessionProxy;
-    if (svp) {
-        svpMode_ = SVP_TRUE;
-    } else {
-        svpMode_ = SVP_FALSE;
-    }
-    keySessionServiceProxy_->CreateMediaDecryptModule(decryptModuleProxy_);
-    CHECK_AND_RETURN_RET_LOG(decryptModuleProxy_ != nullptr, MSERR_INVALID_OPERATION, "can not get DRM decryptModule");
-    PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SET_DRM_CONFIG_DONE, 0, {} };
-    ReportMessage(msg);
-
-    std::unique_lock<std::mutex> drmLock(drmMutex_);
-    MEDIA_LOGI("For Drmcond SetDecryptConfig will trig drmPreparedCond");
-    isDrmPrepared_ = true;
-    drmPreparedCond_.notify_all();
-
-    return MSERR_OK;
-}
-
 int32_t PlayBinCtrlerBase::Reset() noexcept
 {
     MEDIA_LOGD("enter");
@@ -491,7 +453,6 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     }
 
     uri_.clear();
-    drmInfo_.clear();
     isErrorHappened_ = false;
     enableLooping_ = false;
     {
@@ -511,7 +472,7 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     isDuration_ = false;
     isUserSetPause_ = false;
     subtitleTrackNum_ = 0;
-    isDrmPrepared_ = false;
+
     MEDIA_LOGD("exit");
     return MSERR_OK;
 }
@@ -1258,96 +1219,6 @@ void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveS
     }
 }
 
-int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demux, gpointer drmInfoArray,
-    uint32_t infoCount, gpointer userData)
-{
-    MEDIA_LOGI("OnDrmInfoUpdatedSignalReceived is called");
-    (void)demux;
-    int32_t retCode = DRM_SIGNAL_UNKNOWN;
-    CHECK_AND_RETURN_RET_LOG(userData != nullptr, DRM_SIGNAL_INVALID_PARAM, "userData is nullptr");
-    auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, DRM_SIGNAL_INVALID_PARAM, "thizStrong is nullptr");
-    CHECK_AND_RETURN_RET_LOG(drmInfoArray != nullptr, DRM_SIGNAL_INVALID_PARAM, "drminfoArray nullptr");
-
-    DrmInfoItem *drmInfos = static_cast<DrmInfoItem*>(drmInfoArray);
-    CHECK_AND_RETURN_RET_LOG(drmInfos != nullptr, DRM_SIGNAL_INVALID_PARAM, "drmInfos nullptr");
-    std::map<std::string, std::vector<uint8_t>> drmInfoMap;
-    for (uint32_t i = 0; i < infoCount; i++) {
-        DrmInfoItem temp = drmInfos[i];
-        std::stringstream ssConverter;
-        std::string uuid;
-        for (uint32_t index = 0; index < DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
-            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
-            uuid = ssConverter.str();
-        }
-        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
-        drmInfoMap.insert({ uuid, pssh });
-    }
-
-    std::unique_lock<std::mutex> drmInfoLock(thizStrong->drmInfoMutex_);
-    thizStrong->drmInfo_ = drmInfoMap;
-    drmInfoLock.unlock();
-
-    Format format;
-    (void) format.PutInfoMap(std::string(PlayerKeys::PLAYER_DRM_INFO), drmInfoMap);
-    PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_DRM_INFO_UPDATED, 0, format };
-    thizStrong->ReportMessage(msg);
-
-    std::unique_lock<std::mutex> lock(thizStrong->drmMutex_);
-    while (!thizStrong->isDrmPrepared_) {
-        MEDIA_LOGI("For Drmcond begin wait for drm prepared");
-        thizStrong->drmPreparedCond_.wait(lock);
-        MEDIA_LOGI("For Drmcond end wait for drm prepared success");
-    }
-    retCode = DRM_SIGNAL_OK;
-    return retCode;
-}
-int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, int64_t inputBuffer,
-    int64_t outputBuffer, uint32_t length, gpointer keyId, uint32_t keyIdLength, gpointer iv, uint32_t ivLength,
-    uint32_t subsampleCount, gpointer subsamples, uint32_t mode, uint32_t svp, uint32_t cryptByteBlock,
-    uint32_t skipByteBlock, gpointer userData)
-{
-    MEDIA_LOGI("OnMediaDecryptSignalReceived is called");
-    (void)elem;
-    (void)length;
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    int32_t retCode = DRM_SIGNAL_INVALID_PARAM;
-
-    DrmStandard::IMediaDecryptModuleService::CryptInfo cryptInfo;
-    cryptInfo.type = static_cast<DrmStandard::IMediaDecryptModuleService::CryptAlgorithmType>(mode);
-    CHECK_AND_RETURN_RET_LOG(keyId != nullptr, retCode, "keyId is nullptr");
-    unsigned char* keyIdAddress = static_cast<unsigned char*>(keyId);
-    std::vector<uint8_t> keyIdVector(keyIdAddress, keyIdAddress + keyIdLength);
-    cryptInfo.keyId = keyIdVector;
-    CHECK_AND_RETURN_RET_LOG(iv != nullptr, retCode, "iv is nullptr");
-    unsigned char* ivAddress = static_cast<uint8_t*>(iv);
-    std::vector<uint8_t> ivVector(ivAddress, ivAddress + ivLength);
-    cryptInfo.iv = ivVector;
-    cryptInfo.pattern.encryptBlocks = cryptByteBlock;
-    cryptInfo.pattern.skipBlocks = skipByteBlock;
-    DrmStandard::IMediaDecryptModuleService::SubSample *subSamples =
-        static_cast<DrmStandard::IMediaDecryptModuleService::SubSample*>(subsamples);
-    for (uint32_t i = 0; i < subsampleCount; i++) {
-        DrmStandard::IMediaDecryptModuleService::SubSample temp({ subSamples[i].clearHeaderLen,
-            subSamples[i].payLoadLen });
-        cryptInfo.subSample.emplace_back(temp);
-    }
-    uint64_t srcBuffer = static_cast<uint64_t>(inputBuffer);
-    uint64_t dstBuffer = static_cast<uint64_t>(outputBuffer);
-
-    if (thizStrong != nullptr && thizStrong->decryptModuleProxy_ != nullptr) {
-        retCode = thizStrong->decryptModuleProxy_->DecryptMediaData(svp, cryptInfo, srcBuffer, dstBuffer);
-        if (retCode != 0) {
-            retCode = DRM_SIGNAL_SERVICE_WRONG;
-            MEDIA_LOGE("decryptModuleProxy_ decrypt failed");
-        }
-    } else {
-        retCode = DRM_SIGNAL_INVALID_OPERATOR;
-        MEDIA_LOGE("thizStrong or decryptModuleProxy_ is nullptr, media-decrypt signal handle Failed");
-    }
-    return retCode;
-}
-
 void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
 {
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
@@ -1367,42 +1238,6 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CheckAndAddSignalIds(id, wrapper, &elem);
 }
 
-void PlayBinCtrlerBase::OnDemuxElementSetup(GstElement &elem)
-{
-    MEDIA_LOGI("connect signal from %{public}s", GST_ELEMENT_NAME(&elem));
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-    gulong id = g_signal_connect_data(&elem, "drm-info-updated",
-        G_CALLBACK(&PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    CheckAndAddSignalIds(id, wrapper, &elem);
-}
-
-void PlayBinCtrlerBase::OnCodecElementSetup(GstElement &elem)
-{
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " is now the playerCtrlerBase for svp", FAKE_POINTER(this));
-    if (svpMode_ == SVP_CLEAR) {
-        MEDIA_LOGD("svp is unknown, set codec svp CLEAR!");
-    } else if (svpMode_ == SVP_TRUE) {
-        MEDIA_LOGD("set the drm svp mode TRUE");
-        g_object_set(const_cast<GstElement *>(&elem), "svp-mode", SVP_TRUE, nullptr);
-    } else {
-        MEDIA_LOGD("set the drm svp mode FALSE");
-        g_object_set(const_cast<GstElement *>(&elem), "svp-mode", SVP_FALSE, nullptr);
-    }
-}
-
-void PlayBinCtrlerBase::OnDecryptElementSetup(GstElement &elem)
-{
-    MEDIA_LOGI("OnDecryptElementSetup element is : %{public}s", ELEM_NAME(&elem));
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-    gulong id = g_signal_connect_data(&elem, "media-decrypt",
-        G_CALLBACK(&PlayBinCtrlerBase::OnMediaDecryptSignalReceived), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    CheckAndAddSignalIds(id, wrapper, &elem);
-}
-
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
     MEDIA_LOGI("element setup: %{public}s", ELEM_NAME(&elem));
@@ -1413,22 +1248,6 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0) {
         MEDIA_LOGI("add msgfilter element: %{public}s", ELEM_NAME(&elem));
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
-    }
-
-    if (strncmp(ELEM_NAME(&elem), "hlsdemux", strlen("hlsdemux")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "tsdemux", strlen("tsdemux")) == 0) {
-        OnDemuxElementSetup(elem);
-    }
-
-    if (strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_hevc", strlen("omx_rk_video_decoder_hevc")) == 0) {
-        OnCodecElementSetup(elem);
-    }
-
-    if (strncmp(ELEM_NAME(&elem), "drmdec", strlen("drmdec")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_hevc", strlen("omx_rk_video_decoder_hevc")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0) {
-        OnDecryptElementSetup(elem);
     }
 
     OnAdaptiveElementSetup(elem);

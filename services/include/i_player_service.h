@@ -299,19 +299,6 @@ public:
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
 
-    /**
-     * @brief add for drm, set decrypt module
-     *
-     * @param keySessionProxy is the sptr will be setted to playerserver.
-     * @param svp bool.
-     * @return Returns {@link MSERR_OK} if set successfully; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     * @since
-     * @version
-     */
-    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-
 #ifdef SUPPORT_VIDEO
     /**
      * @brief Method to set the surface.

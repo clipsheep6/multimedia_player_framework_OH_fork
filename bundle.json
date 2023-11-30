@@ -63,8 +63,7 @@
           "relational_store",
           "resource_management",
           "av_codec",
-          "miscdevice",
-          "drm_framework"
+          "miscdevice"
         ],
         "third_party": [
           "glib",

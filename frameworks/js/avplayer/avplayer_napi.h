@@ -58,8 +58,6 @@ const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_TRACKCHANGE = "trackChange";
 const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
-const std::string EVENT_DRM_INFO_UPDATE = "drmInfoUpdate";
-const std::string EVENT_SET_DECRYPT_CONFIG_DONE = "setDecryptConfigDone";
 const std::string EVENT_ERROR = "error";
 }
 
@@ -216,10 +214,6 @@ private:
      * GetCurrentTrack(trackType: MediaType): Promise<number>;
      */
     static napi_value JsGetCurrentTrack(napi_env env, napi_callback_info info);
-    /**
-     * setDecryptConfig(handle:drm.MediaKeySession, svp:boolean) :void;
-     */
-    static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;

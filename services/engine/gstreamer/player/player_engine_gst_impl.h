@@ -60,8 +60,6 @@ public:
     int32_t SetParameter(const Format &param) override;
     int32_t GetVideoHeight() override;
     int32_t SetLooping(bool loop) override;
-    int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) override;
     int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
         const int32_t rendererFlag) override;
@@ -103,8 +101,6 @@ private:
     void HandleTrackNumUpdate(const PlayBinMessage &msg);
     void HandleTrackInfoUpdate(const PlayBinMessage &msg);
     void HandleAudioMessage(const PlayBinMessage &msg);
-    void HandleDrmInfoUpdated(const PlayBinMessage &msg);
-    void HandleSetDecryptConfigDone(const PlayBinMessage &msg);
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleSubtitleUpdate(const PlayBinMessage &msg);

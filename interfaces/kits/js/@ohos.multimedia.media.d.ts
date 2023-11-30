@@ -16,7 +16,7 @@
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
 import type image from './@ohos.multimedia.image';
-import type drm from './@ohos.multimedia.drm';
+
 /**
  * @name media
  * @since 6
@@ -1004,25 +1004,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
-
-    /**
-     * Set MediaKeySession object and svp flag if the media content is encrypted for decryption.
-     * Note, Call this function when the app received a "drmInfoUpdate" event.
-     * @param handle A Media MediaKeySession instance.
-     * @param svp Secure Video Path.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    setDecryptConfig(handle:drm.MediaKeySession, svp:boolean): void;
-
-    /**
-     * Get the latest drmInfos.
-     * @returns A Promise instance used to return the drm info in DrmInfo Pair.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    getDrmInfo(): Array<Object>;
-
     url ?: string;
 
     /**
@@ -1277,16 +1258,6 @@ declare namespace media {
      */
     on(type: 'error', callback: ErrorCallback): void;
     off(type: 'error'): void;
-    /**
-     * Register or unregister listens for drm info.
-     * This event will be reported after the {@link #prepare} called.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return drminfos.
-     */
-    on(type: 'drmInfoUpdate', callback: (drmInfo: Array<Object>) => void): void;
-    off(type: 'drmInfoUpdate'): void;
   }
 
   /**

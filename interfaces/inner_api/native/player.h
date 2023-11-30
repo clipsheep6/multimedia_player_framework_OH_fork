@@ -23,9 +23,6 @@
 #include "format.h"
 #include "media_data_source.h"
 
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_mediadecryptmodule_service.h"
-
 namespace OHOS {
 namespace Media {
 class PlayerKeys {
@@ -60,7 +57,6 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
-    static constexpr std::string_view PLAYER_DRM_INFO = "drm_info";
 };
 
 enum BufferingInfoType : int32_t {
@@ -149,10 +145,6 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SUBTITLE_UPDATE,
     /* return to the end of adding subtitle processing. */
     INFO_TYPE_ADD_SUBTITLE_DONE,
-    /* return the message with drminfo. */
-    INFO_TYPE_DRM_INFO_UPDATED,
-	/* return set decrypt done message. */
-    INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
 };
 
 enum PlayerStates : int32_t {
@@ -517,9 +509,6 @@ public:
      * @version 1.0
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-
-    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else
