@@ -40,7 +40,7 @@ const std::string DEFAULT_SYSTEM_TONE_URI_2 =
     "sys_prod/variant/region_comm/china/resource/media/audio/notifications/Rise.ogg";
 
 SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
-    SystemSoundManager &systemSoundMgr, SystemToneType systemToneType)
+    SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType)
     : context_(context),
       systemSoundMgr_(systemSoundMgr),
       systemToneType_(systemToneType)
@@ -167,7 +167,9 @@ int32_t SystemTonePlayerImpl::Start()
     };
 
     int32_t streamID = player_->Play(soundID_, playParams);
-    (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_SYSTEM_TONE);
+    if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+        (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_SYSTEM_TONE);
+    }
 
     return streamID;
 }
@@ -191,7 +193,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 
         streamID = player_->Play(soundID_, playParams);
     }
-    if (!systemToneOptions.muteHaptics) {
+    if (!systemToneOptions.muteHaptics &&
+        systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
         (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_SYSTEM_TONE);
     }
     return streamID;

@@ -20,7 +20,7 @@
 #include <mutex>
 
 #include "isoundpool.h"
-#include "system_sound_manager.h"
+#include "system_sound_manager_impl.h"
 #include "system_sound_vibrator.h"
 
 namespace OHOS {
@@ -29,8 +29,8 @@ class SystemTonePlayerCallback;
 
 class SystemTonePlayerImpl : public SystemTonePlayer {
 public:
-    SystemTonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context, SystemSoundManager &systemSoundMgr,
-        SystemToneType systemToneType);
+    SystemTonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType);
     ~SystemTonePlayerImpl();
 
     // SystemTonePlayer override
@@ -50,7 +50,7 @@ private:
     std::shared_ptr<Media::ISoundPool> player_ = nullptr;
     std::shared_ptr<SystemTonePlayerCallback> callback_ = nullptr;
     std::shared_ptr<AbilityRuntime::Context> context_;
-    SystemSoundManager &systemSoundMgr_;
+    SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
     std::string configuredUri_ = "";
     int32_t soundID_ = -1;

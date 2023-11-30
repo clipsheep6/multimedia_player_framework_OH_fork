@@ -43,9 +43,24 @@ unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManag
 SystemSoundManagerImpl::SystemSoundManagerImpl()
 {
     LoadSystemSoundUriMap();
+    InitRingerMode();
 }
 
 SystemSoundManagerImpl::~SystemSoundManagerImpl() {}
+
+void SystemSoundManagerImpl::InitRingerMode(void)
+{
+    audioGroupManager_ = AudioStandard::AudioSystemManager::GetInstance()->
+        GetGroupManager(AudioStandard::DEFAULT_VOLUME_GROUP_ID);
+    if (audioGroupManager_ == nullptr) {
+        MEDIA_LOGE("InitRingerMode: audioGroupManager_ is nullptr");
+        return;
+    }
+    ringerMode_ = audioGroupManager_->GetRingerMode();
+
+    ringerModeCallback_ = std::make_shared<RingerModeCallbackImpl>(*this);
+    audioGroupManager_->SetRingerModeCallback(getpid(), ringerModeCallback_);
+}
 
 bool SystemSoundManagerImpl::isRingtoneTypeValid(RingtoneType ringtongType)
 {
@@ -206,6 +221,29 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     MEDIA_LOGI("GetSystemToneUri: for systemToneType %{public}d", systemToneType);
 
     return systemToneUriMap_[systemToneType];
+}
+
+int32_t SystemSoundManagerImpl::SetRingerMode(const AudioStandard::AudioRingerMode &ringerMode)
+{
+    ringerMode_.store(ringerMode);
+    return MSERR_OK;
+}
+
+AudioStandard::AudioRingerMode SystemSoundManagerImpl::GetRingerMode() const
+{
+    return ringerMode_.load();
+}
+
+// Ringer mode callback class symbols
+RingerModeCallbackImpl::RingerModeCallbackImpl(SystemSoundManagerImpl &systemSoundManagerImpl)
+    : sysSoundMgr_(systemSoundManagerImpl) {}
+
+void RingerModeCallbackImpl::OnRingerModeUpdated(const AudioStandard::AudioRingerMode &ringerMode)
+{
+    int32_t result = sysSoundMgr_.SetRingerMode(ringerMode);
+    if (result == MSERR_OK && ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+        SystemSoundVibrator::StopVibrator();
+    }
 }
 } // namesapce AudioStandard
 } // namespace OHOS

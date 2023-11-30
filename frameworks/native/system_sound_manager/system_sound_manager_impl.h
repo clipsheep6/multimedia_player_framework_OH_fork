@@ -29,10 +29,15 @@
 
 namespace OHOS {
 namespace Media {
+class RingerModeCallbackImpl;
+
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
     SystemSoundManagerImpl();
     ~SystemSoundManagerImpl();
+
+    int32_t SetRingerMode(const AudioStandard::AudioRingerMode &ringerMode);
+    AudioStandard::AudioRingerMode GetRingerMode() const;
 
     // SystemSoundManager override
     int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
@@ -54,6 +59,7 @@ private:
     void WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
+    void InitRingerMode(void);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
@@ -62,6 +68,19 @@ private:
     std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
     std::unordered_map<SystemToneType, std::string> systemToneUriMap_;
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
+    std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
+    std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
+    std::shared_ptr<RingerModeCallbackImpl> ringerModeCallback_ = nullptr;
+};
+
+class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {
+public:
+    explicit RingerModeCallbackImpl(SystemSoundManagerImpl &systemSoundManagerImpl);
+    virtual ~RingerModeCallbackImpl() = default;
+    void OnRingerModeUpdated(const AudioStandard::AudioRingerMode &ringerMode) override;
+
+private:
+    SystemSoundManagerImpl &sysSoundMgr_;
 };
 } // namespace Media
 } // namespace OHOS

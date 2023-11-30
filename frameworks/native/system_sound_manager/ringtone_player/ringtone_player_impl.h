@@ -17,7 +17,7 @@
 #define RINGTONE_PLAYER_IMPL_H
 
 #include "player.h"
-#include "system_sound_manager.h"
+#include "system_sound_manager_impl.h"
 #include "system_sound_vibrator.h"
 
 
@@ -29,8 +29,8 @@ class RingtonePlayerInterruptCallback;
 
 class RingtonePlayerImpl : public RingtonePlayer {
 public:
-    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context, SystemSoundManager &sysSoundMgr,
-        RingtoneType type);
+    RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
     ~RingtonePlayerImpl();
     void SetPlayerState(RingtoneState ringtoneState);
 
@@ -59,7 +59,7 @@ private:
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::shared_ptr<RingtonePlayerCallback> callback_ = nullptr;
     std::shared_ptr<RingtonePlayerInterruptCallback> interruptCallback_ = nullptr;
-    SystemSoundManager &systemSoundMgr_;
+    SystemSoundManagerImpl &systemSoundMgr_;
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
 };

@@ -35,7 +35,7 @@ const std::string DEFAULT_RINGTONE_URI_2 =
     "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
-    SystemSoundManager &sysSoundMgr, RingtoneType type)
+    SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
     : volume_(HIGH_VOL),
       loop_(false),
       context_(context),
@@ -177,8 +177,9 @@ int32_t RingtonePlayerImpl::Start()
 
     auto ret = player_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
-    (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
-
+    if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+        (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
+    }
     ringtoneState_ = STATE_RUNNING;
 
     return MSERR_OK;
@@ -240,7 +241,9 @@ void RingtonePlayerImpl::SetPlayerState(RingtoneState ringtoneState)
             isStartQueued_ = false;
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Play failed %{public}d", ret);
             ringtoneState_ = RingtoneState::STATE_RUNNING;
-            (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
+            if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+                (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
+            }
         }
     }
 }
