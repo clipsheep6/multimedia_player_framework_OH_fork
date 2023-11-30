@@ -299,6 +299,7 @@ public:
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
 
+#ifdef SUPPORT_DRM
     /**
      * @brief add for drm, set decrypt module
      *
@@ -311,6 +312,7 @@ public:
      */
     virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) = 0;
+#endif
 
 #ifdef SUPPORT_VIDEO
     /**

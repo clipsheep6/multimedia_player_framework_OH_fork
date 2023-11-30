@@ -961,6 +961,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
+#ifdef SUPPORT_DRM
 int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
@@ -975,6 +976,7 @@ int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     MEDIA_LOGI("PlayerServer SetDecryptConfig out");
     return MSERR_OK;
 }
+#endif
 
 bool PlayerServer::IsPlaying()
 {

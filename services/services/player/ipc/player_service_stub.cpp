@@ -18,7 +18,9 @@
 #include "player_listener_proxy.h"
 #include "media_data_source_proxy.h"
 #include "media_server_manager.h"
+#ifdef SUPPORT_DRM
 #include "key_session_service_proxy.h"
+#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -108,7 +110,9 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
     playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
     playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
+#ifdef SUPPORT_DRM
     playerFuncs_[SET_DECRYPT_CONFIG] = { &PlayerServiceStub::SetDecryptConfig, "Player::SetDecryptConfig" };
+#endif
 
     (void)RegisterMonitor(appPid_);
 }
@@ -374,6 +378,7 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
+#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
@@ -382,6 +387,7 @@ int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySes
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetDecryptConfig(keySessionProxy, svp);
 }
+#endif
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -726,6 +732,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
 }
 #endif
 
+#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &reply)
 {
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
@@ -743,6 +750,7 @@ int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &
     MEDIA_LOGE("PlayerServiceStub keySessionServiceProxy is nullptr!");
     return MSERR_INVALID_VAL;
 }
+#endif
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

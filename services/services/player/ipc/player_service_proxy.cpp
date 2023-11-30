@@ -15,7 +15,9 @@
 
 #include "player_service_proxy.h"
 #include "player_listener_stub.h"
+#ifdef SUPPORT_DRM
 #include "key_session_service_proxy.h"
+#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -67,7 +69,9 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
+#ifdef SUPPORT_DRM
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
+#endif
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -578,6 +582,7 @@ int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
+#ifdef SUPPORT_DRM
 int32_t PlayerServiceProxy::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
@@ -606,6 +611,7 @@ int32_t PlayerServiceProxy::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySe
         "SetDecryptConfig failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
+#endif
 
 bool PlayerServiceProxy::IsPlaying()
 {

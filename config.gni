@@ -48,6 +48,11 @@ declare_args() {
       defined(global_parts_info.multimedia_av_session)) {
     multimedia_player_framework_support_avsession_background = true
   }
+  multimedia_player_framework_support_drm = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.multimedia_drm_framework)) {
+    multimedia_player_framework_support_drm = true
+  }
 }
 
 player_framework_defines = []
@@ -124,6 +129,12 @@ if (multimedia_player_framework_support_jssoundpool) {
   player_framework_defines += [ "SUPPORT_SOUND_POOL" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_SOUND_POOL" ]
+}
+
+if (multimedia_player_framework_support_drm) {
+  player_framework_defines += [ "SUPPORT_DRM" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_DRM" ]
 }
 
 # Config path

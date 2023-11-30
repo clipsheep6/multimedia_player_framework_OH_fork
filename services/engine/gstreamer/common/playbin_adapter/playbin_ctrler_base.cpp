@@ -30,8 +30,9 @@
 #include "player_xcollie.h"
 #include "param_wrapper.h"
 #include "playbin_ctrler_base.h"
+#ifdef SUPPORT_DRM
 #include "key_session_service_proxy.h"
-
+#endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
     constexpr uint64_t RING_BUFFER_MAX_SIZE = 5242880; // 5 * 1024 * 1024
@@ -286,6 +287,16 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     }
     audioIndex_ = -1;
 
+#ifdef SUPPORT_DRM
+    // drm condition
+    if (GetCurrState() == preparingState_ && isDrmPrepared_ == false) {
+        MEDIA_LOGI("Stop and current state is preparing, will trig drmPreparedCond");
+        std::unique_lock<std::mutex> drmLock(drmMutex_);
+        stopWaitingDrmConfig_ = true;
+        drmConfigCond_.notify_all();
+    }
+#endif
+
     if (GetCurrState() == preparingState_ && needWait) {
         MEDIA_LOGI("begin wait stop for current status is preparing");
         static constexpr int32_t timeout = 0;  // 0s wait
@@ -444,6 +455,7 @@ int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_DRM
 int32_t PlayBinCtrlerBase::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
@@ -465,10 +477,11 @@ int32_t PlayBinCtrlerBase::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySes
     std::unique_lock<std::mutex> drmLock(drmMutex_);
     MEDIA_LOGI("For Drmcond SetDecryptConfig will trig drmPreparedCond");
     isDrmPrepared_ = true;
-    drmPreparedCond_.notify_all();
+    drmConfigCond_.notify_all();
 
     return MSERR_OK;
 }
+#endif
 
 int32_t PlayBinCtrlerBase::Reset() noexcept
 {
@@ -512,6 +525,7 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     isUserSetPause_ = false;
     subtitleTrackNum_ = 0;
     isDrmPrepared_ = false;
+    stopWaitingDrmConfig_ = false;
     MEDIA_LOGD("exit");
     return MSERR_OK;
 }
@@ -1258,6 +1272,7 @@ void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveS
     }
 }
 
+#ifdef SUPPORT_DRM
 int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demux, gpointer drmInfoArray,
     uint32_t infoCount, gpointer userData)
 {
@@ -1293,15 +1308,24 @@ int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demu
     PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_DRM_INFO_UPDATED, 0, format };
     thizStrong->ReportMessage(msg);
 
+    static constexpr int32_t timeout = 10;
+    MEDIA_LOGI("Drmcond begin wait for drm prepared");
     std::unique_lock<std::mutex> lock(thizStrong->drmMutex_);
-    while (!thizStrong->isDrmPrepared_) {
-        MEDIA_LOGI("For Drmcond begin wait for drm prepared");
-        thizStrong->drmPreparedCond_.wait(lock);
-        MEDIA_LOGI("For Drmcond end wait for drm prepared success");
+    bool notTimeout = thizStrong->drmConfigCond_.wait_for(lock, std::chrono::seconds(timeout), [thizStrong]() {
+        return thizStrong->isDrmPrepared_ || thizStrong->stopWaitingDrmConfig_;
+    });
+    if (notTimeout) {
+        MEDIA_LOGD("Drmcond finish waiting, isDrmPrepared: %{public}d, stopWait: %{public}d",
+            thizStrong->isDrmPrepared_, thizStrong->stopWaitingDrmConfig_);
+    } else {
+        MEDIA_LOGI("Drmcond wait time out!");
     }
     retCode = DRM_SIGNAL_OK;
     return retCode;
 }
+#endif
+
+#ifdef SUPPORT_DRM
 int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, int64_t inputBuffer,
     int64_t outputBuffer, uint32_t length, gpointer keyId, uint32_t keyIdLength, gpointer iv, uint32_t ivLength,
     uint32_t subsampleCount, gpointer subsamples, uint32_t mode, uint32_t svp, uint32_t cryptByteBlock,
@@ -1347,6 +1371,7 @@ int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, 
     }
     return retCode;
 }
+#endif
 
 void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
 {
@@ -1367,6 +1392,7 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CheckAndAddSignalIds(id, wrapper, &elem);
 }
 
+#ifdef SUPPORT_DRM
 void PlayBinCtrlerBase::OnDemuxElementSetup(GstElement &elem)
 {
     MEDIA_LOGI("connect signal from %{public}s", GST_ELEMENT_NAME(&elem));
@@ -1377,7 +1403,9 @@ void PlayBinCtrlerBase::OnDemuxElementSetup(GstElement &elem)
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
     CheckAndAddSignalIds(id, wrapper, &elem);
 }
+#endif
 
+#ifdef SUPPORT_DRM
 void PlayBinCtrlerBase::OnCodecElementSetup(GstElement &elem)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " is now the playerCtrlerBase for svp", FAKE_POINTER(this));
@@ -1391,7 +1419,9 @@ void PlayBinCtrlerBase::OnCodecElementSetup(GstElement &elem)
         g_object_set(const_cast<GstElement *>(&elem), "svp-mode", SVP_FALSE, nullptr);
     }
 }
+#endif
 
+#ifdef SUPPORT_DRM
 void PlayBinCtrlerBase::OnDecryptElementSetup(GstElement &elem)
 {
     MEDIA_LOGI("OnDecryptElementSetup element is : %{public}s", ELEM_NAME(&elem));
@@ -1402,6 +1432,7 @@ void PlayBinCtrlerBase::OnDecryptElementSetup(GstElement &elem)
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
     CheckAndAddSignalIds(id, wrapper, &elem);
 }
+#endif
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
@@ -1415,6 +1446,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
 
+#ifdef SUPPORT_DRM
     if (strncmp(ELEM_NAME(&elem), "hlsdemux", strlen("hlsdemux")) == 0 ||
         strncmp(ELEM_NAME(&elem), "tsdemux", strlen("tsdemux")) == 0) {
         OnDemuxElementSetup(elem);
@@ -1430,6 +1462,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0) {
         OnDecryptElementSetup(elem);
     }
+#endif
 
     OnAdaptiveElementSetup(elem);
     std::string elementName(GST_ELEMENT_NAME(&elem));

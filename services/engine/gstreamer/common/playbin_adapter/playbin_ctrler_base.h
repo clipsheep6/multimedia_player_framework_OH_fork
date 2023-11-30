@@ -71,8 +71,10 @@ public:
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
     int32_t SetAudioEffectMode(const int32_t effectMode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+#ifdef SUPPORT_DRM
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
+#endif
 
     void SetElemSetupListener(ElemSetupListener listener) final;
     void SetElemUnSetupListener(ElemSetupListener listener) final;
@@ -135,12 +137,14 @@ private:
     static void OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     static void AudioChanged(const GstElement *playbin, gpointer userData);
+#ifdef SUPPORT_DRM
     static int32_t OnDrmInfoUpdatedSignalReceived(const GstElement *demux, gpointer drmInfoArray, uint32_t infoCount,
         gpointer userData);
     static int32_t OnMediaDecryptSignalReceived(const GstElement *elem, int64_t inputBuffer,
         int64_t outputBuffer, uint32_t length, gpointer keyId, uint32_t keyIdLength, gpointer iv, uint32_t ivLength,
         uint32_t subsampleCount, gpointer subsamples, uint32_t mode, uint32_t svp, uint32_t cryptByteBlock,
         uint32_t skipByteBlock, gpointer userData);
+#endif
     void SetupInterruptEventCb();
     void SetupAudioSegmentEventCb();
     void SetupAudioDiedEventCb();
@@ -171,9 +175,11 @@ private:
     void OnError(int32_t errorCode, std::string message);
     void CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem);
     bool SetPlayerState(GstPlayerStatus status);
+#ifdef SUPPORT_DRM
     void OnDemuxElementSetup(GstElement &elem);
     void OnCodecElementSetup(GstElement &elem);
     void OnDecryptElementSetup(GstElement &elem);
+#endif
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {
@@ -213,8 +219,10 @@ private:
     /* drmInfo Will be Updated when received a drminfo-update signal,
        and cleared when the source uri is changed. */
     std::map<std::string, std::vector<uint8_t>> drmInfo_;
+#ifdef SUPPORT_DRM
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_;
     sptr<DrmStandard::IMediaDecryptModuleService> decryptModuleProxy_;
+#endif
     enum DrmSignalRetCode : int32_t {
         DRM_SIGNAL_OK = 0,
         DRM_SIGNAL_INVALID_PARAM,
@@ -231,8 +239,9 @@ private:
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
-    std::condition_variable drmPreparedCond_;
+    std::condition_variable drmConfigCond_;
     bool isDrmPrepared_ = false;
+    bool stopWaitingDrmConfig_ = false;
     std::mutex drmMutex_;
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;

@@ -152,6 +152,7 @@ int32_t PlayerEngineGstImpl::SetVideoSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_DRM
 int32_t PlayerEngineGstImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
@@ -166,6 +167,7 @@ int32_t PlayerEngineGstImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeyS
     MEDIA_LOGD("SetDecryptConfig ok out");
     return MSERR_OK;
 }
+#endif
 
 int32_t PlayerEngineGstImpl::PrepareAsync()
 {
