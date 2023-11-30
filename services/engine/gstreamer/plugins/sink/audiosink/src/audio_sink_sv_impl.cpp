@@ -234,7 +234,7 @@ bool AudioSinkSvImpl::DisableAudioEffectBySysParam() const
 int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
     MediaTrace trace("AudioSink::Prepare");
-    MEDIA_LOGD("audioRenderer Prepare In");
+    MEDIA_LOGI("audioRenderer Prepare In");
     AudioStandard::AppInfo appInfo = {};
     appInfo.appUid = appUid;
     appInfo.appPid = appPid;
@@ -251,38 +251,38 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
         OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE :
         OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     audioRenderer_->SetAudioEffectMode(effectMode);
-    MEDIA_LOGD("audioRenderer Prepare Out");
+    MEDIA_LOGI("audioRenderer Prepare Out");
     return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::Start()
 {
     MediaTrace trace("AudioSink::Start");
-    MEDIA_LOGD("audioRenderer Start In");
+    MEDIA_LOGI("audioRenderer Start In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     bool ret = false;
     LISTENER(
         ret = audioRenderer_->Start(),
         "AudioRenderer::Start",
         PlayerXCollie::timerTimeout)
-    MEDIA_LOGD("audioRenderer Start Out");
+    MEDIA_LOGI("audioRenderer Start Out");
     return ret ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
 
 int32_t AudioSinkSvImpl::Stop()
 {
     MediaTrace trace("AudioSink::Stop");
-    MEDIA_LOGD("audioRenderer Stop In");
+    MEDIA_LOGI("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     LISTENER((void)audioRenderer_->Stop(), "AudioRenderer::Stop", PlayerXCollie::timerTimeout)
-    MEDIA_LOGD("audioRenderer Stop Out");
+    MEDIA_LOGI("audioRenderer Stop Out");
     return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::Pause()
 {
     MediaTrace trace("AudioSink::Pause");
-    MEDIA_LOGD("audioRenderer Pause In");
+    MEDIA_LOGI("audioRenderer Pause In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         LISTENER(
@@ -294,7 +294,7 @@ int32_t AudioSinkSvImpl::Pause()
             "AudioRenderer::Pause",
             PlayerXCollie::timerTimeout)
     }
-    MEDIA_LOGD("audioRenderer Pause Out");
+    MEDIA_LOGI("audioRenderer Pause Out");
     return MSERR_OK;
 }
 
@@ -327,10 +327,10 @@ int32_t AudioSinkSvImpl::Flush()
 int32_t AudioSinkSvImpl::Release()
 {
     MediaTrace trace("AudioSink::Release");
-    MEDIA_LOGD("audioRenderer Release In");
+    MEDIA_LOGI("audioRenderer Release In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     LISTENER((void)audioRenderer_->Release(), "AudioRenderer::Release", PlayerXCollie::timerTimeout)
-    MEDIA_LOGD("audioRenderer Release Out");
+    MEDIA_LOGI("audioRenderer Release Out");
     return MSERR_OK;
 }
 
@@ -379,7 +379,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     int32_t ret = -1;
     LISTENER(ret = audioRenderer_->SetParams(params), "AudioRenderer::SetParams", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
-    MEDIA_LOGD("audioRenderer SetParams Out");
+    MEDIA_LOGI("audioRenderer SetParams Out");
     return MSERR_OK;
 }
 

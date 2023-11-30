@@ -246,9 +246,10 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_INITIALIZED &&
+    if (jsPlayer->isReleased_.load() ||
+        (state != AVPlayerState::STATE_INITIALIZED &&
         state != AVPlayerState::STATE_STOPPED &&
-        state != AVPlayerState::STATE_PREPARED) {
+        state != AVPlayerState::STATE_PREPARED)) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
     } else {
@@ -610,7 +611,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         });
 
         std::unique_lock<std::mutex> lock(taskMutex_);
-        isReleased_.store(true);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         stopWait_ = true;
         stateChangeCond_.notify_all();
@@ -630,6 +630,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    jsPlayer->isReleased_.store(true);
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     promiseCtx->asyncTask = jsPlayer->ReleaseTask();
