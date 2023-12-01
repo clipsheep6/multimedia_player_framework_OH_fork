@@ -70,6 +70,7 @@ private:
     void OnBitRateCollectedCb(const int32_t extra, const Format &infoBody);
     void OnDrmInfoUpdatedCb(const int32_t extra, const Format &infoBody);
     void OnSetDecryptConfigDoneCb(const int32_t extra, const Format &infoBody);
+
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);

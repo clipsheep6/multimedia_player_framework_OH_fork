@@ -18,7 +18,9 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#ifdef SUPPORT_DRM
 #include "key_session_impl.h"
+#endif
 #ifdef SUPPORT_VIDEO
 #include "surface_utils.h"
 #endif
@@ -1063,6 +1065,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     return result;
 }
 
+#ifdef SUPPORT_DRM
 napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::JsSetDecryptConfig");
@@ -1122,6 +1125,15 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     }
     return result;
 }
+#else
+napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsSetDecryptConfig is not surpport.");
+    (void)env;
+    (void)info;
+    return nullptr;
+}
+#endif
 
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {

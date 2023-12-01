@@ -97,11 +97,14 @@ ohos_static_library("media_engine_gst_player") {
   external_deps = [
     "audio_framework:audio_client",
     "drivers_peripheral_display:hdi_gralloc_client",
-    "drm_framework:drm_framework",
     "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
   ]
+
+  if (multimedia_player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
 
   subsystem_name = "multimedia"
   part_name = "player_framework"

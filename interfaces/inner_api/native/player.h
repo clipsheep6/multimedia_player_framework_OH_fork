@@ -22,9 +22,10 @@
 #endif
 #include "format.h"
 #include "media_data_source.h"
-
+#ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_mediadecryptmodule_service.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -518,8 +519,10 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
+#ifdef SUPPORT_DRM
     virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) = 0;
+#endif
 
 #ifdef SUPPORT_AUDIO_ONLY
 #else

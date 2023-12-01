@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_engine_gst_avmeta_config") {
   visibility = [ ":*" ]
@@ -90,10 +91,15 @@ ohos_static_library("media_engine_gst_avmeta") {
   ]
 
   external_deps = [
-    "drm_framework:drm_framework",
     "hilog:libhilog",
     "image_framework:image_native",
   ]
+
+  defines = []
+  if (multimedia_player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+    defines += [ "SUPPORT_DRM" ]
+  }
 
   subsystem_name = "multimedia"
   part_name = "player_framework"
