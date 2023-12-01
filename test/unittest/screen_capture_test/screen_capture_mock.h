@@ -31,7 +31,7 @@
 namespace OHOS {
 namespace Media {
 namespace ScreenCaptureTestParam {
-    constexpr uint32_t RECORDER_TIME = 3;
+    constexpr uint32_t RECORDER_TIME = 2;
 } // namespace ScreenCaptureTestParam
 
 class ScreenCaptureCallBackMock : public NoCopyable {
