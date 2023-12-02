@@ -18,8 +18,12 @@
 #include "media_log.h"
 #include "scope_guard.h"
 #include "securec.h"
+#include "sync_fence.h"
 
 using namespace OHOS;
+namespace {
+    constexpr int32_t FENCE_TIMEOUT = 3000;
+}
 
 #define GST_CONSUMER_SURFACE_MEMORY_TYPE "ConsumerSurfaceMemory"
 
@@ -62,14 +66,20 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     sptr<IConsumerSurface> surface = sallocator->priv->csurface;
     sptr<SurfaceBuffer> surface_buffer = nullptr;
     gint32 fencefd = -1;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     gint64 timestamp = 0;
     gint32 data_size = 0;
     gboolean end_of_stream = false;
     int32_t pixel_format = 0;
     Rect damage = {0, 0, 0, 0};
-    if (surface->AcquireBuffer(surface_buffer, fencefd, timestamp, damage) != SURFACE_ERROR_OK) {
+    if (surface->AcquireBuffer(surface_buffer, acquireFence, timestamp, damage) != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(allocator, "Acquire surface buffer failed");
         return nullptr;
+    }
+    if (acquireFence == nullptr || acquireFence == SyncFence::INVALID_FENCE) {
+        GST_WARNING_OBJECT(allocator, "Acquire surface buffer sync fence is null, no need wait");
+    } else {
+        acquireFence->Wait(FENCE_TIMEOUT);
     }
     g_return_val_if_fail(surface_buffer != nullptr, nullptr);
     ON_SCOPE_EXIT(1) { surface->ReleaseBuffer(surface_buffer, -1); };
