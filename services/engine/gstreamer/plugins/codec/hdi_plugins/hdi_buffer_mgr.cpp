@@ -166,7 +166,7 @@ int32_t HdiBufferMgr::Stop(bool isFormatChange)
 
 int32_t HdiBufferMgr::Flush(bool enable)
 {
-    MEDIA_LOGI("Enter Flush %{public}d", enable);
+    MEDIA_LOGD("Enter Flush %{public}d", enable);
     std::unique_lock<std::mutex> lock(mutex_);
     isFlushing_ = enable;
     if (isFlushing_) {

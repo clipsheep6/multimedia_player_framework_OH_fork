@@ -253,7 +253,7 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
         LISTENER(ret = allocator->surface->CancelBuffer(memory->buf),
             "surface::CancelBuffer", PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
-            GST_INFO("cancel buffer to surface failed, %d", ret);
+            GST_DEBUG("cancel buffer to surface failed, %d", ret);
         } else {
             GST_SURFACE_ALLOCATOR_LOCK(allocator);
             allocator->requestBufferNum--;

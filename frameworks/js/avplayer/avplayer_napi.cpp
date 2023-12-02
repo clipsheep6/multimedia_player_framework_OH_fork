@@ -770,7 +770,7 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::setVolume");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetVolume In");
+    MEDIA_LOGD("JsSetVolume In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // setVolume(vol: number)
@@ -799,13 +799,13 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
     HiviewDFX::ReportXPowerJsStackSysEvent(env, "VOLUME_CHANGE", "SRC=Media");
 #endif
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, volumeLevel]() {
-        MEDIA_LOGI("SetVolume Task");
+        MEDIA_LOGD("SetVolume Task");
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetVolume(volumeLevel, volumeLevel);
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("JsSetVolume Out");
+    MEDIA_LOGD("JsSetVolume Out");
     return result;
 }
 
@@ -1752,7 +1752,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get currentTime");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetCurrentTime In");
+    MEDIA_LOGD("JsGetCurrentTime In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -1777,7 +1777,7 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get duration");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetDuration In");
+    MEDIA_LOGD("JsGetDuration In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -1790,7 +1790,7 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_int32(env, duration, &value);
     std::string curState = jsPlayer->GetCurrentState();
-    MEDIA_LOGI("JsGetDuration Out, state %{public}s, duration %{public}d", curState.c_str(), duration);
+    MEDIA_LOGD("JsGetDuration Out, state %{public}s, duration %{public}d", curState.c_str(), duration);
     return value;
 }
 
@@ -1834,7 +1834,7 @@ napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get state");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetState In");
+    MEDIA_LOGD("JsGetState In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -1842,7 +1842,7 @@ napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
     std::string curState = jsPlayer->GetCurrentState();
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &value);
-    MEDIA_LOGI("JsGetState Out");
+    MEDIA_LOGD("JsGetState Out");
     return value;
 }
 

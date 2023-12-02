@@ -398,7 +398,7 @@ void PlayBinCtrlerBase::SetVolume(const float &leftVolume, const float &rightVol
     std::unique_lock<std::mutex> lock(mutex_);
     float volume = leftVolume;
     if (audioSink_ != nullptr) {
-        MEDIA_LOGI("SetVolume(%{public}f) to audio sink", volume);
+        MEDIA_LOGD("SetVolume(%{public}f) to audio sink", volume);
         g_object_set(audioSink_, "volume", volume, nullptr);
     }
 }
@@ -889,7 +889,7 @@ void PlayBinCtrlerBase::QueryDuration()
     if (duration >= 0) {
         duration_ = duration / NANO_SEC_PER_USEC;
     }
-    MEDIA_LOGI("update the duration: %{public}" PRIi64 " microsecond", duration_);
+    MEDIA_LOGD("update the duration: %{public}" PRIi64 " microsecond", duration_);
 }
 
 int64_t PlayBinCtrlerBase::QueryPosition()
@@ -906,7 +906,7 @@ int64_t PlayBinCtrlerBase::QueryPosition()
         curTime = std::min(curTime, duration_);
     }
     lastTime_ = curTime;
-    MEDIA_LOGI("update the position: %{public}" PRIi64 " microsecond", curTime);
+    MEDIA_LOGD("update the position: %{public}" PRIi64 " microsecond", curTime);
     return curTime / USEC_PER_MSEC;
 }
 
@@ -1099,7 +1099,7 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
 
 void PlayBinCtrlerBase::HandleCacheCtrl(int32_t percent)
 {
-    MEDIA_LOGI("HandleCacheCtrl percent is %{public}d", percent);
+    MEDIA_LOGD("HandleCacheCtrl percent is %{public}d", percent);
     if (!isBuffering_) {
         HandleCacheCtrlWhenNoBuffering(percent);
     } else {
@@ -1436,7 +1436,7 @@ void PlayBinCtrlerBase::OnDecryptElementSetup(GstElement &elem)
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
-    MEDIA_LOGI("element setup: %{public}s", ELEM_NAME(&elem));
+    MEDIA_LOGD("element setup: %{public}s", ELEM_NAME(&elem));
     // limit to the g-signal, send this notification at this thread, do not change the work thread.
     // otherwise ,the avmetaengine will work improperly.
 
@@ -1492,7 +1492,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 
 void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
-    MEDIA_LOGI("element unsetup: %{public}s", ELEM_NAME(&elem));
+    MEDIA_LOGD("element unsetup: %{public}s", ELEM_NAME(&elem));
     if (trackParse_ != nullptr) {
         trackParse_->OnElementUnSetup(elem);
     }

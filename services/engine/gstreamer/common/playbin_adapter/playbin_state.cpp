@@ -108,7 +108,7 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState, G
 
 void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("BaseState::HandleStateChange");
+    MEDIA_LOGD("BaseState::HandleStateChange");
     if (msg.extend.has_value() && std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
         GstState targetState = static_cast<GstState>(msg.detail2);
         MEDIA_LOGI("state changed from %{public}s to %{public}s",

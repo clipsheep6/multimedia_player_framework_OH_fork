@@ -66,7 +66,7 @@ int32_t MonitorServiceStub::OnClientDie(int32_t pid)
 int MonitorServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+    MEDIA_LOGD("Stub: OnRemoteRequest of code: %{public}d is received", code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     CHECK_AND_RETURN_RET_LOG(MonitorServiceStub::GetDescriptor() == remoteDescriptor,

@@ -302,7 +302,7 @@ GstFlowReturn PlayerSinkProvider::NewPrerollCb(GstMemSink *memSink, GstBuffer *s
 
 GstFlowReturn PlayerSinkProvider::NewSampleCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData)
 {
-    MEDIA_LOGI("NewSampleCb in");
+    MEDIA_LOGD("NewSampleCb in");
     MediaTrace trace("PlayerSinkProvider::NewSampleCb");
     CHECK_AND_RETURN_RET(gst_mem_sink_app_render(memSink, sample) == GST_FLOW_OK, GST_FLOW_ERROR);
 

@@ -159,7 +159,7 @@ static int32_t ConvertStateChangedMessage(GstMessage &gstMsg, InnerMessage &inne
     GstState newState = GST_STATE_VOID_PENDING;
     GstState pendingState = GST_STATE_VOID_PENDING;
     gst_message_parse_state_changed(&gstMsg, &oldState, &newState, &pendingState);
-    MEDIA_LOGI("%{public}s change state from %{public}s to %{public}s", ELEM_NAME(GST_MESSAGE_SRC(&gstMsg)),
+    MEDIA_LOGD("%{public}s change state from %{public}s to %{public}s", ELEM_NAME(GST_MESSAGE_SRC(&gstMsg)),
         gst_element_state_get_name(oldState), gst_element_state_get_name(newState));
 
     innerMsg.type = INNER_MSG_STATE_CHANGED;
@@ -202,7 +202,7 @@ static int32_t ConvertBufferingTimeMessage(GstMessage &gstMsg, InnerMessage &inn
     gint64 bufferingTime;
     guint mqNumId;
     gst_message_parse_buffering_time(&gstMsg, &bufferingTime, &mqNumId);
-    MEDIA_LOGI("mqNumId = %{public}u, bufferingTime = %{public}" PRIi64 "", mqNumId, bufferingTime);
+    MEDIA_LOGD("mqNumId = %{public}u, bufferingTime = %{public}" PRIi64 "", mqNumId, bufferingTime);
 
     innerMsg.type = INNER_MSG_BUFFERING_TIME;
     innerMsg.detail1 = static_cast<int32_t>(mqNumId);
@@ -268,7 +268,7 @@ static int32_t ConvertBufferingMessage(GstMessage &gstMsg, InnerMessage &innerMs
 
     gint percent;
     gst_message_parse_buffering (&gstMsg, &percent);
-    MEDIA_LOGI("multiqueue percent is %{public}d", percent);
+    MEDIA_LOGD("multiqueue percent is %{public}d", percent);
 
     innerMsg.type = INNER_MSG_BUFFERING;
     innerMsg.detail1 = percent;
@@ -298,7 +298,7 @@ int32_t GstMsgConverterDefault::ConvertToInnerMsg(GstMessage &gstMsg, InnerMessa
 
     if (SIMPLE_MSG_TYPE_MAPPING.count(gstMsg.type) != 0) {
         innerMsg.type = SIMPLE_MSG_TYPE_MAPPING.at(gstMsg.type);
-        MEDIA_LOGI("convert gst msg type: %{public}s", GST_MESSAGE_TYPE_NAME(&gstMsg));
+        MEDIA_LOGD("convert gst msg type: %{public}s", GST_MESSAGE_TYPE_NAME(&gstMsg));
         return MSERR_OK;
     }
 

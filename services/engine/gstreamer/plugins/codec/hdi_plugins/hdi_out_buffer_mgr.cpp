@@ -90,7 +90,7 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     MEDIA_LOGD("Enter PullBuffer");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("mBuffers.size %{public}zu, isFlush %{public}d, isStart %{public}d, isFormatChange_ %{public}d",
+    MEDIA_LOGD("mBuffers.size %{public}zu, isFlush %{public}d, isStart %{public}d, isFormatChange_ %{public}d",
                mBuffers.size(), isFlushed_.load(), isStart_, isFormatChange_);
     bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isFormatChange_; });
     if (isFormatChange_ && !mBuffers.empty()) {
@@ -117,7 +117,7 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
 
 int32_t HdiOutBufferMgr::FreeBuffers()
 {
-    MEDIA_LOGI("FreeBuffers");
+    MEDIA_LOGD("FreeBuffers");
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
     MEDIA_LOGI("availableBuffers_.size() == mPortDef_.nBufferCountActual %{public}d, bufferReleased_ %{public}d",
@@ -140,7 +140,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     MediaTrace trace("HdiOutBufferMgr::CodecBufferAvailable");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "FillBufferDone failed");
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("mBuffers %{public}zu, available %{public}zu codingBuffers %{public}zu",
+    MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu codingBuffers %{public}zu",
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
         if (iter->first != nullptr && iter->first->hdiBuffer.bufferId == buffer->bufferId) {

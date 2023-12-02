@@ -78,7 +78,7 @@ int32_t MonitorServer::Dump(int32_t fd, bool needDetail)
 
 int32_t MonitorServer::Click(int32_t pid)
 {
-    MEDIA_LOGI("Click from %{public}d", pid);
+    MEDIA_LOGD("Click from %{public}d", pid);
     std::unique_lock<std::mutex> lock(mutex_);
 
     auto timeInfoIt = timesMap_.find(pid);
@@ -284,7 +284,7 @@ void MonitorServer::MonitorThread()
             waitTime = static_cast<int32_t>(GetTimeMS() - timeStart);
 
             for (auto it = timesMap_.begin(); it != timesMap_.end(); it++) {
-                MEDIA_LOGI("pid %{public}d, waitTime %{public}d, timeout %{public}d, trigger %{public}d",
+                MEDIA_LOGD("pid %{public}d, waitTime %{public}d, timeout %{public}d, trigger %{public}d",
                     it->first, waitTime, it->second.time, it->second.triggerFlag);
                 if (it->second.triggerFlag == true) {
                     it->second.triggerFlag = false;

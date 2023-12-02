@@ -384,7 +384,7 @@ public:
             (void)status;
             NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
             if (cb != nullptr) {
-                MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work_with_qos start", cb->callbackName.c_str());
+                MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work_with_qos start", cb->callbackName.c_str());
                 cb->UvWork();
                 delete cb;
             }
@@ -613,7 +613,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
     float volumeLevel = 0.0;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
 
-    MEDIA_LOGI("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
+    MEDIA_LOGD("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find vol change callback!");
         return;
@@ -692,7 +692,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t position = extra;
-    MEDIA_LOGI("OnPositionUpdateCb is called, position: %{public}d", position);
+    MEDIA_LOGD("OnPositionUpdateCb is called, position: %{public}d", position);
 
     if (listener_ != nullptr) {
         listener_->NotifyPosition(position);
@@ -780,7 +780,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
         return;
     }
 
-    MEDIA_LOGI("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, val);
+    MEDIA_LOGD("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, val);
     NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 

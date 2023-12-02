@@ -110,7 +110,7 @@ __attribute__((no_sanitize("cfi"))) int32_t TaskQueue::EnqueueTask(const std::sh
 
 __attribute__((no_sanitize("cfi"))) void TaskQueue::CancelNotExecutedTaskLocked()
 {
-    MEDIA_LOGI("All task not executed are being cancelled..........[%{public}s]", name_.c_str());
+    MEDIA_LOGD("All task not executed are being cancelled..........[%{public}s]", name_.c_str());
     while (!taskList_.empty()) {
         std::shared_ptr<ITaskHandler> task = taskList_.front().task_;
         taskList_.pop_front();

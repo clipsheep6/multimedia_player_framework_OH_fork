@@ -511,7 +511,7 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     (void)pspec;
     g_return_if_fail(object != nullptr && value != nullptr);
     GstVdecBase *self = GST_VDEC_BASE(object);
-    GST_INFO_OBJECT(object, "Prop id %u", prop_id);
+    GST_DEBUG_OBJECT(object, "Prop id %u", prop_id);
 
     switch (prop_id) {
         case PROP_SURFACE_POOL:

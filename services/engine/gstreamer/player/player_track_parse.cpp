@@ -499,7 +499,7 @@ GstPadProbeReturn PlayerTrackParse::ParseTrackInfo(GstPad *pad, GstPadProbeInfo 
             gst_event_parse_tag(event, &tagList);
             CHECK_AND_RETURN_RET_LOG(tagList != nullptr, GST_PAD_PROBE_OK, "tags is nullptr");
             GstMetaParser::ParseTagList(*tagList, format);
-            MEDIA_LOGI("catch tags at pad %{public}s:0x%{public}06" PRIXPTR, PAD_NAME(pad), FAKE_POINTER(pad));
+            MEDIA_LOGD("catch tags at pad %{public}s:0x%{public}06" PRIXPTR, PAD_NAME(pad), FAKE_POINTER(pad));
             (void)UpdateTrackInfo();
         } else if (GST_EVENT_TYPE(event) == GST_EVENT_CAPS) {
             GstCaps *caps = nullptr;

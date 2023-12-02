@@ -323,7 +323,7 @@ static void gst_audio_server_sink_service_died_callback(GstBaseSink *basesink)
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
-    MEDIA_LOGI("audiorender: gst_audio_server_sink_set_property");
+    MEDIA_LOGD("audiorender: gst_audio_server_sink_set_property");
     MediaTrace trace("Audio::gst_audio_server_sink_set_property");
     g_return_if_fail(object != nullptr && value != nullptr);
     (void)pspec;

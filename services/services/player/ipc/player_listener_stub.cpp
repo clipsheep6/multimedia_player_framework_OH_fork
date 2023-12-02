@@ -56,7 +56,7 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             Format format;
             (void)MediaParcel::Unmarshalling(data, format);
             std::string info = format.Stringify();
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " listen on info type: %{public}d extra %{public}d, format %{public}s",
+            MEDIA_LOGD("0x%{public}06" PRIXPTR " listen on info type: %{public}d extra %{public}d, format %{public}s",
                        FAKE_POINTER(this), type, extra, info.c_str());
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
             return MSERR_OK;

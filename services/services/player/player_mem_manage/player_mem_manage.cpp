@@ -319,7 +319,7 @@ void PlayerMemManage::SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t sta
 int32_t PlayerMemManage::RecordAppState(int32_t uid, int32_t pid, int32_t state)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter OnAppStateChanged pid:%{public}d uid:%{public}d state:%{public}d", pid, uid, state);
+    MEDIA_LOGD("Enter OnAppStateChanged pid:%{public}d uid:%{public}d state:%{public}d", pid, uid, state);
     for (auto &[findUid, pidPlayersInfo] : playerManage_) {
         if (findUid != uid) {
             continue;
