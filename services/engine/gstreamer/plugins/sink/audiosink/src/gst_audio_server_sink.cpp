@@ -41,7 +41,6 @@ namespace {
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
     constexpr uint64_t AUDIO_EFFECT_NONE_RENDER_DELAY = 270000000; // unit ns, empirical value
     constexpr uint64_t AUDIO_EFFECT_DEFAULT_RENDER_DELAY = 270000000; // unit ns, empirical value
-    constexpr uint64_t EMPTY_BUFFER_SIZE = 8196; // byte, empirical value
 }
 
 enum {
@@ -566,7 +565,6 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             }
             (void)sink->audio_sink->Pause();
             (void)sink->audio_sink->Flush();
-            sink->is_seeking = true;
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
         case GST_EVENT_FLUSH_STOP:
@@ -719,76 +717,6 @@ static void gst_audio_server_sink_get_latency(GstAudioServerSink *sink, const Gs
     g_mutex_unlock(&sink->render_lock);
 }
 
-static GstFlowReturn write_buffer_with_empty_buffer(
-    GstAudioServerSink *sink, const int32_t emptySize, uint8_t *buffer, size_t size)
-{
-    if (emptySize > 0) {
-        std::unique_ptr<uint8_t[]> emptyBuf = std::make_unique<uint8_t[]>(emptySize);
-        (void)memset_s(emptyBuf.get(), emptySize, 0, emptySize);
-        if (sink->audio_sink->Write(emptyBuf.get(), emptySize) != MSERR_OK) {
-            GST_ERROR("unknown error happened during write empty buffer");
-            return GST_FLOW_ERROR;
-        }
-    }
-
-    if (size > 0 && sink->audio_sink->Write(buffer, size) != MSERR_OK) {
-        GST_ERROR("unknown error happened during write buffer");
-        return GST_FLOW_ERROR;
-    }
-    return GST_FLOW_OK;
-}
-
-static GstFlowReturn write_buffer(GstAudioServerSink *sink, GstBaseSink *basesink, GstBuffer *buffer)
-{
-    GstMapInfo map;
-    gst_buffer_map(buffer, &map, GST_MAP_READ);
-    if (sink->is_need_write_empty_buffer) {
-        if (map.size >= EMPTY_BUFFER_SIZE) {
-            sink->is_need_write_empty_buffer = false;
-            if (write_buffer_with_empty_buffer(sink, EMPTY_BUFFER_SIZE,
-                map.data + EMPTY_BUFFER_SIZE, map.size - EMPTY_BUFFER_SIZE) != GST_FLOW_OK) {
-                GST_ERROR_OBJECT(basesink, "unknown error happened during write.");
-                gst_buffer_unmap(buffer, &map);
-                return GST_FLOW_ERROR;
-            }
-            gst_buffer_unmap(buffer, &map);
-            return GST_FLOW_OK;
-        }
-
-        if (sink->buffer_size_written + map.size < EMPTY_BUFFER_SIZE) {
-            if (write_buffer_with_empty_buffer(sink, map.size, map.data, 0) != GST_FLOW_OK) {
-                GST_ERROR_OBJECT(basesink, "unknown error happened during write.");
-                gst_buffer_unmap(buffer, &map);
-                sink->is_need_write_empty_buffer = false;
-                return GST_FLOW_ERROR;
-            }
-            sink->buffer_size_written = sink->buffer_size_written + map.size;
-            gst_buffer_unmap(buffer, &map);
-            return GST_FLOW_OK;
-        }
-        sink->is_need_write_empty_buffer = false;
-        guint size = EMPTY_BUFFER_SIZE - sink->buffer_size_written;
-        if (write_buffer_with_empty_buffer(sink, size, map.data + size,
-            sink->buffer_size_written + map.size - EMPTY_BUFFER_SIZE) != GST_FLOW_OK) {
-            GST_ERROR_OBJECT(basesink, "unknown error happened during write.");
-            gst_buffer_unmap(buffer, &map);
-            sink->buffer_size_written = 0;
-            return GST_FLOW_ERROR;
-        }
-        sink->buffer_size_written = 0;
-        gst_buffer_unmap(buffer, &map);
-        return GST_FLOW_OK;
-    }
-
-    if (sink->audio_sink->Write(map.data, map.size) != MSERR_OK) {
-        GST_ERROR_OBJECT(basesink, "unknown error happened during write.");
-        gst_buffer_unmap(buffer, &map);
-        return GST_FLOW_ERROR;
-    }
-    gst_buffer_unmap(buffer, &map);
-    return GST_FLOW_OK;
-}
-
 static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
     pthread_setname_np(pthread_self(), "audioSinkRender");
@@ -825,14 +753,19 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
             (void)sink->audio_sink->Write(preBuf.get(), bufSize);
             (void)sink->audio_sink->Flush();
             sink->start_first_render = FALSE;
-            sink->is_need_write_empty_buffer = sink->is_seeking;
         }
 
-        sink->is_seeking = false;
-        if (write_buffer(sink, basesink, buffer) != GST_FLOW_OK) {
-            GST_ERROR("unknown error happened during write.");
+        GstMapInfo map;
+        if (gst_buffer_map(buffer, &map, GST_MAP_READ) != TRUE) {
+            GST_ERROR_OBJECT(basesink, "unknown error happened during gst_buffer_map");
             return GST_FLOW_ERROR;
         }
+        if (sink->audio_sink->Write(map.data, map.size) != MSERR_OK) {
+            GST_ERROR_OBJECT(basesink, "unknown error happened during Write");
+            gst_buffer_unmap(buffer, &map);
+            return GST_FLOW_ERROR;
+        }
+        gst_buffer_unmap(buffer, &map);
     }
 
     gst_audio_server_sink_get_latency(sink, buffer);
