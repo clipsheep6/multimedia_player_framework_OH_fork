@@ -28,7 +28,6 @@ ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "$MEDIA_PLAYER_GRAPHIC/utils/sync_fence/export",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
   ]
   cflags = [
     "-std=c++17",
@@ -61,13 +60,12 @@ ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
   }
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
-    "../../../../../../../foundation/graphic/graphic_2d:libsurface",
-    "../../../../../../../foundation/graphic/graphic_2d/frameworks/surface:surface",
     "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "../../../../../../../foundation/graphic/graphic_2d/utils:sync_fence",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
