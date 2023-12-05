@@ -93,7 +93,7 @@ public:
         if (type == INFO_TYPE_STATE_CHANGE) {
             PlayerStates state = static_cast<PlayerStates>(extra);
             player_->state_ = state;
-            for (int i = 0; i < STATE_MAP_LENGTH; i++) {
+            for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
                 if (g_stateMap[i].playerStates == state) {
                     int32_t convertState = g_stateMap[i].avPlayerState;
                     callback_.onInfo(player_, AV_INFO_TYPE_STATE_CHANGE, convertState);
@@ -103,7 +103,7 @@ public:
         }
 
         if (player_ != nullptr && callback_.onInfo != nullptr) {
-            for (int i = 0; i < INFO_TYPE_LENGTH; i++) {
+            for (uint32_t i = 0; i < INFO_TYPE_LENGTH; i++) {
                 if (g_onInfoType[i].playerOnInfoType == type) {
                     callback_.onInfo(player_, g_onInfoType[i].aVPlayerOnInfoType, extra);
                     break;
@@ -325,7 +325,7 @@ OH_AVErrCode OH_AVPlayer_GetDuration(OH_AVPlayer *player, int32_t *duration)
 OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
-    for (int i = 0; i < STATE_MAP_LENGTH; i++) {
+    for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
         if (g_stateMap[i].playerStates == player->state_) {
             *state = g_stateMap[i].avPlayerState;
             return AV_ERR_OK;
