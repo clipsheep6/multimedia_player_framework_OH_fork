@@ -33,7 +33,7 @@ enum RingtoneType {
 enum SystemToneType {
     SYSTEM_TONE_TYPE_SIM_CARD_0 = 0,
     SYSTEM_TONE_TYPE_SIM_CARD_1 = 1,
-    SYSTEM_TONE_TYPE_NOTIFICAION = 32,
+    SYSTEM_TONE_TYPE_NOTIFICATION = 32,
 };
 
 class SystemSoundManager {

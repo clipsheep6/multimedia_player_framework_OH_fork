@@ -40,7 +40,7 @@ static const std::map<std::string, RingtoneType> ringtoneTypeMap = {
 static const std::map<std::string, SystemToneType> systemToneTypeMap = {
     {"SYSTEM_TONE_TYPE_SIM_CARD_0", SYSTEM_TONE_TYPE_SIM_CARD_0},
     {"SYSTEM_TONE_TYPE_SIM_CARD_1", SYSTEM_TONE_TYPE_SIM_CARD_1},
-    {"SYSTEM_TONE_TYPE_NOTIFICAION", SYSTEM_TONE_TYPE_NOTIFICAION}
+    {"SYSTEM_TONE_TYPE_NOTIFICATION", SYSTEM_TONE_TYPE_NOTIFICATION}
 };
 
 class SystemSoundManagerNapi {

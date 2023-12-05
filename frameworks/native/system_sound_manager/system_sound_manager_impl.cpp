@@ -79,7 +79,7 @@ bool SystemSoundManagerImpl::isSystemToneTypeValid(SystemToneType systemToneType
     switch (systemToneType) {
         case SYSTEM_TONE_TYPE_SIM_CARD_0:
         case SYSTEM_TONE_TYPE_SIM_CARD_1:
-        case SYSTEM_TONE_TYPE_NOTIFICAION:
+        case SYSTEM_TONE_TYPE_NOTIFICATION:
             return true;
         default:
             MEDIA_LOGE("isSystemToneTypeValid: systemToneType %{public}d is unavailable", systemToneType);
@@ -98,8 +98,8 @@ void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
     systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] =
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
-    systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICAION] =
-        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICAION));
+    systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] =
+        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICATION));
 }
 
 void SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
@@ -135,7 +135,7 @@ std::string SystemSoundManagerImpl::GetKeyForDatabase(const std::string &systemS
                 return "system_tone_for_sim_card_0";
             case SYSTEM_TONE_TYPE_SIM_CARD_1:
                 return "system_tone_for_sim_card_1";
-            case SYSTEM_TONE_TYPE_NOTIFICAION:
+            case SYSTEM_TONE_TYPE_NOTIFICATION:
                 return "system_tone_for_notification";
             default:
                 MEDIA_LOGE("GetKeyForDatabase: systemToneType %{public}d is unavailable", type);
