@@ -719,8 +719,17 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Pause()
 {
-    MEDIA_LOGI("completed state does not support pause");
-    return MSERR_OK;
+    GstState state = GST_STATE_NULL;
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+    if (state == GST_STATE_PAUSED) {
+        MEDIA_LOGI("playbin already paused");
+        ctrler_.ChangeState(ctrler_.pausedState_);
+        return MSERR_OK;
+    }
+    ctrler_.isUserSetPause_ = true;
+    GstStateChangeReturn ret;
+    MEDIA_LOGI("complete->pause start");
+    return ChangePlayBinState(GST_STATE_PAUSED, ret);
 }
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Stop()
