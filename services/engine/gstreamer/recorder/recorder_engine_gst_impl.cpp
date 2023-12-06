@@ -17,6 +17,9 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "recorder_private_param.h"
+#include "recorder_stop.h"
+#include <sys/time.h>
+#include <ctime>
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderEngineGstImpl"};
@@ -24,6 +27,20 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+class RecoderStopDoneCallback : public StopDoneCallback {
+public:
+    RecoderStopDoneCallback(RecorderEngineGstImpl* recorderEngineGstImpl) {
+        recorderEngineGstImpl_ = recorderEngineGstImpl;
+    }
+
+    void OnStopDone() {
+        MEDIA_LOGE("xsb OnStopDone");
+        recorderEngineGstImpl_->NotifyStopDone();
+    }
+private:
+    RecorderEngineGstImpl* recorderEngineGstImpl_;
+};
+
 RecorderEngineGstImpl::RecorderEngineGstImpl(int32_t appUid, int32_t appPid,
     uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
@@ -36,6 +53,7 @@ RecorderEngineGstImpl::~RecorderEngineGstImpl()
 {
     MEDIA_LOGD("enter, dtor");
     (void)StopPipeline(false);
+    RecorderStop::GetInstance()->Release();
     MEDIA_LOGD("exit, dtor");
 }
 
@@ -47,7 +65,7 @@ int32_t RecorderEngineGstImpl::Init()
 
     ctrler_ = ctrler;
     builder_ = std::make_unique<RecorderPipelineBuilder>(appUid_, appPid_, appTokenId_, appFullTokenId_);
-
+    RecorderStop::GetInstance()->SetEncoder(true);
     return MSERR_OK;
 }
 
@@ -222,34 +240,54 @@ int32_t RecorderEngineGstImpl::Resume()
 int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    int ret = StopPipeline(isDrainAll);
-    return ret;
+    MEDIA_LOGE("xsb Stop");
+    if (pipeline_ != nullptr) {
+        MEDIA_LOGE("xsb Stop1");
+        std::shared_ptr<StopDoneCallback> stopDoneCallback = std::make_shared<RecoderStopDoneCallback>(this);
+        RecorderStop::GetInstance()->RegisterStopDoneCallback(stopDoneCallback);
+        timeval tv;
+        gettimeofday(&tv, 0); 
+        int64_t stopTime = (int64_t)tv.tv_sec * 1000000 + (int64_t)tv.tv_usec;
+        RecorderStop::GetInstance()->NotifyStop(stopTime);
+        stopDoneCond_.wait_for(lock, std::chrono::seconds(1));
+        MEDIA_LOGE("xsb Stop Done");
+        StopPipeline(isDrainAll);
+    }
+    MEDIA_LOGE("xsb Stop end");
+    return MSERR_OK;
 }
 
 int32_t RecorderEngineGstImpl::Reset()
 {
-    (void)Stop(false);
+    (void)StopPipeline(false);
     consumerSurface_ = nullptr;
     return MSERR_OK;
 }
 
 int32_t RecorderEngineGstImpl::StopPipeline(bool isDrainAll)
 {
+    MEDIA_LOGE("xsb StopPipeline");
     if (allSources_.empty())  {
         return MSERR_OK;
     }
+    MEDIA_LOGE("xsb StopPipeline1");
 
     int ret = ctrler_->Stop(isDrainAll);
+    MEDIA_LOGE("xsb StopPipeline2");
 
     (void)ctrler_->Reset();
+    MEDIA_LOGE("xsb StopPipeline3");
     pipeline_ = nullptr;
     builder_->Reset();
+    MEDIA_LOGE("xsb StopPipeline4");
     for (size_t i = 0; i < sourceCount_.size(); i++) {
         sourceCount_[i] = 0;
     }
     allSources_.clear();
     videoSourceId_ = -1;
-
+    // std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGE("xsb StopPipeline5");
+    MEDIA_LOGE("xsb StopPipeline6");
     return ret;
 }
 
@@ -326,5 +364,10 @@ int32_t RecorderEngineGstImpl::SetSurface()
     MEDIA_LOGI("set surface to videoSource success");
     return ret;
 }
+
+void RecorderEngineGstImpl::NotifyStopDone() {
+    stopDoneCond_.notify_all();
+}
+
 } // namespace Media
 } // namespace OHOS

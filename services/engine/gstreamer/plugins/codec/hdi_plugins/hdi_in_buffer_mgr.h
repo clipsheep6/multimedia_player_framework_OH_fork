@@ -32,10 +32,14 @@ public:
 
     int32_t CodecBufferAvailable(const OmxCodecBuffer *buffer) override;
 
+    void SetStop(int64_t stopTime);
+
 protected:
     std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers_;
     std::shared_ptr<HdiBufferWrap> GetHdiEosBuffer();
     bool firstFramePrinted = false;
+    bool isStop_ = false;
+    int64_t stopTime_;
 };
 } // namespace Media
 } // namespace OHOS

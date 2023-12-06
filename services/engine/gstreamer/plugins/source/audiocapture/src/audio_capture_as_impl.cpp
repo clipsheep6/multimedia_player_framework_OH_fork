@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "audio_errors.h"
 #include "media_errors.h"
+#include "recorder_stop.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioCaptureAsImpl"};
@@ -28,8 +29,30 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+
+class AudioCaptureStopCallback : public StopCallback {
+public:
+    AudioCaptureStopCallback(AudioCaptureAsImpl* audioCaptureAsImpl) {
+        audioCaptureAsImpl_ = audioCaptureAsImpl;
+    }
+
+    void OnStop(int64_t stopTime) {
+        MEDIA_LOGE("xsb OnStop");
+        audioCaptureAsImpl_->SetStop(stopTime);
+    }
+private:
+    AudioCaptureAsImpl* audioCaptureAsImpl_;
+};
+
 AudioCaptureAsImpl::AudioCaptureAsImpl()
 {
+    bool isEncoder = RecorderStop::GetInstance()->GetEncoder();
+    MEDIA_LOGE("xsb AudioCaptureAsImpl");
+    if (isEncoder) {
+        MEDIA_LOGE("xsb AudioCaptureAsImpl1");
+        std::shared_ptr<StopCallback> audioCaptureStopCallback = std::make_shared<AudioCaptureStopCallback>(this);
+        RecorderStop::GetInstance()->RegisterStopCallback(audioCaptureStopCallback);
+    }
 }
 
 AudioCaptureAsImpl::~AudioCaptureAsImpl()
@@ -250,7 +273,6 @@ int32_t AudioCaptureAsImpl::AudioCaptureLoop()
         if ((curState_.load() != RECORDER_RUNNING) && (curState_ != RECORDER_RESUME)) {
             return MSERR_OK;
         }
-
         {
             std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
             if (audioCacheCtrl_->captureQueue_.size() >= MAX_QUEUE_SIZE) {
@@ -258,7 +280,6 @@ int32_t AudioCaptureAsImpl::AudioCaptureLoop()
                 continue;
             }
         }
-
         std::shared_ptr<AudioBuffer> tempBuffer = GetSegmentData();
         CHECK_AND_RETURN_RET_LOG(tempBuffer != nullptr, MSERR_UNKNOWN, "tempBuffer is nullptr!");
 
@@ -268,11 +289,15 @@ int32_t AudioCaptureAsImpl::AudioCaptureLoop()
             MEDIA_LOGD("failed to  GetSegmentInfo!");
             return MSERR_UNKNOWN;
         }
-
         tempBuffer->timestamp = curTimeStamp;
         tempBuffer->duration = bufferDurationNs_;
         tempBuffer->dataLen = bufferSize_;
-
+        if (isStop_) {
+            MEDIA_LOGW("xsb AudioCaptureLoop");
+            RecorderStop::GetInstance()->NotifyStopDone();
+            // continue;
+            return MSERR_OK;
+        }
         {
             std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
             audioCacheCtrl_->captureQueue_.push(tempBuffer);
@@ -467,6 +492,13 @@ void AudioCaptureAsImpl::EmptyCaptureQueue()
         }
         audioCacheCtrl_->captureQueue_.pop();
     }
+}
+
+void AudioCaptureAsImpl::SetStop(int64_t stopTime) {
+    MEDIA_LOGD("xsb SetStop");
+    std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
+    isStop_ = true;
+    stopTime_ = stopTime;
 }
 } // namespace Media
 } // namespace OHOS

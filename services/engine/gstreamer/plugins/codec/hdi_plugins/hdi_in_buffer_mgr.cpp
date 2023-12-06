@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "hdi_codec_util.h"
 #include "media_dfx.h"
+#include "recorder_stop.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiInBufferMgr"};
@@ -27,9 +28,30 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+class HdiInputStopCallback : public StopCallback {
+public:
+    HdiInputStopCallback(HdiInBufferMgr* hdiInBufferMgr) {
+        hdiInBufferMgr_ = hdiInBufferMgr;
+    }
+
+    void OnStop(int64_t stopTime) {
+        MEDIA_LOGE("xsb OnStop");
+        hdiInBufferMgr_->SetStop(stopTime);
+    }
+private:
+    HdiInBufferMgr* hdiInBufferMgr_;
+};
+
 HdiInBufferMgr::HdiInBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    bool isEncoder = RecorderStop::GetInstance()->GetEncoder();
+    MEDIA_LOGE("xsb HdiInBufferMgr");
+    if (isEncoder) {
+        MEDIA_LOGE("xsb HdiInBufferMgr1");
+        std::shared_ptr<StopCallback> hdiInputStopCallback = std::make_shared<HdiInputStopCallback>(this);
+        RecorderStop::GetInstance()->RegisterStopCallback(hdiInputStopCallback);
+    }
 }
 
 HdiInBufferMgr::~HdiInBufferMgr()
@@ -55,6 +77,7 @@ std::shared_ptr<HdiBufferWrap> HdiInBufferMgr::GetHdiEosBuffer()
 int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("PushBuffer start");
+    MEDIA_LOGE("xsb PushBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     bufferCond_.wait(lock, [this]() {return !availableBuffers_.empty() || isFlushed_ || !isStart_;});
     if (isFlushed_ || !isStart_) {
@@ -65,6 +88,13 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
         codecBuffer = GetHdiEosBuffer();
     } else {
         codecBuffer = GetCodecBuffer(buffer);
+    }
+    if (isStop_) {
+        MEDIA_LOGE("xsb PushBuffer1");
+        if (codecBuffer->hdiBuffer.pts > stopTime_) {
+            MEDIA_LOGE("xsb PushBuffer2");
+            RecorderStop::GetInstance()->NotifyStopDone();
+        }
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
     if (!firstFramePrinted) {
@@ -115,6 +145,12 @@ int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     NotifyAvailable();
     bufferCond_.notify_all();
     return GST_CODEC_OK;
+}
+
+void HdiInBufferMgr::SetStop(int64_t stopTime) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    isStop_ = true;
+    stopTime_ = stopTime;
 }
 }  // namespace Media
 }  // namespace OHOS
