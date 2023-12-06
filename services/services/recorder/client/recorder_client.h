@@ -51,6 +51,7 @@ public:
     void SetLocation(float latitude, float longitude) override;
     void SetOrientationHint(int32_t rotation) override;
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) override;
+    int32_t SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback) override;
     int32_t Prepare() override;
     int32_t Start() override;
     int32_t Pause() override;
@@ -60,6 +61,9 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) override;
+    int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) override;
+    int32_t GetActiveMicrophones(int32_t sourceId, std::vector<MicrophoneDescriptor> &microPhoneDescriptors) override;
     // RecorderClient
     void MediaServerDied();
 
@@ -70,6 +74,7 @@ private:
     sptr<IStandardRecorderService> recorderProxy_ = nullptr;
     sptr<RecorderListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
+    std::shared_ptr<RecorderAudioChangeCallback> audioChangeCallback_ = nullptr;
     std::mutex mutex_;
 };
 } // namespace Media

@@ -49,6 +49,9 @@ public:
     int32_t Stop(bool isDrainAll) override;
     int32_t Reset() override;
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) override;
+    int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) override;
+    int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) override;
+    int32_t GetActiveMicrophones(int32_t sourceId, std::vector<MicrophoneDescriptor> &microPhoneDescriptors) override;
     sptr<Surface> GetSurface(int32_t sourceId) override;
 
 private:

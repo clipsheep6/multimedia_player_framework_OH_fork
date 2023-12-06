@@ -272,6 +272,109 @@ int32_t RecorderEngineGstImpl::SetParameter(int32_t sourceId, const RecorderPara
     return pipeline_->SetParameter(sourceId, recParam);
 }
 
+static void WriteParamtoAudioRecordChangeInfo(AudioRecordChangeInfoParam param, AudioRecordChangeInfo &changeInfo)
+{
+    changeInfo.createrUID = param.createrUID_;
+    changeInfo.clientUID = param.clientUID_;
+    changeInfo.sessionId = param.sessionId_;
+    changeInfo.aRecorderInfo.inputSource = static_cast<AudioSourceType>(param.inputSource_);
+    changeInfo.aRecorderInfo.capturerFlags = param.capturerFlags_;
+    changeInfo.aRecorderState = static_cast<AudioReorderState>(param.aRecorderState_);
+    changeInfo.inputDeviceInfo.deviceType = static_cast<DeviceType>(param.deviceType_);
+    changeInfo.inputDeviceInfo.deviceRole = static_cast<DeviceRole>(param.deviceRole_);
+    changeInfo.inputDeviceInfo.deviceId = param.deviceId_;
+    changeInfo.inputDeviceInfo.channelMasks = param.channelMasks_;
+    changeInfo.inputDeviceInfo.channelIndexMasks = param.channelIndexMasks_;
+    changeInfo.inputDeviceInfo.deviceName = param.deviceName_;
+    changeInfo.inputDeviceInfo.macAddress = param.macAddress_;
+    changeInfo.inputDeviceInfo.audioStreamInfo.samplingRate = param.samplingRate_;
+    changeInfo.inputDeviceInfo.audioStreamInfo.encoding = static_cast<RecordAudioEncodingType>(param.encoding_);
+    changeInfo.inputDeviceInfo.audioStreamInfo.format = static_cast<RecordAudioSampleFormat>(param.format_);
+    changeInfo.inputDeviceInfo.audioStreamInfo.channels = param.channels_;
+    changeInfo.inputDeviceInfo.networkId = param.networkId_;
+    changeInfo.inputDeviceInfo.displayName = param.displayName_;
+    changeInfo.inputDeviceInfo.interruptGroupId = param.interruptGroupId_;
+    changeInfo.inputDeviceInfo.volumeGroupId = param.volumeGroupId_;
+    changeInfo.inputDeviceInfo.isLowLatencyDevice = param.isLowLatencyDevice_;
+    changeInfo.muted = param.muted_;
+}
+
+int32_t RecorderEngineGstImpl::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), MSERR_INVALID_OPERATION,
+                             "invalid sourceId: 0x%{public}x", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(allSources_[sourceId].IsAudio(), MSERR_INVALID_OPERATION,
+        "The sourceId %{public}d is not audio source, GetActiveAudioCaptureChangeInfo invalid !", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, MSERR_INVALID_OPERATION, "Pipeline is nullptr");
+
+    AudioRecordChangeInfoParam param;
+    int32_t ret = pipeline_->GetParameter(sourceId, param);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
+    WriteParamtoAudioRecordChangeInfo(param, changeInfo);
+    MEDIA_LOGE("GetActiveAudioCapture changeInfo:sessionId:%{public}d", changeInfo.sessionId);
+    return MSERR_OK;
+}
+
+int32_t RecorderEngineGstImpl::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), MSERR_INVALID_OPERATION,
+                             "invalid sourceId: 0x%{public}x", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(allSources_[sourceId].IsAudio(), -1,
+        "The sourceId %{public}d is not audio source, GetActiveAudioCaptureChangeInfo invalid !", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, -1, "Pipeline is nullptr");
+
+    AudioMaxAmplitudeParam param;
+    int32_t ret = pipeline_->GetParameter(sourceId, param);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, -1);
+    return param.maxAmplitude_;
+}
+
+static void WriteMicParamToMicrophoneDescriptor(MicrophoneDescriptorParam param, MicrophoneDescriptor &micInfo)
+{
+    micInfo.micId_ = param.micId_;
+    micInfo.deviceType_ = static_cast<DeviceType>(param.deviceType_);
+    micInfo.sensitivity_ = param.sensitivity_;
+    micInfo.position_.x = param.position_x_;
+    micInfo.position_.y = param.position_y_;
+    micInfo.position_.z = param.position_z_;
+    micInfo.orientation_.x = param.orientation_x_;
+    micInfo.orientation_.y = param.orientation_y_;
+    micInfo.orientation_.z = param.orientation_z_;
+}
+
+int32_t RecorderEngineGstImpl::GetActiveMicrophones(int32_t sourceId,
+    std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(allSources_.find(sourceId) != allSources_.end(), MSERR_INVALID_OPERATION,
+                             "invalid sourceId: 0x%{public}x", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(allSources_[sourceId].IsAudio(), -1,
+        "The sourceId %{public}d is not audio source, GetActiveAudioCaptureChangeInfo invalid !", sourceId);
+
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, -1, "Pipeline is nullptr");
+
+    MicrophoneDescriptorSizeParam micsizeParam;
+    int32_t ret = pipeline_->GetParameter(sourceId, micsizeParam);
+    MEDIA_LOGI("getmicphone size:%{public}d", micsizeParam.length_);
+
+    for (auto index = 0; index < micsizeParam.length_; index++) {
+        MicrophoneDescriptorParam param;
+        ret = pipeline_->GetParameter(sourceId, param);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, -1);
+        MicrophoneDescriptor microphoneDescriptor;
+        WriteMicParamToMicrophoneDescriptor(param, microphoneDescriptor);
+        microPhoneDescriptors.push_back(microphoneDescriptor);
+    }
+    return MSERR_OK;
+}
+
 bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam) const
 {
     if (sourceId == DUMMY_SOURCE_ID) {

@@ -56,6 +56,10 @@ public:
     virtual int32_t Reset() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) = 0;
+    virtual int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) = 0;
+    virtual int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) = 0;
+    virtual int32_t GetActiveMicrophones(int32_t sourceId,
+        std::vector<MicrophoneDescriptor> &microPhoneDescriptors) = 0;
     virtual int32_t DestroyStub() = 0;
     /**
      * IPC code ID
@@ -90,6 +94,9 @@ public:
         RESET,
         RELEASE,
         SET_FILE_SPLIT_DURATION,
+        GET_ACTIVEAUDIOCAPTUREINFO,
+        GET_MAX_AUDIO_MAXAMPLITUDE,
+        GET_ACTIVE_MICROPHONES,
         DESTROY,
     };
 

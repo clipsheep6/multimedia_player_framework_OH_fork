@@ -16,6 +16,7 @@
 #include "recorder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "audio_changeinfo_proxy_stub.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderListenerStub"};
@@ -55,6 +56,12 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
             OnInfo(type, extra);
             return MSERR_OK;
         }
+        case RecorderListenerMsg::ON_AUDIO_CAPTURE_CHANGE: {
+            struct AudioRecordChangeInfo audioRecordChangeInfo;
+            AudioChangeInfoProxyStub::ReadAudioRecordChangeInfoParcel(data, audioRecordChangeInfo);
+            OnAudioCapturerChange(audioRecordChangeInfo);
+            return MSERR_OK;
+        }
         default: {
             MEDIA_LOGE("default case, need check RecorderListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -80,9 +87,21 @@ void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
     }
 }
 
+void RecorderListenerStub::OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo)
+{
+    if (audioChangeCallback_ != nullptr) {
+        audioChangeCallback_->OnAudioCapturerChange(audioRecordChangeInfo);
+    }
+}
+
 void RecorderListenerStub::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     callback_ = callback;
+}
+
+void RecorderListenerStub::SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback)
+{
+    audioChangeCallback_ = callback;
 }
 
 void RecorderListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)

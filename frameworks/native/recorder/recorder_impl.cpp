@@ -186,6 +186,13 @@ int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback
     return recorderService_->SetRecorderCallback(callback);
 }
 
+int32_t RecorderImpl::SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback)
+{
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "input callback is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetRecorderAudioChangeCallback(callback);
+}
+
 int32_t RecorderImpl::Prepare()
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
@@ -242,6 +249,29 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetParameter(sourceId, format);
+}
+
+int32_t RecorderImpl::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetActiveAudioCaptureChangeInfo(sourceId, changeInfo);
+}
+
+int32_t RecorderImpl::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetAudioCaptureMaxAmplitude(sourceId);
+}
+
+std::vector<MicrophoneDescriptor> RecorderImpl::GetActiveMicrophones(int32_t sourceId) const
+{
+    std::vector<MicrophoneDescriptor> microPhoneDescriptors;
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, microPhoneDescriptors, "recorder service does not exist..");
+    int32_t ret = recorderService_->GetActiveMicrophones(sourceId, microPhoneDescriptors);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("GetActiveMicrophones failed");
+    }
+    return microPhoneDescriptors;
 }
 } // namespace Media
 } // namespace OHOS

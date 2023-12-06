@@ -157,6 +157,74 @@ public:
      * @version 1.0
      */
     virtual int32_t WakeUpAudioThreads() = 0;
+
+    virtual int32_t GetCreateUid() = 0;
+
+    virtual int32_t GetClientUid() = 0;
+
+    virtual int32_t GetSessionId() = 0;
+
+    virtual int32_t GetInputSource() = 0;
+
+    virtual int32_t GetCapturerFlag() = 0;
+
+    virtual int32_t GetRecorderState() = 0;
+
+    virtual int32_t GetDeviceType() = 0;
+
+    virtual int32_t GetDeviceRole() = 0;
+
+    virtual int32_t GetDeviceID() = 0;
+
+    virtual int32_t GetChannelMasks() = 0;
+
+    virtual int32_t GetChannelIndexMasks() = 0;
+
+    virtual std::string GetDeviceName() = 0;
+
+    virtual std::string GetMacAddress() = 0;
+
+    virtual int32_t GetSamPlingRate() = 0;
+
+    virtual int32_t GetEncoding() = 0;
+
+    virtual int32_t GetAudioFormat() = 0;
+
+    virtual int32_t GetAudioChannels() = 0;
+
+    virtual std::string GetNetWorkId() = 0;
+
+    virtual std::string GetDisplayName() = 0;
+
+    virtual int32_t GetInterruptGroupId() = 0;
+
+    virtual int32_t GetVolumeGroupId() = 0;
+
+    virtual gboolean GetIsLowatencyDevice() = 0;
+
+    virtual gboolean Getmuted() = 0;
+
+    virtual int32_t GetMaxAmpitude() = 0;
+
+    virtual int32_t GetActiveMicrophones() = 0;
+
+    virtual int32_t GetActiveMicrophonesMicId() = 0;
+
+    virtual int32_t GetActiveMicrophonesDviceType() = 0;
+
+    virtual int32_t GetActiveMicrophonesSensitivity() = 0;
+
+    virtual float GetActiveMicrophonesPositionX() = 0;
+
+    virtual float GetActiveMicrophonesPositionY() = 0;
+
+    virtual float GetActiveMicrophonesPositionZ() = 0;
+
+    virtual float GetActiveMicrophonesOrientationX() = 0;
+
+    virtual float GetActiveMicrophonesOrientationY() = 0;
+
+    virtual float GetActiveMicrophonesOrientationZ() = 0;
 };
 } // namespace Media
 } // namespace OHOS

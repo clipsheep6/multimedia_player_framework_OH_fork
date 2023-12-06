@@ -326,6 +326,19 @@ public:
     virtual int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) = 0;
 
     /**
+     * @brief Registers a recording listener.
+     *
+     * This function must be called before {@link Prepare}.
+     *
+     * @param callback Indicates the recording listener to register. For details, see {@link RecorderCallback}.
+     * @return Returns {@link SUCCESS} if the listener is registered; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback) = 0;
+
+    /**
      * @brief Prepares for recording.
      *
      * This function must be called before {@link Start}.
@@ -438,6 +451,44 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
+
+    /**
+     * @brief Get active audiocapture change information
+     *
+     * This function the current active audio recording for this audio capture.
+     *
+     * @param changeInfo the audio capturer change info.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) = 0;
+
+    /**
+     * @brief Get audiocapture max amplitude
+     *
+     * This function of get audiocapture max amplitude for this audio capture.
+     *
+     * @param sourceId the current audio source id.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) = 0;
+
+    /**
+     * @brief Get Audio ActiveMicrophones
+     *
+     * This function get the Max Amplitude for this audio capture.
+     *
+     * @param sourceId the current audio source id
+     * @param microPhoneDescriptors The arraylist of the MicrophoneDescriptor
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetActiveMicrophones(int32_t sourceId,
+        std::vector<MicrophoneDescriptor> &microPhoneDescriptors) = 0;
 };
 } // namespace Media
 } // namespace OHOS

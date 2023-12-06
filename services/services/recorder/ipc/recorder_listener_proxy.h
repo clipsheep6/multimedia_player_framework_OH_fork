@@ -35,6 +35,16 @@ private:
     sptr<IStandardRecorderListener> listener_ = nullptr;
 };
 
+class RecorderListenerAudioChangeCallback : public RecorderAudioChangeCallback, public NoCopyable {
+public:
+    explicit RecorderListenerAudioChangeCallback(const sptr<IStandardRecorderListener> &listener);
+    virtual ~RecorderListenerAudioChangeCallback();
+
+    void OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo) override;
+private:
+    sptr<IStandardRecorderListener> listener_ = nullptr;
+};
+
 class RecorderListenerProxy : public IRemoteProxy<IStandardRecorderListener>, public NoCopyable {
 public:
     explicit RecorderListenerProxy(const sptr<IRemoteObject> &impl);
@@ -42,6 +52,7 @@ public:
 
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo) override;
 
 private:
     static inline BrokerDelegator<RecorderListenerProxy> delegator_;

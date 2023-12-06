@@ -218,6 +218,119 @@ struct Location {
     float longitude = 0;
 };
 
+// same as AudioCapturerInfo in audio_info.h
+struct AudioRecordInfo {
+    AudioSourceType inputSource = AUDIO_SOURCE_INVALID;
+    int32_t capturerFlags = 0;
+};
+
+// same as CapturerState in audio_info.h
+enum AudioReorderState {
+    /** Capturer INVALID state */
+    AUDIO_RECORDER_INVALID = -1,
+    /** Create new capturer instance */
+    AUDIO_RECORDER_NEW,
+    /** Capturer Prepared state */
+    AUDIO_RECORDER_PREPARED,
+    /** Capturer Running state */
+    AUDIO_RECORDER_RUNNING,
+    /** Capturer Stopped state */
+    AUDIO_RECORDER_STOPPED,
+    /** Capturer Released state */
+    AUDIO_RECORDER_RELEASED,
+    /** Capturer Paused state */
+    AUDIO_RECORDER_PAUSED
+};
+
+enum DeviceType {
+    DEVICE_TYPE_NONE = -1,
+    DEVICE_TYPE_INVALID = 0,
+    DEVICE_TYPE_EARPIECE = 1,
+    DEVICE_TYPE_SPEAKER = 2,
+    DEVICE_TYPE_WIRED_HEADSET = 3,
+    DEVICE_TYPE_WIRED_HEADPHONES = 4,
+    DEVICE_TYPE_BLUETOOTH_SCO = 7,
+    DEVICE_TYPE_BLUETOOTH_A2DP = 8,
+    DEVICE_TYPE_MIC = 15,
+    DEVICE_TYPE_WAKEUP = 16,
+    DEVICE_TYPE_USB_HEADSET = 22,
+    DEVICE_TYPE_USB_ARM_HEADSET = 23,
+    DEVICE_TYPE_FILE_SINK = 50,
+    DEVICE_TYPE_FILE_SOURCE = 51,
+    DEVICE_TYPE_EXTERN_CABLE = 100,
+    DEVICE_TYPE_DEFAULT = 1000,
+    DEVICE_TYPE_MAX
+};
+
+enum DeviceRole {
+    DEVICE_ROLE_NONE = -1,
+    INPUT_DEVICE = 1,
+    OUTPUT_DEVICE = 2,
+    DEVICE_ROLE_MAX
+};
+
+enum RecordAudioEncodingType {
+    PCM = 0,
+    INVALID = -1
+};
+
+enum RecordAudioSampleFormat {
+    RECORD_SAMPLE_U8 = 0,
+    RECORD_SAMPLE_S16LE = 1,
+    RECORD_SAMPLE_S24LE = 2,
+    RECORD_SAMPLE_S32LE = 3,
+    RECORD_SAMPLE_F32LE = 4,
+    RECORD_INVALID_WIDTH = -1
+};
+
+struct AudioStreamInfo {
+    int32_t samplingRate;
+    RecordAudioEncodingType encoding = PCM;
+    RecordAudioSampleFormat format;
+    int32_t channels;
+};
+// same as DeviceInfo in audio_device_info.h
+struct DeviceInfo {
+    DeviceType deviceType;
+    DeviceRole deviceRole;
+    int32_t deviceId;
+    int32_t channelMasks;
+    int32_t channelIndexMasks;
+    std::string deviceName;
+    std::string macAddress;
+    AudioStreamInfo audioStreamInfo;
+    std::string networkId;
+    std::string displayName;
+    int32_t interruptGroupId;
+    int32_t volumeGroupId;
+    bool isLowLatencyDevice;
+};
+
+// same as AudioCapturerChangeInfo in audio_info.h
+struct AudioRecordChangeInfo {
+    int32_t createrUID;
+    int32_t clientUID;
+    int32_t sessionId;
+    AudioRecordInfo aRecorderInfo;
+    AudioReorderState aRecorderState;
+    DeviceInfo inputDeviceInfo;
+    bool muted;
+};
+
+struct Vector3D {
+    float x;
+    float y;
+    float z;
+};
+
+struct MicrophoneDescriptor {
+    int32_t micId_;
+    DeviceType deviceType_;
+    int32_t sensitivity_;
+    Vector3D position_  = {};
+    Vector3D orientation_  = {};
+};
+
 /**
  * @brief Provides listeners for recording errors and information events.
  *
@@ -248,6 +361,26 @@ public:
      * @version 1.0
      */
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
+};
+
+/**
+ * @brief Provides listeners for recording Audio change callback
+ *
+ * @since 1.0
+ * @version 1.0
+ */
+class RecorderAudioChangeCallback {
+public:
+    virtual ~RecorderAudioChangeCallback() = default;
+
+    /**
+     * @brief Called when audioCapture change
+     *
+     * @param AudioRecordChangeInfo audio capture change information.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo) = 0;
 };
 
 /**
@@ -550,6 +683,18 @@ public:
     virtual int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) = 0;
 
     /**
+     * @brief Registers a recording listener.
+     *
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}
+     *
+     * @param callback Indicates the recording listener to register. For details, see {@link RecorderCallback}.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRecorderAudioChangeCallback(const std::shared_ptr<RecorderAudioChangeCallback> &callback) = 0;
+
+    /**
      * @brief Prepares for recording.
      *
      * This function must be called before {@link Start}.
@@ -659,6 +804,42 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
+
+    /**
+     * @brief Get active audiocapture change information
+     *
+     * This function the current active audio recording for this audio capture.
+     *
+     * @param changeInfo the audio capturer change info.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo) = 0;
+
+    /**
+     * @brief Get Audio Record MaxAmplitude
+     *
+     * This function get the Max Amplitude for this audio capture.
+     *
+     * @param sourceId the current audio source id
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetAudioCaptureMaxAmplitude(int32_t sourceId) = 0;
+
+    /**
+     * @brief Get Audio ActiveMicrophones
+     *
+     * This function get the Max Amplitude for this audio capture.
+     *
+     * @param sourceId the current audio source id
+     * @return Returns {std::vector<sptr<MicrophoneDescriptor>>} The arraylist of the MicrophoneDescriptor
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::vector<MicrophoneDescriptor> GetActiveMicrophones(int32_t sourceId) const = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

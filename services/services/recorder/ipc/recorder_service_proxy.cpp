@@ -17,6 +17,7 @@
 #include "recorder_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "audio_changeinfo_proxy_stub.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceProxy"};
@@ -536,6 +537,84 @@ int32_t RecorderServiceProxy::SetFileSplitDuration(FileSplitType type, int64_t t
         "SetFileSplitDuration failed, error: %{public}d", error);
 
     return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::GetActiveAudioCaptureChangeInfo(int32_t sourceId, AudioRecordChangeInfo &changeInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write sourceId!");
+
+    int error = Remote()->SendRequest(GET_ACTIVEAUDIOCAPTUREINFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DestroyStub failed, error: %{public}d", error);
+
+    int32_t ret = reply.ReadInt32();
+    if (ret == MSERR_OK) {
+        AudioChangeInfoProxyStub::ReadAudioRecordChangeInfoParcel(reply, changeInfo);
+    }
+    return ret;
+}
+
+int32_t RecorderServiceProxy::GetAudioCaptureMaxAmplitude(int32_t sourceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write sourceId!");
+
+    int error = Remote()->SendRequest(GET_MAX_AUDIO_MAXAMPLITUDE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DestroyStub failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::GetActiveMicrophones(int32_t sourceId,
+    std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(sourceId);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write sourceId!");
+
+    int error = Remote()->SendRequest(GET_ACTIVE_MICROPHONES, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DestroyStub failed, error: %{public}d", error);
+    int32_t ret = reply.ReadInt32();
+    int32_t size = reply.ReadInt32();
+    if (ret == MSERR_OK && size > 0) {
+        for (auto i = 0; i < size; i++) {
+            MicrophoneDescriptor microPhoneDescriptor;
+            microPhoneDescriptor.micId_ = reply.ReadInt32();
+            microPhoneDescriptor.deviceType_ = static_cast<DeviceType>(reply.ReadInt32());
+            microPhoneDescriptor.sensitivity_ = reply.ReadInt32();
+            microPhoneDescriptor.position_.x = reply.ReadFloat();
+            microPhoneDescriptor.position_.y = reply.ReadFloat();
+            microPhoneDescriptor.position_.z = reply.ReadFloat();
+            microPhoneDescriptor.orientation_.x = reply.ReadFloat();
+            microPhoneDescriptor.orientation_.y = reply.ReadFloat();
+            microPhoneDescriptor.orientation_.z = reply.ReadFloat();
+            microPhoneDescriptors.push_back(microPhoneDescriptor);
+        }
+    }
+    return ret;
 }
 
 int32_t RecorderServiceProxy::DestroyStub()

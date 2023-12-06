@@ -16,6 +16,7 @@
 #include "recorder_listener_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "audio_changeinfo_proxy_stub.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderListenerProxy"};
@@ -64,6 +65,21 @@ void RecorderListenerProxy::OnInfo(int32_t type, int32_t extra)
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
+void RecorderListenerProxy::OnAudioCapturerChange(AudioRecordChangeInfo  audioRecordChangeInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    token = AudioChangeInfoProxyStub::WriteAudioRecordChangeInfoParcel(data, audioRecordChangeInfo);
+    CHECK_AND_RETURN_LOG(token, "Failed to write audioRecordChangeInfo!");
+    int error = Remote()->SendRequest(RecorderListenerMsg::ON_AUDIO_CAPTURE_CHANGE, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
+}
+
 RecorderListenerCallback::RecorderListenerCallback(const sptr<IStandardRecorderListener> &listener)
     : listener_(listener)
 {
@@ -86,6 +102,24 @@ void RecorderListenerCallback::OnInfo(int32_t type, int32_t extra)
 {
     if (listener_ != nullptr) {
         listener_->OnInfo(type, extra);
+    }
+}
+
+RecorderListenerAudioChangeCallback::RecorderListenerAudioChangeCallback(
+    const sptr<IStandardRecorderListener> &listener) : listener_(listener)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+RecorderListenerAudioChangeCallback::~RecorderListenerAudioChangeCallback()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void RecorderListenerAudioChangeCallback::OnAudioCapturerChange(AudioRecordChangeInfo audioRecordChangeInfo)
+{
+    if (listener_ != nullptr) {
+        listener_->OnAudioCapturerChange(audioRecordChangeInfo);
     }
 }
 } // namespace Media

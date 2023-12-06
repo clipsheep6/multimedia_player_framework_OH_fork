@@ -66,6 +66,7 @@ public:
     virtual ~IRecorderEngineObs() = default;
     virtual void OnError(ErrorType errorType, int32_t errorCode) = 0;
     virtual void OnInfo(InfoType type, int32_t extra) = 0;
+    virtual void OnAudioCapturerChange([[maybe_unused]]AudioRecordChangeInfo audioRecordChangeInfo) {}
 };
 
 /**
@@ -165,6 +166,35 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) = 0;
+
+    /**
+     * Sets an extended parameter for recording. It must be called after Prepare. The sourceId indicates the
+     * source ID, which can be obtained from SetVideoSource or SetAudioSource. Use the DUMMY_SOURCE_ID  to
+     * configure the source-independent parameters.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t GetActiveAudioCaptureChangeInfo([[maybe_unused]]int32_t sourceId,
+        [[maybe_unused]]AudioRecordChangeInfo &changeInfo)
+    {
+        return 0;
+    }
+
+    /**
+     * Sets an extended parameter for recording. It must be called after Prepare. The sourceId indicates the
+     * source ID, which can be obtained from SetVideoSource or SetAudioSource. Use the DUMMY_SOURCE_ID  to
+     * configure the source-independent parameters.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t GetAudioCaptureMaxAmplitude([[maybe_unused]]int32_t sourceId)
+    {
+        return 0;
+    }
+
+    virtual int32_t GetActiveMicrophones([[maybe_unused]]int32_t sourceId,
+        [[maybe_unused]]std::vector<MicrophoneDescriptor> &microPhoneDescriptors)
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS
