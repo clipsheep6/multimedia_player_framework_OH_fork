@@ -1445,25 +1445,25 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         MEDIA_LOGI("add msgfilter element: %{public}s", ELEM_NAME(&elem));
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
-
 #ifdef SUPPORT_DRM
     if (strncmp(ELEM_NAME(&elem), "hlsdemux", strlen("hlsdemux")) == 0 ||
         strncmp(ELEM_NAME(&elem), "tsdemux", strlen("tsdemux")) == 0) {
         OnDemuxElementSetup(elem);
     }
-
     if (strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_hevc", strlen("omx_rk_video_decoder_hevc")) == 0) {
+        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_hevc", strlen("omx_rk_video_decoder_hevc")) == 0 ||
+        strncmp(ELEM_NAME(&elem), "omx_hisi_video_decoder_hevc", strlen("omx_hisi_video_decoder_hevc")) == 0 ||
+        strncmp(ELEM_NAME(&elem), "omx_hisi_video_decoder_avc", strlen("omx_hisi_video_decoder_avc")) == 0) {
         OnCodecElementSetup(elem);
     }
-
     if (strncmp(ELEM_NAME(&elem), "drmdec", strlen("drmdec")) == 0 ||
         strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_hevc", strlen("omx_rk_video_decoder_hevc")) == 0 ||
-        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0) {
+        strncmp(ELEM_NAME(&elem), "omx_rk_video_decoder_avc", strlen("omx_rk_video_decoder_avc")) == 0 ||
+        strncmp(ELEM_NAME(&elem), "omx_hisi_video_decoder_hevc", strlen("omx_hisi_video_decoder_hevc")) == 0 ||
+        strncmp(ELEM_NAME(&elem), "omx_hisi_video_decoder_avc", strlen("omx_hisi_video_decoder_avc")) == 0) {
         OnDecryptElementSetup(elem);
     }
 #endif
-
     OnAdaptiveElementSetup(elem);
     std::string elementName(GST_ELEMENT_NAME(&elem));
     if (isNetWorkPlay_ == false && elementName.find("uridecodebin") != std::string::npos) {
