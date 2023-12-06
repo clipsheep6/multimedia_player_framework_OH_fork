@@ -81,6 +81,8 @@ private:
     int32_t AudioCaptureLoop();
     void GetAudioCaptureBuffer();
     void EmptyCaptureQueue();
+    int32_t CreateByOptionAndAppinfo(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    AudioSourceType sourceType, AudioStandard::AppInfo audioAppInfo);
     std::shared_ptr<AudioBuffer> GetSegmentData();
     std::unique_ptr<AudioCacheCtrl> audioCacheCtrl_;
     std::unique_ptr<std::thread> captureLoop_;

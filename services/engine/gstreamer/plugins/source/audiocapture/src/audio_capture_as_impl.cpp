@@ -153,18 +153,12 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
             CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer failed");
 
             CHECK_AND_RETURN_RET(audioCapturer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
-        } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
-            AudioStandard::AudioCapturerOptions options;
-            CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
-                MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
-            options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
-            options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
-            options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
-            MEDIA_LOGD("SetCaptureParameterOptions out, channels:%{public}d, sampleRate:%{public}d",
-                options.streamInfo.channels, options.streamInfo.samplingRate);
-            
-            audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
-            CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+        } else if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER ||
+            sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_VOICE_CALL) {
+            int32_t ret = CreateByOptionAndAppinfo(bitrate, channels, sampleRate, sourceType, audioAppInfo);
+            if (ret != MSERR_OK) {
+                return ret;
+            }
         } else {
             MEDIA_LOGE("Set sourceType invaild");
             return MSERR_INVALID_OPERATION;
@@ -467,6 +461,37 @@ void AudioCaptureAsImpl::EmptyCaptureQueue()
         }
         audioCacheCtrl_->captureQueue_.pop();
     }
+}
+
+int32_t AudioCaptureAsImpl::CreateByOptionAndAppinfo(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    AudioSourceType sourceType, AudioStandard::AppInfo audioAppInfo)
+{
+    AudioStandard::AudioCapturerOptions options;
+    if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
+        CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
+            MSERR_UNSUPPORT_AUD_PARAMS, "unsupport inner audio params");
+    } else {
+        CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureOptions(bitrate, channels, sampleRate, options),
+            MSERR_UNSUPPORT_AUD_PARAMS, "unsupport voice_call audio params");
+    }
+    options.streamInfo.format = AudioStandard::SAMPLE_S16LE;
+    options.streamInfo.encoding = AudioStandard::AudioEncodingType::ENCODING_PCM;
+    if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
+        options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
+    } else {
+        options.capturerInfo.sourceType = AudioStandard::SourceType::SOURCE_TYPE_VOICE_CALL;
+    }
+    MEDIA_LOGD("SetCaptureParameterOptions out, channels:%{public}d, sampleRate:%{public}d",
+        options.streamInfo.channels, options.streamInfo.samplingRate);
+
+    audioCapturer_ = AudioStandard::AudioCapturer::Create(options, audioAppInfo);
+    if (sourceType == AudioSourceType::AUDIO_SOURCE_TYPE_INNER) {
+        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY, "create audio capturer inner failed");
+    } else {
+        CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_NO_MEMORY,
+            "create audio capturer voice_call failed");
+    }
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

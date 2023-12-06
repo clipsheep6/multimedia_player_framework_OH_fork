@@ -75,6 +75,7 @@ static GType gst_audio_capture_src_source_type_get_type(void)
         {AUDIO_SOURCE_TYPE_DEFAULT, "MIC", "MIC"},
         {AUDIO_SOURCE_TYPE_MIC, "MIC", "MIC"},
         {AUDIO_SOURCE_TYPE_INNER, "INNER", "INNER"},
+        {AUDIO_SOURCE_TYPE_VOICE_CALL, "CALL", "CALL"},
         {0, nullptr, nullptr}
     };
     if (!audio_capture_src_source_type) {
