@@ -60,6 +60,8 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
+    int32_t GetLocation(Location &location) override;
     // RecorderClient
     void MediaServerDied();
 

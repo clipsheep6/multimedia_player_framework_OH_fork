@@ -553,5 +553,56 @@ int32_t RecorderServiceProxy::DestroyStub()
 
     return reply.ReadInt32();
 }
+int32_t RecorderServiceProxy::GetAVRecorderConfig(ConfigMap &configMap)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_AV_RECORDER_CONFIG, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAVRecorderConfig failed, error: %{public}d", error);
+
+    configMap["audioBitrate"] = reply.ReadInt32();
+    configMap["audioChannels"] = reply.ReadInt32();
+    configMap["audioCodec"] = reply.ReadInt32();
+    configMap["auidoSampleRate"] = reply.ReadInt32();
+    configMap["fileFormat"] = reply.ReadInt32();
+    configMap["videoBitrate"] = reply.ReadInt32();
+    configMap["videoCodec"] = reply.ReadInt32();
+    configMap["videoFrameHeight"] = reply.ReadInt32();
+    configMap["videoFrameWidth"] = reply.ReadInt32();
+    configMap["videoFrameRate"] = reply.ReadInt32();
+    configMap["audioSourceType"] = reply.ReadInt32();
+    configMap["videoSourceType"] = reply.ReadInt32();
+    configMap["url"] = reply.ReadInt32();
+    configMap["rotation"] = reply.ReadInt32();
+    configMap["withVideo"] = reply.ReadInt32();
+    configMap["withAudio"] = reply.ReadInt32();
+    configMap["withLocation"] = reply.ReadInt32();
+
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceProxy::GetLocation(Location &location)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_LOCATION, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAVRecorderConfig failed, error: %{public}d", error);
+
+    location.latitude = reply.ReadFloat();
+    location.longitude = reply.ReadFloat();
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

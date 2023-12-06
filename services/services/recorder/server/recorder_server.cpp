@@ -136,6 +136,7 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoSource = source;
+    config_.withVideo = true;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetVideoSource(source, sourceId);
     });
@@ -255,6 +256,7 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
 
     config_.audioSource = source;
+    config_.withAudio = true;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetAudioSource(source, sourceId);
     });
@@ -383,6 +385,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.url = fd;
     OutFd outFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
@@ -434,6 +437,9 @@ void RecorderServer::SetLocation(float latitude, float longitude)
         return;
     }
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    config_.latitude = latitude;
+    config_.longitude = longitude;
+    config_.withLocation = true;
     GeoLocation geoLocation(latitude, longitude);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
@@ -450,6 +456,7 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(status_ == REC_CONFIGURED, "status_ error");
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    config_.rotation = rotation;
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
@@ -669,6 +676,37 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
     write(fd, dumpString.c_str(), dumpString.size());
 
+    return MSERR_OK;
+}
+
+int32_t RecorderServer::GetAVRecorderConfig(ConfigMap &configMap)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    configMap["audioBitrate"] = config_.audioBitRate;
+    configMap["audioChannels"] = config_.audioChannel;
+    configMap["audioCodec"] = static_cast<int32_t>(config_.audioCodec);
+    configMap["audioSampleRate"] = config_.audioSampleRate;
+    configMap["fileFormat"] = static_cast<int32_t>(config_.format);
+    configMap["videoBitrate"] = config_.bitRate;
+    configMap["videoCodec"] = static_cast<int32_t>(config_.videoCodec);
+    configMap["videoFrameHeight"] = config_.height;
+    configMap["videoFrameWidth"] = config_.width;
+    configMap["videoFrameRate"] = config_.frameRate;
+    configMap["audioSourceType"] = static_cast<int32_t>(config_.audioSource);
+    configMap["videoSourceType"] = static_cast<int32_t>(config_.videoSource);
+    configMap["url"] = config_.url;
+    configMap["rotation"] = config_.rotation;
+    configMap["withVideo"] = config_.withVideo;
+    configMap["withAudio"] = config_.withAudio;
+    configMap["withLocation"] = config_.withLocation;
+    return MSERR_OK;
+}
+
+int32_t RecorderServer::GetLocation(Location &location)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    location.latitude = config_.latitude;
+    location.longitude = config_.longitude;
     return MSERR_OK;
 }
 } // namespace Media

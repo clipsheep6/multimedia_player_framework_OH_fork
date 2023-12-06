@@ -66,6 +66,8 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
     int32_t DumpInfo(int32_t fd);
+    int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
+    int32_t GetLocation(Location &location) override;
 
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
@@ -104,6 +106,8 @@ private:
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetFileSplitDuration(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
+    int32_t GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply);
+    int32_t GetLocation(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;

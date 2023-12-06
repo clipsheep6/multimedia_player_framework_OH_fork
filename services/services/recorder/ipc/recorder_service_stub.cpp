@@ -86,6 +86,8 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
+    recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
+    recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
 
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
@@ -335,6 +337,18 @@ int32_t RecorderServiceStub::DumpInfo(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
+}
+
+int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetAVRecorderConfig(configMap);
+}
+
+int32_t RecorderServiceStub::GetLocation(Location &location)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetLocation(location);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -602,6 +616,41 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
     (void)data;
     reply.WriteInt32(DestroyStub());
     needAudioPermissionCheck = false;
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply)
+{
+    ConfigMap configMap;
+    GetAVRecorderConfig(configMap);
+
+    (void)reply.WriteInt32(configMap["audioBitrate"]);
+    (void)reply.WriteInt32(configMap["audioChannels"]);
+    (void)reply.WriteInt32(configMap["audioCodec"]);
+    (void)reply.WriteInt32(configMap["auidoSampleRate"]);
+    (void)reply.WriteInt32(configMap["fileFormat"]);
+    (void)reply.WriteInt32(configMap["videoBitrate"]);
+    (void)reply.WriteInt32(configMap["videoCodec"]);
+    (void)reply.WriteInt32(configMap["videoFrameHeight"]);
+    (void)reply.WriteInt32(configMap["videoFrameWidth"]);
+    (void)reply.WriteInt32(configMap["videoFrameRate"]);
+    (void)reply.WriteInt32(configMap["audioSourceType"]);
+    (void)reply.WriteInt32(configMap["videoSourceType"]);
+    (void)reply.WriteInt32(configMap["url"]);
+    (void)reply.WriteInt32(configMap["rotation"]);
+    (void)reply.WriteInt32(configMap["withVideo"]);
+    (void)reply.WriteInt32(configMap["withAudio"]);
+    (void)reply.WriteInt32(configMap["withLocation"]);
+
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &reply)
+{
+    Location location;
+    GetLocation(location);
+    (void)reply.WriteFloat(location.latitude);
+    (void)reply.WriteFloat(location.longitude);
     return MSERR_OK;
 }
 } // namespace Media
