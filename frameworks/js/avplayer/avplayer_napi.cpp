@@ -584,6 +584,7 @@ void AVPlayerNapi::StopTaskQue()
 {
     MEDIA_LOGI("StopTaskQue In");
     taskQue_->Stop();
+    std::unique_lock<std::mutex> lock(mutex_);
     taskQueStoped_ = true;
     stopTaskQueCond_.notify_all();
     MEDIA_LOGI("StopTaskQue Out");

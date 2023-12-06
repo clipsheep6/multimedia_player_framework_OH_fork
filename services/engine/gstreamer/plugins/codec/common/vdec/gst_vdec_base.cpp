@@ -565,13 +565,16 @@ static GstStateChangeReturn gst_vdec_base_change_state(GstElement *element, GstS
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: stop start");
             gst_buffer_pool_set_active(self->outpool, FALSE);
+            g_mutex_lock(&self->format_changed_lock);
             GST_VIDEO_DECODER_STREAM_LOCK(self);
             if (self->decoder != nullptr) {
                 (void)self->decoder->Flush(GST_CODEC_ALL);
             }
+            self->unsupport_format_changed = true;
             gst_vdec_base_set_flushing(self, TRUE);
 
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+            g_mutex_unlock(&self->format_changed_lock);
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: close start");
