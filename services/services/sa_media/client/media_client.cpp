@@ -370,6 +370,10 @@ void MediaClient::DoMediaServerDied()
     listenerStub_ = nullptr;
     deathRecipient_ = nullptr;
 
+    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
+    CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
+    monitor->MediaServerDied();
+
     AVPlayerServerDied();
     AVCodecServerDied();
 #ifdef SUPPORT_RECORDER
@@ -396,10 +400,6 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-
-    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
-    CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
-    monitor->MediaServerDied();
 }
 } // namespace Media
 } // namespace OHOS

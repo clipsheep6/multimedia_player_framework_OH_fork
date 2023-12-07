@@ -518,12 +518,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
 
-    {
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-        stopWait_ = true;
-        stateChangeCond_.notify_all();
-    }
+    (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     return task;
 }
 
@@ -612,11 +607,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
-        std::unique_lock<std::mutex> lock(taskMutex_);
-        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         isReleased_.store(true);
-        stopWait_ = true;
-        stateChangeCond_.notify_all();
+        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     }
     return task;
 }
