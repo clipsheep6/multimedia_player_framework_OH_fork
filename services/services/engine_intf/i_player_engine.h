@@ -80,7 +80,12 @@ public:
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
 #ifdef SUPPORT_DRM
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp)  = 0;
+        bool svp)
+    {
+        (void)keySessionProxy;
+        (void)svp;
+        return 0;
+    }
 #endif
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
