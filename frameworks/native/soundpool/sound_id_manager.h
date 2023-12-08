@@ -57,13 +57,11 @@ private:
     std::condition_variable queueDataValid_;
     std::deque<int32_t> soundIDs_;
     bool quitQueue_;
-    size_t maxLoadNumAtSameTime_ = 3;
 
     static const int32_t invalidSoundIDFlag = -1;
     static constexpr int32_t MAX_SOUND_ID_QUEUE = 128;
     static constexpr int32_t WAIT_TIME_BEFORE_CLOSE_MS = 1000;
-    static constexpr size_t MAX_STREAM_NUM_FOR_LOW_LATENCY = 3;
-    static constexpr size_t MAX_STREAM_NUM_FOR_NORMAL = 16;
+    static constexpr size_t MAX_LOAD_NUM = 32;
 };
 } // namespace Media
 } // namespace OHOS

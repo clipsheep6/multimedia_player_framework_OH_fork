@@ -77,7 +77,7 @@ int32_t StreamIDManager::InitThreadPool()
     streamPlayingThreadPool_ = std::make_unique<ThreadPool>(THREAD_POOL_NAME);
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain playing ThreadPool");
-    if (maxStreams_ > MAX_PLAY_STREAMS_NUMBER || maxStreams_ <= 0) {
+    if (maxStreams_ > MAX_PLAY_STREAMS_NUMBER) {
         maxStreams_ = MAX_PLAY_STREAMS_NUMBER;
         MEDIA_INFO_LOG("more than max play stream number, align to max play strem number.");
     }

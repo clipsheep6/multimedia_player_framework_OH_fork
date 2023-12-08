@@ -66,7 +66,7 @@ private:
         std::weak_ptr<StreamIDManager> streamIDManagerInner_;
     };
     // audio render max concurrency count.
-    static constexpr int32_t MAX_PLAY_STREAMS_NUMBER = 16;
+    static constexpr int32_t MAX_PLAY_STREAMS_NUMBER = 32;
     static constexpr int32_t MIN_PLAY_STREAMS_NUMBER = 1;
 
     struct StreamIDAndPlayParamsInfo {

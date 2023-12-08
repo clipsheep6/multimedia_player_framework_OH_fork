@@ -67,22 +67,18 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         cacheDir = playParams.cacheDir;
     }
 
-    MEDIA_INFO_LOG("CacheBuffer sampleRate:%{public}d, sampleFormat:%{public}d, channelCount:%{public}d.",
-        sampleRate, sampleFormat, channelCount);
-    // low-latency:1, non low-latency:0
-    if ((rendererOptions.streamInfo.samplingRate == AudioStandard::AudioSamplingRate::SAMPLE_RATE_48000) &&
-        (rendererOptions.streamInfo.channels == AudioStandard::AudioChannel::MONO ||
-        rendererOptions.streamInfo.channels == AudioStandard::AudioChannel::STEREO)) {
-        // samplingRate 48KHz, channelCount 1/2
-        MEDIA_INFO_LOG("low latency support this rendererOptions.");
-        rendererFlags_ = audioRendererInfo.rendererFlags;
-    } else {
-        MEDIA_INFO_LOG("low latency didn't support this rendererOptions, force normal play.");
-        rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
-    }
+    rendererFlags_ = audioRendererInfo.rendererFlags;
     rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer =
         AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
+
+    if (audioRenderer == nullptr) {
+        MEDIA_ERR_LOG("create audiorenderer failed, try again.");
+        rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
+        rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
+        audioRenderer = AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
+    }
+
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
     audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_CALLBACK);
     int32_t ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
