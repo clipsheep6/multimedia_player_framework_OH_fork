@@ -37,6 +37,7 @@ public:
     virtual int32_t Start() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Pause() = 0;
+    virtual int32_t PauseTransitent() = 0;
     virtual int32_t Drain() = 0;
     virtual int32_t Flush() = 0;
     virtual int32_t Release() = 0;

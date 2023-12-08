@@ -298,6 +298,25 @@ int32_t AudioSinkSvImpl::Pause()
     return MSERR_OK;
 }
 
+int32_t AudioSinkSvImpl::PauseTransitent()
+{
+    MediaTrace trace("AudioSink::PauseTransitent");
+    MEDIA_LOGI("audioRenderer PauseTransitent In");
+    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
+        LISTENER(
+            bool ret = audioRenderer_->PauseTransitent();
+            if (ret == false) {
+                MEDIA_LOGE("audio Renderer PauseTransitent failed!");
+            }
+            CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED),
+            "AudioRenderer::PauseTransitent",
+            PlayerXCollie::timerTimeout)
+    }
+    MEDIA_LOGI("audioRenderer PauseTransitent Out");
+    return MSERR_OK;
+}
+
 int32_t AudioSinkSvImpl::Drain()
 {
     MediaTrace trace("AudioSink::Drain");

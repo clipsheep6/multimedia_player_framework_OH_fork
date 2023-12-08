@@ -68,6 +68,7 @@ public:
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Pause() override;
+    int32_t PauseTransitent() override;
     int32_t Drain() override;
     int32_t Flush() override;
     int32_t Release() override;
