@@ -53,6 +53,11 @@ declare_args() {
       defined(global_parts_info.multimedia_drm_framework)) {
     multimedia_player_framework_support_drm = true
   }
+  multimedia_player_framework_support_vibrator = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.sensors_miscdevice)) {
+    multimedia_player_framework_support_vibrator = true
+  }
 }
 
 player_framework_defines = []
@@ -135,6 +140,12 @@ if (multimedia_player_framework_support_drm) {
   player_framework_defines += [ "SUPPORT_DRM" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_DRM" ]
+}
+
+if (multimedia_player_framework_support_vibrator) {
+  player_framework_defines += [ "SUPPORT_VIBRATOR" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_VIBRATOR" ]
 }
 
 # Config path

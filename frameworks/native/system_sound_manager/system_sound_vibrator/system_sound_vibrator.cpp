@@ -15,7 +15,9 @@
 
 #include "system_sound_vibrator.h"
 
+#ifdef SUPPORT_VIBRATOR
 #include "vibrator_agent.h"
+#endif
 
 #include "media_log.h"
 #include "media_errors.h"
@@ -26,6 +28,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoun
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_VIBRATOR
 const std::unordered_map<VibrationType, VibratorUsage> VIBRATOR_USAGE_MAP = {
     {VibrationType::VIBRATION_RINGTONE, USAGE_RING},
     {VibrationType::VIBRATION_SYSTEM_TONE, USAGE_NOTIFICATION},
@@ -42,21 +45,28 @@ const std::unordered_map<VibrationType, std::string> EFFECT_ID_MAP = {
     {VibrationType::VIBRATION_RINGTONE, "haptic.ringtone.Dream_It_Possible"},
     {VibrationType::VIBRATION_SYSTEM_TONE, "haptic.notice.Rise"},
 };
+#endif
 
 int32_t SystemSoundVibrator::StartVibrator(VibrationType type)
 {
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
     bool setUsageRet = Sensors::SetUsage(VIBRATOR_USAGE_MAP.at(type));
     bool setLoopRet = Sensors::SetLoopCount(LOOP_COUNT_MAP.at(type));
-    int32_t result = Sensors::StartVibrator(EFFECT_ID_MAP.at(type).c_str());
+    result = Sensors::StartVibrator(EFFECT_ID_MAP.at(type).c_str());
     MEDIA_LOGI("StartVibrator: setUsageRet %{public}d, setLoopRet %{public}d, startRet %{public}d",
         setUsageRet, setLoopRet, result);
+#endif
     return result;
 }
 
 int32_t SystemSoundVibrator::StopVibrator()
 {
-    int32_t result = Sensors::Cancel();
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
+    result = Sensors::Cancel();
     MEDIA_LOGI("StopVibrator: %{public}d", result);
+#endif
     return result;
 }
 } // namesapce AudioStandard
