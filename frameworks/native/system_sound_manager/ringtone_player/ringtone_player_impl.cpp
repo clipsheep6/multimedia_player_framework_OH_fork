@@ -15,6 +15,8 @@
 
 #include "ringtone_player_impl.h"
 
+#include "config_policy_utils.h"
+
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -29,10 +31,7 @@ namespace OHOS {
 namespace Media {
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
-const std::string DEFAULT_RINGTONE_URI_1 =
-    "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
-const std::string DEFAULT_RINGTONE_URI_2 =
-    "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
+const std::string DEFAULT_RINGTONE_PATH = "resource/media/audio/ringtones";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)

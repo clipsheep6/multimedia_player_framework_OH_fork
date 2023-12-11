@@ -19,6 +19,7 @@
 #include <thread>
 
 #include "audio_info.h"
+#include "config_policy_utils.h"
 
 #include "media_log.h"
 #include "media_errors.h"
@@ -34,10 +35,7 @@ namespace OHOS {
 namespace Media {
 const int32_t MAX_STREAMS = 1; // ensure that only one system tone is playing.
 const int32_t LOAD_WAIT_SECONDS = 2;
-const std::string DEFAULT_SYSTEM_TONE_URI_1 =
-    "sys_prod/resource/media/audio/notifications/Rise.ogg";
-const std::string DEFAULT_SYSTEM_TONE_URI_2 =
-    "sys_prod/variant/region_comm/china/resource/media/audio/notifications/Rise.ogg";
+const std::string DEFAULT_SYSTEM_TONE_PATH = "resource/media/audio/notifications/";
 
 SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType)

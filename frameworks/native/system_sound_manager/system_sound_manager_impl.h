@@ -56,6 +56,7 @@ public:
 
 private:
     void LoadSystemSoundUriMap(void);
+    void ParseDefaultSystemSoundConfig(void);
     void WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
@@ -71,6 +72,8 @@ private:
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
     std::shared_ptr<RingerModeCallbackImpl> ringerModeCallback_ = nullptr;
+
+    static std::unordered_map<std::string, std::string> defaultUriMap_;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {

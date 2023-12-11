@@ -15,6 +15,9 @@
 
 #include "system_sound_manager_impl.h"
 
+#include <json/json.h>
+#include "config_policy_utils.h"
+
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -30,8 +33,14 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoun
 
 namespace OHOS {
 namespace Media {
-const std::string RING_TONE = "ring_tone";
-const std::string SYSTEM_TONE = "system_tone";
+static const std::string RING_TONE = "ring_tone";
+static const std::string SYSTEM_TONE = "system_tone";
+static constexpr char DEFAULT_RINGTONE_JSON[] = "resource/media/audio/ringtone_incall.json";
+static const std::string DEFAULT_RINGTONE_PATH = "resource/media/audio/ringtones/";
+static constexpr char DEFAULT_SYSTEM_TONE_JSON[] = "resource/media/audio/ringtone_sms-notification.json";
+static const std::string DEFAULT_SYSTEM_TONE_PATH = "resource/media/audio/notifications/";
+static constexpr uint32_t MAX_PATH_LEN = 128;
+
 unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
 {
     unique_ptr<SystemSoundManagerImpl> systemSoundMgr = make_unique<SystemSoundManagerImpl>();
@@ -42,6 +51,7 @@ unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManag
 
 SystemSoundManagerImpl::SystemSoundManagerImpl()
 {
+    ParseDefaultSystemSoundConfig();
     LoadSystemSoundUriMap();
     InitRingerMode();
 }
@@ -100,6 +110,62 @@ void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
     systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] =
         GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICATION));
+}
+
+void SystemSoundManagerImpl::ParseDefaultSystemSoundConfig(void)
+{
+    if (defaultUriMap_.size() > 0) {
+        MEDIA_LOGI("SystemSound: the deault system sound uri map has been initialized.");
+        return;
+    }
+
+    char buf[MAX_PATH_LEN];
+    char *path = GetOneCfgFile(DEFAULT_RINGTONE_JSON, buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("GetOneCfgFile for DEFAULT_RINGTONE_JSON failed.");
+        return;
+    }
+    std::string ringtoneJsonPath = path;
+
+    Json::Reader reader;
+    Json::Value root;
+
+    ifstream ringtoneJsonStream(ringtoneJsonPath, ios::binary);
+    if(!ringtoneJsonStream.is_open()) {
+        MEDIA_LOGE("Open ringtoneJsonPath failed.");
+        return; 
+    }
+    if(reader.parse(ringtoneJsonStream, root)) {
+        //读取根节点信息
+        std::string presetRingtoneSim1 = root["preset_ringtone_sim1"].asString();
+        defaultUriMap_["ringtone_for_sim_card_0"] = DEFAULT_RINGTONE_PATH + presetRingtoneSim1 + ".ogg";
+        std::string presetRingtoneSim2 = root["preset_ringtone_sim2"].asString();
+        defaultUriMap_["ringtone_for_sim_card_1"] = DEFAULT_RINGTONE_PATH + presetRingtoneSim2 + ".ogg";
+    }
+    ringtoneJsonStream.close();
+
+    path = GetOneCfgFile(DEFAULT_SYSTEM_TONE_JSON, buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("GetOneCfgFile for DEFAULT_SYSTEM_TONE_JSON failed.");
+        return;
+    }
+    std::string systemToneJsonPath = path;
+
+    ifstream systemToneJsonStream(systemToneJsonPath, ios::binary);
+    if(!systemToneJsonStream.is_open()) {
+        MEDIA_LOGE("Open systemToneJsonPath failed.");
+        return; 
+    }
+    if(reader.parse(systemToneJsonStream, root)) {
+        //读取根节点信息
+        std::string presetSystemToneSms = root["preset_ringtone_sms"].asString();
+        defaultUriMap_["system_tone_for_sim_card_0"] = DEFAULT_SYSTEM_TONE_PATH + presetRingtoneSim1 + ".ogg";
+        defaultUriMap_["system_tone_for_sim_card_1"] = DEFAULT_SYSTEM_TONE_PATH + presetRingtoneSim1 + ".ogg";
+        std::string presetSystemToneNotification = root["preset_ringtone_notification"].asString();
+        defaultUriMap_["system_tone_for_notification"] = DEFAULT_SYSTEM_TONE_PATH + presetRingtoneSim2 + ".ogg";
+    }
+    ringtoneJsonStream.close();
+
 }
 
 void SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
