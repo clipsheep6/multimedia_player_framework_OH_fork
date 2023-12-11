@@ -144,6 +144,9 @@ int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
     if (ringtoneState_ != STATE_NEW) {
         (void)player_->SetVolume(volume_, volume_);
         (void)player_->SetLooping(loop_);
+        if (ringtoneState_ == STATE_RUNNING && std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
+            (void)SystemSoundVibrator::StopVibrator();
+        }
     }
 
     (void)PrepareRingtonePlayer(false);
@@ -177,7 +180,7 @@ int32_t RingtonePlayerImpl::Start()
 
     auto ret = player_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
-    if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+    if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT && volume_ > 0.0f) {
         (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
     }
     ringtoneState_ = STATE_RUNNING;
@@ -192,8 +195,8 @@ int32_t RingtonePlayerImpl::Stop()
 
     if (ringtoneState_ != STATE_STOPPED && player_->IsPlaying()) {
         (void)player_->Stop();
+        (void)SystemSoundVibrator::StopVibrator();
     }
-    (void)SystemSoundVibrator::StopVibrator();
 
     ringtoneState_ = STATE_STOPPED;
     isStartQueued_ = false;
@@ -241,7 +244,8 @@ void RingtonePlayerImpl::SetPlayerState(RingtoneState ringtoneState)
             isStartQueued_ = false;
             CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Play failed %{public}d", ret);
             ringtoneState_ = RingtoneState::STATE_RUNNING;
-            if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+            if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT &&
+                volume_ > 0.0f) {
                 (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
             }
         }
