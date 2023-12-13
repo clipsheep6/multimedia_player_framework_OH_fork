@@ -37,8 +37,6 @@ enum FormatDataType : uint32_t {
     FORMAT_TYPE_STRING,
     /* Addr */
     FORMAT_TYPE_ADDR,
-    /* add for drm, Map: string, vector<uint8> */
-    FORMAT_TYPE_INFOMAP,
 };
 
 struct FormatData {
@@ -52,7 +50,6 @@ struct FormatData {
     std::string stringVal = "";
     uint8_t *addr = nullptr;
     size_t size = 0;
-    std::map<std::string, std::vector<uint8_t>> infoMap;
 };
 
 class __attribute__((visibility("default"))) Format {
@@ -142,28 +139,6 @@ public:
      * @version 1.0
      */
     bool PutFormatVector(const std::string_view &key, std::vector<Format> &value);
-
-    /**
-     * @brief Sets metadata of the format map<string, vector<uint8>>.
-     *
-     * @param key Indicates the metadata key.
-     * @param value Indicates the drminfo, which is a format map.
-     * @return Returns <b>true</b> if the format map is successfully set; returns <b>false</b> otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    bool PutInfoMap(const std::string_view &key, std::map<std::string, std::vector<uint8_t>> &value);
-
-    /**
-     * @brief Obtains the drminfo map<string, vector<uint8>>.
-     *
-     * @param key Indicates the drm infos.
-     * @param value Indicates the drminfo to obtain, which is map<string, vector<uint8>>.
-     * @return Returns <b>true</b> if the map is successfully obtained; returns <b>false</b> otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    bool GetInfoMap(const std::string_view &key, std::map<std::string, std::vector<uint8_t>> &value) const;
 
     /**
      * @brief Obtains the metadata value of the integer type.

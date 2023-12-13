@@ -47,17 +47,10 @@ namespace {
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
     constexpr uint64_t CONNECT_SPEED_DEFAULT = 4 * 8 * 1024 * 1024;  // 4Mbps
     constexpr uint32_t MAX_SUBTITLE_TRACK_NUN = 8;
-    constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
-    constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
 }
 
 namespace OHOS {
 namespace Media {
-struct DrmInfoItem {
-    uint8_t uuid[DRM_MAX_M3U8_DRM_UUID_LEN];
-    uint8_t pssh[DRM_MAX_M3U8_DRM_PSSH_LEN];
-    uint32_t psshLen;
-};
 
 static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS = {
     {
@@ -1283,7 +1276,9 @@ int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demu
     auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, DRM_SIGNAL_INVALID_PARAM, "thizStrong is nullptr");
     CHECK_AND_RETURN_RET_LOG(drmInfoArray != nullptr, DRM_SIGNAL_INVALID_PARAM, "drminfoArray nullptr");
+    CHECK_AND_RETURN_RET_LOG(infoCount > 0, DRM_SIGNAL_INVALID_PARAM, "drminfo count less equal to zero");
 
+    // for restore locally
     DrmInfoItem *drmInfos = static_cast<DrmInfoItem*>(drmInfoArray);
     CHECK_AND_RETURN_RET_LOG(drmInfos != nullptr, DRM_SIGNAL_INVALID_PARAM, "drmInfos nullptr");
     std::map<std::string, std::vector<uint8_t>> drmInfoMap;
@@ -1291,20 +1286,22 @@ int32_t PlayBinCtrlerBase::OnDrmInfoUpdatedSignalReceived(const GstElement *demu
         DrmInfoItem temp = drmInfos[i];
         std::stringstream ssConverter;
         std::string uuid;
-        for (uint32_t index = 0; index < DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
+        for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
             ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
             uuid = ssConverter.str();
         }
         std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
         drmInfoMap.insert({ uuid, pssh });
     }
-
     std::unique_lock<std::mutex> drmInfoLock(thizStrong->drmInfoMutex_);
     thizStrong->drmInfo_ = drmInfoMap;
     drmInfoLock.unlock();
 
+    // for report
     Format format;
-    (void) format.PutInfoMap(std::string(PlayerKeys::PLAYER_DRM_INFO), drmInfoMap);
+    size_t drmInfoSize = static_cast<size_t>(infoCount) * sizeof(DrmInfoItem);
+    (void) format.PutBuffer(PlayerKeys::PLAYER_DRM_INFO_ADDR, static_cast<const uint8_t *>(drmInfoArray), drmInfoSize);
+    (void) format.PutIntValue(PlayerKeys::PLAYER_DRM_INFO_COUNT, static_cast<int32_t>(infoCount));
     PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_DRM_INFO_UPDATED, 0, format };
     thizStrong->ReportMessage(msg);
 

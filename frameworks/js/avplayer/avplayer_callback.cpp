@@ -14,6 +14,8 @@
  */
 
 #include <map>
+#include <iostream>
+#include <sstream>
 #include <uv.h>
 #include "avplayer_napi.h"
 #include "media_errors.h"
@@ -918,19 +920,41 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
 {
     (void)extra;
     MEDIA_LOGI("AVPlayerCallback OnDrmInfoUpdatedCb is called");
-
     if (refMap_.find(AVPlayerEvent::EVENT_DRM_INFO_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find drm info updated callback!");
         return;
     }
-    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO))) {
-        MEDIA_LOGW("there's no drminfo-update key");
+    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR))) {
+        MEDIA_LOGW("there's no drminfo-update drm_info_addr key");
+        return;
+    }
+    if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT))) {
+        MEDIA_LOGW("there's no drminfo-update drm_info_count key");
         return;
     }
 
+    uint8_t *drmInfoAddr = nullptr;
+    size_t size  = 0;
+    int32_t infoCount = 0;
+    infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR), &drmInfoAddr, size);
+    CHECK_AND_RETURN_LOG(drmInfoAddr != nullptr && size > 0, "get drminfo buffer failed");
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT), infoCount);
+    CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
+
     std::map<std::string, std::vector<uint8_t>> drmInfoMap;
-    infoBody.GetInfoMap(std::string(PlayerKeys::PLAYER_DRM_INFO), drmInfoMap);
-    CHECK_AND_RETURN_LOG(!drmInfoMap.empty(), "drminfoMap is empty");
+    DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(drmInfoAddr);
+    CHECK_AND_RETURN_LOG(drmInfos != nullptr, "cast drmInfos nullptr");
+    for (int32_t i = 0; i < infoCount; i++) {
+        DrmInfoItem temp = drmInfos[i];
+        std::stringstream ssConverter;
+        std::string uuid;
+        for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
+            ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
+            uuid = ssConverter.str();
+        }
+        std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
+        drmInfoMap.insert({ uuid, pssh });
+    }
 
     NapiCallback::ObjectArray *cb = new(std::nothrow) NapiCallback::ObjectArray();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new ObjectArray");

@@ -29,6 +29,17 @@
 
 namespace OHOS {
 namespace Media {
+
+namespace DrmConstant {
+constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
+constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
+}
+
+struct DrmInfoItem {
+    uint8_t uuid[DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN];
+    uint8_t pssh[DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN];
+    uint32_t psshLen;
+};
 class PlayerKeys {
 public:
     static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
@@ -61,7 +72,8 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
-    static constexpr std::string_view PLAYER_DRM_INFO = "drm_info";
+    static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
+    static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
 };
 
 enum BufferingInfoType : int32_t {
