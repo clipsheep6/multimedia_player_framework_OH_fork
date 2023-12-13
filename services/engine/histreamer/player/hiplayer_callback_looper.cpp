@@ -19,17 +19,16 @@
 #include <utility>
 #include "common/log.h"
 #include "osal/task/autolock.h"
-//#include "foundation/utils/steady_clock.h"
-//#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
 namespace {
-constexpr int32_t WHAT_NONE = 0;
-constexpr int32_t WHAT_MEDIA_PROGRESS = 1;
-constexpr int32_t WHAT_INFO = 2;
-constexpr int32_t WHAT_ERROR = 3;
+    constexpr int32_t WHAT_NONE = 0;
+    constexpr int32_t WHAT_MEDIA_PROGRESS = 1;
+    constexpr int32_t WHAT_INFO = 2;
+    constexpr int32_t WHAT_ERROR = 3;
 }
+
 HiPlayerCallbackLooper::HiPlayerCallbackLooper() : task_("callbackThread", OHOS::Media::TaskPriority::NORMAL)
 {
     task_.RegisterJob([this] {LoopOnce();});
@@ -63,6 +62,7 @@ void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlaye
         MEDIA_LOG_I("start callback looper");
     }
 }
+
 void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine)
 {
     playerEngine_ = engine;
@@ -75,12 +75,10 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
         return;
     }
     reportMediaProgress_ = true;
-    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Plugin::Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
-    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Plugin::Any()));
 }
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
@@ -101,16 +99,12 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
             MEDIA_LOG_W("get player engine current time error");
         }
     }
-    /*if (reportMediaProgress_) {
-        eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Plugin::Any()));
-    }*/
 }
 
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    /*eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
-        std::make_pair(errorType, errorCode)));*/
+    (void)errorType;
+    (void)errorCode;
 }
 
 void HiPlayerCallbackLooper::DoReportError(const Any &error)
@@ -210,5 +204,5 @@ void HiPlayerCallbackLooper::EventQueue::Quit()
     quit_ = true;
     queueHeadUpdatedCond_.NotifyOne();
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

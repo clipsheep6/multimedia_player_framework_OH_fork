@@ -19,11 +19,13 @@ namespace OHOS {
 namespace Media {
     class RecorderEventReceiver : public Pipeline::EventReceiver {
     public:
-        RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl) {
+        explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
+        {
             hiRecorderImpl_ = hiRecorderImpl;
         }
 
-        void OnEvent(const Event &event) {
+        void OnEvent(const Event &event)
+        {
             hiRecorderImpl_->OnEvent(event);
         }
 
@@ -33,11 +35,14 @@ namespace Media {
 
     class RecorderFilterCallback : public Pipeline::FilterCallback {
     public:
-        RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl) {
+        RecorderFilterCallback(HiRecorderImpl *hiRecorderImpl)
+        {
             hiRecorderImpl_ = hiRecorderImpl;
         }
 
-        void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType) {
+        void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter,
+            Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
+        {
             hiRecorderImpl_->OnCallback(filter, cmd, outType);
         }
 
@@ -46,14 +51,20 @@ namespace Media {
     };
 
     HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
-            : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId) {
+        :appUid_(appUid),
+        appPid_(appPid),
+        appTokenId_(appTokenId),
+        appFullTokenId_(appFullTokenId)
+    {
         pipeline_ = std::make_shared<Pipeline::Pipeline>();
     }
 
-    HiRecorderImpl::~HiRecorderImpl() {
+    HiRecorderImpl::~HiRecorderImpl()
+    {
     }
 
-    int32_t HiRecorderImpl::Init() {
+    int32_t HiRecorderImpl::Init()
+    {
         MEDIA_LOG_I("Init enter.");
         recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
         recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
@@ -61,7 +72,8 @@ namespace Media {
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId) {
+    int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
+    {
         MEDIA_LOG_I("SetVideoSource enter.");
         sourceId = INVALID_SOURCE_ID;
         FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
@@ -84,7 +96,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId) {
+    int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
+    {
         MEDIA_LOG_I("SetAudioSource enter.");
         sourceId = INVALID_SOURCE_ID;
         FALSE_RETURN_V(source != AudioSourceType::AUDIO_SOURCE_INVALID,
@@ -109,20 +122,23 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format) {
+    int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
+    {
         MEDIA_LOG_I("SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
         outputFormatType_ = format;
         OnStateChanged(StateId::RECORDING_SETTING);
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs) {
+    int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
+    {
         MEDIA_LOG_I("SetObs enter.");
         obs_ = obs;
         return (int32_t)Status::OK;
     }
 
-    int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam) {
+    int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam)
+    {
         MEDIA_LOG_I("Configure enter.");
         FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
                        (int32_t)Status::ERROR_INVALID_OPERATION);
@@ -154,12 +170,14 @@ namespace Media {
         return (int32_t)Status::OK;
     }
 
-    sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId) {
+    sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
+    {
         MEDIA_LOG_I("GetSurface enter.");
         return videoEncoderFilter_->GetInputSurface();
     }
 
-    int32_t HiRecorderImpl::Prepare() {
+    int32_t HiRecorderImpl::Prepare()
+    {
         MEDIA_LOG_I("Prepare enter.");
         if (audioCaptureFilter_) {
             audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
@@ -167,7 +185,6 @@ namespace Media {
             audioEncFormat_->Set<Tag::APP_UID>(appUid_);
             audioEncFormat_->Set<Tag::APP_PID>(appPid_);
             audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
-            // audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(AudioSampleFormat::SAMPLE_S16P);
             audioCaptureFilter_->SetParameter(audioEncFormat_);
         }
         if (videoEncoderFilter_) {
@@ -182,7 +199,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Start() {
+    int32_t HiRecorderImpl::Start()
+    {
         MEDIA_LOG_I("Start enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::PAUSE) {
@@ -196,7 +214,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Pause() {
+    int32_t HiRecorderImpl::Pause()
+    {
         MEDIA_LOG_I("Pause enter.");
         Status ret = Status::OK;
         if (curState_ != StateId::READY) {
@@ -208,7 +227,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Resume() {
+    int32_t HiRecorderImpl::Resume()
+    {
         MEDIA_LOG_I("Resume enter.");
         Status ret = Status::OK;
         ret = pipeline_->Resume();
@@ -218,7 +238,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Stop(bool isDrainAll) {
+    int32_t HiRecorderImpl::Stop(bool isDrainAll)
+    {
         MEDIA_LOG_I("Stop enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::INIT || curState_ == StateId::READY) {
@@ -238,7 +259,8 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::Reset() {
+    int32_t HiRecorderImpl::Reset()
+    {
         MEDIA_LOG_I("Reset enter.");
         Status ret = Status::OK;
         if (curState_ == StateId::RECORDING) {
@@ -255,19 +277,17 @@ namespace Media {
         return (int32_t)ret;
     }
 
-    int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam) {
+    int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
+    {
         MEDIA_LOG_I("SetParameter enter.");
         return Configure(sourceId, recParam);
     }
 
-    void HiRecorderImpl::OnEvent(const Event &event) {
+    void HiRecorderImpl::OnEvent(const Event &event)
+    {
         switch (event.type) {
             case EventType::EVENT_ERROR: {
                 OnStateChanged(StateId::ERROR);
-                auto ptr = obs_.lock();
-                if (ptr != nullptr) {
-                    // ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, event.param);
-                }
                 break;
             }
             case EventType::EVENT_READY: {
@@ -283,7 +303,8 @@ namespace Media {
     }
 
     void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
-                                    Pipeline::StreamType outType) {
+                                    Pipeline::StreamType outType)
+    {
         MEDIA_LOG_I("OnCallback enter.");
         if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
             switch (outType) {
@@ -323,7 +344,8 @@ namespace Media {
         }
     }
 
-    void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam) {
+    void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
+    {
         MEDIA_LOG_I("ConfigureAudio enter.");
         switch (recParam.type) {
             case RecorderPublicParamType::AUD_SAMPLERATE: {
@@ -357,10 +379,10 @@ namespace Media {
                 break;
             }
         }
-
     }
 
-    void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam) {
+    void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
+    {
         MEDIA_LOG_I("ConfigureVideo enter.");
         switch (recParam.type) {
             case RecorderPublicParamType::VID_RECTANGLE: {
@@ -406,7 +428,8 @@ namespace Media {
         }
     }
 
-    void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam) {
+    void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
+    {
         MEDIA_LOG_I("ConfigureMuxer enter");
         switch (recParam.type) {
             case RecorderPublicParamType::OUT_FD: {
@@ -432,7 +455,8 @@ namespace Media {
         }
     }
 
-    bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam) {
+    bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
+    {
         FALSE_RETURN_V((SourceIdGenerator::IsAudio(sourceId) && recParam.IsAudioParam() &&
                         static_cast<int32_t>(audioSourceId_) == sourceId) ||
                        (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() &&
@@ -445,5 +469,5 @@ namespace Media {
     {
         curState_ = state;
     }
-} //namespace MEDIA
-} //namespace OHOS
+} // namespace MEDIA
+} // namespace OHOS
