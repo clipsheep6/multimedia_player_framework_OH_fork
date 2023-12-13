@@ -19,8 +19,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "hiplayer_callback_looper.h"
 #include <i_player_engine.h>
+#include "hiplayer_callback_looper.h"
 #include "common/status.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
@@ -48,7 +48,6 @@ enum class PlayerStateId {
     ERROR = 8,
 };
 class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
-
 public:
     HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~HiPlayerImpl() override;
@@ -128,6 +127,6 @@ private:
     int32_t videoWidth_ {0};
     int32_t videoHeight_ {0};
 };
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // HI_PLAYER_IMPL_H

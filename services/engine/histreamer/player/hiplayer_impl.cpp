@@ -52,11 +52,13 @@ const std::pair<Status, int> g_statusPair[] = {
 };
 class PlayerEventReceiver : public EventReceiver {
 public:
-    PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl) {
+    PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl)
+    {
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnEvent(const Event &event) {
+    void OnEvent(const Event &event)
+    {
         hiPlayerImpl_->OnEvent(event);
     }
 
@@ -66,11 +68,13 @@ private:
 
 class PlayerFilterCallback : public FilterCallback {
 public:
-    PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl) {
+    explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
+    {
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType) {
+    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    {
         hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
@@ -84,10 +88,9 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
           appTokenId_(appTokenId),
           appFullTokenId_(appFullTokenId)
 {
-    MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32 " appFullTokenId " PUBLIC_LOG_D64,
-        appUid_, appPid_, appTokenId_, appFullTokenId_);
+    MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 
+    " appTokenId " PUBLIC_LOG_D32 " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
-    // syncManager_ = std::make_shared<MediaSyncManager>();
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -98,7 +101,6 @@ HiPlayerImpl::~HiPlayerImpl()
 #ifdef VIDEO_SUPPORT
     videoSink_.reset();
 #endif
-    //syncManager_.reset();
 }
 
 Status HiPlayerImpl::Init()
@@ -188,7 +190,6 @@ int32_t HiPlayerImpl::Play()
     MEDIA_LOG_I("Play entered.");
     auto ret {Status::OK};
     if (curState_ == PlayerStateId::READY) {
-        //syncManager_->Resume();
         ret = pipeline_->Start();
     }
     if (ret == Status::OK) {
@@ -201,7 +202,6 @@ int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
     auto ret = pipeline_->Pause();
-    // syncManager_->Pause();
     OnStateChanged(PlayerStateId::PAUSE);
     return TransStatus(ret);
 }
@@ -217,7 +217,6 @@ int32_t HiPlayerImpl::Stop()
     if (pipeline_ != nullptr) {
         pipeline_->Stop();
     }
-    // syncManager_->Reset();
     OnStateChanged(PlayerStateId::STOPPED);
     return TransStatus(ret);
 }
@@ -266,9 +265,6 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOG_I("Do seek ...");
         int64_t realSeekTime = seekPos;
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-        /* if (rtv == Status::OK) {
-            syncManager_->Seek(realSeekTime);
-        } */
     }
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
@@ -355,7 +351,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    //currentPositionMs = syncManager_->GetMediaTimeNow();
+    (void)currentPositionMs;
     return TransStatus(Status::OK);
 }
 
@@ -422,6 +418,7 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     MEDIA_LOG_D("SetPlaybackSpeed entered end.");
     return MSERR_OK;
 }
+
 int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 {
     MEDIA_LOG_I("GetPlaybackSpeed entered.");
@@ -593,7 +590,8 @@ int HiPlayerImpl::TransStatus(Status status)
     return MSERR_UNKNOWN;
 }
 
-void HiPlayerImpl::OnEvent(const Event &event) {
+void HiPlayerImpl::OnEvent(const Event &event)
+{
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
@@ -623,7 +621,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 
 Status HiPlayerImpl::Resume()
 {
-    // syncManager_->Resume();
     auto ret = pipeline_->Resume();
     return ret;
 }
@@ -659,28 +656,30 @@ void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBa
     }
 }
 
-Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioDecoderFilter");
     if (audioDecoder_ == nullptr) {
         audioDecoder_ = FilterFactory::Instance().CreateFilter<CodecFilter>("player.audiodecoder",
             FilterType::FILTERTYPE_ADEC);
-        audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);                                                                            
+        audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
     }
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
 }
 
-Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
     if (audioSink_ == nullptr) {
         audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
             FilterType::FILTERTYPE_ASINK);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
     }
-    // audioSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
 #ifdef VIDEO_SUPPORT
-Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoDecoderFilter");
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<CodecFilter>("player.videodecoder",
@@ -690,14 +689,14 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 
-Status HiPlayerImpl::LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type) {
+Status HiPlayerImpl::LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoSinkFilter");
     if (videoSink_ == nullptr) {
         videoSink_ = FilterFactory::Instance().CreateFilter<VideoSinkFilter>("player.videosink",
             FilterType::FILTERTYPE_VSINK);
         videoSink_->Init(playerEventReceiver_, playerFilterCallback_);
     }
-    // videoSink_->SetSyncCenter(syncManager_);
     return pipeline_->LinkFilters(preFilter, {videoSink_}, type);
 }
 #endif

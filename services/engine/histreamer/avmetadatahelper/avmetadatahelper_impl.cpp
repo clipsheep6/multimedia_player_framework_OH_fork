@@ -29,11 +29,13 @@ static const std::set<PixelFormat> SUPPORTED_PIXELFORMAT = {
 
 class HelperEventReceiver : public Pipeline::EventReceiver {
 public:
-    HelperEventReceiver(AVMetadataHelperImpl* helperImpl) {
+    explicit HelperEventReceiver(AVMetadataHelperImpl* helperImpl)
+    {
         helperImpl_ = helperImpl;
     }
 
-    void OnEvent(const Event &event) {
+    void OnEvent(const Event &event)
+    {
         helperImpl_->OnEvent(event);
     }
 
@@ -43,11 +45,14 @@ private:
 
 class HelperFilterCallback : public Pipeline::FilterCallback {
 public:
-    HelperFilterCallback(AVMetadataHelperImpl* helperImpl) {
+    HelperFilterCallback(AVMetadataHelperImpl* helperImpl)
+    {
         helperImpl_ = helperImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType) {
+    void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter,
+        Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
+    {
         helperImpl_->OnCallback(filter, cmd, outType);
     }
 
@@ -60,7 +65,7 @@ void AVMetadataHelperImpl::OnEvent(const Event &event)
 }
 
 void AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
-const Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
+    const Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
 {
 }
 
@@ -94,8 +99,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 
     if (usage == AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
         pipeline_ = std::make_shared<Pipeline::Pipeline>();
-        demuxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::DemuxerFilter>("builtin.player.demuxer",
-            Pipeline::FilterType::FILTERTYPE_DEMUXER);
+        demuxerFilter_ = Pipeline::FilterFactory::Instance()
+            .CreateFilter<Pipeline::DemuxerFilter>("builtin.player.demuxer",Pipeline::FilterType::FILTERTYPE_DEMUXER);
         FALSE_RETURN_V(demuxerFilter_ != nullptr, MSERR_INVALID_VAL);
 
         std::shared_ptr<Pipeline::EventReceiver> eventReceiver = std::make_shared<HelperEventReceiver>(
@@ -103,8 +108,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         std::shared_ptr<Pipeline::FilterCallback> filterCallback = std::make_shared<HelperFilterCallback>(
                 this);
         pipeline_->Init(eventReceiver, filterCallback);
-        videoDecoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::CodecFilter>("builtin.player.videodecoder",
-            Pipeline::FilterType::FILTERTYPE_VDEC);
+        videoDecoderFilter_ = Pipeline::FilterFactory::Instance()
+            .CreateFilter<Pipeline::CodecFilter>("builtin.player.videodecoder",Pipeline::FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoderFilter_ != nullptr, MSERR_INVALID_VAL);
     } else {
         mediaDemuxer_ = std::make_shared<MediaDemuxer>();
@@ -158,7 +163,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
-    int64_t /* timeUs */, int32_t /* option */, const OutputConfiguration &/* param */)
+    int64_t timeUs, int32_t option, const OutputConfiguration &param)
 {
     MEDIA_LOG_I("enter FetchFrameAtTime");
     return nullptr;
