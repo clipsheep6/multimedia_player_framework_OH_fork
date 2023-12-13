@@ -118,6 +118,7 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
     }
 
     if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
+        MEDIA_LOGI("Callback State change disable StoppedCb");
         server_.disableStoppedCb_ = false;
         return MSERR_UNSUPPORT;
     }

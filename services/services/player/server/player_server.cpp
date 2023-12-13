@@ -1262,6 +1262,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
+    } else {
+        MEDIA_LOGI("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
     }
 }
 
