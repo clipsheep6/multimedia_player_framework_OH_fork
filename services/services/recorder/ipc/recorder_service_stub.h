@@ -109,10 +109,13 @@ private:
     int32_t GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply);
     int32_t GetLocation(MessageParcel &data, MessageParcel &reply);
 
+    int32_t CheckPermission();
+
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
     int32_t pid_;
+    AudioSourceType audioSourceType_ = AUDIO_SOURCE_INVALID;
     bool needAudioPermissionCheck = false;
     const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,
         SET_AUDIO_CHANNELS, SET_AUDIO_ENCODING_BIT_RATE};
