@@ -29,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderSe
 
 namespace OHOS {
 namespace Media {
+const int32_t ROOT_UID = 0;
 sptr<RecorderServiceStub> RecorderServiceStub::Create()
 {
     sptr<RecorderServiceStub> recorderStub = new(std::nothrow) RecorderServiceStub();
@@ -106,12 +107,21 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
     int32_t permissionResult;
+
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
+
+    if (code == SET_AUDIO_SOURCE) {
+        int32_t type = data.ReadInt32();
+        audioSourceType_ = static_cast<AudioSourceType>(type);
+    }
     if (AUDIO_REQUEST.count(code) != 0) {
-        permissionResult = MediaPermission::CheckMicPermission();
+        permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
     } else if (COMMON_REQUEST.count(code) != 0) {
         if (needAudioPermissionCheck) {
-            permissionResult = MediaPermission::CheckMicPermission();
+            permissionResult = CheckPermission();
         } else {
             // none audio request no need to check permission in recorder server
             permissionResult = Security::AccessToken::PERMISSION_GRANTED;
@@ -121,11 +131,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
     CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
-        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
-
-    auto remoteDescriptor = data.ReadInterfaceToken();
-    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
-        MSERR_INVALID_OPERATION, "Invalid descriptor");
+        MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the correct permission");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
@@ -443,10 +449,8 @@ int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &repl
 
 int32_t RecorderServiceStub::SetAudioSource(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t type = data.ReadInt32();
     int32_t sourceId = 0;
-    AudioSourceType sourceType = static_cast<AudioSourceType>(type);
-    int32_t ret = SetAudioSource(sourceType, sourceId);
+    int32_t ret = SetAudioSource(audioSourceType_, sourceId);
     reply.WriteInt32(sourceId);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -652,6 +656,31 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
     (void)reply.WriteFloat(location.latitude);
     (void)reply.WriteFloat(location.longitude);
     return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::CheckPermission()
+{
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    if (callerUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Permission Granted");
+        return Security::AccessToken::PERMISSION_GRANTED;
+    }
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+
+    switch (audioSourceType_) {
+        case AUDIO_SOURCE_VOICE_CALL:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.RECORD_VOICE_CALL");
+        case AUDIO_MIC:
+            return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+                "ohos.permission.MICROPHONE");
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_INNER:
+            MEDIA_LOGE("not supported audio source. Permission denied");
+            return Security::AccessToken::PERMISSION_DENIED;
+        default:
+            return Security::AccessToken::PERMISSION_GRANTED;
+    }
 }
 } // namespace Media
 } // namespace OHOS
