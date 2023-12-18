@@ -28,7 +28,6 @@ namespace OHOS {
 namespace Media {
 SoundParser::SoundParser(int32_t soundID, std::string url)
 {
-    std::unique_lock<std::mutex> lock(soundParserLock_);
     std::shared_ptr<MediaAVCodec::AVSource> source = MediaAVCodec::AVSourceFactory::CreateWithURI(url);
     CHECK_AND_RETURN_LOG(source != nullptr, "Create AVSource failed");
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = MediaAVCodec::AVDemuxerFactory::CreateWithSource(source);
@@ -40,7 +39,6 @@ SoundParser::SoundParser(int32_t soundID, std::string url)
 
 SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length)
 {
-    std::unique_lock<std::mutex> lock(soundParserLock_);
     fd = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
     offset = offset >= INT64_MAX ? INT64_MAX : offset;
     length = length >= INT64_MAX ? INT64_MAX : length;
@@ -168,7 +166,6 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 
 int32_t SoundParser::Release()
 {
-    std::unique_lock<std::mutex> lock(soundParserLock_);
     MEDIA_INFO_LOG("SoundParser Release.");
     int32_t ret = MSERR_OK;
     if (soundParserListener_ != nullptr) soundParserListener_.reset();

@@ -34,10 +34,12 @@ SoundIDManager::SoundIDManager() : isParsingThreadPoolStarted_(false), quitQueue
 SoundIDManager::~SoundIDManager()
 {
     MEDIA_INFO_LOG("Destruction SoundIDManager");
-    std::lock_guard lock(soundManagerLock_);
-    quitQueue_ = true;
-    queueSpaceValid_.notify_all(); // notify all load waiters
-    queueDataValid_.notify_all();  // notify all worker threads
+    {
+        std::lock_guard lock(soundManagerLock_);
+        quitQueue_ = true;
+        queueSpaceValid_.notify_all(); // notify all load waiters
+        queueDataValid_.notify_all();  // notify all worker threads
+    }
 
     if (callback_ != nullptr) {
         callback_.reset();
@@ -104,8 +106,8 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
 {
     int32_t soundID;
     {
-        MEDIA_INFO_LOG("SoundIDManager startLoad");
         std::lock_guard lock(soundManagerLock_);
+        MEDIA_INFO_LOG("SoundIDManager startLoad");
         if (soundParsers_.size() >= MAX_LOAD_NUM) {
             MEDIA_INFO_LOG("SoundPool MAX_LOAD_NUM:%{public}zu.", MAX_LOAD_NUM);
             return invalidSoundIDFlag;
@@ -187,7 +189,6 @@ std::shared_ptr<SoundParser> SoundIDManager::FindSoundParser(int32_t soundID) co
 
 int32_t SoundIDManager::Unload(int32_t soundID)
 {
-    std::lock_guard lock(soundManagerLock_);
     MEDIA_INFO_LOG("SoundIDManager soundID:%{public}d", soundID);
     CHECK_AND_RETURN_RET_LOG(!soundParsers_.empty(), MSERR_NO_MEMORY, "No sound in the soundParsers_");
     auto it = soundParsers_.find(soundID);
