@@ -176,8 +176,8 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
 // The queue head has the highest value and priority
 void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
 {
+    std::lock_guard lock(streamIDManagerLock_);
     if (playingStreamIDs_.empty()) {
-        std::lock_guard lock(streamIDManagerLock_);
         playingStreamIDs_.emplace_back(streamID);
     } else {
         bool shouldReCombinePlayingQueue = false;
@@ -186,13 +186,11 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer == nullptr) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 shouldReCombinePlayingQueue = true;
                 break;
             }
             if (!playingCacheBuffer->IsRunning()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 shouldReCombinePlayingQueue = true;
                 break;
@@ -201,7 +199,6 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
                 break;
             }
             if (freshCacheBuffer->GetPriority() <= playingCacheBuffer->GetPriority()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
                 break;
             }
@@ -217,8 +214,8 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
 // The queue head has the highest value and priority
 void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo)
 {
+    std::lock_guard lock(streamIDManagerLock_);
     if (willPlayStreamInfos_.empty()) {
-        std::lock_guard lock(streamIDManagerLock_);
         willPlayStreamInfos_.emplace_back(freshStreamIDAndPlayParamsInfo);
     } else {
         bool shouldReCombineWillPlayQueue = false;
@@ -226,7 +223,6 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(freshStreamIDAndPlayParamsInfo.streamID);
             std::shared_ptr<CacheBuffer> willPlayCacheBuffer = FindCacheBuffer(willPlayStreamInfos_[i].streamID);
             if (willPlayCacheBuffer == nullptr) {
-                std::lock_guard lock(streamIDManagerLock_);
                 willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
                 shouldReCombineWillPlayQueue = true;
                 break;
@@ -235,7 +231,6 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
                 break;
             }
             if (freshCacheBuffer->GetPriority() <= willPlayCacheBuffer->GetPriority()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
                 break;
             }
