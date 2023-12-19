@@ -92,6 +92,17 @@ int32_t SystemTonePlayerImpl::Prepare()
         return MSERR_OK;
     }
 
+    if (soundID_ != -1) {
+        (void)player_->Unload(soundID_);
+        soundID_ = -1;
+        std::lock_guard<std::mutex> lock(loadStatusMutex_);
+        loadCompleted_ = false;
+    }
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
+
     fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
     if (fileDes_ == -1) {
         // open file failed, try to use default path.
@@ -216,6 +227,9 @@ int32_t SystemTonePlayerImpl::Release()
 {
     MEDIA_LOGI("Enter Release()");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
+
+    (void)player_->Unload(soundID_);
+    soundID_ = -1;
 
     (void)player_->Release();
     (void)SystemSoundVibrator::StopVibrator();

@@ -192,7 +192,7 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
     if (systemTonePlayerMap_[systemToneType] != nullptr) {
-        systemTonePlayerMap_[systemToneType]->Release();
+        (void)systemTonePlayerMap_[systemToneType]->Release();
         systemTonePlayerMap_[systemToneType] = nullptr;
     }
 
