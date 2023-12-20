@@ -65,7 +65,8 @@
           "resource_management",
           "av_codec",
           "miscdevice",
-          "drm_framework"
+          "drm_framework",
+          "histreamer"
         ],
         "third_party": [
           "glib",
