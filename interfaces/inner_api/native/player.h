@@ -20,7 +20,7 @@
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
-#include "format.h"
+#include "meta/format.h"
 #include "media_data_source.h"
 #ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"

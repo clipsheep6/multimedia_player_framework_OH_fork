@@ -22,7 +22,7 @@
 #include <memory>
 #include <mutex>
 #include "nocopyable.h"
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 
 namespace OHOS {
 namespace Media {

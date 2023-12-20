@@ -108,6 +108,7 @@ ohos_static_library("media_engine_gst_avcodec") {
     "drivers_peripheral_display:hdi_gralloc_client",
     "graphic_2d:surface",
     "hilog:libhilog",
+    "histreamer:media_foundation",
   ]
 
   subsystem_name = "multimedia"

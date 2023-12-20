@@ -61,10 +61,7 @@ ohos_fuzztest("AVmetadataStubFuzzTest") {
       "avmetadatastub_fuzzer.cpp",
     ]
   }
-  deps = [
-    "../../../../services/services:media_service",
-    "../../../../services/utils:media_format",
-  ]
+  deps = [ "../../../../services/services:media_service" ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

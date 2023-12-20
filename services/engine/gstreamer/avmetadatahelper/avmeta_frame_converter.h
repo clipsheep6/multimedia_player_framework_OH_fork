@@ -20,7 +20,7 @@
 #include <condition_variable>
 #include <gst/gst.h>
 #include "i_avmetadatahelper_service.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "inner_msg_define.h"
 #include "gst_mem_sink.h"
 #include "gst_msg_processor.h"

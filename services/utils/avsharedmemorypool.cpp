@@ -14,7 +14,7 @@
  */
 
 #include "avsharedmemorypool.h"
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"

@@ -17,7 +17,7 @@
 #define IAVMETADATAHELPER_SERVICE_H
 
 #include "avmetadatahelper.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {

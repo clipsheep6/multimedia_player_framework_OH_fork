@@ -19,7 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "dumper.h"
-#include "format.h"
+#include "meta/format.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinState"};

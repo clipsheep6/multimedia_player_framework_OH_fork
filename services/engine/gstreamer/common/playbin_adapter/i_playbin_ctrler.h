@@ -23,7 +23,7 @@
 #include "playbin_msg_define.h"
 #include "playbin_sink_provider.h"
 #include "gst_appsrc_engine.h"
-#include "format.h"
+#include "meta/format.h"
 #ifdef SUPPORT_DRM
 #include "i_keysession_service.h"
 #include "i_mediadecryptmodule_service.h"

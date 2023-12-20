@@ -62,10 +62,7 @@ ohos_fuzztest("PlayerStubFuzzTest") {
       "playerstub_fuzzer.cpp",
     ]
   }
-  deps = [
-    "../../../../services/services:media_service",
-    "../../../../services/utils:media_format",
-  ]
+  deps = [ "../../../../services/services:media_service" ]
   external_deps = [
     "c_utils:utils",
     "graphic_2d:surface",

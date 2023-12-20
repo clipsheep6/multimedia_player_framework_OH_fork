@@ -18,7 +18,7 @@
 
 #include <string>
 #include "nocopyable.h"
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 
 namespace OHOS {
 namespace Media {

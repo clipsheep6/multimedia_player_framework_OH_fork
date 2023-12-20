@@ -44,7 +44,7 @@ class CacheBuffer :
     public AudioStandard::AudioRendererWriteCallback,
     public std::enable_shared_from_this<CacheBuffer> {
 public:
-    CacheBuffer(const MediaAVCodec::Format &trackFormat,
+    CacheBuffer(const Format &trackFormat,
         const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
         const size_t &cacheDataTotalSize,
         const int32_t &soundID, const int32_t &streamID);
@@ -90,7 +90,7 @@ private:
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
 
-    MediaAVCodec::Format trackFormat_;
+    Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
     std::deque<std::shared_ptr<AudioBufferEntry>> reCombineCacheData_;
     size_t cacheDataTotalSize_;

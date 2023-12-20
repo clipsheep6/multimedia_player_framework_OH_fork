@@ -17,7 +17,7 @@
 #define AVSHAREDMEMORY_IPC_H
 
 #include <message_parcel.h>
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {

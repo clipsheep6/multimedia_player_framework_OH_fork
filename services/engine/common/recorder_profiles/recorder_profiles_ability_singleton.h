@@ -17,7 +17,7 @@
 #define RECORDERPROFILESABILITY_SINGLETON_H
 
 #include <mutex>
-#include "format.h"
+#include "meta/format.h"
 #include "recorder_profiles_xml_parser.h"
 
 namespace OHOS {
