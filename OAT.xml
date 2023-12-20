@@ -65,6 +65,7 @@ Note:If the text contains special characters, please escape them according to th
         <filefilterlist>
             <filefilter name="defaultFilter" desc="Files not to check">
                 <filteritem type="filepath" name="test/unittest/resources/test_subtitlefile/.*" desc="test files."/>
+                <filteritem type="filepath" name="test/.*" desc="test files."/>
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies" >
                 <filteritem type="filepath" name="figures/.*" desc="architecture figure binary."/>
