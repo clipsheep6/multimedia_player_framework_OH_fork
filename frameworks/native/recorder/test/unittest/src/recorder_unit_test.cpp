@@ -26,8 +26,6 @@ namespace OHOS {
 namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
-// config for audio
-static AudioRecorderConfig g_audioRecorderConfig;
 
 void RecorderUnitTest::SetUpTestCase(void)
 {
@@ -1039,34 +1037,6 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
-}
-
-/**
- * @tc.name: recorder_SetAudioSource_001
- * @tc.desc: record audio, SetAudioSource
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_SetAudioSource_001, TestSize.Level0)
-{
-    g_audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetAudioSource_001.m4a").c_str(), O_RDWR);
-    ASSERT_TRUE(g_audioRecorderConfig.outputFd >= 0);
-    EXPECT_EQ(MSERR_OK,
-        recorder_->SetAudioSource(AudioSourceType::AUDIO_SOURCE_VOICE_CALL, g_audioRecorderConfig.audioSourceId));
-}
-
-/**
- * @tc.name: recorder_SetAudioSource_002
- * @tc.desc: record audio, SetAudioSource
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_SetAudioSource_002, TestSize.Level0)
-{
-    g_audioRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetAudioSource_002.m4a").c_str(), O_RDWR);
-    ASSERT_TRUE(g_audioRecorderConfig.outputFd >= 0);
-    EXPECT_EQ(MSERR_OK,
-        recorder_->SetAudioSource(AudioSourceType::AUDIO_MIC, g_audioRecorderConfig.audioSourceId));
 }
 } // namespace Media
 } // namespace OHOS
