@@ -327,8 +327,10 @@ static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *even
     g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK(element);
     GstFormat seek_format;
-    GstSeekType start_type, stop_type;
-    gint64 start, stop;
+    GstSeekType start_type;
+    GstSeekType stop_type;
+    gint64 start;
+    gint64 stop;
 
     GST_DEBUG_OBJECT(subtitle_sink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
     switch (GST_EVENT_TYPE(event)) {
