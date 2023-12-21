@@ -531,7 +531,6 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink == nullptr) {
                 break;
             }
-            (void)sink->audio_sink->Pause();
             (void)sink->audio_sink->Flush();
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
