@@ -54,9 +54,6 @@ int32_t SoundPoolManager::Release(const pid_t pid)
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
         MEDIA_INFO_LOG("Release soundpool, pid:%{pulibc}d.", pid);
-        if (it->second != nullptr) {
-            it->second.reset();
-        }
         soundPools_.erase(it);
         return MSERR_OK;
     }
