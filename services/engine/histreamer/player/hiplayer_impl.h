@@ -18,10 +18,12 @@
 
 #include <memory>
 #include <unordered_map>
+#include <queue>
 
 #include "audio_sink_filter.h"
 #include "codec_filter.h"
 #include "common/status.h"
+#include "media_utils.h"
 #include "demuxer_filter.h"
 #include "filter/filter.h"
 #include "filter/filter_factory.h"
@@ -36,18 +38,6 @@
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-
-enum class PlayerStateId {
-    IDLE = 0,
-    INIT = 1,
-    PREPARING = 2,
-    READY = 3,
-    PAUSE = 4,
-    PLAYING = 5,
-    STOPPED = 6,
-    EOS = 7,
-    ERROR = 8,
-};
 
 class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 public:
@@ -86,7 +76,6 @@ public:
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
 
     // internal interfaces
-    int TransStatus(Status status);
     void OnEvent(const Event &event);
     void OnStateChanged(PlayerStateId state);
     void OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
@@ -94,6 +83,10 @@ public:
 private:
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
+    void HandleCompleteEvent(const Event& event);
+    void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
+    void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
+    void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #ifdef VIDEO_SUPPORT
@@ -113,6 +106,8 @@ private:
     std::shared_ptr<FilterCallback> playerFilterCallback_;
     std::weak_ptr<Meta> sourceMeta_{};
     std::vector<std::weak_ptr<Meta>> streamMeta_{};
+    std::atomic<PlayerStates> pipelineStates_ {PlayerStates::PLAYER_IDLE}; // only update in UpdateStateNoLock()
+    std::queue<PlayerStates> pendingStates_ {};
     std::shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_;
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<CodecFilter> audioDecoder_;
