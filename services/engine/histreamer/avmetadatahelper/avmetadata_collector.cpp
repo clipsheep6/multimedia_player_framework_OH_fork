@@ -96,14 +96,14 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     return metadata.tbl_;
 }
 
-void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const
+void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("") == 0) {
             continue;
         }
 
-        if (innerKey.compare(Tag::MIME_TYPE) == 0) { // only need the file mime type
+        if (innerKey.compare(Tag::MIME_TYPE) == 0) {
             continue;
         }
 

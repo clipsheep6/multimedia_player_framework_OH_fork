@@ -73,7 +73,8 @@ public:
     std::unordered_map<int32_t, std::string> GetMetadata(const std::shared_ptr<Meta> &globalInfo,
         const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
-    void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
+private:
+    void ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const;
 };
 } // namespace Media
 } // namespace OHOS
