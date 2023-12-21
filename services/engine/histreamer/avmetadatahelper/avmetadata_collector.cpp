@@ -59,11 +59,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     for (int32_t i = 0; i < keys.size(); i++) {
         std::string strVal;
         int32_t intVal;
-        if (globalInfo->GetData(keys[i], strVal)) {
-            MEDIA_LOG_I("globalMeta, key: %{public}s, val: %{public}s", keys[i].c_str(), strVal.c_str());
-        } else {
+        if (!globalInfo->GetData(keys[i], strVal)) {
             globalInfo->GetData(keys[i], intVal);
-            MEDIA_LOG_I("globalMeta, key: %{public}s, val: %{public}d", keys[i].c_str(), intVal);
         }
     }
 
@@ -86,7 +83,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
 
         ConvertToAVMeta(meta, metadata);
     }
-    MEDIA_LOG_I("fetch meta data map size: %{public}d", metadata.tbl_.size());
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         MEDIA_LOG_I("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
@@ -96,14 +92,14 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     return metadata.tbl_;
 }
 
-void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const
+void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("") == 0) {
             continue;
         }
 
-        if (innerKey.compare(Tag::MIME_TYPE) == 0) { // only need the file mime type
+        if (innerKey.compare(Tag::MIME_TYPE) == 0) {
             continue;
         }
 

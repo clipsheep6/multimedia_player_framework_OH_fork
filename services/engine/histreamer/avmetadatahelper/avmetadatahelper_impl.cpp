@@ -29,9 +29,8 @@ static const std::set<PixelFormat> SUPPORTED_PIXELFORMAT = {
 
 class HelperEventReceiver : public Pipeline::EventReceiver {
 public:
-    explicit HelperEventReceiver(AVMetadataHelperImpl* helperImpl)
+    explicit HelperEventReceiver(AVMetadataHelperImpl *helperImpl) : helperImpl_(helperImpl)
     {
-        helperImpl_ = helperImpl;
     }
 
     void OnEvent(const Event &event)
@@ -45,9 +44,8 @@ private:
 
 class HelperFilterCallback : public Pipeline::FilterCallback {
 public:
-    explicit HelperFilterCallback(AVMetadataHelperImpl* helperImpl)
+    explicit HelperFilterCallback(AVMetadataHelperImpl* helperImpl) : helperImpl_(helperImpl)
     {
-        helperImpl_ = helperImpl;
     }
 
     void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
@@ -103,10 +101,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
             "builtin.player.demuxer", Pipeline::FilterType::FILTERTYPE_DEMUXER);
         FALSE_RETURN_V(demuxerFilter_ != nullptr, MSERR_INVALID_VAL);
 
-        std::shared_ptr<Pipeline::EventReceiver> eventReceiver = std::make_shared<HelperEventReceiver>(
-                this);
-        std::shared_ptr<Pipeline::FilterCallback> filterCallback = std::make_shared<HelperFilterCallback>(
-                this);
+        auto eventReceiver = std::make_shared<HelperEventReceiver>(this);
+        auto filterCallback = std::make_shared<HelperFilterCallback>(this);
         pipeline_->Init(eventReceiver, filterCallback);
         videoDecoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::CodecFilter>(
             "builtin.player.videodecoder", Pipeline::FilterType::FILTERTYPE_VDEC);
@@ -124,6 +120,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    MEDIA_LOG_I("SetSource");
     return MSERR_OK;
 }
 
@@ -135,7 +132,8 @@ std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
     int32_t ret = ExtractMetadata();
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, result, "Failed to call ExtractMetadata");
 
-    if (collectedMeta_.count(key) == 0 || collectedMeta_.at(key).empty()) {
+    auto it = collectedMeta_.find(key);
+    if (it == collectedMeta_.end() || it->second.empty()) {
         MEDIA_LOG_E("The specified metadata %{public}d cannot be obtained from the specified stream.", key);
         return result;
     }
@@ -214,8 +212,6 @@ int32_t AVMetadataHelperImpl::ExtractMetadata()
 
 void AVMetadataHelperImpl::Reset()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-
     if (demuxerFilter_ != nullptr) {
         demuxerFilter_->Stop();
         hasCollectMeta_ = false;
