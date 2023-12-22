@@ -27,7 +27,6 @@
 #include "meta/meta.h"
 #include "meta/meta_key.h"
 #include "avmetadatahelper.h"
-#include "ctime"
 
 namespace OHOS {
 namespace Media {

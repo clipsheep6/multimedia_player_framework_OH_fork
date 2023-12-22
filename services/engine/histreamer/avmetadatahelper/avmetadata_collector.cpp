@@ -17,6 +17,7 @@
 #include <string>
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
+#include "ctime"
 
 namespace OHOS {
 namespace Media {
@@ -172,14 +173,20 @@ std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &t
         MEDIA_LOG_E("datetime is empty, format failed");
         return "";
     }
+
+    const int maxDateTimeSize = 20;
     time_t ts = stoi(timestamp);
-    struct tm *ptm;
-    char date[20], time[20];
+    tm *pTime;
+    char date[maxDateTimeSize];
+    char time[maxDateTimeSize];
 
     ptm = localtime(&ts);
-    strftime(date, 20, "%Y-%m-%d", ptm);
-    strftime(time, 20, "%H:%M:%S", ptm);
-
+    size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
+    size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
+    
+    if (sizeDateStr == 0 || sizeTimeStr == 0) {
+        MEDIA_LOG_E("datetime is invalid, format failed");
+    }
     std::string datetime = std::string(date) + " " + std::string(time);
     return datetime;
 }
