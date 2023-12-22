@@ -135,7 +135,12 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("") == 0) {
-            continue;
+            std::string strVal;
+            if (innerMeta->GetData(innerKey, strVal) && strVal) {
+                avmeta.SetMeta(avKey, convertTimestampToDatetime(strVal));
+            } else {
+                avmeta.SetMeta(avKey, "");
+            }
         }
 
         if (innerKey.compare(Tag::MIME_TYPE) == 0) {
@@ -145,30 +150,37 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;
-            if (innerMeta->GetData(innerKey, intVal)) {
-                avmeta.SetMeta(avKey, std::to_string(intVal));
-                MEDIA_LOG_I("found innerKey: %{public}d, val: %{public}d", avKey, intVal);
-            }
+            avmeta.SetMeta(avKey, innerMeta->GetData(innerKey, intVal) ? std::to_string(intVal) : "");
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
-            if (innerMeta->GetData(innerKey, strVal)) {
-                avmeta.SetMeta(avKey, strVal);
-                MEDIA_LOG_I("found innerKey: %{public}d, val: %{public}s", avKey, strVal.c_str());
-            }
+            avmeta.SetMeta(avKey, innerMeta->GetData(innerKey, duration) ? strVal : "");
         } else if (Any::IsSameTypeWith<Plugin::VideoRotation>(type)) {
             Plugin::VideoRotation rotation;
-            if (innerMeta->GetData(innerKey, rotation)) {
-                avmeta.SetMeta(avKey, std::to_string(rotation));
-            }
+            avmeta.SetMeta(avKey, innerMeta->GetData(innerKey, duration) ? std::to_string(rotation) : "");
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
-            if (innerMeta->GetData(innerKey, duration)) {
-                avmeta.SetMeta(avKey, std::to_string(duration));
-            }
+            avmeta.SetMeta(avKey, innerMeta->GetData(innerKey, duration) ? std::to_string(duration) : "");
         } else {
             MEDIA_LOG_E("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
     }
+}
+
+std::string AVMetaDataCollector::convertTimestampToDatetime(const std::string &timestamp)
+{
+    if (timestamp.size() > 13 || timestamp.size() < 10) {
+        return "";
+    }
+    time_t ts = stoi(timestamp);
+    struct tm *ptm;
+    char date[20], time[20];
+
+    ptm = localtime(&ts);
+    strftime(date, 20, "%Y-%m-%d", ptm);
+    strftime(time, 20, "%H:%M:%S", ptm);
+
+    std::string datetime = std::string(date) + " " + std::string(time);
+    return datetime;
 }
 } // namespace Media
 } // namespace OHOS

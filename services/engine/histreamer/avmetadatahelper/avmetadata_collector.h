@@ -27,6 +27,7 @@
 #include "meta/meta.h"
 #include "meta/meta_key.h"
 #include "avmetadatahelper.h"
+#include "ctime"
 
 namespace OHOS {
 namespace Media {
@@ -78,6 +79,8 @@ public:
 
 private:
     void ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const;
+    std::string convertTimestampToDatetime(const std::string &timestamp);
+    void setEmptyStringToMeta
 };
 } // namespace Media
 } // namespace OHOS

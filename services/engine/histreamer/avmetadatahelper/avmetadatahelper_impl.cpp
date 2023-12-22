@@ -104,6 +104,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         auto eventReceiver = std::make_shared<HelperEventReceiver>(this);
         auto filterCallback = std::make_shared<HelperFilterCallback>(this);
         pipeline_->Init(eventReceiver, filterCallback);
+        demuxerFilter_->Init(eventReceiver, filterCallback);
         videoDecoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::CodecFilter>(
             "builtin.player.videodecoder", Pipeline::FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoderFilter_ != nullptr, MSERR_INVALID_VAL);
@@ -211,7 +212,7 @@ Status AVMetadataHelperImpl::PrepareInternel()
 
 int32_t AVMetadataHelperImpl::ExtractMetadata()
 {
-    FALSE_RETURN_V_MSG_E(usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, MSERR_INVALID_OPERATION, "usage error");
+    // FALSE_RETURN_V_MSG_E(usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, MSERR_INVALID_OPERATION, "usage error");
     FALSE_RETURN_V_MSG_E(mediaDemuxer_ != nullptr, MSERR_INVALID_OPERATION, "mediaDemuxer_ is nullptr");
 
     if (!hasCollectMeta_) {
