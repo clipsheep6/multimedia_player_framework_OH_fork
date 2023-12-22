@@ -212,7 +212,7 @@ Status AVMetadataHelperImpl::PrepareInternel()
 
 int32_t AVMetadataHelperImpl::ExtractMetadata()
 {
-    // FALSE_RETURN_V_MSG_E(usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, MSERR_INVALID_OPERATION, "usage error");
+    FALSE_RETURN_V_MSG_E(usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, MSERR_INVALID_OPERATION, "usage error");
     FALSE_RETURN_V_MSG_E(mediaDemuxer_ != nullptr, MSERR_INVALID_OPERATION, "mediaDemuxer_ is nullptr");
 
     if (!hasCollectMeta_) {
