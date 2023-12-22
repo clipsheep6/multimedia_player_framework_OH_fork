@@ -79,7 +79,7 @@ public:
 
 private:
     void ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const;
-    std::string convertTimestampToDatetime(const std::string &timestamp);
+    std::string ConvertTimestampToDatetime(const std::string &timestamp);
     void setEmptyStringToMeta
 };
 } // namespace Media

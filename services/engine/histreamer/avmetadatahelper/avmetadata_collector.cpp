@@ -137,7 +137,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
         if (innerKey.compare("") == 0) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal) && strVal) {
-                avmeta.SetMeta(avKey, convertTimestampToDatetime(strVal));
+                avmeta.SetMeta(avKey, ConvertTimestampToDatetime(strVal));
             } else {
                 avmeta.SetMeta(avKey, "");
             }
@@ -166,9 +166,10 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
     }
 }
 
-std::string AVMetaDataCollector::convertTimestampToDatetime(const std::string &timestamp)
+std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &timestamp)
 {
-    if (timestamp.size() > 13 || timestamp.size() < 10) {
+    if (timestamp == nullptr || timestamp.empty()) {
+        MEDIA_LOG_E("datetime is empty, format failed");
         return "";
     }
     time_t ts = stoi(timestamp);
