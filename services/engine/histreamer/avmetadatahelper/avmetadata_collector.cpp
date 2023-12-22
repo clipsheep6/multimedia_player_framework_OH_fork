@@ -179,14 +179,13 @@ std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &t
     tm *pTime;
     char date[maxDateTimeSize];
     char time[maxDateTimeSize];
-
     ptm = localtime(&ts);
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
     size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
-    
     if (sizeDateStr == 0 || sizeTimeStr == 0) {
         MEDIA_LOG_E("datetime is invalid, format failed");
     }
+    
     std::string datetime = std::string(date) + " " + std::string(time);
     return datetime;
 }
