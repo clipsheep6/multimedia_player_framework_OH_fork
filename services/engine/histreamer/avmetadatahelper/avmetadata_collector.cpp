@@ -16,6 +16,7 @@
 #include "avmetadata_collector.h"
 #include <string>
 #include "meta/video_types.h"
+#include "buffer/avsharedmemorybase.h"
 
 namespace OHOS {
 namespace Media {
@@ -90,6 +91,44 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
         it++;
     }
     return metadata.tbl_;
+}
+
+std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    MEDIA_LOG_I("GetArtPicture In");
+    size_t trackCount = trackInfos.size();
+    for (size_t index = 0; index < trackCount; index++) {
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        if (meta == nullptr) {
+            MEDIA_LOG_W("meta is invalid, index: %zu", index);
+            continue;
+        }
+
+        std::vector<uint8_t> coverAddr;
+        auto mapIt = meta.Find(Tag::MEDIA_COVER);
+        if (mapIt == meta.end()) {
+            continue;
+        }
+        coverAddr = mapIt->second;
+        if (coverAddr.size() == 0 || coverAddr.size() > artPictureMaxSize) {
+            MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
+            return nullptr;
+        }
+        uint8_t *addr = coverAddr.data();
+        size_t size = coverAddr.size();z
+        auto artPicMem = AVSharedMemoryBase::CreateFromLocal(
+            static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
+        errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
+        if (rc != EOK) {
+            MEDIA_LOG_E("memcpy_s failed, trackCount no %{public}d", index);
+            return nullptr;
+        }
+        
+        MEDIA_LOG_I("GetArtPicture Out");
+        return artPicMem;
+    }
+    MEDIA_LOG_E("GetArtPicture Failed");
+    return nullptr;
 }
 
 void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const

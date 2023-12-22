@@ -58,6 +58,8 @@ private:
     bool hasCollectMeta_ = false;
     int32_t usage_ = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP;
 
+    std::shared_ptr<AVSharedMemory> collectedArtPicture_;
+    
     std::mutex mutex_;
     std::condition_variable cond_;
     bool errHappened_ = false;

@@ -157,7 +157,20 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
     MEDIA_LOG_I("enter FetchArtPicture");
-    return nullptr;
+    if (collectedArtPicture_ != nullptr) {
+        MEDIA_LOG_I("Repeated ExtractArtPicture");
+        return collectedArtPicture_;
+    }
+    if (mediaDemuxer_ == nullptr) {
+        MEDIA_LOG_E("ExtractArtPicutre Failed : mediaDemuxer_ is nullptr");
+        return nullptr;
+    }
+    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
+    collectedArtPicture_ = metaCollector_->GetArtPicture(trackInfos);
+    if (collectedArtPicture_ == nullptr) {
+        MEDIA_LOG_E("ExtractArtPicutre Failed");
+    }
+    return collectedArtPicture_;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
@@ -215,6 +228,7 @@ void AVMetadataHelperImpl::Reset()
     if (demuxerFilter_ != nullptr) {
         demuxerFilter_->Stop();
         hasCollectMeta_ = false;
+        collectedArtPicture_ = nullptr;
     }
 
     if (demuxerFilter_ != nullptr) {
