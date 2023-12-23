@@ -176,7 +176,7 @@ std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &t
 
     time_t ts = stoi(timestamp);
     tm *pTime;
-    *pTime = localtime(&ts);
+    pTime = localtime(&ts);
     char date[maxDateTimeSize];
     char time[maxDateTimeSize];
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
