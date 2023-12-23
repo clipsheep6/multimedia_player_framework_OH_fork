@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+#include "ctime"
 #include "avmetadata_collector.h"
 #include <string>
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
-#include "ctime"
 
 namespace OHOS {
 namespace Media {
