@@ -282,6 +282,7 @@ private:
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
+    void MediaProfileLog(bool isVideo, std::shared_ptr<AVRecorderProfile> &profile);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
