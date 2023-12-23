@@ -1016,9 +1016,7 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
             (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate),
             (asyncCtx->AVRecorderSignError(ret, "GetauidoSampleRate", "auidoSampleRate"), ret));
-        MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
-                   " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
-                   profile.audioCodecFormat, profile.auidoSampleRate);
+        MediaProfileLog(false, profile);
     }
     if (asyncCtx->config_->withVideo) {
         std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
@@ -1036,19 +1034,31 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr),
             (asyncCtx->AVRecorderSignError(ret, "GetIsHdr", "isHdr"), ret));
-        MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
-                   " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr  %{public}d",
-                   profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
-                   profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr);
         CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat == VideoCodecFormat::H265)),
             (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
             MSERR_UNSUPPORT_VID_PARAMS));
+        MediaProfileLog(true, profile);
     }
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
     ret = AVRecorderNapi::GetOutputFormat(outputFile, profile.fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVRecorderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
     MEDIA_LOGI("fileFormat %{public}d", profile.fileFormat);
     return MSERR_OK;
+}
+
+void AVRecorderNapi::MediaProfileLog(bool isVideo, std::shared_ptr<AVRecorderProfile> &profile)
+{
+    CHECK_AND_RETURN_RET(profile != nullptr, MSERR_INVALID_VAL, "invalid recorder profile");
+    if (isVideo) {
+        MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
+            " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr  %{public}d",
+            profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
+            profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr);
+        return;
+    }
+    MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
+        " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
+        profile.audioCodecFormat, profile.auidoSampleRate);
 }
 
 int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
