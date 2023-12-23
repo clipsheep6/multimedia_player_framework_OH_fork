@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "ctime"
-#include "avmetadata_collector.h"
 #include <string>
+#include "ctime"
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
+#include "avmetadata_collector.h"
 
 namespace OHOS {
 namespace Media {
@@ -176,9 +176,9 @@ std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &t
 
     time_t ts = stoi(timestamp);
     tm *pTime;
-    pTime = localtime(&ts);
     char date[maxDateTimeSize];
     char time[maxDateTimeSize];
+    pTime = localtime(&ts);
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
     size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
     if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
