@@ -125,6 +125,7 @@ struct AVRecorderProfile {
     int32_t videoFrameWidth = AVRECORDER_DEFAULT_FRAME_HEIGHT;
     int32_t videoFrameHeight = AVRECORDER_DEFAULT_FRAME_WIDTH;
     int32_t videoFrameRate = AVRECORDER_DEFAULT_FRAME_RATE;
+    bool isHdr = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;

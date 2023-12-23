@@ -56,6 +56,7 @@ public:
     static bool AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value);
     static bool AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec);
     static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value);
+    static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
 };
 
 class MediaJsResult {
