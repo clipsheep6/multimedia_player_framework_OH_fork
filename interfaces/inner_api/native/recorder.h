@@ -105,6 +105,8 @@ enum VideoCodecFormat : int32_t {
     H264 = 2,
     /** MPEG4 */
     MPEG4 = 6,
+    /** H.265 */
+    H265 = 8,
     VIDEO_CODEC_FORMAT_BUTT,
 };
 
@@ -332,6 +334,19 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder) = 0;
+
+    /**
+     * @brief Sets the status of the video to record.
+     *
+     * This function must be called after {@link SetOutputFormat}
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param isHdr Indicates the HDR status to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
 
     /**
      * @brief Sets the width and height of the video to record.
