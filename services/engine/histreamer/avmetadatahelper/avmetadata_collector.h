@@ -77,6 +77,10 @@ public:
     std::shared_ptr<AVSharedMemory> GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
 private:
+    const int maxDateTimeSize = 20;
+    const int standardDateStrSize = 10;
+    const int standardTimeStrSize = 8;
+
     void ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const;
     std::string ConvertTimestampToDatetime(const std::string &timestamp);
     void setEmptyStringToMeta

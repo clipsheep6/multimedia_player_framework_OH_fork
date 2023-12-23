@@ -169,25 +169,23 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
 
 std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &timestamp)
 {
-    if (timestamp == nullptr || timestamp.empty()) {
+    if (timestamp.empty()) {
         MEDIA_LOG_E("datetime is empty, format failed");
         return "";
     }
 
-    const int maxDateTimeSize = 20;
     time_t ts = stoi(timestamp);
-    tm *pTime;
+    tm *pTime = localtime(&ts);
     char date[maxDateTimeSize];
     char time[maxDateTimeSize];
-    ptm = localtime(&ts);
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
     size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
-    if (sizeDateStr == 0 || sizeTimeStr == 0) {
+    if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
         MEDIA_LOG_E("datetime is invalid, format failed");
+        return "";
     }
-    
-    std::string datetime = std::string(date) + " " + std::string(time);
-    return datetime;
+
+    return std::string(date) + " " + std::string(time);
 }
 } // namespace Media
 } // namespace OHOS
