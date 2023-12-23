@@ -640,7 +640,7 @@ bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::stri
     return true;
 }
 
-bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, int64_t &result)
+bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result)
 {
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
