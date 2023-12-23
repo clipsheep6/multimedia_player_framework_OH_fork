@@ -937,6 +937,7 @@ int32_t AVRecorderNapi::GetVideoCodecFormat(const std::string &mime, VideoCodecF
     const std::map<std::string_view, VideoCodecFormat> mimeStrToCodecFormat = {
         { CodecMimeType::VIDEO_AVC, VideoCodecFormat::H264 },
         { CodecMimeType::VIDEO_MPEG4, VideoCodecFormat::MPEG4 },
+        { CodecMimeType::VIDEO_HEVC, VideoCodecFormat::H265 },
         { "", VideoCodecFormat::VIDEO_DEFAULT },
     };
 
@@ -1039,11 +1040,16 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr),
+            (asyncCtx->AVRecorderSignError(ret, "GetIsHdr", "isHdr"), ret));
 
         MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
-                   " videoFrameHeight %{public}d, videoFrameRate %{public}d",
+                   " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr  %{public}d",
                    profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
-                   profile.videoFrameHeight, profile.videoFrameRate);
+                   profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr);
+        CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat == VideoCodecFormat::H265)),
+            (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
+            MSERR_UNSUPPORT_VID_PARAMS));
     }
 
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
@@ -1135,6 +1141,9 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 
         ret = recorder_->SetVideoEncodingBitRate(videoSourceID_, profile.videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncodingBitRate", "videoBitrate"));
+
+        ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoIsHdr", "isHdr"));
     }
 
     return RetInfo(MSERR_EXT_API9_OK, "");
@@ -1391,6 +1400,7 @@ int32_t MediaJsResultExtensionMethod::SetVideoCodecFormat(VideoCodecFormat &code
     const std::map<VideoCodecFormat, std::string_view> codecFormatTomimeStr = {
         { VideoCodecFormat::H264, CodecMimeType::VIDEO_AVC },
         { VideoCodecFormat::MPEG4, CodecMimeType::VIDEO_MPEG4 },
+        { VideoCodecFormat::H265, CodecMimeType::VIDEO_HEVC },
         { VideoCodecFormat::VIDEO_DEFAULT, ""},
     };
 
