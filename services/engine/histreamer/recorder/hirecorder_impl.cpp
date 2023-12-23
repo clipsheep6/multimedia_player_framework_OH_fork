@@ -421,7 +421,7 @@ namespace Media {
                         videoEncFormat_->Set<Tag::MIME_TYPE>(Plugin::MimeType::VIDEO_MPEG4);
                         break;
                     case OHOS::Media::VideoCodecFormat::H265:
-                        MEDIA_LOG_I("ConfigureVideo H265 enter");
+                        MEDIA_LOG_I("Configure VideoCodecFormat::H265");
                         videoEncFormat_->Set<Tag::MIME_TYPE>(Plugin::MimeType::VIDEO_HEVC);
                         break;
                     default:
