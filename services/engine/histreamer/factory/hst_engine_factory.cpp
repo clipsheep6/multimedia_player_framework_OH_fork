@@ -16,9 +16,11 @@
 #include "i_engine_factory.h"
 #include "media_errors.h"
 #include "common/log.h"
-#include "hirecorder_impl.h"
 #include "hiplayer_impl.h"
 #include "avmetadatahelper_impl.h"
+#ifdef SUPPORT_RECORDER
+#include "hirecorder_impl.h"
+#endif
 
 namespace OHOS {
 namespace Media {
