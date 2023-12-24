@@ -77,10 +77,12 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
         return;
     }
     reportMediaProgress_ = true;
+    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
+    //eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
 }
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
@@ -101,10 +103,16 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
             MEDIA_LOG_W("get player engine current time error");
         }
     }
+    if (reportMediaProgress_) {
+        /*eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));*/
+    }
 }
 
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
+    /*eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
+        std::make_pair(errorType, errorCode)));*/
 }
 
 void HiPlayerCallbackLooper::DoReportError(const Any &error)
@@ -120,6 +128,7 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
 
 void HiPlayerCallbackLooper::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+
     eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_INFO, 0,
         std::make_tuple(type, extra, infoBody)));
 }

@@ -13,9 +13,9 @@
 
 declare_args() {
   multimedia_player_framework_support_player = true
-  multimedia_player_framework_support_recorder = true
+  multimedia_player_framework_support_recorder = false
   multimedia_player_framework_support_player_js_api9 = true
-  multimedia_player_framework_support_recorder_js_api9 = true
+  multimedia_player_framework_support_recorder_js_api9 = false
   multimedia_player_framework_support_codec = true
   multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_metadata = true
@@ -81,11 +81,7 @@ if (multimedia_player_framework_support_recorder_js_api9) {
   player_framework_defines += [ "SUPPORT_RECORDER_API9" ]
 }
 
-if (multimedia_player_framework_support_recorder) {
-  player_framework_defines += [ "SUPPORT_RECORDER" ]
-} else {
-  player_framework_defines += [ "UNSUPPORT_RECORDER" ]
-}
+
 
 if (multimedia_player_framework_support_codec) {
   player_framework_defines += [ "SUPPORT_CODEC" ]

@@ -17,6 +17,11 @@ import("//foundation/multimedia/player_framework/config.gni")
 config("media_engine_histreamer_recorder_config") {
   visibility = [ ":*" ]
 
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
+
   cflags = [
     "-O2",
     "-fPIC",
@@ -48,7 +53,7 @@ ohos_static_library("media_engine_histreamer_recorder") {
     cfi_cross_dso = true
     debug = false
   }
-  sources = [ "hirecorder_impl.cpp" ]
+  # sources = [ "hirecorder_impl.cpp" ]
 
   configs = [
     ":media_engine_histreamer_recorder_config",

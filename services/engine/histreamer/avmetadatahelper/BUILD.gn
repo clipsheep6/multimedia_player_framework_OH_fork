@@ -17,6 +17,11 @@ import("//foundation/multimedia/player_framework/config.gni")
 config("media_engine_histreamer_avmetadatahelper_config") {
   visibility = [ ":*" ]
 
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
+
   cflags = [
     "-O2",
     "-fPIC",

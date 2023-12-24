@@ -44,7 +44,10 @@ config("media_engine_histreamer_factory_config") {
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/",
   ]
-  defines = []
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
   defines += player_framework_defines
 }
 

@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <queue>
 
 #include "audio_sink_filter.h"
 #include "codec_filter.h"
@@ -36,7 +37,6 @@
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-
 enum class PlayerStateId {
     IDLE = 0,
     INIT = 1,
@@ -48,7 +48,6 @@ enum class PlayerStateId {
     EOS = 7,
     ERROR = 8,
 };
-
 class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 public:
     HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
@@ -80,7 +79,7 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
-    int32_t SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType) override;
+    int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
@@ -94,6 +93,11 @@ public:
 private:
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
+    void HandleCompleteEvent(const Event& event);
+    void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
+    double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
+    void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
+    void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #ifdef VIDEO_SUPPORT
@@ -113,6 +117,8 @@ private:
     std::shared_ptr<FilterCallback> playerFilterCallback_;
     std::weak_ptr<Meta> sourceMeta_{};
     std::vector<std::weak_ptr<Meta>> streamMeta_{};
+    std::atomic<PlayerStates> pipelineStates_ {PlayerStates::PLAYER_IDLE}; // only update in UpdateStateNoLock()
+    std::queue<PlayerStates> pendingStates_ {};
     std::shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_;
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<CodecFilter> audioDecoder_;

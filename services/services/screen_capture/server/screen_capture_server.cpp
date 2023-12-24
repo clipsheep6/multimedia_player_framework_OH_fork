@@ -365,7 +365,7 @@ int32_t ScreenCaptureServer::InitRecorder()
 {
     CHECK_AND_RETURN_RET_LOG(outputFd_>0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
     MEDIA_LOGI("recorder start init");
-    recorder_ = Media::RecorderServer::Create();
+    //recorder_ = Media::RecorderServer::Create();
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
     int32_t ret = MSERR_OK;
     ret = recorder_->SetVideoSource(videoInfo_.videoSource, videoSourceId_);
