@@ -20,6 +20,7 @@ declare_args() {
   multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_metadata = true
   multimedia_player_framework_support_gstreamer = true
+  multimedia_player_framework_support_histreamer = true
   multimedia_player_framework_support_histreamter = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true

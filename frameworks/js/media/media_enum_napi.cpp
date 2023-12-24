@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "player.h"
+#include "meta/video_types.h"
 #include "recorder.h"
 #include "avmetadatahelper.h"
 #include "avcodec_info.h"

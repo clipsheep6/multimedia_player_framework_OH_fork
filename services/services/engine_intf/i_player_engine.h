@@ -21,6 +21,7 @@
 #include <string>
 #include <refbase.h>
 #include "player.h"
+#include "meta/video_types.h"
 #include "nocopyable.h"
 #ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
@@ -95,7 +96,7 @@ public:
         (void)bitRate;
         return 0;
     }
-    virtual int32_t SetVideoScaleType(VideoScaleType videoScaleType)
+    virtual int32_t SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType)
     {
         (void)videoScaleType;
         return 0;
