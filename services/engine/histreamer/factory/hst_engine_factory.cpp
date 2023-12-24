@@ -17,8 +17,6 @@
 #include "media_errors.h"
 #include "common/log.h"
 #include "hirecorder_impl.h"
-#include "hiplayer_impl.h"
-#include "avmetadatahelper_impl.h"
 
 namespace OHOS {
 namespace Media {
@@ -70,12 +68,6 @@ std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
 std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid, uint32_t tokenId)
 {
     MEDIA_LOG_I("Hst CreatePlayerEngine enter.");
-    auto player = std::unique_ptr<HiPlayerImpl>(new (std::nothrow) HiPlayerImpl(
-        uid, pid, tokenId, 0));
-    if (player) {
-        return player;
-    }
-    MEDIA_LOG_E("create player failed");
     return nullptr;
 }
 #endif
@@ -84,11 +76,6 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
 {
     MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
-    auto helper = std::unique_ptr<AVMetadataHelperImpl>(new (std::nothrow) AVMetadataHelperImpl());
-    if (helper) {
-        return helper;
-    }
-    MEDIA_LOG_E("create AVMetadataHelperImpl failed");
     return nullptr;
 }
 #endif

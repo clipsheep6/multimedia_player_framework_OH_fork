@@ -26,32 +26,32 @@ constexpr uint8_t AUDIO_SOURCE_MAX_COUNT = 1;
 constexpr int32_t INVALID_SOURCE_ID = -1;
 
 struct SourceIdGenerator {
-    static const uint32_t SOURCE_MASK = 0xF00;
-    static const uint32_t VIDEO_MASK = 0x100;
-    static const uint32_t AUDIO_MASK = 0x200;
-    static const uint32_t INDEX_MASK = 0xFF;
+static inline const uint32_t SOURCE_MASK = 0xF00;
+static inline const uint32_t VIDEO_MASK = 0x100;
+static inline const uint32_t AUDIO_MASK = 0x200;
+static inline const uint32_t INDEX_MASK = 0xFF;
 
-    static int32_t GenerateAudioSourceId(uint32_t index)
-    {
-        return static_cast<int32_t>(AUDIO_MASK + (INDEX_MASK & index));
-    }
+static inline int32_t GenerateAudioSourceId(uint32_t index)
+{
+    return static_cast<int32_t>(AUDIO_MASK + (INDEX_MASK & index));
+}
 
-    static int32_t GenerateVideoSourceId(uint32_t index)
-    {
-        return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
-    }
+static inline int32_t GenerateVideoSourceId(uint32_t index)
+{
+    return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
+}
 
-    static int32_t IsAudio(int32_t sourceId)
-    {
-        return ((sourceId > 0) &&
-                ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == AUDIO_MASK));
-    }
+static inline int32_t IsAudio(int32_t sourceId)
+{
+    return ((sourceId > 0) &&
+            ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == AUDIO_MASK));
+}
 
-    static int32_t IsVideo(int32_t sourceId)
-    {
-        return ((sourceId > 0) &&
-                ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
-    }
+static inline int32_t IsVideo(int32_t sourceId)
+{
+    return ((sourceId > 0) &&
+            ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
+}
 };
 } // Media
 } // OHOS

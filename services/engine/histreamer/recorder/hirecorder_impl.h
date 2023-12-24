@@ -24,10 +24,12 @@
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"
 #include "audio_capture_filter.h"
-#include "encoder_filter.h"
+#include "audio_encoder_filter.h"
 #include "muxer_filter.h"
 #include "osal/task/task.h"
 #include "pipeline/pipeline.h"
+#include "surface_encoder_filter.h"
+#include "video_capture_filter.h"
 
 namespace OHOS {
 namespace Media {
@@ -45,55 +47,32 @@ enum class StateId {
 class HiRecorderImpl : public IRecorderEngine {
 public:
     HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
-
     ~HiRecorderImpl();
-
     int32_t Init();
-
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId);
-
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId);
-
     int32_t SetOutputFormat(OutputFormatType format);
-
     int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs);
-
     int32_t Configure(int32_t sourceId, const RecorderParam &recParam);
-
     sptr<Surface> GetSurface(int32_t sourceId);
-
     int32_t Prepare();
-
     int32_t Start();
-
     int32_t Pause();
-
     int32_t Resume();
-
     int32_t Stop(bool isDrainAll);
-
     int32_t Reset();
-
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam);
-
     void OnEvent(const Event &event);
-
     void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
-                    Pipeline::StreamType outType);
+        Pipeline::StreamType outType);
 
 private:
     void ConfigureAudioCapture();
-
     void ConfigureAudio(const RecorderParam &recParam);
-
     void ConfigureVideo(const RecorderParam &recParam);
-
     void ConfigureMuxer(const RecorderParam &recParam);
-
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
-
     void OnStateChanged(StateId state);
-
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};
@@ -105,8 +84,9 @@ private:
 
     std::shared_ptr<Pipeline::Pipeline> pipeline_;
     std::shared_ptr<Pipeline::AudioCaptureFilter> audioCaptureFilter_;
-    std::shared_ptr<Pipeline::EncoderFilter> audioEncoderFilter_;
-    std::shared_ptr<Pipeline::EncoderFilter> videoEncoderFilter_;
+    std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
+    std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
+    std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
 
     std::shared_ptr<Pipeline::EventReceiver> recorderEventReceiver_;
@@ -122,9 +102,20 @@ private:
     int32_t fd_;
     int64_t maxDuration_;
     int64_t maxSize_;
+    int32_t rotation_;
+    float latitude_;
+    float longitude_;
 
-    Mutex stateMutex_{};
-    ConditionVariable cond_{};
+    bool videoSourceIsYuv_ = false;
+
+    Mutex stateMutex_ {};
+    ConditionVariable cond_ {};
+
+    sptr<Surface> producerSurface_{nullptr};
+    sptr<Surface> consumerSurface_{nullptr};
+
+    static constexpr uint32_t ENCODE_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE |
+        BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
 };
 } // namespace MEDIA
 } // namespace OHOS

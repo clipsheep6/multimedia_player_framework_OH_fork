@@ -17,6 +17,11 @@ import("//foundation/multimedia/player_framework/config.gni")
 config("media_engine_histreamer_recorder_config") {
   visibility = [ ":*" ]
 
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
+
   cflags = [
     "-O2",
     "-fPIC",
@@ -63,7 +68,6 @@ ohos_static_library("media_engine_histreamer_recorder") {
 
   external_deps = [
     "av_codec:av_codec_media_engine_filters",
-    "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
     "graphic_2d:surface",
     "graphic_2d:sync_fence",
