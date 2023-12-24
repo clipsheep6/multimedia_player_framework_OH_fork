@@ -17,6 +17,11 @@ import("//foundation/multimedia/player_framework/config.gni")
 config("media_engine_histreamer_player_config") {
   visibility = [ ":*" ]
 
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
+
   cflags = [
     "-O2",
     "-fPIC",
@@ -37,7 +42,7 @@ config("media_engine_histreamer_player_config") {
     "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
     "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
     "$MEDIA_PLAYER_AVCODEC/interfaces",
-    "$MEDIA_PLAYER_HISTREAMER/src",
+    "//foundation/multimedia/histreamer/src",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/sink",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules",
   ]
@@ -52,6 +57,7 @@ ohos_static_library("media_engine_histreamer_player") {
   sources = [
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
+    "media_utils.cpp",
   ]
 
   configs = [
@@ -66,8 +72,9 @@ ohos_static_library("media_engine_histreamer_player") {
   ]
 
   external_deps = [
+    "audio_framework:audio_renderer",
+    "audio_framework:audio_client",
     "av_codec:av_codec_media_engine_filters",
-    "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
     "graphic_2d:surface",
     "graphic_2d:sync_fence",

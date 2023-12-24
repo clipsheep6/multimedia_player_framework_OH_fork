@@ -17,6 +17,7 @@
 #include <string>
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
+#include "meta/any.h"
 
 namespace OHOS {
 namespace Media {
@@ -57,7 +58,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     FALSE_RETURN_V_MSG_E(globalInfo != nullptr && trackInfos.size() != 0, {}, "globalInfo or trackInfos are invalid.");
     std::vector<TagType> keys;
     globalInfo->GetKeys(keys);
-    for (int32_t i = 0; i < keys.size(); i++) {
+    for (int32_t i = 0; i < static_cast<int32_t>(keys.size()); i++) {
         std::string strVal;
         int32_t intVal;
         if (!globalInfo->GetData(keys[i], strVal)) {
@@ -76,7 +77,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
             return metadata.tbl_;
         }
 
-        Plugin::MediaType mediaType;
+        Plugins::MediaType mediaType;
         if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
             MEDIA_LOG_E("mediaType not found, index: %zu", index);
             return metadata.tbl_;
@@ -105,17 +106,19 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
         }
 
         std::vector<uint8_t> coverAddr;
-        auto mapIt = meta.Find(Tag::MEDIA_COVER);
-        if (mapIt == meta.end()) {
+        auto mapIt = meta->Find(Tag::MEDIA_COVER);
+        if (mapIt == meta->end()) {
             continue;
         }
-        coverAddr = mapIt->second;
-        if (coverAddr.size() == 0 || coverAddr.size() > artPictureMaxSize) {
+        if (Any::IsSameTypeWith<std::vector<uint8_t>>(mapIt->second)) {
+            coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
+        }
+        if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > artPictureMaxSize) {
             MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
         uint8_t *addr = coverAddr.data();
-        size_t size = coverAddr.size();z
+        size_t size = coverAddr.size();
         auto artPicMem = AVSharedMemoryBase::CreateFromLocal(
             static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
         errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
@@ -131,7 +134,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
     return nullptr;
 }
 
-void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmeta) const
+void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("") == 0) {
@@ -155,8 +158,8 @@ void AVMetaDataCollector::ConvertToAVMeta(const Meta &innerMeta, Metadata &avmet
                 avmeta.SetMeta(avKey, strVal);
                 MEDIA_LOG_I("found innerKey: %{public}d, val: %{public}s", avKey, strVal.c_str());
             }
-        } else if (Any::IsSameTypeWith<Plugin::VideoRotation>(type)) {
-            Plugin::VideoRotation rotation;
+        } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
+            Plugins::VideoRotation rotation;
             if (innerMeta->GetData(innerKey, rotation)) {
                 avmeta.SetMeta(avKey, std::to_string(rotation));
             }

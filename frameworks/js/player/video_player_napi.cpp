@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "surface_utils.h"
 #include "string_ex.h"
+#include "meta/video_types.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif

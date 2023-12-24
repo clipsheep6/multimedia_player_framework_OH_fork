@@ -31,6 +31,7 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
+#include "meta/video_types.h"
 
 using namespace OHOS::AudioStandard;
 
