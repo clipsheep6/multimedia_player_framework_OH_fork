@@ -21,6 +21,7 @@
 #include "osal/task/task.h"
 #include "i_player_engine.h"
 #include "meta/any.h"
+#include "osal/utils/steady_clock.h"
 
 namespace OHOS {
 namespace Media {
