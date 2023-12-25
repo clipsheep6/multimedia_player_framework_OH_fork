@@ -515,11 +515,6 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
-#ifdef SUPPORT_DRM
-    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-#endif
-
 #ifdef SUPPORT_AUDIO_ONLY
 #else
     /**
@@ -649,6 +644,11 @@ public:
      * @version 1.0
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
+
+#ifdef SUPPORT_DRM
+    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) = 0;
+#endif
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {
