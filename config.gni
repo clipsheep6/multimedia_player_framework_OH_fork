@@ -20,6 +20,7 @@ declare_args() {
   multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_metadata = true
   multimedia_player_framework_support_gstreamer = true
+  multimedia_player_framework_support_histreamer = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true
   multimedia_player_framework_support_capi = true
@@ -151,6 +152,9 @@ if (multimedia_player_framework_support_vibrator) {
 # Config path
 MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
 MEDIA_PLAYER_AVCODEC = "//foundation/multimedia/av_codec"
+MEDIA_PLAYER_HISTREAMER = "//foundation/multimedia/histreamer"
+
+MEDIA_PLAYER_C_UTILS = "//commonlibrary/c_utils"
 MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
 
 # Fuzz test output path

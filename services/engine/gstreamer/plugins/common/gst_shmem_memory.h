@@ -17,7 +17,7 @@
 #define GST_SHMEM_MEMORY_H
 
 #include <gst/gst.h>
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 typedef struct _GstShMemMemory GstShMemMemory;
 

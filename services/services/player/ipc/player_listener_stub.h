@@ -18,7 +18,7 @@
 
 #include "i_standard_player_listener.h"
 #include "player.h"
-#include "format.h"
+#include "meta/format.h"
 #include "monitor_client_object.h"
 
 namespace OHOS {

@@ -19,9 +19,9 @@
 #include <cstdint>
 #include <gst/gst.h>
 #include "avcodec_common.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "codec_common.h"
-#include "format.h"
+#include "meta/format.h"
 #include "i_avcodec_engine.h"
 #include "media_errors.h"
 #include "surface.h"

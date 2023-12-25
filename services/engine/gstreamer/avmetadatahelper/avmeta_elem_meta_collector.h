@@ -24,8 +24,8 @@
 #include <mutex>
 #include <memory>
 #include <gst/gst.h>
-#include "avsharedmemory.h"
-#include "format.h"
+#include "buffer/avsharedmemory.h"
+#include "meta/format.h"
 #include "nocopyable.h"
 
 namespace OHOS {

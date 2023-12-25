@@ -17,7 +17,7 @@
 #define AVFORMAT_NATIVE_MOCK_H
 
 #include "avcodec_mock.h"
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

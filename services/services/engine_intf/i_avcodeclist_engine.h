@@ -23,8 +23,8 @@
 #include <vector>
 #include "nocopyable.h"
 #include "avcodec_info.h"
-#include "avsharedmemory.h"
-#include "format.h"
+#include "buffer/avsharedmemory.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

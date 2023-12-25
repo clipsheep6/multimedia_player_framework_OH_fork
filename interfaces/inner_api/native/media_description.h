@@ -16,7 +16,7 @@
 #ifndef MEDIA_DESCRIPTION_H
 #define MEDIA_DESCRIPTION_H
 
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

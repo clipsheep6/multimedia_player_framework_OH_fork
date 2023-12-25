@@ -55,6 +55,7 @@
           "input",
           "memmgr_plugin",
           "hicollie",
+          "histreamer",
           "drivers_peripheral_codec",
           "drivers_peripheral_display",
           "hdf_core",
@@ -90,16 +91,6 @@
           ]
         },
         "inner_kits": [
-          {
-            "type": "so",
-            "name": "//foundation/multimedia/player_framework/services/utils:media_format",
-            "header": {
-              "header_files": [
-                "format.h"
-              ],
-              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
-            }
-          },
           {
             "type": "so",
             "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",

@@ -49,11 +49,35 @@ void MediaEvent::EventWrite(std::string eventName, OHOS::HiviewDFX::HiSysEvent::
         "MSG", msg_);
 }
 
+void MediaEvent::EventWriteWithAppInfo(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+    std::string module, std::string status, int32_t appUid, int32_t appPid)
+{
+    int32_t pid = getpid();
+    uint32_t uid = getuid();
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
+        "PID", pid,
+        "UID", uid,
+        "MODULE", module,
+        "MSG", msg_,
+        "APP_PID", appPid,
+        "APP_UID", appUid,
+        "STATUS", status);
+}
+
 void BehaviorEventWrite(std::string status, std::string moudle)
 {
     MediaEvent event;
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
         event.EventWrite("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, moudle);
+    }
+}
+
+void BehaviorEventWriteForScreencapture(std::string status, std::string moudle, int32_t appUid, int32_t appPid)
+{
+    MediaEvent event;
+    if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
+        event.EventWriteWithAppInfo("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+            moudle, status, appUid, appPid);
     }
 }
 

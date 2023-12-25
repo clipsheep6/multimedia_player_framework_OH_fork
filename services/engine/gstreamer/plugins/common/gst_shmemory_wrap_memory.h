@@ -18,7 +18,7 @@
 
 #include <functional>
 #include <gst/gst.h>
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 struct _GstShMemoryWrapMemory;
 using GstShMemoryWrapMemory = _GstShMemoryWrapMemory;

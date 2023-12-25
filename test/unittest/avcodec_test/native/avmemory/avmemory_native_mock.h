@@ -17,7 +17,7 @@
 #define AVMEMORY_NATIVE_MOCK_H
 
 #include "avcodec_mock.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {

@@ -19,7 +19,7 @@
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "media_data_source_callback.h"
+#include "helper_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 #include "audio_effect.h"
@@ -83,7 +83,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     void SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper, AVFileDescriptor& fileDescriptor);
     void SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& avHelper,
-        std::shared_ptr<MediaDataSourceCallback>& dataSrcCb);
+        std::shared_ptr<HelperDataSourceCallback>& dataSrcCb);
 
     std::string GetCurrentState();
     void NotifyState(HelperStates state) override;
@@ -98,7 +98,7 @@ private:
     napi_env env_ = nullptr;
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;
     std::shared_ptr<AVMetadataHelperCallback> extractorCb_ = nullptr;
-    std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
+    std::shared_ptr<HelperDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;

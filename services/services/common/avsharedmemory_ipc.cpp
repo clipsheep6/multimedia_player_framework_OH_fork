@@ -15,7 +15,7 @@
 
 #include "avsharedmemory_ipc.h"
 #include <unistd.h>
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 #include "avdatasrcmemory.h"
 #include "media_errors.h"
 #include "media_log.h"

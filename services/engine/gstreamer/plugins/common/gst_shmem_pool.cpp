@@ -19,7 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "buffer_type_meta.h"
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 #include "scope_guard.h"
 using namespace OHOS;
 

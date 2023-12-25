@@ -90,7 +90,6 @@ ohos_static_library("media_engine_gst_common") {
     ":media_gst_dfx",
     "../plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-    "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
@@ -103,6 +102,7 @@ ohos_static_library("media_engine_gst_common") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
+    "histreamer:media_foundation",
     "init:libbegetutil",
     "ipc:ipc_single",
   ]
@@ -171,7 +171,6 @@ ohos_static_library("media_gst_dfx") {
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-    "//foundation/multimedia/player_framework/services/utils:media_format",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstreamer",
@@ -180,6 +179,7 @@ ohos_static_library("media_gst_dfx") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "histreamer:media_foundation",
     "init:libbegetutil",
   ]
 

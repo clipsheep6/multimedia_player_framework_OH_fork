@@ -25,7 +25,7 @@
 #include "avcodec_errors.h"
 #include "avdemuxer.h"
 #include "avsource.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "avcodec_codec_name.h"
 #include "cache_buffer.h"
 #include "isoundpool.h"

@@ -19,7 +19,7 @@
 #include <gst/gst.h>
 #include <unordered_map>
 #include <string>
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

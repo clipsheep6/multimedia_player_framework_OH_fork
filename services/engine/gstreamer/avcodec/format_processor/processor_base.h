@@ -17,7 +17,7 @@
 #define FORMAT_PROCESSOR_BASE_H
 
 #include "codec_common.h"
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

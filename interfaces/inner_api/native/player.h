@@ -20,7 +20,7 @@
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
-#include "format.h"
+#include "meta/format.h"
 #include "media_data_source.h"
 #ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
@@ -213,22 +213,6 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_75_X,
     /* Video playback at 2.0x normal speed */
     SPEED_FORWARD_2_00_X,
-};
-
-enum VideoScaleType : int32_t {
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not same as the display surface, the aspect
-     * of the content is not maintained. This is the default scale type.
-     */
-    VIDEO_SCALE_TYPE_FIT = 0,
-
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not the same as the display surface, content's
-     * aspect ratio is maintained and the content is cropped to fit the display surface.
-     */
-    VIDEO_SCALE_TYPE_FIT_CROP,
 };
 
 class PlayerCallback {
@@ -531,11 +515,6 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
-#ifdef SUPPORT_DRM
-    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-#endif
-
 #ifdef SUPPORT_AUDIO_ONLY
 #else
     /**
@@ -665,6 +644,11 @@ public:
      * @version 1.0
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
+
+#ifdef SUPPORT_DRM
+    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) = 0;
+#endif
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

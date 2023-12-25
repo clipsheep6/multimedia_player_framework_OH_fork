@@ -742,7 +742,7 @@ napi_value AVMetadataExtractorNapi::JsGetAVFileDescriptor(napi_env env, napi_cal
 }
 
 void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& avHelper,
-    std::shared_ptr<MediaDataSourceCallback>& dataSrcCb)
+    std::shared_ptr<HelperDataSourceCallback>& dataSrcCb)
 {
     auto task = std::make_shared<TaskHandler<void>>([this, &helper_ = avHelper, &dataSrcCb_ = dataSrcCb]() {
         MEDIA_LOGI("SetDataSrc Task");
@@ -799,7 +799,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     }
     MEDIA_LOGI("Recvive filesize is %{public}" PRId64 "", jsMetaHelper->dataSrcDescriptor_.fileSize);
     jsMetaHelper->dataSrcCb_
-        = std::make_shared<MediaDataSourceCallback>(env, jsMetaHelper->dataSrcDescriptor_.fileSize);
+        = std::make_shared<HelperDataSourceCallback>(env, jsMetaHelper->dataSrcDescriptor_.fileSize);
 
     napi_value callback = nullptr;
     napi_ref ref = nullptr;
@@ -808,7 +808,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    jsMetaHelper->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
+    jsMetaHelper->dataSrcCb_->SaveCallbackReference(HELPER_READAT_CALLBACK_NAME, autoRef);
 
     jsMetaHelper->SetDataSrcTask(jsMetaHelper->helper_, jsMetaHelper->dataSrcCb_);
 
@@ -833,9 +833,9 @@ napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_inf
     (void)napi_create_object(env, &value);
     (void)jsMetaHelper->dataSrcCb_->GetSize(fileSize);
     (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
-    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(READAT_CALLBACK_NAME, &callback);
+    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(HELPER_READAT_CALLBACK_NAME, &callback);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
-    (void)MediaDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
+    (void)HelperDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
     MEDIA_LOGI("JsGetDataSrc Out");
     return value;

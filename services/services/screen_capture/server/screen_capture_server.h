@@ -201,6 +201,7 @@ private:
     const int32_t videoFrameRateMax_ = 30;
     const std::string MP4 = "mp4";
     const std::string M4A = "m4a";
+    OHOS::AudioStandard::AppInfo appinfo_;
 
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;

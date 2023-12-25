@@ -42,10 +42,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static MediaClient mediaClientInstance;
+static MediaClient g_mediaClientInstance;
 IMediaService &MediaServiceFactory::GetInstance()
 {
-    return mediaClientInstance;
+    return g_mediaClientInstance;
 }
 
 MediaClient::MediaClient() noexcept
@@ -317,7 +317,7 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 void MediaClient::MediaServerDied(pid_t pid)
 {
     MEDIA_LOGE("media server is died, pid:%{public}d!", pid);
-    mediaClientInstance.DoMediaServerDied();
+    g_mediaClientInstance.DoMediaServerDied();
 }
 
 void MediaClient::AVPlayerServerDied()

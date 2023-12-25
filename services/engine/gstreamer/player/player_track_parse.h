@@ -23,7 +23,7 @@
 #include <set>
 #include <gst/gst.h>
 #include <gst/player/player.h>
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

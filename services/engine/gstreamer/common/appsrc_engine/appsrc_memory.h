@@ -17,7 +17,7 @@
 #define APPSRC_MEMORY_H
 
 #include <queue>
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "nocopyable.h"
 
 namespace OHOS {

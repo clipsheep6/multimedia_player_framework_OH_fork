@@ -30,11 +30,15 @@ public:
     bool CreateMsg(const char *format, ...) __attribute__((__format__(printf, 2, 3)));
     void EventWrite(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         std::string module);
+    void EventWriteWithAppInfo(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        std::string module, std::string status, int32_t appUid, int32_t appPid);
 private:
     std::string msg_;
 };
 
 __attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string moudle);
+__attribute__((visibility("default"))) void BehaviorEventWriteForScreencapture(std::string status,
+    std::string moudle, int32_t appUid, int32_t appPid);
 __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string moudle);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {

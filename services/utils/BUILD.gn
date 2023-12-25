@@ -14,28 +14,6 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-ohos_static_library("media_format") {
-  sources = [ "format.cpp" ]
-
-  include_dirs = [
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//commonlibrary/c_utils/base/include",
-  ]
-
-  defines = []
-  defines += player_framework_defines
-  deps = [ "//foundation/multimedia/player_framework/services/utils:media_service_utils" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-
-  subsystem_name = "multimedia"
-  part_name = "player_framework"
-}
-
 config("media_service_utils_public_config") {
   include_dirs = [ "include" ]
 }
@@ -51,10 +29,10 @@ ohos_shared_library("media_service_utils") {
 
   sources = [
     "avdatasrcmemory.cpp",
-    "avsharedmemorybase.cpp",
     "avsharedmemorypool.cpp",
     "media_dfx.cpp",
     "media_permission.cpp",
+    "media_utils.cpp",
     "player_xcollie.cpp",
     "task_queue.cpp",
     "uri_helper.cpp",
@@ -65,10 +43,11 @@ ohos_shared_library("media_service_utils") {
   include_dirs = [
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "//third_party/libxml2/include",
   ]
 
-  defines = []
+  defines = [ "MEDIA_OHOS" ]
   defines += player_framework_defines
 
   cflags = [
@@ -101,8 +80,10 @@ ohos_shared_library("media_service_utils") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "graphic_2d:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",
+    "histreamer:media_foundation",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

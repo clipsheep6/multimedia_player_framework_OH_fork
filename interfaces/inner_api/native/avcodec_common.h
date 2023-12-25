@@ -17,7 +17,7 @@
 
 #include <string>
 #include "av_common.h"
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

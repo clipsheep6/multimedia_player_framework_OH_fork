@@ -21,7 +21,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "player.h"
-#include "format.h"
+#include "meta/format.h"
 #include "uri_helper.h"
 #include "scope_guard.h"
 #include "playbin_state.h"
