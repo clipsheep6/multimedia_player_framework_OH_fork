@@ -31,6 +31,7 @@
 #include "xpower_event_js.h"
 #endif
 #include "av_common.h"
+#include "meta/video_types.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -1463,7 +1464,8 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
 
     int32_t videoScaleType = 0;
     napi_status status = napi_get_value_int32(env, args[0], &videoScaleType);
-    if (status != napi_ok || videoScaleType < VIDEO_SCALE_TYPE_FIT || videoScaleType > VIDEO_SCALE_TYPE_FIT_CROP) {
+    if (status != napi_ok || videoScaleType < static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT)
+        || videoScaleType > static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input scale type");
         return result;
     }

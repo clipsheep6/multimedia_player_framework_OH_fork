@@ -52,6 +52,7 @@ ohos_static_library("media_engine_histreamer_player") {
   sources = [
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
+    "media_utils.cpp",
   ]
 
   configs = [
@@ -66,8 +67,9 @@ ohos_static_library("media_engine_histreamer_player") {
   ]
 
   external_deps = [
+    "audio_framework:audio_client",
+    "audio_framework:audio_renderer",
     "av_codec:av_codec_media_engine_filters",
-    "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
     "graphic_2d:surface",
     "graphic_2d:sync_fence",

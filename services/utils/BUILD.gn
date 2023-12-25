@@ -32,6 +32,7 @@ ohos_shared_library("media_service_utils") {
     "avsharedmemorypool.cpp",
     "media_dfx.cpp",
     "media_permission.cpp",
+    "media_utils.cpp",
     "player_xcollie.cpp",
     "task_queue.cpp",
     "uri_helper.cpp",
@@ -42,10 +43,11 @@ ohos_shared_library("media_service_utils") {
   include_dirs = [
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "//third_party/libxml2/include",
   ]
 
-  defines = []
+  defines = [ "MEDIA_OHOS" ]
   defines += player_framework_defines
 
   cflags = [
@@ -78,6 +80,7 @@ ohos_shared_library("media_service_utils") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "graphic_2d:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",
     "histreamer:media_foundation",

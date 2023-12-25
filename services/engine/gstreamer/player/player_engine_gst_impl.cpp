@@ -789,7 +789,7 @@ int32_t PlayerEngineGstImpl::SetParameter(const Format &param)
     if (param.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
         int32_t videoScaleType = 0;
         param.GetIntValue(PlayerKeys::VIDEO_SCALE_TYPE, videoScaleType);
-        return SetVideoScaleType(VideoScaleType(videoScaleType));
+        return SetVideoScaleType(Plugins::VideoScaleType(videoScaleType));
     }
     if (param.ContainKey(PlayerKeys::CONTENT_TYPE) && param.ContainKey(PlayerKeys::STREAM_USAGE)) {
         param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType_);
@@ -875,7 +875,7 @@ int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t PlayerEngineGstImpl::SetVideoScaleType(VideoScaleType videoScaleType)
+int32_t PlayerEngineGstImpl::SetVideoScaleType(Plugins::VideoScaleType videoScaleType)
 {
     std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
     if (sinkProvider_ != nullptr) {

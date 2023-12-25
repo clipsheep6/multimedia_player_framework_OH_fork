@@ -67,7 +67,6 @@ private:
 
     std::shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_;
     std::shared_ptr<OHOS::Media::Pipeline::DemuxerFilter> demuxerFilter_;
-    std::shared_ptr<OHOS::Media::Pipeline::CodecFilter> videoDecoderFilter_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<AVMetaDataCollector> metaCollector_;
 };

@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "surface_utils.h"
 #include "string_ex.h"
+#include "meta/video_types.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
@@ -1141,7 +1142,8 @@ napi_value VideoPlayerNapi::SetVideoScaleType(napi_env env, napi_callback_info i
     int32_t videoScaleType = 0;
     status = napi_get_value_int32(env, args[0], &videoScaleType);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_get_value_int32 error");
-    if (videoScaleType > VIDEO_SCALE_TYPE_FIT_CROP || videoScaleType < VIDEO_SCALE_TYPE_FIT) {
+    if (videoScaleType > static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP)
+        || videoScaleType < static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT)) {
         jsPlayer->ErrorCallback(MSERR_EXT_INVALID_VAL, "invalid parameters, please check the input parameters");
         return undefinedResult;
     }
