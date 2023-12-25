@@ -573,7 +573,7 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                if (helper_->SetSource(url, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
+                if (helper_->SetSource(url, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 }
                 stopWait_ = false;
@@ -597,7 +597,7 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
+                if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                 }
                 stopWait_ = false;
