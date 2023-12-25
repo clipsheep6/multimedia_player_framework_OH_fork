@@ -215,22 +215,6 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_2_00_X,
 };
 
-enum VideoScaleType : int32_t {
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not same as the display surface, the aspect
-     * of the content is not maintained. This is the default scale type.
-     */
-    VIDEO_SCALE_TYPE_FIT = 0,
-
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not the same as the display surface, content's
-     * aspect ratio is maintained and the content is cropped to fit the display surface.
-     */
-    VIDEO_SCALE_TYPE_FIT_CROP,
-};
-
 class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;

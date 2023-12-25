@@ -20,6 +20,11 @@ group("media_engine_package") {
     deps += [
       "common:media_engine_common",
       "gstreamer:media_engine_gst_package",
+    ]
+  }
+  if (multimedia_player_framework_support_histreamer) {
+    deps += [
+      "common:media_engine_common",
       "histreamer:media_engine_histreamer_package",
     ]
   }

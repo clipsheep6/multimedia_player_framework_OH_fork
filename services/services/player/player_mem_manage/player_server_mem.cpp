@@ -551,7 +551,7 @@ int32_t PlayerServerMem::SetSaveParameter()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     int32_t ret = MSERR_OK;
     if (recoverConfig_.videoScaleType != -1) {
-        ret = playerEngine_->SetVideoScaleType(VideoScaleType(recoverConfig_.videoScaleType));
+        ret = playerEngine_->SetVideoScaleType(Plugins::VideoScaleType(recoverConfig_.videoScaleType));
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetVideoScaleType");
     }
     if (recoverConfig_.contentType != -1 && recoverConfig_.streamUsage != -1) {
