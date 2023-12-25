@@ -103,6 +103,7 @@ ohos_shared_library("media") {
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avimagegenerator_napi.cpp",
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadataextractor_napi.cpp",
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadatahelper_callback.cpp",
+      "${multimedia_player_framework_path}/frameworks/js/metadatahelper/helper_data_source_callback.cpp",
     ]
   }
 
