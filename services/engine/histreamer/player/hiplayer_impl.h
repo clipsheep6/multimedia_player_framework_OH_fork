@@ -18,7 +18,9 @@
 
 #include <memory>
 #include <unordered_map>
+#include <queue>
 
+#include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
 #include "codec_filter.h"
 #include "common/status.h"
@@ -26,28 +28,18 @@
 #include "filter/filter.h"
 #include "filter/filter_factory.h"
 #include "hiplayer_callback_looper.h"
+#include "media_utils.h"
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #ifdef VIDEO_SUPPORT
-#include "video_sink_filter.h"
+#include "decoder_surface_filter.h"
 #endif
+
 
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-
-enum class PlayerStateId {
-    IDLE = 0,
-    INIT = 1,
-    PREPARING = 2,
-    READY = 3,
-    PAUSE = 4,
-    PLAYING = 5,
-    STOPPED = 6,
-    EOS = 7,
-    ERROR = 8,
-};
 
 class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 public:
@@ -80,13 +72,12 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
-    int32_t SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType) override;
+    int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
 
     // internal interfaces
-    int TransStatus(Status status);
     void OnEvent(const Event &event);
     void OnStateChanged(PlayerStateId state);
     void OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
@@ -94,11 +85,16 @@ public:
 private:
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
+    void HandleCompleteEvent(const Event& event);
+    void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
+    double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
+    void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
+    void NotifyDurationUpdate(const std::string_view& type, int32_t param);
+    void NotifySeekDone(int32_t status);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #ifdef VIDEO_SUPPORT
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-    Status LinkVideoSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #endif
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -113,15 +109,15 @@ private:
     std::shared_ptr<FilterCallback> playerFilterCallback_;
     std::weak_ptr<Meta> sourceMeta_{};
     std::vector<std::weak_ptr<Meta>> streamMeta_{};
+    std::atomic<PlayerStates> pipelineStates_ {PlayerStates::PLAYER_IDLE}; // only update in UpdateStateNoLock()
+    std::queue<PlayerStates> pendingStates_ {};
     std::shared_ptr<OHOS::Media::Pipeline::Pipeline> pipeline_;
     std::shared_ptr<DemuxerFilter> demuxer_;
-    std::shared_ptr<CodecFilter> audioDecoder_;
+    std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
 #ifdef VIDEO_SUPPORT
-    std::shared_ptr<CodecFilter> videoDecoder_;
-    std::shared_ptr<VideoSinkFilter> videoSink_;
+    std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif
-    std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};

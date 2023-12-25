@@ -21,6 +21,7 @@
 #include "osal/task/task.h"
 #include "i_player_engine.h"
 #include "meta/any.h"
+#include "osal/utils/steady_clock.h"
 
 namespace OHOS {
 namespace Media {
@@ -75,6 +76,7 @@ private:
     };
 
     OHOS::Media::Task task_;
+    OHOS::Media::Mutex loopMutex_ {};
     bool taskStarted_ {false};
     IPlayerEngine* playerEngine_ {};
     std::weak_ptr<IPlayerEngineObs> obs_ {};
