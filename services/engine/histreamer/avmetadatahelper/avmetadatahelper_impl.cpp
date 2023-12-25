@@ -104,9 +104,6 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         auto eventReceiver = std::make_shared<HelperEventReceiver>(this);
         auto filterCallback = std::make_shared<HelperFilterCallback>(this);
         pipeline_->Init(eventReceiver, filterCallback);
-        videoDecoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::CodecFilter>(
-            "builtin.player.videodecoder", Pipeline::FilterType::FILTERTYPE_VDEC);
-        FALSE_RETURN_V(videoDecoderFilter_ != nullptr, MSERR_INVALID_VAL);
     } else {
         mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     }

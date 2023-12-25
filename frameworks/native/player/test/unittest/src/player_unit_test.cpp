@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "audio_effect.h"
 #include "av_common.h"
+#include "meta/video_types.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -152,7 +153,8 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
     EXPECT_NE(MSERR_OK, player_->PrepareAsync());
     EXPECT_NE(MSERR_OK, player_->Prepare());
     Format format;
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
+    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE,
+        static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT));
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     EXPECT_NE(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->Play());
@@ -199,7 +201,8 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_005, TestSize.Level3)
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
     Format format;
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
+    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE,
+        static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT));
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -1357,9 +1360,11 @@ HWTEST_F(PlayerUnitTest, Player_SetVideoScaleType_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Prepare());
     EXPECT_EQ(MSERR_OK, player_->Play());
     Format format;
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
+    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE,
+        static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT));
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP);
+    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE,
+        static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP));
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
 }
 
@@ -1772,7 +1777,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
     sptr<Surface> renderSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, renderSurface);
     std::vector<std::string> srcVector = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
-    for (int32_t i = 0; i < srcVector.size(); i++) {
+    for (int32_t i = 0; i < static_cast<int32_t>(srcVector.size()); i++) {
         if (srcVector[i] == MEDIA_ROOT + "H264_MP3.mp4") {
             system("param set sys.media.player.resource.type NetWork");
         }

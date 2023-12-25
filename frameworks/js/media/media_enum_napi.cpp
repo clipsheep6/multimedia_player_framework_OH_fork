@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "player.h"
+#include "meta/video_types.h"
 #include "recorder.h"
 #include "avmetadatahelper.h"
 #include "avcodec_info.h"
@@ -253,8 +254,8 @@ static const std::vector<struct JsEnumInt> g_VP8Profile = {
 };
 
 static const std::vector<struct JsEnumInt> g_VideoScaleType = {
-    { "VIDEO_SCALE_TYPE_FIT", VideoScaleType::VIDEO_SCALE_TYPE_FIT },
-    { "VIDEO_SCALE_TYPE_FIT_CROP", VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP },
+    { "VIDEO_SCALE_TYPE_FIT", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT) },
+    { "VIDEO_SCALE_TYPE_FIT_CROP", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP) },
 };
 
 static const std::vector<struct JsEnumInt> g_stateChangeReason = {

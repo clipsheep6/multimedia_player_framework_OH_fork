@@ -16,7 +16,9 @@
 #include "i_engine_factory.h"
 #include "media_errors.h"
 #include "common/log.h"
+#ifdef SUPPORT_RECORDER
 #include "hirecorder_impl.h"
+#endif
 
 namespace OHOS {
 namespace Media {
