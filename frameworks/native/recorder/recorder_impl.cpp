@@ -98,6 +98,12 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, in
     return recorderService_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
+int32_t RecorderImpl::RecorderImpl::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetVideoIsHdr(sourceId, isHdr);
+}
+
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");

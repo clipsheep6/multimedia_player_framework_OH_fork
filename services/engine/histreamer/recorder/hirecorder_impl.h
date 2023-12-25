@@ -73,6 +73,8 @@ private:
     void ConfigureMuxer(const RecorderParam &recParam);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
+    void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
+
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};

@@ -59,6 +59,7 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
     virtual int32_t GetLocation(Location &location) = 0;
+    virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
     /**
      * IPC code ID
      */
@@ -95,6 +96,7 @@ public:
         DESTROY,
         GET_AV_RECORDER_CONFIG,
         GET_LOCATION,
+        SET_VIDEO_IS_HDR,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");
