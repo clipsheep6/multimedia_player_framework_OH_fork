@@ -400,6 +400,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+                    muxerFilter_->SetParameter(muxerFormat_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -411,6 +412,7 @@ void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const 
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+                    muxerFilter_->SetParameter(muxerFormat_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -529,6 +531,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         case RecorderPublicParamType::OUT_FD: {
             OutFd outFd = static_cast<const OutFd&>(recParam);
             fd_ = dup(outFd.fd);
+            muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
             MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
             break;
         }
@@ -544,13 +547,21 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_ORIENTATION_HINT: {
             RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
-            rotation_ = rotationAngle.rotation;
+            if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
+                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
+            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
+                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_90);
+            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_180) {
+                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_180);
+            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
+                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
+            }
             break;
         }
         case RecorderPublicParamType::GEO_LOCATION: {
             GeoLocation geoLocation = static_cast<const GeoLocation&>(recParam);
-            latitude_ = geoLocation.latitude;
-            longitude_ = geoLocation.longitude;
+            muxerFormat_->Set<Tag::MEDIA_LATITUDE>(geoLocation.latitude);
+            muxerFormat_->Set<Tag::MEDIA_LONGITUDE>(geoLocation.longitude);
             break;
         }
         default:

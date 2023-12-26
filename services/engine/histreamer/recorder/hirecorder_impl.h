@@ -96,7 +96,7 @@ private:
 
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
-
+    std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
     std::weak_ptr<IRecorderEngineObs> obs_{};
@@ -104,9 +104,6 @@ private:
     int32_t fd_;
     int64_t maxDuration_;
     int64_t maxSize_;
-    int32_t rotation_;
-    float latitude_;
-    float longitude_;
 
     bool videoSourceIsYuv_ = false;
 
