@@ -104,6 +104,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         auto eventReceiver = std::make_shared<HelperEventReceiver>(this);
         auto filterCallback = std::make_shared<HelperFilterCallback>(this);
         pipeline_->Init(eventReceiver, filterCallback);
+        demuxerFilter_->Init(eventReceiver, filterCallback);
     } else {
         mediaDemuxer_ = std::make_shared<MediaDemuxer>();
     }
