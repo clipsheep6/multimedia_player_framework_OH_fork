@@ -82,6 +82,7 @@ public:
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
 
 private:
     int32_t Init();

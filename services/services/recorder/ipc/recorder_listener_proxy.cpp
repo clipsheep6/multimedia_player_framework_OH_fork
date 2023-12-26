@@ -64,6 +64,20 @@ void RecorderListenerProxy::OnInfo(int32_t type, int32_t extra)
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
+void RecorderListenerProxy::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    audioRecorderChangeInfo.Marshalling(data);
+    int error = Remote()->SendRequest(RecorderListenerMsg::ON_AUDIO_CAPTURE_CHANGE, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on audio capture change failed, error: %{public}d", error);
+}
+
 RecorderListenerCallback::RecorderListenerCallback(const sptr<IStandardRecorderListener> &listener)
     : listener_(listener)
 {
@@ -86,6 +100,13 @@ void RecorderListenerCallback::OnInfo(int32_t type, int32_t extra)
 {
     if (listener_ != nullptr) {
         listener_->OnInfo(type, extra);
+    }
+}
+
+void RecorderListenerCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    if (listener_ != nullptr) {
+        listener_->OnAudioCaptureChange(audioRecorderChangeInfo);
     }
 }
 } // namespace Media

@@ -108,10 +108,12 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
 /**
  * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
  * on(type: 'error', callback: ErrorCallback): void
+ * on(type: 'audioCaptureChange', callback: Callback<AudioCaptureChangeInfo>): void
  */
 namespace AVRecorderEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
+const std::string EVENT_AUDIO_CAPTURE_CHANGE = "audioCaptureChange";
 }
 
 struct AVRecorderAsyncContext;
@@ -148,7 +150,7 @@ using RetInfo = std::pair<int32_t, std::string>;
 class AVRecorderNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
-    
+
     using AvRecorderTaskqFunc = RetInfo (AVRecorderNapi::*)();
 
 private:
@@ -202,11 +204,13 @@ private:
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
      * on(type: 'error', callback: ErrorCallback): void
+     * on(type: 'audioCaptureChange', callback: Callback<AudioCaptureChangeInfo>): void
      */
     static napi_value JsSetEventCallback(napi_env env, napi_callback_info info);
     /**
      * off(type: 'stateChange'): void;
      * off(type: 'error'): void;
+     * off(type: 'audioCaptureChange'): void
      */
     static napi_value JsCancelEventCallback(napi_env env, napi_callback_info info);
     /**

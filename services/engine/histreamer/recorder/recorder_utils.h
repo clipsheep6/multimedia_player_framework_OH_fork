@@ -17,6 +17,8 @@
 #define OHOS_MEDIA_RECORDER_UTILS_H
 
 #include <cstdint>
+#include "audio_capturer.h"
+#include "audio_info.h"
 
 namespace OHOS {
 namespace Media {

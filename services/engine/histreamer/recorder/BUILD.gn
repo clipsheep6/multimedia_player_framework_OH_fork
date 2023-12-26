@@ -67,6 +67,7 @@ ohos_static_library("media_engine_histreamer_recorder") {
   ]
 
   external_deps = [
+    "audio_framework:audio_capturer",
     "av_codec:av_codec_media_engine_filters",
     "c_utils:utils",
     "graphic_2d:surface",

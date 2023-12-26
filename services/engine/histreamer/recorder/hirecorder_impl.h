@@ -65,6 +65,7 @@ public:
     void OnEvent(const Event &event);
     void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
+    void OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
 
 private:
     void ConfigureAudioCapture();
@@ -75,6 +76,7 @@ private:
     void OnStateChanged(StateId state);
     void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
 
+    AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<uint32_t> audioSourceId_{0};
@@ -99,6 +101,7 @@ private:
     std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
+    std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     int32_t fd_;

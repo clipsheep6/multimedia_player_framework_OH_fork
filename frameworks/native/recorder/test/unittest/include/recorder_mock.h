@@ -176,6 +176,7 @@ public:
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
     int32_t GetErrorCode();
 private:
     int32_t errorCode_ = 0;

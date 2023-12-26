@@ -46,6 +46,7 @@ public:
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
+    static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
