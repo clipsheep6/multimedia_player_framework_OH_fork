@@ -134,6 +134,9 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
     } else if (errCode == MSERR_DATA_SOURCE_ERROR_UNKNOWN) {
         SendErrorCallback(MSERR_EXT_API9_IO, "Video input data is abnormal."
             " Please confirm that the pts, width, height, size and other data are normal.");
+    } else if (errCode == MSERR_AUD_INTERRUPT) {
+        SendErrorCallback(MSERR_EXT_API9_AUDIO_INTERRUPTED,
+            "Record failed by audio interrupt.");
     } else {
         SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
     }

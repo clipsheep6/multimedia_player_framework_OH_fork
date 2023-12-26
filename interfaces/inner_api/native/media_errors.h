@@ -72,6 +72,7 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_DATA_SOURCE_IO_ERROR,                       // media data source IO failed.
     MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,               // media data source get mem failed.
     MSERR_DATA_SOURCE_ERROR_UNKNOWN,                  // media data source error unknow.
+    MSERR_AUD_INTERRUPT,                              // audio interrupted.
     MSERR_EXTEND_START      = MS_ERR_OFFSET + 0xF000, // extend err start.
 };
 
@@ -103,6 +104,7 @@ enum MediaServiceExtErrCodeAPI9 : ErrCode {
     MSERR_EXT_API9_TIMEOUT = 5400104,               // opertate timeout.
     MSERR_EXT_API9_SERVICE_DIED = 5400105,          // media service died.
     MSERR_EXT_API9_UNSUPPORT_FORMAT = 5400106,      // unsupport format.
+    MSERR_EXT_API9_AUDIO_INTERRUPTED = 5400107,      // audio interrupted.
 };
 
 __attribute__((visibility("default"))) std::string MSErrorToString(MediaServiceErrCode code);
