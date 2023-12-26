@@ -547,7 +547,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
+    MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
         (this->*onInfoFuncs_[type])(extra, infoBody);
     } else {

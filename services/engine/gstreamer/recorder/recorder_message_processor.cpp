@@ -103,7 +103,7 @@ static RecorderMsgProcResult ProcessStateChangedMessage(GstMessage &msg, Recorde
     GstState pendingState = GST_STATE_NULL;
 
     gst_message_parse_state_changed(&msg, &oldState, &newState, &pendingState);
-    MEDIA_LOGI("%{public}s finished state change, oldState: %{public}s, newState: %{public}s",
+    MEDIA_LOGD("%{public}s finished state change, oldState: %{public}s, newState: %{public}s",
                GST_ELEMENT_NAME(msg.src), gst_element_state_get_name(oldState),
                gst_element_state_get_name(newState));
 
