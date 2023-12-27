@@ -23,6 +23,7 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"
+#include "parameter.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -194,7 +195,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
-    MEDIA_LOGD("current url is : %{public}s", url.c_str());
+    MEDIA_LOGI("current url is : %{public}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
@@ -210,7 +211,18 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
-    ret = playerEngine_->SetObs(obs);
+    playerEngine_->GetVideoWidth();
+
+    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
+    if (res == 1 && useHistreamer[0] == '1') {
+        MEDIA_LOGI("InitPlayEngine hst");
+        ret = playerEngine_->SetObsForHst(obs);
+    } else {
+        MEDIA_LOGI("InitPlayEngine gst");
+        ret = playerEngine_->SetObs(obs);
+    }
+
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 
     lastOpStatus_ = PLAYER_INITIALIZED;

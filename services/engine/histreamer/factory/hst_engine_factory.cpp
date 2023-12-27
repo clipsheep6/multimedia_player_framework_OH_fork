@@ -19,6 +19,9 @@
 #ifdef SUPPORT_RECORDER
 #include "hirecorder_impl.h"
 #endif
+#ifdef SUPPORT_PLAYER
+#include "hiplayer_impl.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -70,6 +73,12 @@ std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
 std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid, uint32_t tokenId)
 {
     MEDIA_LOG_I("Hst CreatePlayerEngine enter.");
+    auto player = std::unique_ptr<HiPlayerImpl>(new (std::nothrow) HiPlayerImpl(
+        uid, pid, tokenId, 0));
+    if (player) {
+        return player;
+    }
+    MEDIA_LOG_E("create player failed");
     return nullptr;
 }
 #endif
