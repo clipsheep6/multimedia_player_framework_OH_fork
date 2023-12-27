@@ -49,6 +49,8 @@ public:
 
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
+    virtual int32_t SetObsForHst(const std::shared_ptr<IPlayerEngineObs> &obs) { (void)obs; return 0; }
     virtual int32_t AddSubSource(const std::string &url)
     {
         (void)url;
@@ -90,7 +92,6 @@ public:
 #endif
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
-    virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate)
     {
         (void)bitRate;

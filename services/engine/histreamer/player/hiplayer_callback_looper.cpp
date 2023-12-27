@@ -57,7 +57,7 @@ void HiPlayerCallbackLooper::Stop()
     }
 }
 
-void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs)
+void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::shared_ptr<IPlayerEngineObs>& obs)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
