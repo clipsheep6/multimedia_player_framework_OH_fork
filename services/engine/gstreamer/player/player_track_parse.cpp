@@ -41,6 +41,7 @@ static const std::unordered_map<std::string_view, std::string_view> INNER_KEY_TO
     { INNER_META_KEY_TRACK_INDEX, PlayerKeys::PLAYER_TRACK_INDEX },
     { INNER_META_KEY_TRACK_TYPE, PlayerKeys::PLAYER_TRACK_TYPE },
     { INNER_META_KEY_VIDEO_WIDTH, PlayerKeys::PLAYER_WIDTH },
+    { INNER_META_KEY_DURATION, PlayerKeys::PLAYER_DURATION },
     { INNER_META_KEY_TRACK_INNER_INDEX, INNER_META_KEY_TRACK_INNER_INDEX },
 };
 
