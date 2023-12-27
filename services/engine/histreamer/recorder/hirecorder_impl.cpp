@@ -95,7 +95,8 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
     Status ret;
-    if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV) {
+    if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
+        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
         videoSourceIsYuv_ = true;
         videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
             ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
