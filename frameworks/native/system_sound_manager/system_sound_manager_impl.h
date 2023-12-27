@@ -70,7 +70,7 @@ private:
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
-    std::shared_ptr<RingerModeCallbackImpl> ringerModeCallback_ = nullptr;
+    std::shared_ptr<AudioStandard::AudioRingerModeCallback> ringerModeCallback_ = nullptr;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {
@@ -81,6 +81,7 @@ public:
 
 private:
     SystemSoundManagerImpl &sysSoundMgr_;
+    AudioStandard::AudioRingerMode ringerMode_ { AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL };
 };
 } // namespace Media
 } // namespace OHOS

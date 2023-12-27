@@ -46,7 +46,14 @@ SystemSoundManagerImpl::SystemSoundManagerImpl()
     InitRingerMode();
 }
 
-SystemSoundManagerImpl::~SystemSoundManagerImpl() {}
+SystemSoundManagerImpl::~SystemSoundManagerImpl()
+{
+    if (audioGroupManager_ != nullptr) {
+        (void)audioGroupManager_->UnsetRingerModeCallback(getpid());
+        ringerModeCallback_ = nullptr;
+        audioGroupManager_ = nullptr;
+    }
+}
 
 void SystemSoundManagerImpl::InitRingerMode(void)
 {
@@ -240,8 +247,9 @@ RingerModeCallbackImpl::RingerModeCallbackImpl(SystemSoundManagerImpl &systemSou
 
 void RingerModeCallbackImpl::OnRingerModeUpdated(const AudioStandard::AudioRingerMode &ringerMode)
 {
-    int32_t result = sysSoundMgr_.SetRingerMode(ringerMode);
-    if (result == MSERR_OK && ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
+    ringerMode_ = ringerMode;
+    int32_t result = sysSoundMgr_.SetRingerMode(ringerMode_);
+    if (result == MSERR_OK && ringerMode_ == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
         SystemSoundVibrator::StopVibrator();
     }
 }
