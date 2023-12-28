@@ -17,7 +17,6 @@ import router from '@ohos.router';
 import { CommonConstants } from '../common/constants/CommonConstants';
 import Logger from '../model/Logger';
 import MediaLibraryUtils from '../model/MediaLibraryUtils';
-import mediaLibrary from '@ohos.multimedia.mediaLibrary';
 import media from '@ohos.multimedia.media';
 import audio from '@ohos.multimedia.audio';
 
@@ -45,7 +44,7 @@ struct AudioPlayer {
   private fdHead: string = 'fd://';
   private isPrepare: boolean = false;
   private isNext = false;
-  private fileAsset: mediaLibrary.FileAsset;
+  private fileDescriptor: media.AVFileDescriptor;
   private index: number = -1;
   private fd: number;
   private movingTime: number = -1;
@@ -58,6 +57,7 @@ struct AudioPlayer {
     this.videoName = router.getParams()[CommonConstants.KEY_PARAM_DATA];
     this.SRC_LIST = CommonConstants.VIDEO_AUDIO_LISTS;
     this.index = CommonConstants.VIDEO_AUDIO_LISTS.map(item => item).indexOf(this.videoName);
+    Logger.info(TAG, 'initAVPlayer aboutToAppear' + this.videoName);
     this.initAVPlayer();
     Logger.info(TAG, 'aboutToAppear success, and play source is' + this.videoName);
   }
@@ -163,6 +163,7 @@ struct AudioPlayer {
         case 'initialized':
           Logger.info(TAG, 'state initialized called');
           if (this.isNext) {
+            Logger.info(TAG, 'stateChange: start to prepare');
             await this.avPlayer.prepare();
           }
           break;
@@ -218,18 +219,23 @@ struct AudioPlayer {
     if (this.avPlayer !== undefined) {
       ret = true;
     }
-    this.avPlayer.url = this.fdPath;
+
+    this.avPlayer.fdSrc = this.fileDescriptor;
+
     Logger.info(TAG, 'createAVPlayer end');
     return ret;
   }
+
   // 播放文件打开函数
-  async openMediaFile(fileName: string): Promise<mediaLibrary.FileAsset> {
-    let fileAsset = await this.mediaLibUtils.findFile('0', fileName);
-    return fileAsset;
+  async openMediaFileFd(fileName: string): Promise<media.AVFileDescriptor> {
+    let testFileDescriptor = await this.mediaLibUtils.openFileDescriptor(fileName);
+    return testFileDescriptor;
   }
   // 调用播放接口
   async play(): Promise<void> {
+    Logger.info(TAG, 'start play');
     if (!this.isPrepare) {
+      Logger.info(TAG, 'start to prepare');
       await this.avPlayer.prepare();
       this.isPrepare = !this.isPrepare;
     }
@@ -317,12 +323,8 @@ struct AudioPlayer {
   // 初始化函数
   async initAVPlayer(): Promise<void> {
     Logger.info(TAG, 'initAVPlayer success');
-    this.fileAsset = await this.openMediaFile(this.videoName);
-    this.duration = this.fileAsset.duration;
-    this.durationTimeText = this.mediaLibUtils.getShowTime(this.fileAsset.duration);
-    this.fd = await this.fileAsset.open('r');
-    this.fdPath = this.fdHead + this.fd;
-    Logger.info(TAG, 'file id is : ' + this.fdPath);
+    this.fileDescriptor = await this.openMediaFileFd(this.videoName);
+    Logger.info(TAG, 'file id is : ' + this.fileDescriptor);
     await this.createAVPlayer();
     this.setStateChangeCallback();
     this.setErrorCallback();
@@ -340,19 +342,12 @@ struct AudioPlayer {
     } else {
       this.index = this.index + 1;
     }
-    // 关闭当前已经打开的视频文件fd
-    await this.fileAsset.close(this.fd)
-    // 打开新的视频文件，并获取相关duration 和 fd数值
-    this.fileAsset = await this.openMediaFile(this.SRC_LIST[this.index]);
-    this.duration = this.fileAsset.duration;
-    this.durationTimeText = this.mediaLibUtils.getShowTime(this.fileAsset.duration);
-    this.videoName = this.fileAsset.displayName;
-    this.fd = await this.fileAsset.open('r');
-    this.fdPath = this.fdHead + this.fd;
-    Logger.info(TAG, 'file id is : ' + this.fdPath);
+    this.fileDescriptor = await this.openMediaFileFd(this.SRC_LIST[this.index]);
+
+    Logger.info(TAG, 'file id is : ' + this.fileDescriptor);
     // 开始进入下一个视频的播放
     if (this.getState() === 'idle') {
-      this.avPlayer.url = this.fdPath;
+      this.avPlayer.fdSrc = this.fileDescriptor;
       // 将当前切视频状态置为true
       this.isNext = true;
       this.isPlaying = false;
@@ -369,16 +364,11 @@ struct AudioPlayer {
     } else {
       this.index = this.index - 1;
     }
-    await this.fileAsset.close(this.fd);
-    this.fileAsset = await this.openMediaFile(this.SRC_LIST[this.index]);
-    this.duration = this.fileAsset.duration;
-    this.durationTimeText = this.mediaLibUtils.getShowTime(this.fileAsset.duration);
-    this.videoName = this.fileAsset.displayName;
-    this.fd = await this.fileAsset.open('r');
-    this.fdPath = this.fdHead + this.fd;
-    Logger.info(TAG, 'file id is : ' + this.fdPath);
+
+    this.fileDescriptor = await this.openMediaFileFd(this.SRC_LIST[this.index]);
+    Logger.info(TAG, 'file descriptor is : ' + this.fileDescriptor);
     if (this.getState() === 'idle') {
-      this.avPlayer.url = this.fdPath;
+      this.avPlayer.fdSrc = this.fileDescriptor;
       // 将当前切视频状态置为true
       this.isNext = true;
       this.isPlaying = false;
