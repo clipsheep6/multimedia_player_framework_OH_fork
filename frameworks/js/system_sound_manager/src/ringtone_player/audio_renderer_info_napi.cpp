@@ -163,7 +163,7 @@ napi_value AudioRendererInfoNapi::SetContentType(napi_env env, napi_callback_inf
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetContentType: napi_get_cb_info failed");
         return jsResult;
     }
@@ -225,7 +225,7 @@ napi_value AudioRendererInfoNapi::SetStreamUsage(napi_env env, napi_callback_inf
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetStreamUsage: napi_get_cb_info failed");
         return jsResult;
     }
@@ -289,7 +289,7 @@ napi_value AudioRendererInfoNapi::SetRendererFlags(napi_env env, napi_callback_i
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("get renderer flag fail to napi_get_cb_info");
         return jsResult;
     }

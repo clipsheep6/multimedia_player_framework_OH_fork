@@ -629,7 +629,7 @@ napi_value AVMetadataExtractorNapi::JsSetUrl(napi_env env, napi_callback_info in
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
@@ -705,7 +705,7 @@ napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_cal
 
     extractor->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
         return result;
     }
@@ -787,7 +787,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     jsMetaHelper->StartListenCurrentResource(); // Listen to the events of the current resource
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsMetaHelper->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "args[0] is not napi_object");
         return result;
     }

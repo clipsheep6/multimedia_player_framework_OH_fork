@@ -291,7 +291,7 @@ napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[callbackParam]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_valuetype valueType = napi_undefined;
-    if (args[2] == nullptr || napi_typeof(env, args[2], &valueType) != napi_ok // 2 is the second arg.
+    if (argCount < callbackParam || napi_typeof(env, args[2], &valueType) != napi_ok // 2 is the second arg.
         || valueType != napi_object) {
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "JsFetchFrameAtTime");
     } else {
@@ -557,7 +557,7 @@ napi_value AVImageGeneratorNapi::JsSetUrl(napi_env env, napi_callback_info info)
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         generator->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
@@ -632,7 +632,7 @@ napi_value AVImageGeneratorNapi::JsSetAVFileDescriptor(napi_env env, napi_callba
 
     generator->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         generator->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
         return result;
     }

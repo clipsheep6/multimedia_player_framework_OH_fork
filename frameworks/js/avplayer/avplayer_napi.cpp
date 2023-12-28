@@ -669,7 +669,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
         return result;
     }
@@ -682,7 +682,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     }
 
     int32_t mode = SEEK_PREVIOUS_SYNC;
-    if (args[1] != nullptr) {
+    if (argCount > 1) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek mode is not number");
             return result;
@@ -728,7 +728,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "speed mode is not number");
         return result;
     }
@@ -771,7 +771,7 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "setVolume level is not number");
         return result;
     }
@@ -815,7 +815,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "selectBitrate is not number");
         return result;
     }
@@ -902,7 +902,7 @@ napi_value AVPlayerNapi::JsAddSubtitleUrl(napi_env env, napi_callback_info info)
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
@@ -933,7 +933,7 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "fileDescriptor is not napi_object");
         return result;
     }
@@ -1044,7 +1044,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
@@ -1082,7 +1082,7 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
         return result;
     }
     napi_valuetype valueType;
-    if (args[0] == nullptr || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "keysession is not napi_object");
         return result;
     }
@@ -1163,7 +1163,7 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
 
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
         return result;
     }
@@ -1229,7 +1229,7 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "args[0] is not napi_object");
         return result;
     }
@@ -1340,7 +1340,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "the attribute(SurfaceID) input is not string");
         return result;
     }
@@ -1399,7 +1399,7 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop is not napi_boolean");
         return result;
     }
@@ -1457,7 +1457,7 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetVideoScaleType is not napi_number");
         return result;
     }
@@ -1519,7 +1519,7 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAudioInterruptMode is not napi_number");
         return result;
     }
@@ -1583,7 +1583,7 @@ napi_value AVPlayerNapi::JsSetAudioEffectMode(napi_env env, napi_callback_info i
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "audioEffectMode is not number");
         return result;
     }
@@ -1691,7 +1691,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input");
         return result;
     }
@@ -1941,7 +1941,7 @@ napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, ret, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
         return ret;
     }
@@ -1983,7 +1983,7 @@ napi_value AVPlayerNapi::JsDeselectTrack(napi_env napiEnv, napi_callback_info in
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(napiEnv, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(napiEnv, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
         return result;
     }
@@ -2100,6 +2100,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetOnCallback In");
 
+    constexpr size_t requireArgc = 2;
     napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
     size_t argCount = 2; // args[0]:type, args[1]:callback
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
@@ -2112,8 +2113,9 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
-        args[1] == nullptr || napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+    if (argCount < requireArgc ||
+        napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
+        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
         return result;
     }
@@ -2150,7 +2152,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     napi_valuetype valueType0 = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
         return result;
     }

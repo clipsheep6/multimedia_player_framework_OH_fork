@@ -242,7 +242,7 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         jsPlayer->ErrorCallback(MSERR_EXT_INVALID_VAL, "napi_typeof failed, please check the input parameters");
         return undefinedResult;
     }
@@ -328,7 +328,7 @@ napi_value VideoPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
     }
     // get url from js
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->ErrorCallback(MSERR_EXT_INVALID_VAL, "napi_typeof failed, please check the input parameters");
         return undefinedResult;
     }
@@ -440,7 +440,7 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
 
     // get surface id from js
     napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+    if (argCount > 0 && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
         asyncContext->surface = CommonNapi::GetStringArgument(env, args[0]);
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
@@ -816,7 +816,7 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
 
     // get speed mode
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed get speed mode");
     }
     status = napi_get_value_int32(env, args[0], &asyncContext->speedMode);
@@ -860,7 +860,7 @@ napi_value VideoPlayerNapi::SelectBitrate(napi_env env, napi_callback_info info)
 
     // get bitrate
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed get bitrate");
     }
     status = napi_get_value_int32(env, args[0], &asyncContext->bitRate);
@@ -1009,7 +1009,7 @@ napi_value VideoPlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < minArgCount) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -1048,7 +1048,7 @@ napi_value VideoPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -1119,7 +1119,7 @@ napi_value VideoPlayerNapi::SetVideoScaleType(napi_env env, napi_callback_info i
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -1349,7 +1349,7 @@ napi_value VideoPlayerNapi::SetAudioInterruptMode(napi_env env, napi_callback_in
 
     MEDIA_LOGD("SetAudioInterruptMode In");
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }

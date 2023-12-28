@@ -205,7 +205,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
     // get param
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
     }
 
@@ -592,7 +592,7 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < minArgCount) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return result;
     }

@@ -206,7 +206,7 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
 
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         return undefinedResult;
     }
 
@@ -292,7 +292,7 @@ napi_value AudioPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
 
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && argCount > 0,
         undefinedResult, "Failed to retrieve details about the callback");
 
     AudioPlayerNapi *player = nullptr;
@@ -528,7 +528,7 @@ napi_value AudioPlayerNapi::Seek(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
 
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -574,7 +574,7 @@ napi_value AudioPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
 
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -622,7 +622,7 @@ napi_value AudioPlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < minArgCount) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -660,7 +660,7 @@ napi_value AudioPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &undefinedResult);
 
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -932,7 +932,7 @@ napi_value AudioPlayerNapi::SetAudioInterruptMode(napi_env env, napi_callback_in
 
     MEDIA_LOGD("SetAudioInterruptMode In");
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }

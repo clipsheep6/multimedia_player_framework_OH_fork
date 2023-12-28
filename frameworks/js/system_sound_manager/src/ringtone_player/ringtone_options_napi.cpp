@@ -164,7 +164,7 @@ napi_value RingtoneOptionsNapi::SetVolume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetVolume: failed for napi_get_cb_info");
         return jsResult;
     }
@@ -224,7 +224,7 @@ napi_value RingtoneOptionsNapi::SetLoop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetLoop: failed for napi_get_cb_info");
         return jsResult;
     }
