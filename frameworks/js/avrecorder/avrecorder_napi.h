@@ -113,7 +113,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
 namespace AVRecorderEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
-const std::string EVENT_AUDIO_CAPTURE_CHANGE = "audioCaptureChange";
+const std::string EVENT_AUDIO_CAPTURE_CHANGE = "audioCapturerChange";
 }
 
 struct AVRecorderAsyncContext;

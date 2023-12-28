@@ -263,10 +263,7 @@ int32_t HiRecorderImpl::Prepare()
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
         CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
-        auto ptr = obs_.lock();
-        if (ptr->isAudioCaptureChange_) {
-            audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
-        }
+        audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
     }
     if (videoEncoderFilter_) {
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);

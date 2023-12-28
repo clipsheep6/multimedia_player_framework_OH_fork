@@ -505,7 +505,6 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     std::shared_ptr<IRecorderEngineObs> obs = shared_from_this();
-    obs->isAudioCaptureChange_ = recorderCb_->isAudioCaptureChange_;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetObs(obs);
     });

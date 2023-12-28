@@ -398,7 +398,6 @@ class RecorderCallback {
 public:
     virtual ~RecorderCallback() = default;
 
-    bool isAudioCaptureChange_ = false;
     /**
      * @brief Called when an error occurs during recording. This callback is used to report recording errors.
      *
