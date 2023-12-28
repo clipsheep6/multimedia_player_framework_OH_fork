@@ -102,7 +102,7 @@ ohos_static_library("media_engine_gst_common") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
-    "histreamer:media_foundation",
+    "media_foundation:media_foundation",
     "init:libbegetutil",
     "ipc:ipc_single",
   ]
@@ -179,7 +179,7 @@ ohos_static_library("media_gst_dfx") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-    "histreamer:media_foundation",
+    "media_foundation:media_foundation",
     "init:libbegetutil",
   ]
 

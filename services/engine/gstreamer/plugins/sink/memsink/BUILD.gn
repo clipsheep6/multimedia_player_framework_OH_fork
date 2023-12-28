@@ -91,7 +91,7 @@ ohos_shared_library("gst_mem_sink") {
     "graphic_2d:surface",
     "graphic_2d:sync_fence",
     "hilog:libhilog",
-    "histreamer:media_foundation",
+    "media_foundation:media_foundation",
     "init:libbegetutil",
   ]
 

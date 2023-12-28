@@ -83,7 +83,7 @@ ohos_static_library("media_engine_gst_factory") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
-    "histreamer:media_foundation",
+    "media_foundation:media_foundation",
     "image_framework:image_native",
   ]
 

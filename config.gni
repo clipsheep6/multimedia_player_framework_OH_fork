@@ -152,7 +152,7 @@ if (multimedia_player_framework_support_vibrator) {
 # Config path
 MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
 MEDIA_PLAYER_AVCODEC = "//foundation/multimedia/av_codec"
-MEDIA_PLAYER_HISTREAMER = "//foundation/multimedia/histreamer"
+MEDIA_PLAYER_HISTREAMER = "//foundation/multimedia/media_foundation"
 
 MEDIA_PLAYER_C_UTILS = "//commonlibrary/c_utils"
 MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
