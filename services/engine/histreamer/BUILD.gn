@@ -31,10 +31,6 @@ ohos_shared_library("media_engine_histreamer") {
     deps += [ "recorder:media_engine_histreamer_recorder" ]
   }
 
-  if (multimedia_player_framework_support_player) {
-    deps += [ "player:media_engine_histreamer_player" ]
-  }
-
   relative_install_dir = "media"
   subsystem_name = "multimedia"
   part_name = "player_framework"

@@ -40,7 +40,6 @@ config("media_engine_histreamer_player_config") {
     "$MEDIA_PLAYER_HISTREAMER/src",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/sink",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/inner_api/",
   ]
 }
 
@@ -53,6 +52,7 @@ ohos_static_library("media_engine_histreamer_player") {
   sources = [
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
+    "media_utils.cpp",
   ]
 
   configs = [
@@ -70,7 +70,6 @@ ohos_static_library("media_engine_histreamer_player") {
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
     "av_codec:av_codec_media_engine_filters",
-    "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
     "graphic_2d:surface",
     "graphic_2d:sync_fence",

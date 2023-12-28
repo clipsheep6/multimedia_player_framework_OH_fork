@@ -43,7 +43,6 @@ config("media_engine_histreamer_factory_config") {
     "$MEDIA_PLAYER_HISTREAMER/src",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/inner_api/",
   ]
   defines = [
     "HST_ANY_WITH_NO_RTTI",
@@ -65,10 +64,7 @@ ohos_static_library("media_engine_histreamer_factory") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
   ]
 
-  deps = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
-  ]
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx" ]
 
   external_deps = [
     "audio_framework:audio_client",

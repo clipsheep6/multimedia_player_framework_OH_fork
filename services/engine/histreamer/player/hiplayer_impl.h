@@ -22,6 +22,7 @@
 
 #include "audio_decoder_filter.h"
 #include "audio_sink_filter.h"
+#include "codec_filter.h"
 #include "common/status.h"
 #include "demuxer_filter.h"
 #include "filter/filter.h"
@@ -31,9 +32,10 @@
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
-#ifdef SUPPORT_VIDEO
+#ifdef VIDEO_SUPPORT
 #include "decoder_surface_filter.h"
 #endif
+
 
 namespace OHOS {
 namespace Media {
@@ -60,7 +62,6 @@ public:
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format& params) override;
-    int32_t SetObsForHst(const std::shared_ptr<IPlayerEngineObs>& obs) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
@@ -92,9 +93,8 @@ private:
     void NotifySeekDone(int32_t status);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-#ifdef SUPPORT_VIDEO
+#ifdef VIDEO_SUPPORT
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
-    bool IsVideoMime(const std::string& mime);
 #endif
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -115,10 +115,9 @@ private:
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
-#ifdef SUPPORT_VIDEO
+#ifdef VIDEO_SUPPORT
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif
-    std::shared_ptr<MediaSyncManager> syncManager_;
     std::atomic<PlayerStateId> curState_;
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
