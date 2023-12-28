@@ -37,7 +37,7 @@ namespace Media {
     PlayerStates TransStateId2PlayerState(PlayerStateId state);
     Plugins::SeekMode Transform2SeekMode(PlayerSeekMode mode);
     const std::string& StringnessPlayerState(PlayerStates state);
-    inline float TransformPlayRate2Float(PlaybackRateMode rateMode);
+    float TransformPlayRate2Float(PlaybackRateMode rateMode);
     inline PlaybackRateMode TransformFloat2PlayRate(float rate);
     double ChangeModeToSpeed(const PlaybackRateMode& mode);
     constexpr double SPEED_0_75_X = 0.75;

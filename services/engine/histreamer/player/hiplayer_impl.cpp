@@ -34,7 +34,6 @@ const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 t
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-constexpr double EPSINON = 0.0001;
 
 class PlayerEventReceiver : public EventReceiver {
 public:
@@ -400,46 +399,37 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed entered.");
-    double playbackSpeed = ChangeModeToSpeed(mode);
-    auto meta = std::make_shared<Meta>();
-    meta->SetData(Tag::MEDIA_PLAYBACK_SPEED, playbackSpeed);
-    demuxer_->SetParameter(meta);
-    Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, 0, format);
-
-    int32_t currentPosMs = 0;
-    int32_t durationMs = 0;
-    NZERO_RETURN(GetDuration(durationMs));
-    NZERO_RETURN(GetCurrentTime(currentPosMs));
-    currentPosMs = std::min(currentPosMs, durationMs);
-    currentPosMs = currentPosMs < 0 ? 0 : currentPosMs;
-    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
-    MEDIA_LOG_D("SetPlaybackSpeed entered end.");
+    if (playbackRateMode_ == mode) {
+        MEDIA_LOG_I("SetPlaybackSpeed new mode same as the old.");
+        return MSERR_OK;
+    }
+    Status res = Status::OK;
+    float speed = TransformPlayRate2Float(mode);
+    if (audioSink_ != nullptr) {
+        res = audioSink_->SetSpeed(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackSpeed audioSink set speed  error.");
+        return MSERR_UNKNOWN;
+    }
+    if (syncManager_ != nullptr) {
+        res = syncManager_->SetPlaybackRate(speed);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("SetPlaybackSpeed syncManager set audio speed error.");
+        return MSERR_UNKNOWN;
+    }
+    playbackRateMode_ = mode;
+    MEDIA_LOG_I("SetPlaybackSpeed entered end.");
     return MSERR_OK;
 }
+
 int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 {
     MEDIA_LOG_I("GetPlaybackSpeed entered.");
-    double rate;
-    auto meta = std::make_shared<Meta>();
-    demuxer_->GetParameter(meta);
-    meta->GetData(Tag::MEDIA_PLAYBACK_SPEED, rate);
-    if (abs(rate - SPEED_0_75_X) < EPSINON) {
-        return SPEED_FORWARD_0_75_X;
-    }
-    if (abs(rate - SPEED_1_00_X) < EPSINON) {
-        return SPEED_FORWARD_1_00_X;
-    }
-    if (abs(rate - SPEED_1_25_X) < EPSINON) {
-        return SPEED_FORWARD_1_25_X;
-    }
-    if (abs(rate - SPEED_1_75_X) < EPSINON) {
-        return SPEED_FORWARD_1_75_X;
-    }
-    if (abs(rate - SPEED_2_00_X) < EPSINON) {
-        return SPEED_FORWARD_2_00_X;
-    }
-    return SPEED_FORWARD_1_00_X;
+    mode = playbackRateMode_.load();
+    MEDIA_LOG_I("GetPlaybackSpeed end, mode is " PUBLIC_LOG_D32, mode);
+    return MSERR_OK;
 }
 
 bool HiPlayerImpl::IsVideoMime(const std::string& mime)

@@ -125,6 +125,7 @@ private:
     std::string url_;
     int32_t videoWidth_{0};
     int32_t videoHeight_{0};
+    PlaybackRateMode playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 };
 } // namespace Media
 } // namespace OHOS
