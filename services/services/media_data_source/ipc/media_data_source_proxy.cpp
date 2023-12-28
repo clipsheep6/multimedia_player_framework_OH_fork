@@ -81,10 +81,10 @@ int32_t MediaDataCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, ui
 
 int32_t MediaDataCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
-    (void)pos;
-    (void)length;
-    (void)mem;
-    return MSERR_OK;
+    MEDIA_LOGD("ReadAt in");
+    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+    return callbackProxy_->ReadAt(mem, length, pos);
 }
 
 int32_t MediaDataCallback::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
