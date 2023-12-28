@@ -14,6 +14,7 @@
  */
 
 #include "native_module_ohos_media.h"
+#include "media_foundation_napi.h"
 #include "media_log.h"
 
 namespace {
@@ -29,6 +30,7 @@ static napi_value Export(napi_env env, napi_value exports)
     MEDIA_LOGD("Export() is called");
 
     OHOS::Media::MediaEnumNapi::Init(env, exports);
+    OHOS::MediaFoundation::MediaFoundationNapi::Init(env, exports);
 
 #ifdef SUPPORT_PLAYER
     OHOS::Media::AudioPlayerNapi::Init(env, exports);
