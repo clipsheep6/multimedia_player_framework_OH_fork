@@ -427,7 +427,7 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 {
     MEDIA_LOG_I("GetPlaybackSpeed entered.");
-    mode = playbackRateMode_.load();
+    mode = playbackRateMode_;
     MEDIA_LOG_I("GetPlaybackSpeed end, mode is " PUBLIC_LOG_D32, mode);
     return MSERR_OK;
 }
