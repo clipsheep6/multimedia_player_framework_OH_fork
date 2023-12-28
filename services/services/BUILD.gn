@@ -199,6 +199,8 @@ ohos_shared_library("media_service") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
     "safwk:system_ability_fwk",
   ]
 

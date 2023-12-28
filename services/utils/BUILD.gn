@@ -88,6 +88,7 @@ ohos_shared_library("media_service_utils") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

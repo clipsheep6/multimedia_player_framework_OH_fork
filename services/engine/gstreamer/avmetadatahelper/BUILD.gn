@@ -94,6 +94,7 @@ ohos_static_library("media_engine_gst_avmeta") {
     "hilog:libhilog",
     "histreamer:media_foundation",
     "image_framework:image_native",
+    "qos_manager:qos",
   ]
 
   defines = []

@@ -26,6 +26,7 @@
 #include <type_traits>
 #include "media_errors.h"
 #include "nocopyable.h"
+#include "qos.h"
 
 namespace OHOS {
 namespace Media {
@@ -218,6 +219,8 @@ public:
 
     int32_t Start();
     int32_t Stop() noexcept;
+    void SetQos(const OHOS::QOS::QosLevel level);
+    void ResetQos();
 
     // delayUs cannot be gt 10000000ULL.
     __attribute__((no_sanitize("cfi"))) int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
@@ -237,6 +240,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cond_;
     std::string name_;
+    pid_t tid_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

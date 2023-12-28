@@ -109,6 +109,7 @@ ohos_static_library("media_engine_gst_avcodec") {
     "graphic_2d:surface",
     "hilog:libhilog",
     "histreamer:media_foundation",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

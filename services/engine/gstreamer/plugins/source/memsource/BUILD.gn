@@ -99,6 +99,7 @@ ohos_shared_library("gst_mem_src") {
     "hilog:libhilog",
     "histreamer:media_foundation",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   relative_install_dir = "media/plugins"

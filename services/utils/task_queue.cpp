@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
-#include "task_queue.h"
+#include <sys/types.h>
+#include <unistd.h>
 #include <malloc.h>
+#include "task_queue.h"
 #include "media_log.h"
 #include "media_errors.h"
+
+using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TaskQueue"};
@@ -66,6 +70,26 @@ int32_t TaskQueue::Stop() noexcept
     lock.lock();
     CancelNotExecutedTaskLocked();
     return MSERR_OK;
+}
+
+void TaskQueue::SetQos(const QosLevel level)
+{
+    if (tid_ == -1) {
+        MEDIA_LOGW("SetQos thread level failed, tid invalid");
+        return;
+    }
+    MEDIA_LOGI("SetQos thread [%{public}d] level [%{public}d]", static_cast<int>(tid_), static_cast<int>(level));
+    SetQosForOtherThread(level, tid_);
+}
+
+void TaskQueue::ResetQos()
+{
+    if (tid_ == -1) {
+        MEDIA_LOGW("ResetQos thread level failed, tid invalid");
+        return;
+    }
+    ResetQosForOtherThread(tid_);
+    MEDIA_LOGI("ResetQos thread [%{public}d] ok", static_cast<int>(tid_));
 }
 
 // cancelNotExecuted = false, delayUs = 0ULL.
@@ -124,6 +148,7 @@ __attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
 {
     MEDIA_LOGI("Enter TaskProcessor [%{public}s]", name_.c_str());
     constexpr uint32_t nameSizeMax = 15;
+    tid_ = gettid();
     pthread_setname_np(pthread_self(), name_.substr(0, nameSizeMax).c_str());
     (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {

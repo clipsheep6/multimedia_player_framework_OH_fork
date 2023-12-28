@@ -105,6 +105,7 @@ ohos_static_library("media_engine_gst_common") {
     "histreamer:media_foundation",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "qos_manager:qos",
   ]
 
   defines = []
@@ -181,6 +182,7 @@ ohos_static_library("media_gst_dfx") {
     "hilog:libhilog",
     "histreamer:media_foundation",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

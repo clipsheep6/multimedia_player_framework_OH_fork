@@ -47,6 +47,7 @@ ohos_unittest("avmetadata_unit_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   deps = [

@@ -91,6 +91,7 @@ ohos_static_library("gst_codec_plugins_common") {
     "hilog:libhilog",
     "histreamer:media_foundation",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

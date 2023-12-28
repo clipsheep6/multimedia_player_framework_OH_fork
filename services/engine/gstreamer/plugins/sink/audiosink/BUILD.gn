@@ -94,6 +94,7 @@ ohos_shared_library("gst_audio_server_sink") {
     "audio_framework:audio_renderer",
     "hilog:libhilog",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   relative_install_dir = "media/plugins"

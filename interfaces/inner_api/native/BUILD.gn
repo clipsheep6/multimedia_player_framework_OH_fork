@@ -181,6 +181,7 @@ ohos_shared_library("media_client") {
     "hitrace:hitrace_meter",
     "image_framework:image_native",
     "ipc:ipc_single",
+    "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
   public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]

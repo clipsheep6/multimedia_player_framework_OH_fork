@@ -58,6 +58,7 @@ ohos_shared_library("systemsoundmanager") {
     "histreamer:media_foundation",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "qos_manager:qos",
     "resource_management:global_resmgr",
   ]
   relative_install_dir = "module/multimedia"

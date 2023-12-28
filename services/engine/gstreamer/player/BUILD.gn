@@ -101,6 +101,7 @@ ohos_static_library("media_engine_gst_player") {
     "hilog:libhilog",
     "histreamer:media_foundation",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_drm) {

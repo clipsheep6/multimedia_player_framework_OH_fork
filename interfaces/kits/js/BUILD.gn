@@ -160,6 +160,7 @@ ohos_shared_library("media") {
     "image_framework:image_native",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_video) {

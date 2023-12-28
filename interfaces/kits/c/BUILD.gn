@@ -80,6 +80,7 @@ ohos_shared_library("native_avscreen_capture") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
+    "qos_manager:qos",
     "window_manager:libdm",
   ]
   output_extension = "so"

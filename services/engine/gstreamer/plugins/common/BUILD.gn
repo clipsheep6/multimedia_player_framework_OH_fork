@@ -103,6 +103,7 @@ ohos_shared_library("gst_media_common") {
     "graphic_2d:sync_fence",
     "hilog:libhilog",
     "histreamer:media_foundation",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

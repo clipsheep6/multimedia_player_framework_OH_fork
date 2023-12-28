@@ -71,6 +71,7 @@ ohos_static_library("media_engine_common_avcodeclist") {
     "c_utils:utils",
     "hilog:libhilog",
     "histreamer:media_foundation",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"
