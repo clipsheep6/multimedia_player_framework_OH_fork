@@ -16,7 +16,7 @@
 #include "gst_shared_mem_sink.h"
 #include <cinttypes>
 #include "gst_shmem_pool.h"
-#include "avsharedmemorypool.h"
+#include "common/avsharedmemorypool.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "buffer_type_meta.h"
