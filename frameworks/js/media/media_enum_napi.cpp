@@ -43,42 +43,9 @@ struct JsEnumString {
     std::string_view enumString;
 };
 
-static const std::vector<struct JsEnumInt> g_mediaErrorCode = {
-    { "MSERR_OK", MediaServiceExtErrCode::MSERR_EXT_OK },
-    { "MSERR_NO_MEMORY", MediaServiceExtErrCode::MSERR_EXT_NO_MEMORY },
-    { "MSERR_OPERATION_NOT_PERMIT", MediaServiceExtErrCode::MSERR_EXT_OPERATE_NOT_PERMIT },
-    { "MSERR_INVALID_VAL", MediaServiceExtErrCode::MSERR_EXT_INVALID_VAL },
-    { "MSERR_IO", MediaServiceExtErrCode::MSERR_EXT_IO },
-    { "MSERR_TIMEOUT", MediaServiceExtErrCode::MSERR_EXT_TIMEOUT },
-    { "MSERR_UNKNOWN", MediaServiceExtErrCode::MSERR_EXT_UNKNOWN },
-    { "MSERR_SERVICE_DIED", MediaServiceExtErrCode::MSERR_EXT_SERVICE_DIED },
-    { "MSERR_INVALID_STATE", MediaServiceExtErrCode::MSERR_EXT_INVALID_STATE },
-    { "MSERR_UNSUPPORTED", MediaServiceExtErrCode::MSERR_EXT_UNSUPPORT },
-};
-
-static const std::vector<struct JsEnumInt> g_AVErrorCode = {
-    { "AVERR_OK", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_OK },
-    { "AVERR_NO_PERMISSION", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_NO_PERMISSION },
-    { "AVERR_INVALID_PARAMETER", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_INVALID_PARAMETER },
-    { "AVERR_UNSUPPORT_CAPABILITY", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_CAPABILITY },
-    { "AVERR_NO_MEMORY", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_NO_MEMORY },
-    { "AVERR_OPERATE_NOT_PERMIT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_OPERATE_NOT_PERMIT },
-    { "AVERR_IO", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_IO },
-    { "AVERR_TIMEOUT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_TIMEOUT },
-    { "AVERR_SERVICE_DIED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_SERVICE_DIED },
-    { "AVERR_UNSUPPORT_FORMAT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_FORMAT },
-};
-
 static const std::vector<struct JsEnumInt> g_avDataSourceError = {
     { "SOURCE_ERROR_IO", MediaDataSourceError::SOURCE_ERROR_IO },
     { "SOURCE_ERROR_EOF", MediaDataSourceError::SOURCE_ERROR_EOF },
-};
-
-static const std::vector<struct JsEnumInt> g_bufferingInfoType = {
-    { "BUFFERING_START", BufferingInfoType::BUFFERING_START },
-    { "BUFFERING_END", BufferingInfoType::BUFFERING_END },
-    { "BUFFERING_PERCENT", BufferingInfoType::BUFFERING_PERCENT },
-    { "CACHED_DURATION", BufferingInfoType::CACHED_DURATION },
 };
 
 static const std::vector<struct JsEnumInt> g_recorderAudioEncoder = {
@@ -103,12 +70,6 @@ static const std::vector<struct JsEnumInt> g_playbackSpeed = {
     { "SPEED_FORWARD_1_25_X", PlaybackRateMode::SPEED_FORWARD_1_25_X },
     { "SPEED_FORWARD_1_75_X", PlaybackRateMode::SPEED_FORWARD_1_75_X },
     { "SPEED_FORWARD_2_00_X", PlaybackRateMode::SPEED_FORWARD_2_00_X },
-};
-
-static const std::vector<struct JsEnumInt> g_mediaType = {
-    { "MEDIA_TYPE_AUD", MediaType::MEDIA_TYPE_AUD },
-    { "MEDIA_TYPE_VID", MediaType::MEDIA_TYPE_VID },
-    { "MEDIA_TYPE_SUBTITLE", MediaType::MEDIA_TYPE_SUBTITLE },
 };
 
 static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
@@ -138,13 +99,6 @@ static const std::vector<struct JsEnumInt> g_frameFlags = {
     { "SYNC_FRAME", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_SYNC_FRAME },
     { "PARTIAL_FRAME", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_PARTIAL_FRAME },
     { "CODEC_DATA", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_CODEC_DATA },
-};
-
-static const std::vector<struct JsEnumInt> g_seekMode = {
-    { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
-    { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
-    { "SEEK_CLOSEST_SYNC", PlayerSeekMode::SEEK_CLOSEST_SYNC },
-    { "SEEK_CLOSEST", PlayerSeekMode::SEEK_CLOSEST },
 };
 
 static const std::vector<struct JsEnumInt> g_AVCodecType = {
@@ -258,82 +212,17 @@ static const std::vector<struct JsEnumInt> g_VideoScaleType = {
     { "VIDEO_SCALE_TYPE_FIT_CROP", static_cast<int32_t>(Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT_CROP) },
 };
 
-static const std::vector<struct JsEnumInt> g_stateChangeReason = {
-    { "USER", StateChangeReason::USER },
-    { "BACKGROUND", StateChangeReason::BACKGROUND },
-};
-
-static const std::vector<struct JsEnumString> g_containerFormatType = {
-    { "CFT_MPEG_4", ContainerFormatType::CFT_MPEG_4 },
-    { "CFT_MPEG_4A", ContainerFormatType::CFT_MPEG_4A },
-};
-
-static const std::vector<struct JsEnumString> g_codecMimeType = {
-    { "VIDEO_H263", CodecMimeType::VIDEO_H263 },
-    { "VIDEO_AVC", CodecMimeType::VIDEO_AVC },
-    { "VIDEO_MPEG2", CodecMimeType::VIDEO_MPEG2 },
-    { "VIDEO_HEVC", CodecMimeType::VIDEO_HEVC },
-    { "VIDEO_MPEG4", CodecMimeType::VIDEO_MPEG4 },
-    { "VIDEO_VP8", CodecMimeType::VIDEO_VP8 },
-    { "VIDEO_VP9", CodecMimeType::VIDEO_VP9 },
-    { "AUDIO_AMR_NB", CodecMimeType::AUDIO_AMR_NB },
-    { "AUDIO_AMR_WB", CodecMimeType::AUDIO_AMR_WB },
-    { "AUDIO_MPEG", CodecMimeType::AUDIO_MPEG },
-    { "AUDIO_AAC", CodecMimeType::AUDIO_AAC },
-    { "AUDIO_VORBIS", CodecMimeType::AUDIO_VORBIS },
-    { "AUDIO_OPUS", CodecMimeType::AUDIO_OPUS },
-    { "AUDIO_FLAC", CodecMimeType::AUDIO_FLAC },
-    { "AUDIO_RAW", CodecMimeType::AUDIO_RAW },
-};
-
-static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
-    { "MD_KEY_TRACK_INDEX", "track_index" },
-    { "MD_KEY_TRACK_TYPE", "track_type" },
-    { "MD_KEY_CODEC_MIME", "codec_mime" },
-    { "MD_KEY_DURATION", "duration" },
-    { "MD_KEY_BITRATE", "bitrate" },
-    { "MD_KEY_MAX_INPUT_SIZE", "max_input_size" },
-    { "MD_KEY_MAX_ENCODER_FPS", "max_encoder_fps" },
-    { "MD_KEY_WIDTH", "width" },
-    { "MD_KEY_HEIGHT", "height" },
-    { "MD_KEY_PIXEL_FORMAT", "pixel_format" },
-    { "MD_KEY_AUDIO_SAMPLE_FORMAT", "audio_sample_format" },
-    { "MD_KEY_FRAME_RATE", "frame_rate" },
-    { "MD_KEY_CAPTURE_RATE", "capture_rate" },
-    { "MD_KEY_I_FRAME_INTERVAL", "i_frame_interval" },
-    { "MD_KEY_REQUEST_I_FRAME", "req_i_frame" },
-    { "MD_KEY_REPEAT_FRAME_AFTER", "repeat_frame_after" },
-    { "MD_KEY_SUSPEND_INPUT_SURFACE", "suspend_input_surface" },
-    { "MD_KEY_VIDEO_ENCODE_BITRATE_MODE", "video_encode_bitrate_mode" },
-    { "MD_KEY_PROFILE", "codec_profile" },
-    { "MD_KEY_QUALITY", "codec_quality" },
-    { "MD_KEY_RECT_TOP", "rect_top" },
-    { "MD_KEY_RECT_BOTTOM", "rect_bottom" },
-    { "MD_KEY_RECT_LEFT", "rect_left" },
-    { "MD_KEY_RECT_RIGHT", "rect_right" },
-    { "MD_KEY_COLOR_STANDARD", "color_standard" },
-    { "MD_KEY_AUD_CHANNEL_COUNT", "channel_count" },
-    { "MD_KEY_AUD_SAMPLE_RATE", "sample_rate" },
-    { "MD_KEY_CUSTOM", "vendor.custom" },
-    { "MD_KEY_LANGUAGE", "language" },
-};
-
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
-    { "AVErrorCode", g_AVErrorCode},
-    { "MediaErrorCode", g_mediaErrorCode },
     { "AVDataSourceError", g_avDataSourceError },
-    { "BufferingInfoType", g_bufferingInfoType },
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
     { "PlaybackSpeed", g_playbackSpeed },
     { "AVImageQueryOptions", g_avImageQueryOptions },
     { "PixelFormat", g_pixelFormat },
-    { "MediaType", g_mediaType },
     { "VideoRecorderQualityLevel", g_videoRecorderQualityLevel },
     { "AudioSourceType", g_audioSourceType },
     { "VideoSourceType", g_videoSourceType },
     { "FrameFlags", g_frameFlags },
-    { "SeekMode", g_seekMode },
     { "AVCodecType", g_AVCodecType },
     { "AACProfile", g_AACProfile },
     { "VideoEncodeBitrateMode", g_videoEncodeBitrateMode },
@@ -345,13 +234,10 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "H263Profile", g_H263Profile},
     { "VP8Profile", g_VP8Profile },
     { "VideoScaleType", g_VideoScaleType},
-    { "StateChangeReason", g_stateChangeReason},
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {
-    { "MediaDescriptionKey", g_mediaDescriptionKey },
-    { "ContainerFormatType", g_containerFormatType },
-    { "CodecMimeType", g_codecMimeType },
+    
 };
 
 napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)
