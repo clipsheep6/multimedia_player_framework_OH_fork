@@ -29,7 +29,6 @@ ohos_shared_library("media_service_utils") {
 
   sources = [
     "avdatasrcmemory.cpp",
-    "avsharedmemorypool.cpp",
     "media_dfx.cpp",
     "media_permission.cpp",
     "media_utils.cpp",

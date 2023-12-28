@@ -96,7 +96,6 @@
             "name": "//foundation/multimedia/player_framework/services/utils:media_service_utils",
             "header": {
               "header_files": [
-                "avsharedmemorypool.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/services/utils/include"
             }
