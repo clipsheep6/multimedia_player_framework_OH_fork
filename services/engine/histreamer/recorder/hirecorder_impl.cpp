@@ -75,6 +75,7 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 
 HiRecorderImpl::~HiRecorderImpl()
 {
+    Stop(false);
 }
 
 int32_t HiRecorderImpl::Init()
