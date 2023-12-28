@@ -33,13 +33,13 @@ enum class PlayerStateId {
 
 namespace OHOS {
 namespace Media {
-    int TransStatus(Status status);
-    PlayerStates TransStateId2PlayerState(PlayerStateId state);
-    Plugins::SeekMode Transform2SeekMode(PlayerSeekMode mode);
-    const std::string& StringnessPlayerState(PlayerStates state);
-    inline float TransformPlayRate2Float(PlaybackRateMode rateMode);
-    inline PlaybackRateMode TransformFloat2PlayRate(float rate);
-    double ChangeModeToSpeed(const PlaybackRateMode& mode);
+    int __attribute__((visibility("default"))) TransStatus(Status status);
+    PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state);
+    Plugins::SeekMode __attribute__((visibility("default"))) Transform2SeekMode(PlayerSeekMode mode);
+    const std::string& __attribute__((visibility("default"))) StringnessPlayerState(PlayerStates state);
+    inline float __attribute__((visibility("default"))) TransformPlayRate2Float(PlaybackRateMode rateMode);
+    inline PlaybackRateMode __attribute__((visibility("default"))) TransformFloat2PlayRate(float rate);
+    double __attribute__((visibility("default"))) ChangeModeToSpeed(const PlaybackRateMode& mode);
     constexpr double SPEED_0_75_X = 0.75;
     constexpr double SPEED_1_00_X = 1.00;
     constexpr double SPEED_1_25_X = 1.25;

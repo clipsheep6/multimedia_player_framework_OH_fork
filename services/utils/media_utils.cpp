@@ -43,7 +43,7 @@ const std::array<std::pair<PlaybackRateMode, float>, 5> PLAY_RATE_REFS = {
 };
 }  // namespace
 
-int TransStatus(Status status)
+int __attribute__((visibility("default"))) TransStatus(Status status)
 {
     for (const auto& errPair : g_statusPair) {
         if (errPair.first == status) {
@@ -53,7 +53,7 @@ int TransStatus(Status status)
     return MSERR_UNKNOWN;
 }
 
-PlayerStates TransStateId2PlayerState(PlayerStateId state)
+PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state)
 {
     PlayerStates playerState = PLAYER_STATE_ERROR;
     switch (state) {
@@ -87,7 +87,7 @@ PlayerStates TransStateId2PlayerState(PlayerStateId state)
     return playerState;
 }
 
-Plugins::SeekMode Transform2SeekMode(PlayerSeekMode mode)
+Plugins::SeekMode __attribute__((visibility("default"))) Transform2SeekMode(PlayerSeekMode mode)
 {
     switch (mode) {
         case PlayerSeekMode::SEEK_NEXT_SYNC:
@@ -101,7 +101,7 @@ Plugins::SeekMode Transform2SeekMode(PlayerSeekMode mode)
             return Plugins::SeekMode::SEEK_CLOSEST;
     }
 }
-const std::string& StringnessPlayerState(PlayerStates state)
+const std::string& __attribute__((visibility("default"))) StringnessPlayerState(PlayerStates state)
 {
     using StateString = std::pair<PlayerStates, std::string>;
     const static std::array<StateString, 9> maps = { // array size
@@ -124,7 +124,7 @@ const std::string& StringnessPlayerState(PlayerStates state)
     }
     return ite->second;
 }
-float TransformPlayRate2Float(PlaybackRateMode rateMode)
+float __attribute__((visibility("default"))) TransformPlayRate2Float(PlaybackRateMode rateMode)
 {
     auto ite = std::find_if(PLAY_RATE_REFS.begin(), PLAY_RATE_REFS.end(), [&](const auto& pair) ->bool {
         return pair.first == rateMode;
@@ -134,7 +134,7 @@ float TransformPlayRate2Float(PlaybackRateMode rateMode)
     }
     return ite->second;
 }
-PlaybackRateMode TransformFloat2PlayRate(float rate)
+PlaybackRateMode __attribute__((visibility("default"))) TransformFloat2PlayRate(float rate)
 {
     auto ite = std::find_if(PLAY_RATE_REFS.begin(), PLAY_RATE_REFS.end(), [&](const auto& pair) ->bool {
         return std::fabs(rate - pair.second) < 1e-3;
@@ -145,7 +145,7 @@ PlaybackRateMode TransformFloat2PlayRate(float rate)
     return ite->first;
 }
 
-double TransformPlayRateToSpeed(const PlaybackRateMode& mode)
+double __attribute__((visibility("default"))) TransformPlayRateToSpeed(const PlaybackRateMode& mode)
 {
     switch (mode) {
         case SPEED_FORWARD_0_75_X:

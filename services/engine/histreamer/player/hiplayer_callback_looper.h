@@ -34,7 +34,7 @@ public:
 
     void Stop();
 
-    void StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs);
+    void StartWithPlayerEngineObs(const std::shared_ptr<IPlayerEngineObs>& obs);
 
     void SetPlayEngine(IPlayerEngine* engine);
 
