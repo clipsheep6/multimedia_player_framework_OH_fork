@@ -14,7 +14,6 @@
  */
 
 #define HST_LOG_TAG "HiPlayerImpl"
-#define SUPPORT_VIDEO
 
 #include "hiplayer_impl.h"
 
@@ -178,7 +177,7 @@ int HiPlayerImpl::PrepareAsync()
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     int32_t durationMs = 0;
     GetDuration(durationMs);
-    NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, 0);
+    NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs);
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
     return TransStatus(ret);
@@ -274,12 +273,13 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         int64_t realSeekTime = seekPos;
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
         if (rtv == Status::OK) {
-            syncManager_->Seek(realSeekTime);
+            syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
         }
-        if (pipelineStates_ == PLAYER_STARTED) {
+        if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Start();
         }
     }
+    NotifySeekDone(seekPos);
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
@@ -357,16 +357,11 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::SetObsForHst(const std::shared_ptr<IPlayerEngineObs>& obs)
+int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 {
     MEDIA_LOG_I("SetObs entered.");
     callbackLooper_.StartWithPlayerEngineObs(obs);
     return TransStatus(Status::OK);
-}
-
-int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
-{
-    return 0;
 }
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
@@ -387,7 +382,7 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
     } else {
         MEDIA_LOG_W("Get media duration failed.");
     }
-    if (found) {
+    if (found && duration > 0 && duration != duration_) {
         duration_ = Plugins::HstTime2Us(duration);
     }
     int64_t tmp = 0;
@@ -700,13 +695,14 @@ void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t pa
 {
     Format format;
     format.PutIntValue(std::string(type), param);
+    MEDIA_LOG_I("NotifyDurationUpdate duration_ " PUBLIC_LOG_D64 " param " PUBLIC_LOG_D32, duration_, param);
     callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, duration_, format);
 }
 
-void HiPlayerImpl::NotifySeekDone(int32_t status)
+void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, status, format);
+    callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
 
 void HiPlayerImpl::OnStateChanged(PlayerStateId state)
@@ -765,6 +761,9 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
             FilterType::FILTERTYPE_ASINK);
         FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+        if (demuxer_) {
+            audioSink_->SetParameter(demuxer_->GetGlobalMetaInfo());
+        }
         audioSink_->SetSyncCenter(syncManager_);
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);

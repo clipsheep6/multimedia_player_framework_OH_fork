@@ -60,7 +60,6 @@ public:
     int32_t SetVideoSurface(sptr<Surface> surface) override;
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format& params) override;
-    int32_t SetObsForHst(const std::shared_ptr<IPlayerEngineObs>& obs) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
@@ -89,7 +88,7 @@ private:
     double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
-    void NotifySeekDone(int32_t status);
+    void NotifySeekDone(int32_t seekPos);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #ifdef SUPPORT_VIDEO

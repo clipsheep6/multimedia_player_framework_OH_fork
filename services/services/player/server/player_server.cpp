@@ -222,17 +222,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
-    playerEngine_->GetVideoWidth();
-
-    char useHistreamer[10] = {0}; // 10 for system parameter usage
-    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
-    if (res == 1 && useHistreamer[0] == '1') {
-        MEDIA_LOGI("InitPlayEngine hst");
-        ret = playerEngine_->SetObsForHst(obs);
-    } else {
-        MEDIA_LOGI("InitPlayEngine gst");
-        ret = playerEngine_->SetObs(obs);
-    }
+    ret = playerEngine_->SetObs(obs);
 
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 
