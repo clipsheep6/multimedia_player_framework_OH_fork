@@ -287,12 +287,10 @@ sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");
     sptr<ISystemAbilityManager> samgr = nullptr;
-    LISTENER(samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager(),
-        "SystemAbilityManagerClient::GetSystemAbilityManager", false)
+    samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "system ability manager is nullptr.");
     sptr<IRemoteObject> object = nullptr;
-    LISTENER(object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID),
-        "SystemAbilityManagerClient::GetSystemAbility", false)
+    object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
