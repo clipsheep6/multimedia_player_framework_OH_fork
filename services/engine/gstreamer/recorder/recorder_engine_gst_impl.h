@@ -50,6 +50,9 @@ public:
     int32_t Reset() override;
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) override;
     sptr<Surface> GetSurface(int32_t sourceId) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
 
 private:
     int32_t BuildPipeline();

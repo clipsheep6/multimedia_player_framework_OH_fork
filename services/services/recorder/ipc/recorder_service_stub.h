@@ -69,6 +69,9 @@ public:
     int32_t DumpInfo(int32_t fd);
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
     int32_t GetLocation(Location &location) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
 
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
@@ -110,7 +113,9 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply);
     int32_t GetLocation(MessageParcel &data, MessageParcel &reply);
-
+    int32_t GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetAvailableEncoder(MessageParcel &data, MessageParcel &reply);
+    int32_t GetMaxAmplitude(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;

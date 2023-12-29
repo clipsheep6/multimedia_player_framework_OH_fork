@@ -24,6 +24,7 @@
 #include "meta/format.h"
 #include "surface.h"
 #include "av_common.h"
+#include "codec_capability.h"
 
 namespace OHOS {
 namespace Media {
@@ -858,6 +859,12 @@ public:
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
 
     virtual int32_t GetLocation(Location &location) = 0;
+
+    virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
+
+    virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
+
+    virtual int32_t GetMaxAmplitude() = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

@@ -735,5 +735,47 @@ int32_t RecorderServer::GetLocation(Location &location)
     location.longitude = config_.longitude;
     return MSERR_OK;
 }
+
+int32_t RecorderServer::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetCurrentCapturerChangeInfo(changeInfo);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetAvailableEncoder(encoderInfo);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetMaxAmplitude()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetMaxAmplitude();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
 } // namespace Media
 } // namespace OHOS

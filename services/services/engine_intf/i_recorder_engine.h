@@ -166,6 +166,21 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) = 0;
+    /**
+     * Get current audio capturer change info.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
+    /**
+     * Get available encoder capability info.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
+    /**
+     * Get current audio max amplitude.
+     * Return max amplitude.
+     */
+    virtual int32_t GetMaxAmplitude() = 0;
 };
 } // namespace Media
 } // namespace OHOS

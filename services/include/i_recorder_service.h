@@ -455,6 +455,12 @@ public:
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
 
     virtual int32_t GetLocation(Location &location) = 0;
+
+    virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
+
+    virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
+
+    virtual int32_t GetMaxAmplitude() = 0;
 };
 } // namespace Media
 } // namespace OHOS

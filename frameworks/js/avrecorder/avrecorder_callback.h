@@ -61,7 +61,7 @@ private:
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
 };
 
-class AudioCaptureChangeInfoJsCallback {
+class AudioCaptureChangeInfoJsCallback : public MediaJsResult {
 public:
     explicit AudioCaptureChangeInfoJsCallback(AudioRecorderChangeInfo value)
         : value_(value)

@@ -388,5 +388,32 @@ int32_t RecorderClient::GetLocation(Location &location)
     MEDIA_LOGD("GetLocation");
     return recorderProxy_->GetLocation(location);
 }
+
+int32_t RecorderClient::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+    
+    MEDIA_LOGD("GetCurrentCapturerChangeInfo");
+    return recorderProxy_->GetCurrentCapturerChangeInfo(changeInfo);
+}
+
+int32_t RecorderClient::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetAvailableEncoder");
+    return recorderProxy_->GetAvailableEncoder(encoderInfo);
+}
+
+int32_t RecorderClient::GetMaxAmplitude()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("GetMaxAmplitude");
+    return recorderProxy_->GetMaxAmplitude();
+}
 } // namespace Media
 } // namespace OHOS

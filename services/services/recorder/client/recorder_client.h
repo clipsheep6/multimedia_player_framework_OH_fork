@@ -63,6 +63,9 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
     int32_t GetLocation(Location &location) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
     // RecorderClient
     void MediaServerDied();
 

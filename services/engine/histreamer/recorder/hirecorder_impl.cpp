@@ -451,6 +451,41 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
     ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
 }
 
+int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    if (audioCaptureFilter_ == nullptr) {
+        MEDIA_LOG_E("audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
+        return (int32_t)Status::OK;
+    }
+    AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
+    Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
+    changeInfo = ConvertCapturerChangeInfo(audioChangeInfo);
+    return (int32_t)ret;
+}
+
+int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    if (!codecCapabilityAdapter_) {
+        codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
+    }
+    codecCapabilityAdapter_->Init();
+
+    std::vector<MediaAVCodec::CapabilityData*> encoderCapData;
+    Status ret = codecCapabilityAdapter_->GetAvailableEncoder(encoderCapData);
+    
+    encoderInfo = ConvertEncoderInfo(encoderCapData);
+    return (int32_t)ret;
+}
+
+int32_t HiRecorderImpl::GetMaxAmplitude()
+{
+    if (!audioCaptureFilter_) {
+        MEDIA_LOG_E("audioCaptureFilter_ is null, cannot get audio max amplitude");
+        return (int32_t)Status::ERROR_INVALID_OPERATION;
+    }
+    return audioCaptureFilter_->GetMaxAmplitude();
+}
+
 void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 {
     MEDIA_LOG_I("ConfigureAudio enter.");
@@ -651,6 +686,53 @@ AudioRecorderChangeInfo HiRecorderImpl::ConvertCapturerChangeInfo(
     audioRecorderChangeInfo.inputDeviceInfo.audioStreamInfo.format =
         capturerChangeInfo.inputDeviceInfo.audioStreamInfo.format;
     return audioRecorderChangeInfo;
+}
+
+EncoderCapabilityData HiRecorderImpl::ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData)
+{
+    EncoderCapabilityData encoderInfo;
+    encoderInfo.mimeType = capabilityData->mimeType;
+    encoderInfo.type = VIDEO_TYPE;
+    encoderInfo.bitrate = CodecRange(capabilityData->bitrate.minVal, capabilityData->bitrate.maxVal);
+    encoderInfo.frameRate = CodecRange(capabilityData->frameRate.minVal, capabilityData->frameRate.maxVal);
+    encoderInfo.width = CodecRange(capabilityData->width.minVal, capabilityData->width.maxVal);
+    encoderInfo.height = CodecRange(capabilityData->height.minVal, capabilityData->height.maxVal);
+    encoderInfo.channels = CodecRange();
+    encoderInfo.sampleRate = std::vector<int32_t>();
+    return encoderInfo;
+}
+
+EncoderCapabilityData HiRecorderImpl::ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData)
+{
+    EncoderCapabilityData encoderInfo;
+    encoderInfo.mimeType = capabilityData->mimeType;
+    encoderInfo.type = AUIDO_TYPE;
+    encoderInfo.bitrate = CodecRange(capabilityData->bitrate.minVal, capabilityData->bitrate.maxVal);
+    encoderInfo.frameRate = CodecRange();
+    encoderInfo.width = CodecRange();
+    encoderInfo.height = CodecRange();
+    encoderInfo.channels = CodecRange(capabilityData->channels.minVal, capabilityData->channels.maxVal);
+    encoderInfo.sampleRate = capabilityData->sampleRate;
+    return encoderInfo;
+}
+
+std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
+    std::vector<MediaAVCodec::CapabilityData*> &capData)
+{
+    std::vector<EncoderCapabilityData> encoderInfoVector;
+    for (int32_t i = 0; i < (int32_t)capData.size(); i++) {
+        EncoderCapabilityData encoderInfo;
+        if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER) {
+            encoderInfo = ConvertAudioEncoderInfo(capData[i]);
+            encoderInfoVector.push_back(encoderInfo);
+        } else if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_AUDIO_ENCODER) {
+            encoderInfo = ConvertVideoEncoderInfo(capData[i]);
+            encoderInfoVector.push_back(encoderInfo);
+        } else {
+            MEDIA_LOG_W("codecType is not encoder, skip convert");
+        }
+    }
+    return encoderInfoVector;
 }
 } // namespace MEDIA
 } // namespace OHOS

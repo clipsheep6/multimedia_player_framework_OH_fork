@@ -50,6 +50,9 @@ const std::string RELEASE = "Release";
 const std::string GET_AV_RECORDER_PROFILE = "GetAVRecorderProfile";
 const std::string SET_AV_RECORDER_CONFIG = "SetAVRecorderConfig";
 const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig";
+const std::string GET_CURRENT_CAPTURER_CHANGE_INFO = "GetCurrentCapturerChangeInfo";
+const std::string GET_MAX_AMPLITUDE = "GetMaxAmplitude";
+const std::string GET_ENCODER_INFO = "GetEncoderInfo";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -67,13 +70,19 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
+        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::GETINPUTSURFACE,
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -81,20 +90,29 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::PAUSE,
         AVRecordergOpt::STOP,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
         AVRecordergOpt::RESUME,
         AVRecordergOpt::STOP,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
         AVRecordergOpt::PREPARE,
         AVRecordergOpt::RESET,
-        AVRecordergOpt::RELEASE
+        AVRecordergOpt::RELEASE,
+        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_MAX_AMPLITUDE,
+        AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_RELEASED, {
         AVRecordergOpt::RELEASE
@@ -233,6 +251,21 @@ private:
      * getAVRecorderConfig(): Promise<AVRecorderConfig>;
     */
     static napi_value JsGetAVRecorderConfig(napi_env env, napi_callback_info info);
+    /**
+     * getCurrentAudioCapturerInfo(callback: AsyncCallback<audio.AudioCapturerChangeInfo>): void;
+     * getCurrentAudioCapturerInfo(): Promise<audio.AudioCapturerChangeInfo>;
+    */
+    static napi_value JsGetCurrentCapturerChangeInfo(napi_env env, napi_callback_info info);
+    /**
+     * getAudioCapturerMaxAmplitude(callback: AsyncCallback<number>): void;
+     * getAudioCapturerMaxAmplitude(): Promise<number>;
+    */
+    static napi_value JsGetMaxAmplitude(napi_env env,  napi_callback_info info);
+    /**
+     * getAvailableEncoder(callback: AsyncCallback<Array<EncoderInfo>>): void;
+     * getAvailableEncoder(): Promise<Array<EncoderInfo>>;
+    */
+    static napi_value JsGetEncoderInfo(napi_env env,  napi_callback_info info);
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
@@ -245,7 +278,12 @@ private:
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderConfigTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
-
+    static std::shared_ptr<TaskHandler<RetInfo>> GetCurrentCapturerChangeInfoTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetMaxAmplitudeTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetEncoderInfoTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
@@ -269,6 +307,9 @@ private:
     RetInfo GetVideoRecorderProfile();
 
     int32_t GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config);
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+    int32_t GetMaxAmplitude(int32_t &maxAmplitude);
+    int32_t GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -317,6 +358,9 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;
+    AudioRecorderChangeInfo changeInfo_;
+    int32_t maxAmplitude_;
+    std::vector<EncoderCapabilityData> encoderInfo_;
 };
 
 class MediaJsResultExtensionMethod {
@@ -351,6 +395,21 @@ public:
 
 private:
     std::shared_ptr<AVRecorderConfig> value_ = nullptr;
+};
+class MediaJsEncoderInfo : public MediaJsResult {
+public:
+    explicit MediaJsEncoderInfo(std::vector<EncoderCapabilityData> encoderInfo)
+        : encoderInfo_(encoderInfo)
+    {
+    }
+    ~MediaJsEncoderInfo() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+    napi_status GetAudioEncoderInfo(
+        napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
+    napi_status GetVideoEncoderInfo(
+        napi_env env, EncoderCapabilityData encoderCapData, napi_value &result, uint32_t position);
+private:
+    std::vector<EncoderCapabilityData> encoderInfo_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -61,6 +61,9 @@ public:
     int32_t Init();
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
     int32_t GetLocation(Location &location) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;

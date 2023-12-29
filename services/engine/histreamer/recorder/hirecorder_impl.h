@@ -30,6 +30,7 @@
 #include "pipeline/pipeline.h"
 #include "surface_encoder_filter.h"
 #include "video_capture_filter.h"
+#include "codec_capability_adapter.h"
 
 namespace OHOS {
 namespace Media {
@@ -43,6 +44,9 @@ enum class StateId {
     ERROR,
     BUTT,
 };
+
+const std::string AUIDO_TYPE = "audio";
+const std::string VIDEO_TYPE = "video";
 
 class HiRecorderImpl : public IRecorderEngine {
 public:
@@ -66,6 +70,9 @@ public:
     void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
     void OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
+    int32_t GetMaxAmplitude();
 
 private:
     void ConfigureAudioCapture();
@@ -75,6 +82,9 @@ private:
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
     void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
+    EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
+    EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
+    std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
 
     AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     std::atomic<uint32_t> audioCount_{0};
@@ -92,6 +102,7 @@ private:
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
+    std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
 
     std::shared_ptr<Pipeline::EventReceiver> recorderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> recorderCallback_;

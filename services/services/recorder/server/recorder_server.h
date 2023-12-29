@@ -78,6 +78,9 @@ public:
     int32_t DumpInfo(int32_t fd);
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
     int32_t GetLocation(Location &location) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
