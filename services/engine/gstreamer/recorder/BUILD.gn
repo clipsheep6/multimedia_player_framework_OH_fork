@@ -92,7 +92,7 @@ ohos_static_library("media_engine_gst_recorder") {
   external_deps = [
     "graphic_2d:surface",
     "hilog:libhilog",
-    "histreamer:media_foundation",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 

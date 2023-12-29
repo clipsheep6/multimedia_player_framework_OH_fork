@@ -178,10 +178,10 @@ ohos_shared_library("media_client") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
-    "histreamer:media_foundation",
     "hitrace:hitrace_meter",
     "image_framework:image_native",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]

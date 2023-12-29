@@ -77,8 +77,8 @@ ohos_static_library("media_engine_histreamer_player") {
     "graphic_2d:surface",
     "graphic_2d:sync_fence",
     "hilog:libhilog",
-    "histreamer:media_foundation",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
   ]
 

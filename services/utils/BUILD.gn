@@ -82,11 +82,11 @@ ohos_shared_library("media_service_utils") {
     "graphic_2d:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",
-    "histreamer:media_foundation",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 
