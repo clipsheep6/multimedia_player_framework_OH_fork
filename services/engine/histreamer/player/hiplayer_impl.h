@@ -124,6 +124,10 @@ private:
     std::string url_;
     int32_t videoWidth_{0};
     int32_t videoHeight_{0};
+
+    int32_t contentType_{0};
+    int32_t streamUsage_{0};
+    int32_t rendererFlag_{0};
 };
 } // namespace Media
 } // namespace OHOS

@@ -343,13 +343,10 @@ int32_t HiPlayerImpl::SetParameter(const Format& params)
     }
 #endif
     if (params.ContainKey(PlayerKeys::CONTENT_TYPE) && params.ContainKey(PlayerKeys::STREAM_USAGE)) {
-        int32_t contentType;
-        int32_t streamUsage;
-        int32_t rendererFlag;
-        params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
-        params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
-        params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag);
-        return SetAudioRendererInfo(contentType, streamUsage, rendererFlag);
+        params.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType_);
+        params.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage_);
+        params.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag_);
+        return TransStatus(Status::OK);
     }
     if (params.ContainKey(PlayerKeys::AUDIO_INTERRUPT_MODE)) {
         int32_t interruptMode = 0;
@@ -765,6 +762,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
             FilterType::FILTERTYPE_ASINK);
         FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+        SetAudioRendererInfo(contentType_, streamUsage_, rendererFlag_);
         if (demuxer_) {
             audioSink_->SetParameter(demuxer_->GetGlobalMetaInfo());
         }
