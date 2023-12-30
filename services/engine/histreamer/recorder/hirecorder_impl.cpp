@@ -457,7 +457,7 @@ int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
 {
     if (audioCaptureFilter_ == nullptr) {
         MEDIA_LOG_E("audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
-        return (int32_t)Status::OK;
+        return (int32_t)Status::ERROR_INVALID_OPERATION;
     }
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
     Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
@@ -725,10 +725,10 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
     for (int32_t i = 0; i < (int32_t)capData.size(); i++) {
         EncoderCapabilityData encoderInfo;
         if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER) {
-            encoderInfo = ConvertAudioEncoderInfo(capData[i]);
+            encoderInfo = ConvertVideoEncoderInfo(capData[i]);
             encoderInfoVector.push_back(encoderInfo);
         } else if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_AUDIO_ENCODER) {
-            encoderInfo = ConvertVideoEncoderInfo(capData[i]);
+            encoderInfo = ConvertAudioEncoderInfo(capData[i]);
             encoderInfoVector.push_back(encoderInfo);
         } else {
             MEDIA_LOG_W("codecType is not encoder, skip convert");

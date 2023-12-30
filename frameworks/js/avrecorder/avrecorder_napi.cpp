@@ -77,9 +77,9 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAVRecorderProfile", JsGetAVRecorderProfile),
         DECLARE_NAPI_FUNCTION("setAVRecorderConfig", JsSetAVRecorderConfig),
         DECLARE_NAPI_FUNCTION("getAVRecorderConfig", JsGetAVRecorderConfig),
-        DECLARE_NAPI_FUNCTION("getCurrentCapturerChangeInfo", JsGetCurrentCapturerChangeInfo),
-        DECLARE_NAPI_FUNCTION("getMaxAmplitude", JsGetMaxAmplitude),
-        DECLARE_NAPI_FUNCTION("getEncoderInfo", JsGetEncoderInfo),
+        DECLARE_NAPI_FUNCTION("getCurrentAudioCapturerInfo", JsGetCurrentAudioCapturerInfo),
+        DECLARE_NAPI_FUNCTION("getAudioCapturerMaxAmplitude", JsGetAudioCapturerMaxAmplitude),
+        DECLARE_NAPI_FUNCTION("getAvailableEncoder", JsGetAvailableEncoder),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
     };
@@ -548,10 +548,10 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
     return result;
 }
 
-napi_value AVRecorderNapi::JsGetCurrentCapturerChangeInfo(napi_env env, napi_callback_info info)
+napi_value AVRecorderNapi::JsGetCurrentAudioCapturerInfo(napi_env env, napi_callback_info info)
 {
-    MediaTrace trace("AVRecorder::JsGetCurrentCapturerChangeInfo");
-    const std::string &opt = AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO;
+    MediaTrace trace("AVRecorder::JsGetCurrentAudioCapturerInfo");
+    const std::string &opt = AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO;
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
 
     napi_value result = nullptr;
@@ -587,7 +587,7 @@ napi_value AVRecorderNapi::JsGetCurrentCapturerChangeInfo(napi_env env, napi_cal
             }
 
             if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO)) {
+                (asyncCtx->opt_ == AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO)) {
                 asyncCtx->JsResult = std::make_unique<AudioCaptureChangeInfoJsCallback>(asyncCtx->changeInfo_);
             }
         }
@@ -600,9 +600,9 @@ napi_value AVRecorderNapi::JsGetCurrentCapturerChangeInfo(napi_env env, napi_cal
     return result;
 }
 
-napi_value AVRecorderNapi::JsGetMaxAmplitude(napi_env env,  napi_callback_info info)
+napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_callback_info info)
 {
-    MediaTrace trace("AVRecorder::JsGetMaxAmplitude");
+    MediaTrace trace("AVRecorder::JsGetAudioCapturerMaxAmplitude");
     const std::string &opt = AVRecordergOpt::GET_MAX_AMPLITUDE;
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
@@ -651,9 +651,9 @@ napi_value AVRecorderNapi::JsGetMaxAmplitude(napi_env env,  napi_callback_info i
     return result;
 }
 
-napi_value AVRecorderNapi::JsGetEncoderInfo(napi_env env,  napi_callback_info info)
+napi_value AVRecorderNapi::JsGetAvailableEncoder(napi_env env,  napi_callback_info info)
 {
-    MediaTrace trace("AVRecorder::JsGetEncoderInfo");
+    MediaTrace trace("AVRecorder::JsGetAvailableEncoder");
     const std::string &opt = AVRecordergOpt::GET_ENCODER_INFO;
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
@@ -912,7 +912,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetCurrentCapturerChangeIn
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &changeInfo = asyncCtx->changeInfo_]() {
-        const std::string &option = AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO;
+        const std::string &option = AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(napi != nullptr,

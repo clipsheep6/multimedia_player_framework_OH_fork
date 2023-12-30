@@ -71,13 +71,27 @@ public:
 
     bool Marshalling(Parcel &parcel) const
     {
-        return parcel.WriteString(mimeType)
-            && parcel.WriteString(type)
-            && bitrate.Marshalling(parcel)
-            && frameRate.Marshalling(parcel)
-            && width.Marshalling(parcel)
-            && height.Marshalling(parcel)
-            && channels.Marshalling(parcel);
+        if (!parcel.WriteString(mimeType)) {
+            return false;
+        }
+        if (!parcel.WriteString(type)) {
+            return false;
+        }
+        if (!(bitrate.Marshalling(parcel) && frameRate.Marshalling(parcel)
+            && width.Marshalling(parcel) && height.Marshalling(parcel)
+            && channels.Marshalling(parcel))) {
+            return false;
+        }
+        size_t size = sampleRate.size();
+        if (!parcel.WriteUint64(size)) {
+            return false;
+        }
+        for (const auto &i : sampleRate) {
+            if (!parcel.WriteInt32(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     void Unmarshalling(Parcel &parcel)
@@ -89,6 +103,10 @@ public:
         width.Unmarshalling(parcel);
         height.Unmarshalling(parcel);
         channels.Unmarshalling(parcel);
+        size_t size = parcel.ReadUint64();
+        for (size_t i = 0; i < size; i++) {
+            sampleRate.push_back(parcel.ReadInt32());
+        }
     }
 };
 } // namespace Media

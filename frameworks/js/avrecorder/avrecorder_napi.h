@@ -50,7 +50,7 @@ const std::string RELEASE = "Release";
 const std::string GET_AV_RECORDER_PROFILE = "GetAVRecorderProfile";
 const std::string SET_AV_RECORDER_CONFIG = "SetAVRecorderConfig";
 const std::string GET_AV_RECORDER_CONFIG = "GetAVRecorderConfig";
-const std::string GET_CURRENT_CAPTURER_CHANGE_INFO = "GetCurrentCapturerChangeInfo";
+const std::string GET_CURRENT_AUDIO_CAPTURER_INFO = "GetCurrentAudioCapturerInfo";
 const std::string GET_MAX_AMPLITUDE = "GetMaxAmplitude";
 const std::string GET_ENCODER_INFO = "GetEncoderInfo";
 }
@@ -71,7 +71,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO
     }},
@@ -80,7 +80,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
-        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG
@@ -92,7 +92,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::STOP,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
-        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG
@@ -103,7 +103,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::STOP,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
-        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG
@@ -113,7 +113,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::PREPARE,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
-        AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
+        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG
@@ -259,17 +259,17 @@ private:
      * getCurrentAudioCapturerInfo(callback: AsyncCallback<audio.AudioCapturerChangeInfo>): void;
      * getCurrentAudioCapturerInfo(): Promise<audio.AudioCapturerChangeInfo>;
     */
-    static napi_value JsGetCurrentCapturerChangeInfo(napi_env env, napi_callback_info info);
+    static napi_value JsGetCurrentAudioCapturerInfo(napi_env env, napi_callback_info info);
     /**
      * getAudioCapturerMaxAmplitude(callback: AsyncCallback<number>): void;
      * getAudioCapturerMaxAmplitude(): Promise<number>;
     */
-    static napi_value JsGetMaxAmplitude(napi_env env,  napi_callback_info info);
+    static napi_value JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_callback_info info);
     /**
      * getAvailableEncoder(callback: AsyncCallback<Array<EncoderInfo>>): void;
      * getAvailableEncoder(): Promise<Array<EncoderInfo>>;
     */
-    static napi_value JsGetEncoderInfo(napi_env env,  napi_callback_info info);
+    static napi_value JsGetAvailableEncoder(napi_env env,  napi_callback_info info);
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
