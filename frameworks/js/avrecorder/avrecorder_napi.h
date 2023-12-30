@@ -82,7 +82,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
     {AVRecorderState::STATE_STARTED, {
         AVRecordergOpt::START,
@@ -93,7 +94,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
     {AVRecorderState::STATE_PAUSED, {
         AVRecordergOpt::PAUSE,
@@ -103,7 +105,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
     {AVRecorderState::STATE_STOPPED, {
         AVRecordergOpt::STOP,
@@ -112,7 +115,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_CURRENT_CAPTURER_CHANGE_INFO,
         AVRecordergOpt::GET_MAX_AMPLITUDE,
-        AVRecordergOpt::GET_ENCODER_INFO
+        AVRecordergOpt::GET_ENCODER_INFO,
+        AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
     {AVRecorderState::STATE_RELEASED, {
         AVRecordergOpt::RELEASE

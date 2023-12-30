@@ -60,7 +60,9 @@ public:
 
     void OnStateChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
     {
-        hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+        if (hiRecorderImpl_) {
+            hiRecorderImpl_->OnAudioCaptureChange(capturerChangeInfo);
+        }
     }
 
 private:
