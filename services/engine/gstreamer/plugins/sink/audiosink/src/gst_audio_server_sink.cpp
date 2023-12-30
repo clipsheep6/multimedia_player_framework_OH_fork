@@ -99,6 +99,11 @@ static void gst_audio_server_sink_event_init(GstAudioServerSinkClass *klass)
     g_signal_new("audio-service-died", G_TYPE_FROM_CLASS(klass),
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 0); // no parameters
+
+    g_signal_new("device-change-event", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 2, const AudioStandard::DeviceInfo deviceInfo,
+        const AudioStandard::AudioStreamDeviceChangeReason reason);
 }
 
 static void gst_audio_server_sink_property1_init(GObjectClass *gobject_class)
@@ -292,6 +297,14 @@ static void gst_audio_server_sink_interrupt_callback(GstBaseSink *basesink,
 {
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_signal_emit_by_name(sink, "interrupt-event", eventType, forceType, hintType);
+}
+
+static void gst_audio_server_sink_device_change_callback(GstBaseSink *basesink,
+    const AudioStandard::DeviceInfo &deviceInfo,
+    const AudioStandard::AudioStreamDeviceChangeReason reason)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "device-change-event", deviceInfo, reason);
 }
 
 static void gst_audio_server_sink_state_callback(GstBaseSink *basesink, guint state)
@@ -604,7 +617,8 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
                                      gst_audio_server_sink_error_callback,
-                                     gst_audio_server_sink_service_died_callback);
+                                     gst_audio_server_sink_service_died_callback,
+                                     gst_audio_server_sink_device_change_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
     sink->pre_power_on = sink->audio_sink->IsMediaAudioActive();

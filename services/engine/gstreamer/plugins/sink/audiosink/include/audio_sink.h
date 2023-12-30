@@ -54,7 +54,9 @@ public:
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
                                 void (*errorCb)(GstBaseSink *, const std::string &),
-                                void (*audioDiedCb)(GstBaseSink *)) = 0;
+                                void (*audioDiedCb)(GstBaseSink *),
+                                void (*deviceCb)(GstBaseSink *, const AudioStandard::DeviceInfo &deviceInfo,
+                                    const AudioStandard::AudioStreamDeviceChangeReason reason)) = 0;
     virtual int32_t SetAudioEffectMode(int32_t effectMode) = 0;
     virtual int32_t GetAudioEffectMode(int32_t &effectMode) = 0;
     virtual bool IsMediaAudioActive() = 0;

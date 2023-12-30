@@ -473,6 +473,8 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
 {
     if (msg.subType == PLAYBIN_MSG_INTERRUPT_EVENT) {
         HandleInterruptMessage(msg);
+    } else if (msg.subType == PLAYBIN_MSG_DEVICE_CHANGE_EVENT) {
+        HandleDeviceChangeMessage(msg);
     }
 }
 
@@ -490,6 +492,20 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
         notifyObs->OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleDeviceChangeMessage(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("Audio deviceChange event in");
+    std::pair<> value = std::any_cast<std::pair<const AudioStandard::DeviceInfo deviceInfo,
+        const AudioStandard::AudioStreamDeviceChangeReason reason>>(msg.extra);
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        (void)format.PutBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE,
+            reinterpret_cast<const uint8_t*> (&value), sizeof(value));
+        notifyObs->OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, 0, format);
     }
 }
 

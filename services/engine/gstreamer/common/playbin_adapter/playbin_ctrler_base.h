@@ -133,6 +133,8 @@ private:
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
+    static void OnDeviceChangeEventCb(const GstElement *audioSink, const AudioStandard::DeviceInfo deviceInfo,
+        const AudioStandard::AudioStreamDeviceChangeReason reason);
     static void OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData);
     static void OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
@@ -148,6 +150,7 @@ private:
     void SetupInterruptEventCb();
     void SetupAudioSegmentEventCb();
     void SetupAudioDiedEventCb();
+    void SetupAudioDeviceEventCb();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
     void OnSourceSetup(const GstElement *playbin, GstElement *src,

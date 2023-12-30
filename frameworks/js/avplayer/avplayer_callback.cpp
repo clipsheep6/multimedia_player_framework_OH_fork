@@ -503,6 +503,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
     onInfoFuncs_[INFO_TYPE_DRM_INFO_UPDATED] = &AVPlayerCallback::OnDrmInfoUpdatedCb;
     onInfoFuncs_[INFO_TYPE_SET_DECRYPT_CONFIG_DONE] = &AVPlayerCallback::OnSetDecryptConfigDoneCb;
+    onInfoFuncs_[INFO_TYPE_AUDIO_DEVICE_CHANGE] = 
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -862,6 +863,35 @@ void AVPlayerCallback::OnAudioInterruptCb(const int32_t extra, const Format &inf
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_INTERRUPT);
     cb->callbackName = AVPlayerEvent::EVENT_AUDIO_INTERRUPT;
+    int32_t eventType = 0;
+    int32_t forceType = 0;
+    int32_t hintType = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    MEDIA_LOGI("OnAudioInterruptCb is called, eventType = %{public}d, forceType = %{public}d, hintType = %{public}d",
+        eventType, forceType, hintType);
+    // ohos.multimedia.audio.d.ts interface InterruptEvent
+    cb->valueMap["eventType"] = eventType;
+    cb->valueMap["forceType"] = forceType;
+    cb->valueMap["hintType"] = hintType;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE) == refMap_.end()) {
+        MEDIA_LOGW("can not find audio interrupt callback!");
+        return;
+    }
+
+    NapiCallback::PropertyInt *cb = new(std::nothrow) NapiCallback::PropertyInt();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new PropertyInt");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE;
     int32_t eventType = 0;
     int32_t forceType = 0;
     int32_t hintType = 0;
