@@ -52,6 +52,11 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
     stateCb_ = stateCb;
 }
 
+void AudioRendererMediaCallback::SaveDeviceChangeCallback(DeviceChangeFunc deviceCb)
+{
+    deviceCb_ = deviceCb;
+}
+
 AudioServiceDiedCallback::AudioServiceDiedCallback(GstBaseSink *audioSink) : audioSink_(audioSink)
 {
     MEDIA_LOGD("AudioServiceDiedCallback create");
@@ -91,6 +96,18 @@ void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererStat
         });
         (void)taskQue_.EnqueueTask(task);
     }
+}
+
+void AudioRendererMediaCallback::OnOutputDeviceChange(const AudioStandard::DeviceInfo &deviceInfo,
+    const AudioStandard::AudioStreamDeviceChangeReason reason)
+{
+    MEDIA_LOGD("OnOutputDeviceChange reason is %{public}d", static_cast<int32_t>(reason));
+    auto task = std::make_shared<TaskHandler<void>>([this, deviceInfo, reason] {
+        if (DeviceCb_ != nullptr) {
+            DeviceCb_(audioSink_, deviceInfo, reason);
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
 }
 
 AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
@@ -517,15 +534,19 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
                                      void (*errorCb)(GstBaseSink *, const std::string &),
-                                     void (*audioDiedCb)(GstBaseSink *))
+                                     void (*audioDiedCb)(GstBaseSink *)
+                                     void (*deviceCb)(GstBaseSink *, const AudioStandard::DeviceInfo &deviceInfo,
+                                        const AudioStandard::AudioStreamDeviceChangeReason reason))
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
+    audioRendererMediaCallback_->SaveDeviceChangeCallback(deviceCb);
     XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     CHECK_AND_RETURN(audioRenderer_ != nullptr);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
+    audioRenderer_->RegisterOutputDeviceChangeWithInfoCallback(audioRendererMediaCallback_);
     audioServiceDiedCallback_->SaveAudioPolicyServiceDiedCb(audioDiedCb);
     audioRenderer_->RegisterAudioPolicyServerDiedCb(getpid(), audioServiceDiedCallback_);
 }
