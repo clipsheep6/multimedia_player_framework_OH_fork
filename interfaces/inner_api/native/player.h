@@ -49,6 +49,7 @@ public:
     static constexpr std::string_view PLAYER_TRACK_INFO = "track_info";
     static constexpr std::string_view PLAYER_WIDTH = "width";
     static constexpr std::string_view PLAYER_HEIGHT = "height";
+    static constexpr std::string_view PLAYER_DURATION = "duration";
     static constexpr std::string_view PLAYER_MIME = "codec_mime";
     static constexpr std::string_view PLAYER_BITRATE = "bitrate";
     static constexpr std::string_view PLAYER_FRAMERATE = "frame_rate";
