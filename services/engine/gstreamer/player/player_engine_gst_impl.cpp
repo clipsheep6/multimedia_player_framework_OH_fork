@@ -473,6 +473,8 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
 {
     if (msg.subType == PLAYBIN_MSG_INTERRUPT_EVENT) {
         HandleInterruptMessage(msg);
+    } else if (msg.subType == PLAYBIN_MSG_FIRST_FRAME_EVENT) {
+        HandleAudioFirstFrameMessage(msg);
     }
 }
 
@@ -490,6 +492,18 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
         (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
         notifyObs->OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg)
+{
+    MEDIA_LOGI("Audio first frame event in");
+    uint64_t value = std::any_cast<uint64_t>(msg.extra);
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, value);
+        notifyObs->OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
     }
 }
 

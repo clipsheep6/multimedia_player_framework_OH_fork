@@ -55,6 +55,9 @@ StreamIDManager::~StreamIDManager()
     if (callback_ != nullptr) {
         callback_.reset();
     }
+    if (frameWriteCallback_ != nullptr) {
+        frameWriteCallback_.reset();
+    }
     for (auto cacheBuffer : cacheBuffers_) {
         if (cacheBuffer.second != nullptr) {
             cacheBuffer.second->Release();
@@ -119,6 +122,9 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             CHECK_AND_RETURN_RET_LOG(cacheBufferCallback_ != nullptr, MSERR_INVALID_VAL,
                 "Invalid cachebuffer callback");
             cacheBuffer->SetCacheBufferCallback(cacheBufferCallback_);
+            if (frameWriteCallback_ != nullptr) {
+                cacheBuffer->SetFrameWriteCallback(frameWriteCallback_);
+            }
             cacheBuffers_.emplace(streamID, cacheBuffer);
         }
     }
@@ -314,6 +320,12 @@ void StreamIDManager::OnPlayFinished()
 int32_t StreamIDManager::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
     callback_ = callback;
+    return MSERR_OK;
+}
+
+int32_t StreamIDManager::SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback)
+{
+    frameWriteCallback_ = callback;
     return MSERR_OK;
 }
 } // namespace Media

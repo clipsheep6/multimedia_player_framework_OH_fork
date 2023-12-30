@@ -109,6 +109,7 @@ private:
     void HandleSetDecryptConfigDone(const PlayBinMessage &msg);
 
     void HandleInterruptMessage(const PlayBinMessage &msg);
+    void HandleAudioFirstFrameMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleSubtitleUpdate(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);

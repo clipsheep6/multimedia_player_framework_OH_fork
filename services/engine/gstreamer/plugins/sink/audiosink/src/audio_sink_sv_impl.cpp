@@ -52,6 +52,11 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
     stateCb_ = stateCb;
 }
 
+void AudioRendererMediaCallback::SaveFirstFrameCallback(FirstFrameCbFunc firstFrameCb)
+{
+    firstFrameCb_ = firstFrameCb;
+}
+
 AudioServiceDiedCallback::AudioServiceDiedCallback(GstBaseSink *audioSink) : audioSink_(audioSink)
 {
     MEDIA_LOGD("AudioServiceDiedCallback create");
@@ -91,6 +96,16 @@ void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererStat
         });
         (void)taskQue_.EnqueueTask(task);
     }
+}
+
+void AudioRendererMediaCallback::OnFirstFrameWriting(uint64_t latency)
+{
+    auto task = std::make_shared<TaskHandler<void>>([this, latency] {
+        if (firstFrameCb_ != nullptr) {
+            firstFrameCb_(audioSink_, static_cast<gulong>(latency));
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
 }
 
 AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
@@ -516,6 +531,7 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
+                                     void (*firstFrameCb)(GstBaseSink *, gulong),
                                      void (*errorCb)(GstBaseSink *, const std::string &),
                                      void (*audioDiedCb)(GstBaseSink *))
 {
@@ -523,9 +539,11 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
+    audioRendererMediaCallback_->SaveFirstFrameCallback(firstFrameCb);
     XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     CHECK_AND_RETURN(audioRenderer_ != nullptr);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
+    audioRenderer_->SetRendererFirstFrameWritingCallback(audioRendererMediaCallback_);
     audioServiceDiedCallback_->SaveAudioPolicyServiceDiedCb(audioDiedCb);
     audioRenderer_->RegisterAudioPolicyServerDiedCb(getpid(), audioServiceDiedCallback_);
 }

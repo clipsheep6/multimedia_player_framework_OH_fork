@@ -187,6 +187,9 @@ int32_t SoundPool::Release()
     if (callback_ != nullptr) {
         callback_.reset();
     }
+    if (frameWriteCallback_ != nullptr) {
+        frameWriteCallback_.reset();
+    }
     SoundPoolManager::GetInstance().Release(getpid());
     return MSERR_OK;
 }
@@ -197,6 +200,15 @@ int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback
     if (soundIDManager_ != nullptr) soundIDManager_->SetCallback(soundPoolCallback);
     if (streamIdManager_ != nullptr) streamIdManager_->SetCallback(soundPoolCallback);
     callback_ = soundPoolCallback;
+    return MSERR_OK;
+}
+
+int32_t SoundPool::SetSoundPoolFrameWriteCallback(
+    const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback)
+{
+    MEDIA_INFO_LOG("SoundPool::%{public}s", __func__);
+    if (streamIdManager_ != nullptr) streamIdManager_->SetFrameWriteCallback(frameWriteCallback);
+    frameWriteCallback_ = frameWriteCallback;
     return MSERR_OK;
 }
 

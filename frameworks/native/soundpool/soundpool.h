@@ -52,12 +52,16 @@ public:
 
     int32_t SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback) override;
 
+    int32_t SetSoundPoolFrameWriteCallback(
+        const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback) override;
+
 private:
     bool CheckVolumeVaild(float *leftVol, float *rightVol);
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
     std::mutex soundPoolLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
+    std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     static constexpr int32_t MIN_STREAM_PRIORITY = 0;
 };
 } // namespace Media

@@ -1,0 +1,71 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+config("audio_haptic_client_public_config") {
+  visibility = [ ":*" ]
+  include_dirs =
+      [ "./../../../interfaces/inner_api/native/system_sound_manager/include" ]
+}
+
+ohos_shared_library("audio_haptic_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  install_enable = true
+  sources = [
+    "audio_haptic_manager_impl.cpp",
+    "audio_haptic_player_impl.cpp",
+    "audio_haptic_vibrator_impl.cpp",
+  ]
+
+  include_dirs = [
+    "./",
+    "./../../../interfaces/inner_api/native/audio_haptic/include",
+    "./../../../interfaces/inner_api/native/soundpool/include",
+    "./../../../services/utils/include",
+  ]
+
+  deps = [
+    "./../../../interfaces/inner_api/native:media_client",
+    "./../soundpool:soundpool_client",
+  ]
+
+  external_deps = [
+    "audio_framework:audio_client",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+  ]
+
+  if (multimedia_player_framework_support_vibrator) {
+    external_deps += [ "miscdevice:vibrator_interface_native" ]
+  }
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  public_configs = [ ":audio_haptic_client_public_config" ]
+
+  defines = []
+  defines += player_framework_defines
+  innerapi_tags = [ "platformsdk" ]
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}

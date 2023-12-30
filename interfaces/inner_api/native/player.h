@@ -70,6 +70,7 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+    static constexpr std::string_view AUDIO_FIRST_FRAME = "audio_first_frame";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
@@ -164,8 +165,10 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_ADD_SUBTITLE_DONE,
     /* return the message with drminfo. */
     INFO_TYPE_DRM_INFO_UPDATED,
-	/* return set decrypt done message. */
+    /* return set decrypt done message. */
     INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
+    /* return the audio latency when the first frame is writing. */
+    INFO_TYPE_AUDIO_FIRST_FRAME,
 };
 
 enum PlayerStates : int32_t {

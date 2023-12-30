@@ -133,6 +133,7 @@ private:
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
+    static void OnAudioFirstFrameEventCb(const GstElement *audioSink, const uint64_t latency, gpointer userData);
     static void OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData);
     static void OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
@@ -146,6 +147,7 @@ private:
         uint32_t skipByteBlock, gpointer userData);
 #endif
     void SetupInterruptEventCb();
+    void SetupFirstAudioFrameEventCb();
     void SetupAudioSegmentEventCb();
     void SetupAudioDiedEventCb();
     void OnElementSetup(GstElement &elem);
