@@ -124,6 +124,9 @@ private:
     std::string url_;
     int32_t videoWidth_{0};
     int32_t videoHeight_{0};
+
+    std::shared_ptr<Meta> audioRenderInfo_{nullptr};
+    std::shared_ptr<Meta> audioInterruptMode_{nullptr};
 };
 } // namespace Media
 } // namespace OHOS

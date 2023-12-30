@@ -572,18 +572,22 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
 {
     MEDIA_LOG_I("SetAudioRendererInfo entered.");
     Plugins::AudioRenderInfo audioRenderInfo {contentType, streamUsage, rendererFlag};
-    auto meta = std::make_shared<Meta>();
-    meta->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
-    audioSink_->SetParameter(meta);
+    audioRenderInfo_ = std::make_shared<Meta>();
+    audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(audioRenderInfo_);
+    }
     return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 {
     MEDIA_LOG_I("SetAudioInterruptMode entered.");
-    auto meta = std::make_shared<Meta>();
-    meta->SetData(Tag::AUDIO_INTERRUPT_MODE, interruptMode);
-    audioSink_->SetParameter(meta);
+    audioInterruptMode_ = std::make_shared<Meta>();
+    audioInterruptMode_->SetData(Tag::AUDIO_INTERRUPT_MODE, interruptMode);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetParameter(audioInterruptMode_);
+    }
     return TransStatus(Status::OK);
 }
 
@@ -765,6 +769,12 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
             FilterType::FILTERTYPE_ASINK);
         FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
+        if (audioRenderInfo_ != nullptr) {
+            audioSink_->SetParameter(audioRenderInfo_);
+        }
+        if (audioInterruptMode_ != nullptr) {
+            audioSink_->SetParameter(audioInterruptMode_);
+        }
         if (demuxer_) {
             audioSink_->SetParameter(demuxer_->GetGlobalMetaInfo());
         }
