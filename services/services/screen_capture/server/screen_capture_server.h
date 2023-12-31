@@ -147,6 +147,7 @@ private:
     int32_t StartHomeVideoCapture();
     int32_t StartHomeVideoCaptureFile();
     int32_t CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer);
+    int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
     int32_t StopScreenCaptureRecorder();
@@ -193,6 +194,7 @@ private:
     OutputFormatType fileFormat_;
     AudioEncInfo audioEncInfo_;
     VideoEncInfo videoEncInfo_;
+    std::vector<uint64_t> missionIds_;
     const int32_t audioBitrateMin_ = 8000;
     const int32_t audioBitrateMax_ = 384000;
     const int32_t videoBitrateMin_ = 1;
