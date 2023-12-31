@@ -636,13 +636,10 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     Format format;
-    if (singleLoop_.load()) { // PlayerServer will judge and seek
-        callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
-    } else {
-        OnStateChanged(PlayerStateId::EOS);
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
-    }
+    OnStateChanged(PlayerStateId::EOS);
+    callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.ManualReportMediaProgressOnce();
+    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
