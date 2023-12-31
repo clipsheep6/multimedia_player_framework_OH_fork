@@ -269,7 +269,8 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (rtv == Status::OK) {
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Pause();
-            pipeline_->Flush();
+            audioDecoder_->Flush();
+            audioDecoder_->Start();
         }
         MEDIA_LOG_I("Do seek ...");
         int64_t realSeekTime = seekPos;
@@ -278,7 +279,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
             syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
         }
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-            pipeline_->Start();
+            pipeline_->Resume();
         }
     }
     NotifySeekDone(seekPos);
