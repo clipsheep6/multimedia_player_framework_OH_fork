@@ -37,7 +37,7 @@ namespace Media {
     PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state);
     Plugins::SeekMode __attribute__((visibility("default"))) Transform2SeekMode(PlayerSeekMode mode);
     const std::string& __attribute__((visibility("default"))) StringnessPlayerState(PlayerStates state);
-    inline float __attribute__((visibility("default"))) TransformPlayRate2Float(PlaybackRateMode rateMode);
+    float __attribute__((visibility("default"))) TransformPlayRate2Float(PlaybackRateMode rateMode);
     inline PlaybackRateMode __attribute__((visibility("default"))) TransformFloat2PlayRate(float rate);
     double __attribute__((visibility("default"))) ChangeModeToSpeed(const PlaybackRateMode& mode);
     constexpr double SPEED_0_75_X = 0.75;
