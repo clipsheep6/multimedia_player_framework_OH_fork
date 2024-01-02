@@ -31,9 +31,14 @@ namespace OHOS {
 namespace Media {
 static const std::string AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME = "AudioHapticManager";
 
-static const std::map<std::string, AudioLatencyMode> latencyModeMap = {
+static const std::map<std::string, AudioLatencyMode> audioLatencyModeMap = {
     {"AUDIO_LATENCY_MODE_NORMAL", AUDIO_LATENCY_MODE_NORMAL},
     {"AUDIO_LATENCY_MODE_FAST", AUDIO_LATENCY_MODE_FAST}
+};
+
+static const std::map<std::string, AudioHapticType> audioHapticTypeMap = {
+    {"AUDIO_HAPTIC_TYPE_AUDIO", AUDIO_HAPTIC_TYPE_AUDIO},
+    {"AUDIO_HAPTIC_TYPE_HAPTIC", AUDIO_HAPTIC_TYPE_HAPTIC}
 };
 
 class AudioHapticManagerNapi {
@@ -48,7 +53,8 @@ private:
     static napi_value Construct(napi_env env, napi_callback_info info);
     static napi_value GetAudioHapticManager(napi_env env, napi_callback_info info);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
-    static napi_value CreateLatencyModeObject(napi_env env);
+    static napi_value CreateAudioLatencyModeObject(napi_env env);
+    static napi_value CreateAudioHapticTypeObject(napi_env env);
 
     static napi_value RegisterSource(napi_env env, napi_callback_info info);
     static void AsyncRegisterSource(napi_env env, void *data);
@@ -66,7 +72,8 @@ private:
     static bool IsLegalAudioStreamUsage(int32_t streamUsage);
 
     static napi_ref sConstructor_;
-    static napi_ref sLatencyMode_;
+    static napi_ref sAudioLatencyMode_;
+    static napi_ref sAudioHapticType_;
 
     napi_env env_;
 

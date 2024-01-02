@@ -466,13 +466,13 @@ napi_value AudioHapticPlayerNapi::RegisterAudioHapticPlayerCallback(napi_env env
 napi_value AudioHapticPlayerNapi::Off(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
-    size_t argc = ARGS_ONE;
-    napi_value argv[ARGS_ONE] = {nullptr};
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {nullptr};
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result, "Off: napi_get_cb_info fail");
-    if (argc != ARGS_ONE) {
-        MEDIA_LOGE("Off: requires 1 parameters");
+    if (argc != ARGS_ONE && argc != ARGS_TWO) {
+        MEDIA_LOGE("Off: requires 1 or 2 parameters");
         AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
         return result;
     }

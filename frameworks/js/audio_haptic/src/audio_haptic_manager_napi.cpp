@@ -38,7 +38,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 namespace OHOS {
 namespace Media {
 napi_ref AudioHapticManagerNapi::sConstructor_ = nullptr;
-napi_ref AudioHapticManagerNapi::sLatencyMode_ = nullptr;
+napi_ref AudioHapticManagerNapi::sAudioLatencyMode_ = nullptr;
+napi_ref AudioHapticManagerNapi::sAudioHapticType_ = nullptr;
 
 AudioHapticManagerNapi::AudioHapticManagerNapi()
     : env_(nullptr), audioHapticMgrClient_(nullptr) {}
@@ -59,7 +60,7 @@ napi_status AudioHapticManagerNapi::AddNamedProperty(napi_env env, napi_value ob
     return status;
 }
 
-napi_value AudioHapticManagerNapi::CreateLatencyModeObject(napi_env env)
+napi_value AudioHapticManagerNapi::CreateAudioLatencyModeObject(napi_env env)
 {
     napi_value result = nullptr;
     napi_status status;
@@ -68,17 +69,45 @@ napi_value AudioHapticManagerNapi::CreateLatencyModeObject(napi_env env)
 
     status = napi_create_object(env, &result);
     if (status == napi_ok) {
-        for (auto &iter: latencyModeMap) {
+        for (auto &iter: audioLatencyModeMap) {
             propName = iter.first;
             status = AddNamedProperty(env, result, propName, iter.second);
             if (status != napi_ok) {
-                MEDIA_LOGE("CreateLatencyModeObject: Failed to add named prop!");
+                MEDIA_LOGE("CreateAudioLatencyModeObject: Failed to add named prop!");
                 break;
             }
             propName.clear();
         }
         if (status == napi_ok) {
-            status = napi_create_reference(env, result, refCount, &sLatencyMode_);
+            status = napi_create_reference(env, result, refCount, &sAudioLatencyMode_);
+            if (status == napi_ok) {
+                return result;
+            }
+        }
+    }
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value AudioHapticManagerNapi::CreateAudioHapticTypeObject(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        std::string propName;
+        for (auto &iter: audioHapticTypeMap) {
+            propName = iter.first;
+            status = AddNamedProperty(env, result, propName, iter.second);
+            if (status != napi_ok) {
+                MEDIA_LOGE("CreateAudioHapticTypeObject: Failed to add named prop!");
+                break;
+            }
+            propName.clear();
+        }
+        if (status == napi_ok) {
+            int32_t refCount = 1;
+            status = napi_create_reference(env, result, refCount, &sAudioHapticType_);
             if (status == napi_ok) {
                 return result;
             }
@@ -105,7 +134,8 @@ napi_value AudioHapticManagerNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor staticProp[] = {
         DECLARE_NAPI_STATIC_FUNCTION("getAudioHapticManager", GetAudioHapticManager),
-        DECLARE_NAPI_PROPERTY("AudioLatencyMode", CreateLatencyModeObject(env)),
+        DECLARE_NAPI_PROPERTY("AudioLatencyMode", CreateAudioLatencyModeObject(env)),
+        DECLARE_NAPI_PROPERTY("AudioHapticType", CreateAudioHapticTypeObject(env)),
     };
 
     status = napi_define_class(env, AUDIO_HAPTIC_MANAGER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Construct,

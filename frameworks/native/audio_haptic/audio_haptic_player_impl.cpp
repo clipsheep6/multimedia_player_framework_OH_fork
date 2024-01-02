@@ -450,10 +450,10 @@ int32_t AudioHapticPlayerImpl::StopAVPlayer()
     if (playerState_ != STATE_STOPPED && avPlayer_->IsPlaying()) {
         (void)avPlayer_->Stop();
         audioHapticVibrator_->StopVibrate();
-        if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-            vibrateThread_->join();
-            vibrateThread_.reset();
-        }
+    }
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
     }
 
     playerState_ = STATE_STOPPED;
@@ -524,6 +524,14 @@ void AudioHapticPlayerImpl::NotifyInterruptEvent(AudioStandard::InterruptEvent &
 
 void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
+    audioHapticVibrator_->StopVibrate();
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
+    }
+
+    playerState_ = STATE_STOPPED;
+
     if (napiCallback_ != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for napi object");
         napiCallback_->OnEndOfStream();
@@ -559,7 +567,6 @@ void AudioHapticPlayerNativeCallback::OnLoadCompleted(int32_t soundId)
 void AudioHapticPlayerNativeCallback::OnPlayFinished()
 {
     MEDIA_LOGI("OnPlayFinished reported from sound pool.");
-    audioHapticPlayerImpl_.Stop();
     audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
 }
 
@@ -620,6 +627,9 @@ void AudioHapticPlayerNativeCallback::HandleStateChangeEvent(int32_t extra, cons
             break;
     }
     audioHapticPlayerImpl_.SetAVPlayerState(playerState_);
+    if (avPlayerState == PLAYER_PLAYBACK_COMPLETE) {
+        audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
+    }
 }
 
 void AudioHapticPlayerNativeCallback::HandleAudioInterruptEvent(int32_t extra, const Format &infoBody)
