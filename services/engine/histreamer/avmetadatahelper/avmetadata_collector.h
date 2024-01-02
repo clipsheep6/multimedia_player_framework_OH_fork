@@ -22,7 +22,6 @@
 #include <mutex>
 #include <nocopyable.h>
 #include "media_errors.h"
-#include "common/log.h"
 #include "meta/media_types.h"
 #include "meta/meta.h"
 #include "meta/meta_key.h"

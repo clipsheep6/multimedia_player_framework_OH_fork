@@ -26,7 +26,6 @@
 #include "filter/filter_factory.h"
 #include "demuxer_filter.h"
 #include "media_demuxer.h"
-#include "codec_filter.h"
 #include "avmetadata_collector.h"
 
 namespace OHOS {

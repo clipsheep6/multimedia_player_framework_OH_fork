@@ -15,6 +15,7 @@
 
 #include "avmetadata_collector.h"
 #include <string>
+#include "common/log.h"
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
 #include "meta/any.h"

@@ -16,6 +16,7 @@
 #include "i_engine_factory.h"
 #include "media_errors.h"
 #include "common/log.h"
+#include "avmetadatahelper_impl.h"
 #ifdef SUPPORT_RECORDER
 #include "hirecorder_impl.h"
 #endif
@@ -87,6 +88,11 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
 {
     MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
+    auto helper = std::unique_ptr<AVMetadataHelperImpl>(new (std::nothrow) AVMetadataHelperImpl());
+    if (helper) {
+        return helper;
+    }
+    MEDIA_LOG_E("create AVMetadataHelperImpl failed");
     return nullptr;
 }
 #endif
