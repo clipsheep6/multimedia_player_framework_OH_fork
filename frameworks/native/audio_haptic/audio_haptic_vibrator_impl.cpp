@@ -76,7 +76,12 @@ int32_t AudioHapticVibratorImpl::Release()
 {
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     isStopped_ = true;
+    int32_t result = Sensors::Cancel();
+    if (result != 0) {
+        MEDIA_LOGE("Failed to stop vibrator: result %{public}d", result);
+    }
     vibrateCV_.notify_one();
+
     if (vibratorPkg_ != nullptr) {
         Sensors::FreeVibratorPackage(*vibratorPkg_);
         vibratorPkg_ = nullptr;

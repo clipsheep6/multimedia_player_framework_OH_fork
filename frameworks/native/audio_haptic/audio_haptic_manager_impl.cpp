@@ -152,7 +152,7 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     }
     if (audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ != nullptr) {
         audioHapticPlayerMap_[sourceID]->audioHapticPlayer_->Release();
-        audioHapticPlayerMap_[sourceID] = nullptr;
+        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ = nullptr;
     }
 
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
