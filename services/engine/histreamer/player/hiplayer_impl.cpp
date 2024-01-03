@@ -88,6 +88,9 @@ HiPlayerImpl::~HiPlayerImpl()
     }
 #endif
     syncManager_.reset();
+    if (demuxer_) {
+        pipeline_->RemoveHeadFilter(demuxer_);
+    }
 }
 
 Status HiPlayerImpl::Init()
