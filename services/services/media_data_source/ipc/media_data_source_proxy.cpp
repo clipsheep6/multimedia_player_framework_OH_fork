@@ -20,6 +20,7 @@
 #include "avdatasrcmemory.h"
 #include "avsharedmemory_ipc.h"
 #include "meta/any.h"
+#include "parameter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataSourceProxy"};
@@ -130,7 +131,9 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     CHECK_AND_RETURN_RET_LOG(BufferCache_ != nullptr, MSERR_NO_MEMORY, "Failed to create BufferCache_!");
 
     uint32_t offset = 0;
-    if (Any::IsSameTypeWith<AVDataSrcMemory>(mem)) {
+    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
+    if (res != 1 || useHistreamer[0] != '1') {
         offset = std::static_pointer_cast<AVDataSrcMemory>(mem)->GetOffset();
     }
     MEDIA_LOGD("offset is %{public}u", offset);
