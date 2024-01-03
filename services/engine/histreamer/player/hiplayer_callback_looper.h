@@ -42,6 +42,8 @@ public:
 
     void StopReportMediaProgress();
 
+    void DropMediaProgress();
+
     void ManualReportMediaProgressOnce();
 
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
@@ -67,6 +69,7 @@ private:
     public:
         void Enqueue(const std::shared_ptr<Event>& event);
         std::shared_ptr<Event> Next();
+        void RemoveMediaProgressEvent();
         void Quit();
     private:
         OHOS::Media::Mutex queueMutex_ {};
@@ -82,6 +85,7 @@ private:
     std::weak_ptr<IPlayerEngineObs> obs_ {};
     EventQueue eventQueue_ {};
     bool reportMediaProgress_ {false};
+    bool isDropMediaProgress_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
 };
 }  // namespace Media

@@ -93,11 +93,17 @@ void HiPlayerCallbackLooper::StopReportMediaProgress()
     reportMediaProgress_ = false;
 }
 
+void HiPlayerCallbackLooper::DropMediaProgress()
+{
+    isDropMediaProgress_ = true;
+    eventQueue_.RemoveMediaProgressEvent();
+}
+
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     auto obs = obs_.lock();
-    if (obs) {
+    if (obs && !isDropMediaProgress_) {
         Format format;
         int32_t currentPositionMs;
         if (playerEngine_->GetCurrentTime(currentPositionMs) == 0) {
@@ -107,6 +113,7 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
             MEDIA_LOG_W("get player engine current time error");
         }
     }
+    isDropMediaProgress_ = false;
     if (reportMediaProgress_) {
         eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
@@ -216,6 +223,14 @@ void HiPlayerCallbackLooper::EventQueue::Quit()
     OHOS::Media::AutoLock lock(queueMutex_);
     quit_ = true;
     queueHeadUpdatedCond_.NotifyOne();
+}
+
+void HiPlayerCallbackLooper::EventQueue::RemoveMediaProgressEvent()
+{
+    OHOS::Media::AutoLock lock(queueMutex_);
+    queue_.remove_if([](const std::shared_ptr<Event>& event) {
+        return event->what == WHAT_MEDIA_PROGRESS;
+    });
 }
 }  // namespace Media
 }  // namespace OHOS

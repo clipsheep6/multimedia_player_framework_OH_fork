@@ -258,10 +258,8 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
                 mSeconds, static_cast<int32_t>(mode));
     int32_t durationMs;
     GetDuration(durationMs);
-    if (durationMs <= 0) {
-        MEDIA_LOG_E("Seek, invalid operation, source is unseekable or invalid");
-        return (int32_t)Status::ERROR_INVALID_PARAMETER;
-    }
+    FALSE_RETURN_V_MSG_E(durationMs > 0, (int32_t) Status::ERROR_INVALID_PARAMETER,
+        "Seek, invalid operation, source is unseekable or invalid");
     MEDIA_LOG_D("Seek durationMs : " PUBLIC_LOG_D32, durationMs);
     if (mSeconds >= durationMs) { // if exceeds change to duration
         mSeconds = durationMs;
@@ -271,6 +269,8 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     auto seekMode = Transform2SeekMode(mode);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.DropMediaProgress();
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Pause();
             audioDecoder_->Flush();
@@ -296,6 +296,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         }
     }
     NotifySeekDone(seekPos);
+    callbackLooper_.StartReportMediaProgress();
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
