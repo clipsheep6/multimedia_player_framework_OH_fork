@@ -89,6 +89,7 @@ private:
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     void NotifySeekDone(int32_t seekPos);
+    void NotifyResolutionChange();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
 #ifdef SUPPORT_VIDEO
