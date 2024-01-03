@@ -244,12 +244,6 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
     }
     producerSurface_ = producerSurface;
     consumerSurface_ = consumerSurface;
-    if (videoEncoderFilter_) {
-        videoEncoderFilter_->SetInputSurface(consumerSurface);
-    }
-    if (videoCaptureFilter_) {
-        videoCaptureFilter_->SetInputSurface(consumerSurface);
-    }
     return producerSurface;
 }
 
@@ -291,6 +285,12 @@ int32_t HiRecorderImpl::Start()
     if (curState_ == StateId::PAUSE) {
         ret = pipeline_->Resume();
     } else {
+        if (videoEncoderFilter_ && consumerSurface_) {
+            videoEncoderFilter_->SetInputSurface(consumerSurface_);
+        }
+        if (videoCaptureFilter_ && consumerSurface_) {
+            videoCaptureFilter_->SetInputSurface(consumerSurface_);
+        }
         ret = pipeline_->Start();
     }
     if (ret == Status::OK) {
