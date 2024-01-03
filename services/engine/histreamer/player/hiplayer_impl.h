@@ -127,6 +127,8 @@ private:
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
+
+    std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 };
 } // namespace Media
 } // namespace OHOS
