@@ -180,6 +180,7 @@ int HiPlayerImpl::PrepareAsync()
     int32_t durationMs = 0;
     GetDuration(durationMs);
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs);
+    NotifyResolutionChange();
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
     return TransStatus(ret);
