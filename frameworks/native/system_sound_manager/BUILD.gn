@@ -62,6 +62,7 @@ ohos_shared_library("system_sound_client") {
     "bundle_framework:appexecfwk_base",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "qos_manager:qos",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]

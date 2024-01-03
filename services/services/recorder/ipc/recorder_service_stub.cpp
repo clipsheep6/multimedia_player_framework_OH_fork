@@ -89,6 +89,10 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
+    recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
+    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
+    recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
+    recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
 
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
@@ -203,6 +207,12 @@ int32_t RecorderServiceStub::SetCaptureRate(int32_t sourceId, double fps)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetCaptureRate(sourceId, fps);
+}
+
+int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoIsHdr(sourceId, isHdr);
 }
 
 sptr<OHOS::Surface> RecorderServiceStub::GetSurface(int32_t sourceId)
@@ -357,6 +367,24 @@ int32_t RecorderServiceStub::GetLocation(Location &location)
     return recorderServer_->GetLocation(location);
 }
 
+int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetCurrentCapturerChangeInfo(changeInfo);
+}
+
+int32_t RecorderServiceStub::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetAvailableEncoder(encoderInfo);
+}
+
+int32_t RecorderServiceStub::GetMaxAmplitude()
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->GetMaxAmplitude();
+}
+
 int32_t RecorderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -425,6 +453,14 @@ int32_t RecorderServiceStub::SetVideoEncodingBitRate(MessageParcel &data, Messag
     int32_t sourceId = data.ReadInt32();
     int32_t rate = data.ReadInt32();
     reply.WriteInt32(SetVideoEncodingBitRate(sourceId, rate));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetVideoIsHdr(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool isHdr = data.ReadBool();
+    reply.WriteInt32(SetVideoIsHdr(sourceId, isHdr));
     return MSERR_OK;
 }
 
@@ -681,6 +717,38 @@ int32_t RecorderServiceStub::CheckPermission()
         default:
             return Security::AccessToken::PERMISSION_GRANTED;
     }
+}
+
+int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply)
+{
+    AudioRecorderChangeInfo changeInfo;
+    int32_t ret = GetCurrentCapturerChangeInfo(changeInfo);
+    changeInfo.Marshalling(reply);
+
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetAvailableEncoder(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<EncoderCapabilityData> encoderInfo;
+    int32_t ret = GetAvailableEncoder(encoderInfo);
+    reply.WriteInt32(static_cast<int32_t>(encoderInfo.size()));
+    for (auto iter = encoderInfo.begin(); iter != encoderInfo.end(); iter++) {
+        iter->Marshalling(reply);
+    }
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetMaxAmplitude(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(GetMaxAmplitude());
+
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

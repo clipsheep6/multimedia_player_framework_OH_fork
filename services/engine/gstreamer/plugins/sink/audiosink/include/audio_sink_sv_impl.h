@@ -25,21 +25,27 @@
 
 namespace OHOS {
 namespace Media {
-class AudioRendererMediaCallback : public AudioStandard::AudioRendererCallback {
+class AudioRendererMediaCallback
+    : public AudioStandard::AudioRendererCallback,
+      public AudioStandard::AudioRendererFirstFrameWritingCallback  {
 public:
     using InterruptCbFunc = std::function<void(GstBaseSink *, guint, guint, guint)>;
     using StateCbFunc = std::function<void(GstBaseSink *, guint)>;
+    using FirstFrameCbFunc = std::function<void(GstBaseSink *, guint)>;
     explicit AudioRendererMediaCallback(GstBaseSink *audioSink);
     ~AudioRendererMediaCallback();
     void SaveInterruptCallback(InterruptCbFunc interruptCb);
     void SaveStateCallback(StateCbFunc stateCb);
+    void SaveFirstFrameCallback(FirstFrameCbFunc firstFrameCb);
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
         const AudioStandard::StateChangeCmdType cmdType) override;
+    void OnFirstFrameWriting(uint64_t latency) override;
 private:
     GstBaseSink *audioSink_ = nullptr;
     InterruptCbFunc interruptCb_ = nullptr;
     StateCbFunc stateCb_ = nullptr;
+    FirstFrameCbFunc firstFrameCb_ = nullptr;
     TaskQueue taskQue_;
 };
 
@@ -83,6 +89,7 @@ public:
     void SetAudioInterruptMode(int32_t interruptMode) override;
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
+                        void (*firstFrameCb)(GstBaseSink *, gulong),
                         void (*errorCb)(GstBaseSink *, const std::string &),
                         void (*audioDiedCb)(GstBaseSink *)) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
@@ -218,11 +225,13 @@ public:
     }
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
+                        void (*firstFrameCb)(GstBaseSink *, gulong),
                         void (*errorCb)(GstBaseSink *, const std::string &),
                         void (*audioDiedCb)(GstBaseSink *)) override
     {
         (void)interruptCb;
         (void)stateCb;
+        (void)firstFrameCb;
         (void)errorCb;
         (void)audioDiedCb;
     }

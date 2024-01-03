@@ -622,8 +622,10 @@ static gboolean gst_surface_mem_sink_send_event(GstElement *element, GstEvent *e
     gdouble rate;
     GstFormat seek_format;
     GstSeekFlags flags;
-    GstSeekType start_type, stop_type;
-    gint64 start, stop;
+    GstSeekType start_type;
+    GstSeekType stop_type;
+    gint64 start;
+    gint64 stop;
     const gdouble EPS = 1e-6;
 
     GST_DEBUG_OBJECT(basesink, "handling event name %s", GST_EVENT_TYPE_NAME(event));

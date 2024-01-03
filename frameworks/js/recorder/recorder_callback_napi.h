@@ -45,6 +45,7 @@ public:
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
 
 private:
     struct RecordJsCallback {

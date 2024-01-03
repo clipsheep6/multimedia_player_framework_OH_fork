@@ -56,10 +56,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
   if (multimedia_player_framework_support_player) {
     sources = [ "playerservicestub_fuzzer.cpp" ]
   }
-  deps = [
-    "../../../../services/services:media_service",
-    "../../../../services/utils:media_format",
-  ]
+  deps = [ "../../../../services/services:media_service" ]
   external_deps = [
     "c_utils:utils",
     "drivers_peripheral_display:hdi_gralloc_client",

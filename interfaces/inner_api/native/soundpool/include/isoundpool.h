@@ -32,6 +32,7 @@ struct PlayParams {
 };
 
 class ISoundPoolCallback;
+class ISoundPoolFrameWriteCallback;
 
 class ISoundPool {
 public:
@@ -154,6 +155,17 @@ public:
      */
     virtual int32_t SetSoundPoolCallback
         (const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback) = 0;
+
+    /**
+     * @brief Register frame write listens for soundpool
+     *
+     * @param frameWriteCallback The frame writ listen class for soundpool
+     * @return Returns used to return the result. MSERR_OK if success
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSoundPoolFrameWriteCallback
+        (const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback) = 0;
 };
 
 class ISoundPoolCallback {
@@ -185,6 +197,13 @@ public:
      * @version 1.0
      */
     virtual void OnError(int32_t errorCode) = 0;
+};
+
+class ISoundPoolFrameWriteCallback {
+public:
+    virtual ~ISoundPoolFrameWriteCallback() = default;
+
+    virtual void OnFirstAudioFrameWritingCallback(uint64_t &latency) = 0;
 };
 
 class __attribute__((visibility("default"))) SoundPoolFactory {

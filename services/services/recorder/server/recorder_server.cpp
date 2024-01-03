@@ -130,6 +130,14 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
     }
 }
 
+void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    std::lock_guard<std::mutex> lock(cbMutex_);
+    if (recorderCb_ != nullptr) {
+        recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
+    }
+}
+
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -208,6 +216,23 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
     VidBitRate vidBitRate(rate);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidBitRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.isHdr = isHdr;
+    VidIsHdr vidIsHdr(isHdr);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidIsHdr);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
@@ -671,6 +696,7 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer audioSampleRate is: " + std::to_string(config_.audioSampleRate) + "\n";
     dumpString += "RecorderServer audioChannel is: " + std::to_string(config_.audioChannel) + "\n";
     dumpString += "RecorderServer audioBitRate is: " + std::to_string(config_.audioBitRate) + "\n";
+    dumpString += "RecorderServer isHdr is: " + std::to_string(config_.isHdr) + "\n";
     dumpString += "RecorderServer maxDuration is: " + std::to_string(config_.maxDuration) + "\n";
     dumpString += "RecorderServer format is: " + std::to_string(config_.format) + "\n";
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
@@ -708,6 +734,48 @@ int32_t RecorderServer::GetLocation(Location &location)
     location.latitude = config_.latitude;
     location.longitude = config_.longitude;
     return MSERR_OK;
+}
+
+int32_t RecorderServer::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetCurrentCapturerChangeInfo(changeInfo);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetAvailableEncoder(encoderInfo);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::GetMaxAmplitude()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->GetMaxAmplitude();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 } // namespace Media
 } // namespace OHOS

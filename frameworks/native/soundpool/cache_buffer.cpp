@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-CacheBuffer::CacheBuffer(const MediaAVCodec::Format &trackFormat,
+CacheBuffer::CacheBuffer(const Format &trackFormat,
     const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
     const size_t &cacheDataTotalSize, const int32_t &soundID, const int32_t &streamID) : trackFormat_(trackFormat),
     cacheData_(cacheData), cacheDataTotalSize_(cacheDataTotalSize), soundID_(soundID), streamID_(streamID),
@@ -84,6 +84,10 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     int32_t ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
     if (ret != MSERR_OK) {
         MEDIA_ERR_LOG("audio renderer write callback fail, ret %{public}d.", ret);
+    }
+    ret = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
+    if (ret != MSERR_OK) {
+        MEDIA_ERR_LOG("audio renderer first frame write callback fail, ret %{public}d.", ret);
     }
     return audioRenderer;
 }
@@ -237,6 +241,12 @@ void CacheBuffer::OnWriteData(size_t length)
     cacheDataFrameNum_++;
 }
 
+void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
+{
+    CHECK_AND_RETURN_LOG(frameWriteCallback_ != nullptr, "frameWriteCallback is null.");
+    frameWriteCallback_->OnFirstAudioFrameWritingCallback(latency);
+}
+
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
     std::lock_guard lock(cacheBufferLock_);
@@ -330,6 +340,7 @@ int32_t CacheBuffer::Release()
     if (!reCombineCacheData_.empty()) reCombineCacheData_.clear();
     if (callback_ != nullptr) callback_.reset();
     if (cacheBufferCallback_ != nullptr) cacheBufferCallback_.reset();
+    if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
     return MSERR_OK;
 }
 
@@ -342,6 +353,12 @@ int32_t CacheBuffer::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 int32_t CacheBuffer::SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
     cacheBufferCallback_ = callback;
+    return MSERR_OK;
+}
+
+int32_t CacheBuffer::SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback)
+{
+    frameWriteCallback_ = callback;
     return MSERR_OK;
 }
 } // namespace Media

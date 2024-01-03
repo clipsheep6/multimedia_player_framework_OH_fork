@@ -105,7 +105,6 @@ ohos_shared_library("media_service") {
 
   sources = [
     "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
-    "//foundation/multimedia/player_framework/services/utils/avsharedmemorybase.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
     "monitor/ipc/monitor_service_stub.cpp",
@@ -183,7 +182,6 @@ ohos_shared_library("media_service") {
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-    "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/libxml2:xml2",
   ]
@@ -199,7 +197,10 @@ ohos_shared_library("media_service") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "napi:ace_napi",
+    "qos_manager:concurrent_task_client",
+    "qos_manager:qos",
     "safwk:system_ability_fwk",
   ]
 

@@ -17,7 +17,7 @@
 #include <string_view>
 #include <limits>
 #include "avmetadatahelper.h"
-#include "avsharedmemorybase.h"
+#include "buffer/avsharedmemorybase.h"
 #include "av_common.h"
 #include "gst_meta_parser.h"
 #include "gst_utils.h"

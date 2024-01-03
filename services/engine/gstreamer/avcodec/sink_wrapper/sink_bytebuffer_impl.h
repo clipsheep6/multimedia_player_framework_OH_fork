@@ -19,7 +19,7 @@
 #include "sink_base.h"
 #include <mutex>
 #include <vector>
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "gst_shared_mem_sink.h"
 #include "nocopyable.h"
 

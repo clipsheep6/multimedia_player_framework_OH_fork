@@ -55,6 +55,9 @@ StreamIDManager::~StreamIDManager()
     if (callback_ != nullptr) {
         callback_.reset();
     }
+    if (frameWriteCallback_ != nullptr) {
+        frameWriteCallback_.reset();
+    }
     for (auto cacheBuffer : cacheBuffers_) {
         if (cacheBuffer.second != nullptr) {
             cacheBuffer.second->Release();
@@ -119,6 +122,9 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             CHECK_AND_RETURN_RET_LOG(cacheBufferCallback_ != nullptr, MSERR_INVALID_VAL,
                 "Invalid cachebuffer callback");
             cacheBuffer->SetCacheBufferCallback(cacheBufferCallback_);
+            if (frameWriteCallback_ != nullptr) {
+                cacheBuffer->SetFrameWriteCallback(frameWriteCallback_);
+            }
             cacheBuffers_.emplace(streamID, cacheBuffer);
         }
     }
@@ -130,10 +136,6 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
 {
     if (!isStreamPlayingThreadPoolStarted_.load()) {
         InitThreadPool();
-    }
-    {
-        std::lock_guard lock(streamIDManagerLock_);
-        streamIDs_.emplace_back(streamID);
     }
 
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
@@ -160,6 +162,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
             MEDIA_INFO_LOG("StreamIDManager to playing fresh sound:%{public}d.", streamID);
             AddPlayTask(streamID, playParameters);
         } else {
+            std::lock_guard lock(streamIDManagerLock_);
             MEDIA_INFO_LOG("StreamIDManager queue will play streams, streamID:%{public}d.", streamID);
             StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo;
             freshStreamIDAndPlayParamsInfo.streamID = streamID;
@@ -177,7 +180,6 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
 void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
 {
     if (playingStreamIDs_.empty()) {
-        std::lock_guard lock(streamIDManagerLock_);
         playingStreamIDs_.emplace_back(streamID);
     } else {
         bool shouldReCombinePlayingQueue = false;
@@ -186,13 +188,11 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer == nullptr) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 shouldReCombinePlayingQueue = true;
                 break;
             }
             if (!playingCacheBuffer->IsRunning()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 shouldReCombinePlayingQueue = true;
                 break;
@@ -201,7 +201,6 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
                 break;
             }
             if (freshCacheBuffer->GetPriority() <= playingCacheBuffer->GetPriority()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
                 break;
             }
@@ -218,7 +217,6 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
 void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo freshStreamIDAndPlayParamsInfo)
 {
     if (willPlayStreamInfos_.empty()) {
-        std::lock_guard lock(streamIDManagerLock_);
         willPlayStreamInfos_.emplace_back(freshStreamIDAndPlayParamsInfo);
     } else {
         bool shouldReCombineWillPlayQueue = false;
@@ -226,7 +224,6 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(freshStreamIDAndPlayParamsInfo.streamID);
             std::shared_ptr<CacheBuffer> willPlayCacheBuffer = FindCacheBuffer(willPlayStreamInfos_[i].streamID);
             if (willPlayCacheBuffer == nullptr) {
-                std::lock_guard lock(streamIDManagerLock_);
                 willPlayStreamInfos_.erase(willPlayStreamInfos_.begin() + i);
                 shouldReCombineWillPlayQueue = true;
                 break;
@@ -235,7 +232,6 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
                 break;
             }
             if (freshCacheBuffer->GetPriority() <= willPlayCacheBuffer->GetPriority()) {
-                std::lock_guard lock(streamIDManagerLock_);
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
                 break;
             }
@@ -253,6 +249,7 @@ int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams pl
         "Failed to obtain playing ThreadPool");
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain stream play Task");
     streamPlayingThreadPool_->AddTask(streamPlayTask);
+    std::lock_guard lock(streamIDManagerLock_);
     currentTaskNum_++;
     QueueAndSortPlayingStreamID(streamID);
     return MSERR_OK;
@@ -289,7 +286,6 @@ int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
 
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
 {
-    std::lock_guard lock(streamIDManagerLock_);
     int32_t streamID = 0;
     if (cacheBuffers_.empty()) {
         MEDIA_INFO_LOG("StreamIDManager cacheBuffers_ empty");
@@ -324,6 +320,12 @@ void StreamIDManager::OnPlayFinished()
 int32_t StreamIDManager::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
     callback_ = callback;
+    return MSERR_OK;
+}
+
+int32_t StreamIDManager::SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback)
+{
+    frameWriteCallback_ = callback;
     return MSERR_OK;
 }
 } // namespace Media

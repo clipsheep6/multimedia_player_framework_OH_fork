@@ -98,6 +98,12 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, in
     return recorderService_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
+int32_t RecorderImpl::RecorderImpl::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetVideoIsHdr(sourceId, isHdr);
+}
+
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
@@ -255,5 +261,24 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetParameter(sourceId, format);
 }
+
+int32_t RecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetCurrentCapturerChangeInfo(changeInfo);
+}
+
+int32_t RecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetAvailableEncoder(encoderInfo);
+}
+
+int32_t RecorderImpl::GetMaxAmplitude()
+{
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->GetMaxAmplitude();
+}
+
 } // namespace Media
 } // namespace OHOS

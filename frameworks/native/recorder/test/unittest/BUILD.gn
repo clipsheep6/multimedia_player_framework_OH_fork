@@ -24,7 +24,6 @@ ohos_unittest("recorder_unit_test") {
     "//foundation/multimedia/player_framework/frameworks/native/recorder",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
-    "//graphic/graphic_2d/interfaces/innerkits/surface",
   ]
 
   cflags = [

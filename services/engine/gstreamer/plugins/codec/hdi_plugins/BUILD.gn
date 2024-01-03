@@ -120,6 +120,8 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "hdf_core:libhdf_utils",
     "hdf_core:libhdi",
     "hilog:libhilog",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   relative_install_dir = "media/plugins"

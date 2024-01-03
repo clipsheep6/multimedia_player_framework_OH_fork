@@ -118,6 +118,11 @@ void TestRecorderCallbackTest::OnInfo(int32_t type, int32_t extra)
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
 }
 
+void OHOS::Media::TestRecorderCallbackTest::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    (void)audioRecorderChangeInfo;
+}
+
 int32_t TestRecorderCallbackTest::GetErrorCode()
 {
     return errorCode_;

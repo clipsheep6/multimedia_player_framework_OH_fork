@@ -217,7 +217,7 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < 1) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
@@ -601,7 +601,7 @@ napi_value AudioRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argCount < minArgCount) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }

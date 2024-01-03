@@ -64,7 +64,7 @@ public:
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
 #endif
-    int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
+    int32_t SetVideoScaleType(Plugins::VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
         const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
@@ -109,6 +109,7 @@ private:
     void HandleSetDecryptConfigDone(const PlayBinMessage &msg);
 
     void HandleInterruptMessage(const PlayBinMessage &msg);
+    void HandleAudioFirstFrameMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleSubtitleUpdate(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);
@@ -137,7 +138,7 @@ private:
     int32_t apppid_ = 0;
     uint32_t apptokenid_ = 0;
     std::map<uint32_t, uint64_t> mqBufferingTime_;
-    VideoScaleType videoScaleType_ = VIDEO_SCALE_TYPE_FIT;
+    Plugins::VideoScaleType videoScaleType_ = Plugins::VideoScaleType::VIDEO_SCALE_TYPE_FIT;
     int32_t contentType_ = AudioStandard::CONTENT_TYPE_MUSIC; // CONTENT_TYPE_MUSIC
     int32_t streamUsage_ = AudioStandard::STREAM_USAGE_MEDIA; // STREAM_USAGE_MEDIA
     int32_t rendererFlag_ = 0;

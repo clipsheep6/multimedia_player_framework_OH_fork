@@ -29,6 +29,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
     void SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 

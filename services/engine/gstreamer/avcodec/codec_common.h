@@ -22,8 +22,8 @@
 #include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "audio_info.h"
-#include "avsharedmemory.h"
-#include "format.h"
+#include "buffer/avsharedmemory.h"
+#include "meta/format.h"
 #include "surface.h"
 
 namespace OHOS {

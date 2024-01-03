@@ -22,7 +22,7 @@
 #include "iremote_stub.h"
 #include "avcodec_common.h"
 #include "avcodec_info.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 #include "surface.h"
 
 namespace OHOS {

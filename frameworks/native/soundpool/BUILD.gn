@@ -51,6 +51,7 @@ ohos_shared_library("soundpool_client") {
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   cflags = [

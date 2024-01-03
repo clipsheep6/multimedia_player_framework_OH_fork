@@ -99,7 +99,8 @@ void PlayerListenerStub::OnMonitor(PlayerOnInfoType type, int32_t extra, const F
     }
 }
 
-void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+__attribute__((no_sanitize("cfi"))) void PlayerListenerStub::OnInfo(PlayerOnInfoType type,
+    int32_t extra, const Format &infoBody)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     CHECK_AND_RETURN(cb != nullptr);

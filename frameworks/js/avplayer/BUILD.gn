@@ -73,6 +73,7 @@ ohos_shared_library("media_avplayer") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "napi:ace_napi",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_video) {

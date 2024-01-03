@@ -32,6 +32,7 @@ public:
     int32_t SetVideoSize(int32_t sourceId, int32_t width, int32_t height) override;
     int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate) override;
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) override;
+    int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
@@ -60,6 +61,9 @@ public:
     int32_t Init();
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
     int32_t GetLocation(Location &location) override;
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override;
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override;
+    int32_t GetMaxAmplitude() override;
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;

@@ -19,9 +19,12 @@
 #include <cstdint>
 #include <string>
 #include <map>
-#include "format.h"
+#include <set>
+#include <parcel.h>
+#include "meta/format.h"
 #include "surface.h"
 #include "av_common.h"
+#include "codec_capability.h"
 
 namespace OHOS {
 namespace Media {
@@ -105,6 +108,8 @@ enum VideoCodecFormat : int32_t {
     H264 = 2,
     /** MPEG4 */
     MPEG4 = 6,
+    /** H.265 */
+    H265 = 8,
     VIDEO_CODEC_FORMAT_BUTT,
 };
 
@@ -222,6 +227,168 @@ struct Location {
     float longitude = 0;
 };
 
+struct AudioCapturerInfo {
+    int32_t sourceType;
+    int32_t capturerFlags;
+
+    AudioCapturerInfo() = default;
+    ~AudioCapturerInfo()= default;
+    bool Marshalling(Parcel &parcel) const
+    {
+        return parcel.WriteInt32(sourceType)
+            && parcel.WriteInt32(capturerFlags);
+    }
+    void Unmarshalling(Parcel &parcel)
+    {
+        sourceType = parcel.ReadInt32();
+        capturerFlags = parcel.ReadInt32();
+    }
+};
+
+struct DeviceStreamInfo {
+    int32_t encoding;
+    int32_t format;
+    std::set<int32_t> samplingRate;
+    std::set<int32_t> channels;
+
+    DeviceStreamInfo() = default;
+
+    bool Marshalling(Parcel &parcel) const
+    {
+        if (!parcel.WriteInt32(encoding)) {
+            return false;
+        }
+        if (!parcel.WriteInt32(format)) {
+            return false;
+        }
+        size_t size = samplingRate.size();
+        if (!parcel.WriteUint64(size)) {
+            return false;
+        }
+        for (const auto &i : samplingRate) {
+            if (!parcel.WriteInt32(i)) {
+                return false;
+            }
+        }
+        size = channels.size();
+        if (!parcel.WriteUint64(size)) {
+            return false;
+        }
+        for (const auto &i : channels) {
+            if (!parcel.WriteInt32(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    void Unmarshalling(Parcel &parcel)
+    {
+        encoding = parcel.ReadInt32();
+        format = parcel.ReadInt32();
+        size_t size = parcel.ReadUint64();
+        for (size_t i = 0; i < size; i++) {
+            samplingRate.insert(parcel.ReadInt32());
+        }
+        size = parcel.ReadUint64();
+        for (size_t i = 0; i < size; i++) {
+            channels.insert(parcel.ReadInt32());
+        }
+    }
+};
+
+struct DeviceInfo {
+    int32_t deviceType;
+    int32_t deviceRole;
+    int32_t deviceId;
+    int32_t channelMasks;
+    int32_t channelIndexMasks;
+    std::string deviceName;
+    std::string macAddress;
+    DeviceStreamInfo audioStreamInfo;
+    std::string networkId;
+    std::string displayName;
+    int32_t interruptGroupId;
+    int32_t volumeGroupId;
+    bool isLowLatencyDevice;
+
+    DeviceInfo() = default;
+    ~DeviceInfo() = default;
+    bool Marshalling(Parcel &parcel) const
+    {
+        return parcel.WriteInt32(deviceType)
+            && parcel.WriteInt32(deviceRole)
+            && parcel.WriteInt32(deviceId)
+            && parcel.WriteInt32(channelMasks)
+            && parcel.WriteInt32(channelIndexMasks)
+            && parcel.WriteString(deviceName)
+            && parcel.WriteString(macAddress)
+            && audioStreamInfo.Marshalling(parcel)
+            && parcel.WriteString(networkId)
+            && parcel.WriteString(displayName)
+            && parcel.WriteInt32(interruptGroupId)
+            && parcel.WriteInt32(volumeGroupId)
+            && parcel.WriteBool(isLowLatencyDevice);
+    }
+    void Unmarshalling(Parcel &parcel)
+    {
+        deviceType = parcel.ReadInt32();
+        deviceRole = parcel.ReadInt32();
+        deviceId = parcel.ReadInt32();
+        channelMasks = parcel.ReadInt32();
+        channelIndexMasks = parcel.ReadInt32();
+        deviceName = parcel.ReadString();
+        macAddress = parcel.ReadString();
+        audioStreamInfo.Unmarshalling(parcel);
+        networkId = parcel.ReadString();
+        displayName = parcel.ReadString();
+        interruptGroupId = parcel.ReadInt32();
+        volumeGroupId = parcel.ReadInt32();
+        isLowLatencyDevice = parcel.ReadBool();
+    }
+};
+/**
+ * same as AudioCapturerChangeInfo in audio_info.h
+*/
+class AudioRecorderChangeInfo {
+public:
+    int32_t createrUID;
+    int32_t clientUID;
+    int32_t sessionId;
+    int32_t clientPid;
+    AudioCapturerInfo capturerInfo;
+    int32_t capturerState;
+    DeviceInfo inputDeviceInfo;
+    bool muted;
+
+    AudioRecorderChangeInfo(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+    {
+        *this = audioRecorderChangeInfo;
+    }
+    AudioRecorderChangeInfo() = default;
+    ~AudioRecorderChangeInfo() = default;
+    bool Marshalling(Parcel &parcel) const
+    {
+        return parcel.WriteInt32(createrUID)
+            && parcel.WriteInt32(clientUID)
+            && parcel.WriteInt32(sessionId)
+            && parcel.WriteInt32(clientPid)
+            && capturerInfo.Marshalling(parcel)
+            && parcel.WriteInt32(capturerState)
+            && inputDeviceInfo.Marshalling(parcel)
+            && parcel.WriteBool(muted);
+    }
+    void Unmarshalling(Parcel &parcel)
+    {
+        createrUID = parcel.ReadInt32();
+        clientUID = parcel.ReadInt32();
+        sessionId = parcel.ReadInt32();
+        clientPid = parcel.ReadInt32();
+        capturerInfo.Unmarshalling(parcel);
+        capturerState = parcel.ReadInt32();
+        inputDeviceInfo.Unmarshalling(parcel);
+        muted = parcel.ReadBool();
+    }
+};
 /**
  * @brief Provides listeners for recording errors and information events.
  *
@@ -252,6 +419,18 @@ public:
      * @version 1.0
      */
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
+    /**
+     * @brief Called when the recording configuration changes. This callback is used to report all information
+     * after recording configuration changes
+     *
+     * @param audioCaptureChangeInfo audio Capture Change information.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+    {
+        (void)audioRecorderChangeInfo;
+    }
 };
 
 /**
@@ -332,6 +511,19 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder) = 0;
+
+    /**
+     * @brief Sets the status of the video to record.
+     *
+     * This function must be called after {@link SetOutputFormat}
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param isHdr Indicates the HDR status to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
 
     /**
      * @brief Sets the width and height of the video to record.
@@ -667,6 +859,12 @@ public:
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
 
     virtual int32_t GetLocation(Location &location) = 0;
+
+    virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
+
+    virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
+
+    virtual int32_t GetMaxAmplitude() = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

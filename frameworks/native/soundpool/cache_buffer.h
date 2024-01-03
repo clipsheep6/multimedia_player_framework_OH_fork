@@ -42,14 +42,16 @@ struct AudioBufferEntry {
 
 class CacheBuffer :
     public AudioStandard::AudioRendererWriteCallback,
+    public AudioStandard::AudioRendererFirstFrameWritingCallback,
     public std::enable_shared_from_this<CacheBuffer> {
 public:
-    CacheBuffer(const MediaAVCodec::Format &trackFormat,
+    CacheBuffer(const Format &trackFormat,
         const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
         const size_t &cacheDataTotalSize,
         const int32_t &soundID, const int32_t &streamID);
     ~CacheBuffer();
     void OnWriteData(size_t length) override;
+    void OnFirstFrameWriting(uint64_t latency) override;
     int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
         const PlayParams playParams);
     int32_t DoPlay(const int32_t streamID);
@@ -62,6 +64,7 @@ public:
     int32_t SetParallelPlayFlag(const int32_t streamID, const bool parallelPlayFlag);
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
+    int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
 
     bool IsRunning() const
     {
@@ -90,7 +93,7 @@ private:
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     static AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate);
 
-    MediaAVCodec::Format trackFormat_;
+    Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
     std::deque<std::shared_ptr<AudioBufferEntry>> reCombineCacheData_;
     size_t cacheDataTotalSize_;
@@ -102,6 +105,7 @@ private:
     std::atomic<bool> isRunning_ = false;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
+    std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     std::mutex cacheBufferLock_;
 
     int32_t loop_ = 0;

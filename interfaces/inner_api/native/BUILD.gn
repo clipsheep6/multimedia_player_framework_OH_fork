@@ -111,7 +111,6 @@ ohos_shared_library("media_client") {
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
-    "$MEDIA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
   ]
   if (multimedia_player_framework_support_player) {
     sources += [
@@ -172,9 +171,8 @@ ohos_shared_library("media_client") {
     ":media_client_ipc_config",
   ]
 
-  deps = [ "../../../services/utils:media_format" ]
-
   public_configs = [ ":media_public_config" ]
+  deps = [ "$MEDIA_ROOT_DIR/services/utils:media_service_utils" ]
 
   external_deps = [
     "audio_framework:audio_client",
@@ -183,8 +181,11 @@ ohos_shared_library("media_client") {
     "hitrace:hitrace_meter",
     "image_framework:image_native",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
+  public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]

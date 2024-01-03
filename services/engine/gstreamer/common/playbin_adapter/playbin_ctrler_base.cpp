@@ -21,7 +21,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "player.h"
-#include "format.h"
+#include "meta/format.h"
 #include "uri_helper.h"
 #include "scope_guard.h"
 #include "playbin_state.h"
@@ -748,6 +748,17 @@ void PlayBinCtrlerBase::SetupInterruptEventCb()
     CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
+void PlayBinCtrlerBase::SetupFirstAudioFrameEventCb()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(audioSink_, "audio-first-frame-event",
+        G_CALLBACK(&PlayBinCtrlerBase::OnAudioFirstFrameEventCb), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
+}
+
 void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
 {
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
@@ -778,6 +789,7 @@ void PlayBinCtrlerBase::SetupCustomElement()
         if (audioSink_ != nullptr) {
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
+            SetupFirstAudioFrameEventCb();
             SetupAudioSegmentEventCb();
             SetupAudioDiedEventCb();
         }
@@ -1515,6 +1527,16 @@ void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const ui
     uint32_t value = 0;
     value = (((eventType << INTERRUPT_EVENT_SHIFT) | forceType) << INTERRUPT_EVENT_SHIFT) | hintType;
     PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_INTERRUPT_EVENT, 0, value };
+    thizStrong->ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::OnAudioFirstFrameEventCb(const GstElement *audioSink, const uint64_t latency, gpointer userData)
+{
+    (void)audioSink;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    uint64_t value = latency;
+    PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_FIRST_FRAME_EVENT, 0, value };
     thizStrong->ReportMessage(msg);
 }
 

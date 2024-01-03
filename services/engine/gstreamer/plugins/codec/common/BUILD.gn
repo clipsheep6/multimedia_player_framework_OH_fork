@@ -90,6 +90,8 @@ ohos_static_library("gst_codec_plugins_common") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

@@ -43,7 +43,7 @@ namespace {
     const std::vector<const gchar *> GST_ARGS = {
         "ohos_media_service",
         "--gst-disable-registry-fork",
-#ifdef __aarch64__
+#if (defined(__aarch64__) || defined(__x86_64__))
         "--gst-plugin-path=/system/lib64/media/plugins"
 #else
         "--gst-plugin-path=/system/lib/media/plugins"

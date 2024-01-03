@@ -16,7 +16,7 @@
 #ifndef MEDIA_PARCEL_H
 #define MEDIA_PARCEL_H
 
-#include "format.h"
+#include "meta/format.h"
 #include "message_parcel.h"
 
 namespace OHOS {

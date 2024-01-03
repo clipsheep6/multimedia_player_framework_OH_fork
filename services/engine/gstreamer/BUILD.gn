@@ -41,6 +41,8 @@ ohos_shared_library("media_engine_gst") {
     "//third_party/gstreamer/gstreamer:gstreamer_packages",
   ]
 
+  external_deps = [ "hilog:libhilog" ]
+
   if (multimedia_player_framework_support_player) {
     deps += [ "player:media_engine_gst_player" ]
   }

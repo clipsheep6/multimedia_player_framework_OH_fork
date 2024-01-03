@@ -20,8 +20,8 @@
 #include <map>
 #include <string>
 #include <unordered_map>
-#include "avsharedmemory.h"
-#include "format.h"
+#include "buffer/avsharedmemory.h"
+#include "meta/format.h"
 #include "media_data_source.h"
 #include "nocopyable.h"
 #include "pixel_map.h"

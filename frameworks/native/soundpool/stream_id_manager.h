@@ -38,6 +38,8 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
 
+    int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
+
 private:
     class CacheBufferCallBack : public ISoundPoolCallback {
     public:
@@ -87,6 +89,7 @@ private:
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     std::mutex streamIDManagerLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
+    std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     std::map<int32_t, std::shared_ptr<CacheBuffer>> cacheBuffers_;
     int32_t nextStreamID_ = 0;
     int32_t maxStreams_ = MIN_PLAY_STREAMS_NUMBER;

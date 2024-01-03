@@ -63,7 +63,6 @@ ohos_static_library("media_engine_common_avcodeclist") {
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-    "//foundation/multimedia/player_framework/services/utils:media_format",
     "//third_party/libxml2:xml2",
   ]
 
@@ -71,6 +70,8 @@ ohos_static_library("media_engine_common_avcodeclist") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

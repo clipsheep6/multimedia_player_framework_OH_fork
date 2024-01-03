@@ -195,15 +195,10 @@ int32_t AudioCaptureAsImpl::GetCaptureParameter(uint32_t &bitrate, uint32_t &cha
 int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
 {
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
-    AudioStandard::Timestamp timeStamp;
-    auto timestampBase = AudioStandard::Timestamp::Timestampbase::MONOTONIC;
-    CHECK_AND_RETURN_RET_LOG(audioCapturer_->GetAudioTime(timeStamp, timestampBase), MSERR_UNKNOWN,
-        "failed to GetAudioTime");
-    CHECK_AND_RETURN_RET(timeStamp.time.tv_nsec >= 0 && timeStamp.time.tv_sec >= 0, MSERR_UNKNOWN);
-    if (((UINT64_MAX - timeStamp.time.tv_nsec) / SEC_TO_NANOSECOND) <= static_cast<uint64_t>(timeStamp.time.tv_sec)) {
-        MEDIA_LOGW("audio frame pts too long, this shouldn't happen");
-    }
-    start = timeStamp.time.tv_nsec + timeStamp.time.tv_sec * SEC_TO_NANOSECOND;
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now.time_since_epoch();
+    auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+    start = static_cast<uint64_t>(nanoseconds.count());
     MEDIA_LOGD("timestamp from audioCapturer: %{public}" PRIu64 "", start);
     MEDIA_LOGD("audioCapturer timestamp has increased: %{public}" PRIu64 "", start - lastInputTime_);
     lastInputTime_ = start;

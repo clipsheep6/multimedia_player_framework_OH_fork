@@ -20,6 +20,7 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include "recorder.h"
 
 namespace OHOS {
 namespace Media {
@@ -28,12 +29,14 @@ public:
     virtual ~IStandardRecorderListener() = default;
     virtual void OnError(int32_t errorType, int32_t errorCode) = 0;
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
+    virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;
     /**
      * IPC code ID
      */
     enum RecorderListenerMsg {
         ON_ERROR = 0,
         ON_INFO = 1,
+        ON_AUDIO_CAPTURE_CHANGE = 2,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderListener");

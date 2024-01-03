@@ -78,6 +78,7 @@ ohos_shared_library("media_soundpool") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "napi:ace_napi",
+    "qos_manager:qos",
     "resource_management:global_resmgr",
   ]
 

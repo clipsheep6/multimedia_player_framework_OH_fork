@@ -92,6 +92,8 @@ ohos_shared_library("gst_mem_sink") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "init:libbegetutil",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   relative_install_dir = "media/plugins"

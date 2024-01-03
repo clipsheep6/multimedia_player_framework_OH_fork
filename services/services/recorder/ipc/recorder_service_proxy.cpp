@@ -143,6 +143,24 @@ int32_t RecorderServiceProxy::SetVideoEncodingBitRate(int32_t sourceId, int32_t 
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteBool(isHdr);
+    int error = Remote()->SendRequest(SET_VIDEO_IS_HDR, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoIsHdr failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetCaptureRate(int32_t sourceId, double fps)
 {
     MessageParcel data;
@@ -603,6 +621,60 @@ int32_t RecorderServiceProxy::GetLocation(Location &location)
     location.latitude = reply.ReadFloat();
     location.longitude = reply.ReadFloat();
     return MSERR_OK;
+}
+
+int32_t RecorderServiceProxy::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_AUDIO_CAPTURER_CHANGE_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentCapturerChangeInfo failed, error: %{public}d", error);
+    changeInfo.Unmarshalling(reply);
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_AVAILABLE_ENCODER, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetAvailableEncoder failed, error: %{public}d", error);
+    int32_t encoderCnt = reply.ReadInt32();
+    for (int32_t i = 0; i < encoderCnt; i++) {
+        EncoderCapabilityData codecData;
+        codecData.Unmarshalling(reply);
+        encoderInfo.push_back(codecData);
+    }
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::GetMaxAmplitude()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_MAX_AMPLITUDE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetMaxAmplitude failed, error: %{public}d", error);
+    int32_t amplitude = reply.ReadInt32();
+    MEDIA_LOGI("GetMaxAmplitude amplitude result: %d", amplitude);
+    return amplitude;
 }
 } // namespace Media
 } // namespace OHOS

@@ -371,6 +371,24 @@ bool CommonNapi::SetPropertyDouble(napi_env env, napi_value &obj, const std::str
     return true;
 }
 
+bool CommonNapi::SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_get_boolean(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
+
+    return true;
+}
+
 bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
@@ -637,6 +655,26 @@ bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::stri
     status = napi_set_property(env, obj, keyNapi, valueNapi);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
 
+    return true;
+}
+
+bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result)
+{
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+    napi_value item = nullptr;
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+    if (napi_get_value_bool(env, item, &result) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+        return false;
+    }
     return true;
 }
 } // namespace Media

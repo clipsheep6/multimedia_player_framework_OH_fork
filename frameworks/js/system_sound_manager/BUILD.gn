@@ -56,7 +56,9 @@ ohos_shared_library("systemsoundmanager") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "napi:ace_napi",
+    "qos_manager:qos",
     "resource_management:global_resmgr",
   ]
   relative_install_dir = "module/multimedia"

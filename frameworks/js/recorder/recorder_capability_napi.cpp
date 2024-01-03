@@ -83,7 +83,7 @@ napi_value RecorderCapabilityNapi::IsAudioRecorderConfigSupported(napi_env env, 
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+    if (argCount > 0 && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
         (void)ExtractAudioRecorderProfile(env, args[0], asyncCtx->profile);
     } else {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
@@ -177,8 +177,9 @@ napi_value RecorderCapabilityNapi::GetVideoRecorderProfile(napi_env env, napi_ca
     }
 
     napi_valuetype valueType = napi_undefined;
-    if ((args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) &&
-        (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number)) {
+    if ((argCount > 1) &&
+        (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) &&
+        (napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number)) {
         NAPI_CALL(env, napi_get_value_int32(env, args[0], &asyncCtx->sourceId));
         NAPI_CALL(env, napi_get_value_int32(env, args[1], &asyncCtx->qualityLevel));
     } else {
@@ -230,8 +231,9 @@ napi_value RecorderCapabilityNapi::HasVideoRecorderProfile(napi_env env, napi_ca
     }
 
     napi_valuetype valueType = napi_undefined;
-    if ((args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) &&
-        (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number)) {
+    if ((argCount > 1) &&
+        (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) &&
+        (napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number)) {
         NAPI_CALL(env, napi_get_value_int32(env, args[0], &asyncCtx->sourceId));
         NAPI_CALL(env, napi_get_value_int32(env, args[1], &asyncCtx->qualityLevel));
     } else {

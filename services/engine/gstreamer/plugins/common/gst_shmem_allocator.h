@@ -18,7 +18,7 @@
 
 #include <gst/gst.h>
 #include "gst_shmem_memory.h"
-#include "avsharedmemorypool.h"
+#include "common/avsharedmemorypool.h"
 
 G_BEGIN_DECLS
 

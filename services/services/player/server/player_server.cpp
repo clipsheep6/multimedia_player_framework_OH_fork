@@ -15,6 +15,7 @@
 
 #include "player_server.h"
 #include <map>
+#include <unistd.h>
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
@@ -23,6 +24,11 @@
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
 #include "av_common.h"
+#include "parameter.h"
+#include "concurrent_task_client.h"
+#include "qos.h"
+
+using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -192,9 +198,15 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         return MSERR_INVALID_OPERATION;
     }
 
+    std::unordered_map<std::string, std::string> payload;
+    pid_t pid = getpid();
+    payload["pid"] = std::to_string(pid);
+    MEDIA_LOGI("PlayerServer qos auth, pid = %{public}d", pid);
+    OHOS::ConcurrentTask::ConcurrentTaskClient::GetInstance().RequestAuth(payload);
+
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
-    MEDIA_LOGD("current url is : %{public}s", url.c_str());
+    MEDIA_LOGI("current url is : %{public}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
@@ -211,6 +223,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
+
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 
     lastOpStatus_ = PLAYER_INITIALIZED;

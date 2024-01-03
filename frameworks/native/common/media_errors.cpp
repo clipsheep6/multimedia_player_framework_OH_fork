@@ -63,6 +63,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_NETWORK_TIMEOUT, "network timeout"},
     {MSERR_NOT_FIND_CONTAINER, "not find a demuxer"},
     {MSERR_EXTEND_START, "extend start error code"},
+    {MSERR_AUD_INTERRUPT, "audio interrupted"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -164,6 +165,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_NETWORK_TIMEOUT,                     MSERR_EXT_API9_TIMEOUT},
     {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_API9_UNSUPPORT_FORMAT},
     {MSERR_UNKNOWN,                             MSERR_EXT_API9_IO},
+    {MSERR_AUD_INTERRUPT,                       MSERR_EXT_API9_AUDIO_INTERRUPTED}
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -178,6 +180,7 @@ const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS 
     {MSERR_EXT_API9_TIMEOUT, "Network Timeout: "},
     {MSERR_EXT_API9_SERVICE_DIED, "Service Died: "},
     {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupport Format: "},
+    {MSERR_EXT_API9_AUDIO_INTERRUPTED, "Audio Interruped: "},
 };
 
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)
@@ -249,6 +252,14 @@ std::string ErrorMessageUnsupportFormat(const std::string& param1, const std::st
     return message;
 }
 
+std::string ErrorMessageAudioInterruped(const std::string & param1, const std::string& param2)
+{
+    (void)param1;
+    (void)param2;
+    std::string message = "Audio Interrupted by other process.";
+    return message;
+}
+
 const std::map<MediaServiceExtErrCodeAPI9, ErrorMessageFunc> MSEXTERRAPI9CODE_FUNCS = {
     {MSERR_EXT_API9_OK, &ErrorMessageOk},
     {MSERR_EXT_API9_NO_PERMISSION, &ErrorMessageNoPermission},
@@ -260,6 +271,7 @@ const std::map<MediaServiceExtErrCodeAPI9, ErrorMessageFunc> MSEXTERRAPI9CODE_FU
     {MSERR_EXT_API9_TIMEOUT, &ErrorMessageTimeout},
     {MSERR_EXT_API9_SERVICE_DIED, &ErrorMessageServiceDied},
     {MSERR_EXT_API9_UNSUPPORT_FORMAT, &ErrorMessageUnsupportFormat},
+    {MSERR_EXT_API9_AUDIO_INTERRUPTED, &ErrorMessageAudioInterruped},
 };
 
 std::string MSErrorToString(MediaServiceErrCode code)

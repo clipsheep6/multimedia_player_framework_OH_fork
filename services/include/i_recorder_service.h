@@ -101,6 +101,19 @@ public:
     virtual int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) = 0;
 
     /**
+     * @brief Sets the status of the video to record.
+     *
+     * This function must be called after {@link SetOutputFormat}
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param isHdr Indicates the HDR status to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
+
+    /**
      * @brief Sets the video capture rate.
      *
      * This function must be called after {@link SetVideoSource} but before {@link Prepare}. It is valid when the
@@ -442,6 +455,12 @@ public:
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
 
     virtual int32_t GetLocation(Location &location) = 0;
+
+    virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
+
+    virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
+
+    virtual int32_t GetMaxAmplitude() = 0;
 };
 } // namespace Media
 } // namespace OHOS

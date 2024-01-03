@@ -326,5 +326,22 @@ int32_t RecorderEngineGstImpl::SetSurface()
     MEDIA_LOGI("set surface to videoSource success");
     return ret;
 }
+
+int32_t RecorderEngineGstImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    (void)changeInfo;
+    return MSERR_OK;
+}
+
+int32_t RecorderEngineGstImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    (void)encoderInfo;
+    return MSERR_OK;
+}
+
+int32_t RecorderEngineGstImpl::GetMaxAmplitude()
+{
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

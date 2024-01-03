@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Media {
-enum PlayerServerTaskType : uint8_t {
+enum class PlayerServerTaskType : uint8_t {
     /**
      * The following types are treated as two-phase tasks. Such a task consists of two phases.
      * The first phase is initiated by the taskhandler corresponding to the task, and the second

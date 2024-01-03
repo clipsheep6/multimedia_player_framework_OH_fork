@@ -20,7 +20,7 @@
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
-#include "format.h"
+#include "meta/format.h"
 #include "media_data_source.h"
 #ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
@@ -70,6 +70,7 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+    static constexpr std::string_view AUDIO_FIRST_FRAME = "audio_first_frame";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
@@ -164,8 +165,10 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_ADD_SUBTITLE_DONE,
     /* return the message with drminfo. */
     INFO_TYPE_DRM_INFO_UPDATED,
-	/* return set decrypt done message. */
+    /* return set decrypt done message. */
     INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
+    /* return the audio latency when the first frame is writing. */
+    INFO_TYPE_AUDIO_FIRST_FRAME,
 };
 
 enum PlayerStates : int32_t {
@@ -213,22 +216,6 @@ enum PlaybackRateMode : int32_t {
     SPEED_FORWARD_1_75_X,
     /* Video playback at 2.0x normal speed */
     SPEED_FORWARD_2_00_X,
-};
-
-enum VideoScaleType : int32_t {
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not same as the display surface, the aspect
-     * of the content is not maintained. This is the default scale type.
-     */
-    VIDEO_SCALE_TYPE_FIT = 0,
-
-    /**
-     * The content is stretched to the fit the display surface rendering area. When
-     * the aspect ratio of the content is not the same as the display surface, content's
-     * aspect ratio is maintained and the content is cropped to fit the display surface.
-     */
-    VIDEO_SCALE_TYPE_FIT_CROP,
 };
 
 class PlayerCallback {
@@ -531,11 +518,6 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
-#ifdef SUPPORT_DRM
-    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-#endif
-
 #ifdef SUPPORT_AUDIO_ONLY
 #else
     /**
@@ -665,6 +647,11 @@ public:
      * @version 1.0
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
+
+#ifdef SUPPORT_DRM
+    virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) = 0;
+#endif
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

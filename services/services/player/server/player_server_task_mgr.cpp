@@ -16,6 +16,9 @@
 #include "player_server_task_mgr.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "qos.h"
+
+using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerTaskMgr"};
@@ -44,7 +47,6 @@ int32_t PlayerServerTaskMgr::Init()
     taskThread_ = std::make_unique<TaskQueue>("PlayerEngine");
     int32_t ret = taskThread_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task thread start failed");
-
     isInited_ = true;
 
     return MSERR_OK;
@@ -66,6 +68,12 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
+
+    if (taskName == "play" || taskName == "prepare") {
+        taskThread_->SetQos(QosLevel::QOS_USER_INTERACTIVE);
+    } else if (taskName == "pause") {
+        taskThread_->ResetQos();
+    }
 
     (void)cancelTask;
     if (type == PlayerServerTaskType::STATE_CHANGE) {

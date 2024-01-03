@@ -21,7 +21,7 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "i_recorder_profiles_service.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {

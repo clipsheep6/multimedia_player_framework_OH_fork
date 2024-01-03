@@ -70,6 +70,7 @@ ohos_static_library("media_engine_gst_loader") {
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
+    "qos_manager:qos",
   ]
 
   subsystem_name = "multimedia"

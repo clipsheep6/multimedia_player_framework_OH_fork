@@ -86,7 +86,7 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    MEDIA_LOGI("Init success");
+    MEDIA_LOGD("Init success");
     return exports;
 }
 
@@ -573,7 +573,7 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                if (helper_->SetSource(url, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
+                if (helper_->SetSource(url, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 }
                 stopWait_ = false;
@@ -597,7 +597,7 @@ void AVMetadataExtractorNapi::SetSource(std::string url)
                 return;
             }
             if (helper_ != nullptr) {
-                if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
+                if (helper_->SetSource(fd, 0, -1, AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                 }
                 stopWait_ = false;
@@ -629,7 +629,7 @@ napi_value AVMetadataExtractorNapi::JsSetUrl(napi_env env, napi_callback_info in
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
         extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
@@ -673,7 +673,7 @@ void AVMetadataExtractorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadata
 
         if (helper_ != nullptr) {
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length,
-                AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
+                AVMetadataUsage::AV_META_USAGE_META_ONLY) != MSERR_OK) {
                 OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Helper SetSource FileDescriptor failed");
             }
             stopWait_ = false;
@@ -705,7 +705,7 @@ napi_value AVMetadataExtractorNapi::JsSetAVFileDescriptor(napi_env env, napi_cal
 
     extractor->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
         return result;
     }
@@ -742,7 +742,7 @@ napi_value AVMetadataExtractorNapi::JsGetAVFileDescriptor(napi_env env, napi_cal
 }
 
 void AVMetadataExtractorNapi::SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& avHelper,
-    std::shared_ptr<MediaDataSourceCallback>& dataSrcCb)
+    std::shared_ptr<HelperDataSourceCallback>& dataSrcCb)
 {
     auto task = std::make_shared<TaskHandler<void>>([this, &helper_ = avHelper, &dataSrcCb_ = dataSrcCb]() {
         MEDIA_LOGI("SetDataSrc Task");
@@ -787,7 +787,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     jsMetaHelper->StartListenCurrentResource(); // Listen to the events of the current resource
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsMetaHelper->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "args[0] is not napi_object");
         return result;
     }
@@ -799,7 +799,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     }
     MEDIA_LOGI("Recvive filesize is %{public}" PRId64 "", jsMetaHelper->dataSrcDescriptor_.fileSize);
     jsMetaHelper->dataSrcCb_
-        = std::make_shared<MediaDataSourceCallback>(env, jsMetaHelper->dataSrcDescriptor_.fileSize);
+        = std::make_shared<HelperDataSourceCallback>(env, jsMetaHelper->dataSrcDescriptor_.fileSize);
 
     napi_value callback = nullptr;
     napi_ref ref = nullptr;
@@ -808,7 +808,7 @@ napi_value AVMetadataExtractorNapi::JsSetDataSrc(napi_env env, napi_callback_inf
     napi_status status = napi_create_reference(env, callback, 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    jsMetaHelper->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
+    jsMetaHelper->dataSrcCb_->SaveCallbackReference(HELPER_READAT_CALLBACK_NAME, autoRef);
 
     jsMetaHelper->SetDataSrcTask(jsMetaHelper->helper_, jsMetaHelper->dataSrcCb_);
 
@@ -833,9 +833,9 @@ napi_value AVMetadataExtractorNapi::JsGetDataSrc(napi_env env, napi_callback_inf
     (void)napi_create_object(env, &value);
     (void)jsMetaHelper->dataSrcCb_->GetSize(fileSize);
     (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
-    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(READAT_CALLBACK_NAME, &callback);
+    int32_t ret = jsMetaHelper->dataSrcCb_->GetCallback(HELPER_READAT_CALLBACK_NAME, &callback);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
-    (void)MediaDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
+    (void)HelperDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
     MEDIA_LOGI("JsGetDataSrc Out");
     return value;

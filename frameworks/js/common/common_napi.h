@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include "format.h"
+#include "meta/format.h"
 #include "av_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -46,6 +46,7 @@ public:
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
     static bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value);
+    static bool SetPropertyBool(napi_env env, napi_value &obj, const std::string &key, bool value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
@@ -56,6 +57,7 @@ public:
     static bool AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value);
     static bool AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec);
     static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value);
+    static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 };
 
 class MediaJsResult {

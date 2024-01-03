@@ -21,7 +21,7 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "avcodec_info.h"
-#include "avsharedmemory.h"
+#include "buffer/avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {

@@ -17,7 +17,7 @@
 #define AVCODEABILITY_SINGLETON_H
 
 #include <mutex>
-#include "format.h"
+#include "meta/format.h"
 #include "avcodec_info.h"
 namespace OHOS {
 namespace Media {

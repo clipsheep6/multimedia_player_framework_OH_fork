@@ -84,6 +84,8 @@ ohos_static_library("media_engine_gst_factory") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "image_framework:image_native",
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
   ]
 
   if (multimedia_player_framework_support_drm) {

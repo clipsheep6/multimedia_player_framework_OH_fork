@@ -163,7 +163,7 @@ napi_value SystemToneOptionsNapi::SetAudioMute(napi_env env, napi_callback_info 
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetAudioMute: failed for napi_get_cb_info");
         return jsResult;
     }
@@ -223,7 +223,7 @@ napi_value SystemToneOptionsNapi::SetHapticsMute(napi_env env, napi_callback_inf
     napi_get_undefined(env, &jsResult);
 
     status = napi_get_cb_info(env, info, &argc, args, &jsThis, nullptr);
-    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+    if (status != napi_ok || jsThis == nullptr || argc < 1) {
         MEDIA_LOGE("SetHapticsMute: failed for napi_get_cb_info");
         return jsResult;
     }

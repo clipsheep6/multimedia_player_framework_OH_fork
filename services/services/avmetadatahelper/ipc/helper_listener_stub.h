@@ -18,7 +18,7 @@
 
 #include "i_standard_helper_listener.h"
 #include "avmetadatahelper.h"
-#include "format.h"
+#include "meta/format.h"
 
 namespace OHOS {
 namespace Media {

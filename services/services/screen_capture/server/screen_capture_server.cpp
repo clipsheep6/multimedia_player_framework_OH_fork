@@ -51,11 +51,12 @@ ScreenCaptureServer::~ScreenCaptureServer()
 int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetCaptureMode start");
     if ((captureMode > CAPTURE_SPECIFIED_WINDOW) || (captureMode < CAPTURE_HOME_SCREEN)) {
         MEDIA_LOGI("invalid capture mode");
         return MSERR_INVALID_VAL;
     }
-    if (captureMode == CAPTURE_SPECIFIED_SCREEN || captureMode == CAPTURE_SPECIFIED_WINDOW) {
+    if (captureMode == CAPTURE_SPECIFIED_SCREEN) {
         MEDIA_LOGI("the capture Mode:%{public}d still not supported", captureMode);
         return MSERR_UNSUPPORT;
     }
@@ -66,6 +67,7 @@ int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
 int32_t ScreenCaptureServer::SetDataType(DataType dataType)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetDataType start");
     if ((dataType > DataType::CAPTURE_FILE) || (dataType < DataType::ORIGINAL_STREAM)) {
         MEDIA_LOGI("invalid data type");
         return MSERR_INVALID_VAL;
@@ -81,6 +83,7 @@ int32_t ScreenCaptureServer::SetDataType(DataType dataType)
 int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetRecorderInfo start");
     url_ = recorderInfo.url;
 
     if (MP4.compare(recorderInfo.fileFormat) == 0) {
@@ -98,6 +101,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
 int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetOutputFile start");
     if (outputFd < 0) {
         MEDIA_LOGI("invalid outputFd");
         return MSERR_INVALID_VAL;
@@ -124,6 +128,7 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
 int32_t ScreenCaptureServer::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetScreenCaptureCallback start");
     {
         std::lock_guard<std::mutex> cbLock(cbMutex_);
         screenCaptureCb_ = callback;
@@ -134,6 +139,7 @@ int32_t ScreenCaptureServer::SetScreenCaptureCallback(const std::shared_ptr<Scre
 int32_t ScreenCaptureServer::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::InitAudioEncInfo start");
     MEDIA_LOGD("audioEncInfo audioBitrate:%{public}d", audioEncInfo.audioBitrate);
     MEDIA_LOGD("audioEncInfo audioCodecformat:%{public}d", audioEncInfo.audioCodecformat);
     if ((audioEncInfo.audioCodecformat >= AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT) ||
@@ -152,6 +158,7 @@ int32_t ScreenCaptureServer::InitAudioEncInfo(AudioEncInfo audioEncInfo)
 int32_t ScreenCaptureServer::InitVideoEncInfo(VideoEncInfo videoEncInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::InitVideoEncInfo start");
     MEDIA_LOGD("videoEncInfo videoCodec:%{public}d", videoEncInfo.videoCodec);
     MEDIA_LOGD("videoEncInfo videoBitrate:%{public}d", videoEncInfo.videoBitrate);
     MEDIA_LOGD("videoEncInfo videoFrameRate:%{public}d", videoEncInfo.videoFrameRate);
@@ -272,6 +279,7 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::InitAudioCap");
+    MEDIA_LOGI("ScreenCaptureServer::InitAudioCap start");
     int ret = MSERR_OK;
     ret = CheckAudioParam(audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckAudioParam failed");
@@ -322,7 +330,6 @@ std::shared_ptr<AudioCapturer> ScreenCaptureServer::CreateAudioCapture(AudioCapt
         capturerOptions.capturerInfo.sourceType = static_cast<SourceType>(audioInfo.audioSource);
     }
     capturerOptions.capturerInfo.capturerFlags = 0;
-    AppInfo appinfo_;
     uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
@@ -341,6 +348,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::InitVideoCap");
+    MEDIA_LOGI("ScreenCaptureServer::InitVideoCap start");
     if (!CheckScreenCapturePermission()) {
         return MSERR_INVALID_OPERATION;
     }
@@ -438,6 +446,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
+    MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
     isAudioStart_ = true;
     if (audioMicCapturer_ != nullptr) {
         if (!audioMicCapturer_->Start()) {
@@ -466,7 +475,11 @@ int32_t ScreenCaptureServer::StartScreenCapture()
             readInnerAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioInnerCapture, this);
         }
     }
-    return StartVideoCapture();
+    int32_t ret = StartVideoCapture();
+    if (ret == MSERR_OK) {
+        BehaviorEventWriteForScreencapture("start", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+    }
+    return ret;
 }
 
 int32_t ScreenCaptureServer::StartVideoCapture()
@@ -474,7 +487,7 @@ int32_t ScreenCaptureServer::StartVideoCapture()
     if (!GetUsingPermissionFromPrivacy(START_VIDEO)) {
         MEDIA_LOGE("getUsingPermissionFromPrivacy");
     }
-    if (captureMode_ == CAPTURE_HOME_SCREEN) {
+    if (captureMode_ == CAPTURE_HOME_SCREEN || captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
         if (dataType_ == DataType::CAPTURE_FILE) {
             return StartHomeVideoCaptureFile();
         } else {
@@ -500,7 +513,8 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(psurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
 
     std::string virtualScreenName = "screen_capture";
-    CreateVirtualScreen(virtualScreenName, psurface);
+    int32_t ret = CreateVirtualScreen(virtualScreenName, psurface);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
 
     return MSERR_OK;
 }
@@ -517,9 +531,10 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
     }
 
     std::string virtualScreenName = "screen_capture_file";
-    CreateVirtualScreen(virtualScreenName, consumer_);
+    int32_t ret = CreateVirtualScreen(virtualScreenName, consumer_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
 
-    int32_t ret = recorder_->Start();
+    ret = recorder_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Start failed");
     MEDIA_LOGI("recorder start success");
 
@@ -537,12 +552,21 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
         .surface_ = consumer,
         .flags_ = 0,
         .isForShot_ = true,
+        .missionIds_ = {},
     };
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
         MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
                    display->GetHeight(), display->GetDpi());
         virScrOption.density_ = display->GetDpi();
+    }
+    if (missionIds_.size() > 0 && captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
+        virScrOption.missionIds_ = missionIds_;
+    } else {
+        if (videoInfo_.taskIDs.size() > 0 && captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
+            GetMissionIds(missionIds_);
+            virScrOption.missionIds_ = missionIds_;
+        }
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     if (screenId_ < 0) {
@@ -556,12 +580,28 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
         MEDIA_LOGE("GetScreenById failed");
         return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGI("CreateVirtualScreen success");
     std::vector<sptr<Screen>> screens;
     ScreenManager::GetInstance().GetAllScreens(screens);
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(screenId_);
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
     ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
+    MEDIA_LOGI("MakeMirror success");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
+{
+    int32_t size = videoInfo_.taskIDs.size();
+    std::list<int32_t> taskIDListTemp = videoInfo_.taskIDs;
+    for (int32_t i = 0; i < size; i++) {
+        int32_t taskId = taskIDListTemp.front();
+        taskIDListTemp.pop_front();
+        MEDIA_LOGI("ScreenCaptureServer::GetMissionIds taskId : %{public}s", std::to_string(taskId).c_str());
+        uint64_t uintNum = static_cast<uint64_t>(taskId);
+        missionIds.push_back(uintNum);
+    }
     return MSERR_OK;
 }
 
@@ -753,6 +793,7 @@ int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetMicrophoneEnabled start");
     MEDIA_LOGI("SetMicrophoneEnabled:%{public}d", isMicrophone);
     isMicrophoneOn = isMicrophone;
     return MSERR_OK;
@@ -834,16 +875,19 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
-
+    MEDIA_LOGI("ScreenCaptureServer::StopScreenCapture start");
     int32_t stopFlagSuccess = MSERR_OK;
     if (dataType_ == DataType::CAPTURE_FILE) {
         stopFlagSuccess = StopScreenCaptureRecorder();
     } else {
-        stopFlagSuccess = StopAudioCapture();
-        CHECK_AND_RETURN_RET_LOG(stopFlagSuccess == MSERR_OK, stopFlagSuccess, "StopAudioCapture failed");
-
-        stopFlagSuccess = StopVideoCapture();
+        int32_t retAudio = StopAudioCapture();
+        int32_t retVideo = StopVideoCapture();
+        stopFlagSuccess = retAudio == MSERR_OK && retVideo == MSERR_OK ? MSERR_OK : MSERR_STOP_FAILED;
     }
+    if (stopFlagSuccess == MSERR_OK) {
+        BehaviorEventWriteForScreencapture("stop", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+    }
+    MEDIA_LOGI("ScreenCaptureServer stop result :%{public}d", stopFlagSuccess);
     return stopFlagSuccess;
 }
 
@@ -922,6 +966,7 @@ void ScreenCaptureServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::Release");
+    MEDIA_LOGI("ScreenCaptureServer::Release start");
 
     screenCaptureCb_ = nullptr;
     ReleaseAudioCapture();
