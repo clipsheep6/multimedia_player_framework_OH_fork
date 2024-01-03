@@ -25,6 +25,7 @@
 #include "filter/filter.h"
 #include "audio_capture_filter.h"
 #include "audio_encoder_filter.h"
+#include "media_errors.h"
 #include "muxer_filter.h"
 #include "osal/task/task.h"
 #include "pipeline/pipeline.h"

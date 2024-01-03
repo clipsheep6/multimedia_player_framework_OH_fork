@@ -386,7 +386,14 @@ void HiRecorderImpl::OnEvent(const Event &event)
             OnStateChanged(StateId::ERROR);
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
-                ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, -1);
+                switch (AnyCast<Status>(event.param)) {
+                    case Status::ERROR_AUDIO_INTERRUPT:
+                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
+                        break;
+                    default:
+                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, -1);
+                        break;
+                }
             }
             break;
         }
