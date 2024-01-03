@@ -50,7 +50,7 @@ ohos_fuzztest("PlayerSetVolumeFuzzTest") {
   external_deps = [
     "c_utils:utils",
     "drivers_peripheral_display:hdi_gralloc_client",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

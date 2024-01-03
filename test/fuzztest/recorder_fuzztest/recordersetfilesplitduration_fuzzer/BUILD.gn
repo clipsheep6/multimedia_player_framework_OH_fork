@@ -60,14 +60,13 @@ ohos_fuzztest("RecorderSetFileSplitDurationFuzzTest") {
     ]
   }
   deps = [
-    "../../../../../../../foundation/graphic/graphic_2d:libsurface",
-    "../../../../../../../foundation/graphic/graphic_2d/frameworks/surface:surface",
     "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "../../../../../../../foundation/graphic/graphic_2d/utils:sync_fence",
     "../../../../../../../foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

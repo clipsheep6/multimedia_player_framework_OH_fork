@@ -58,7 +58,7 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//utils/system/safwk/native/include",
     "//commonlibrary/c_utils/base/include",
-    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
+    "$MEDIA_PLAYER_SURFACE/surface/include",
   ]
 
   cflags = [
@@ -188,7 +188,7 @@ ohos_shared_library("media_client") {
   public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 
   if (multimedia_player_framework_support_video) {
-    external_deps += [ "graphic_2d:surface" ]
+    external_deps += [ "graphic_surface:surface" ]
   }
 
   if (multimedia_player_framework_support_drm) {

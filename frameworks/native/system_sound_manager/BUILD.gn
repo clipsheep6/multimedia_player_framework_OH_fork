@@ -60,7 +60,7 @@ ohos_shared_library("system_sound_client") {
     "ability_runtime:data_ability_helper",
     "audio_framework:audio_client",
     "bundle_framework:appexecfwk_base",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "qos_manager:qos",
     "relational_store:native_dataability",

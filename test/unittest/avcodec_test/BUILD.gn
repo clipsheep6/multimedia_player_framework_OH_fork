@@ -89,7 +89,7 @@ ohos_unittest("vcodec_native_unit_test") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
@@ -130,7 +130,7 @@ ohos_unittest("acodec_native_unit_test") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
@@ -166,7 +166,7 @@ ohos_unittest("avcodec_list_native_unit_test") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
@@ -199,7 +199,7 @@ ohos_unittest("format_native_unit_test") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

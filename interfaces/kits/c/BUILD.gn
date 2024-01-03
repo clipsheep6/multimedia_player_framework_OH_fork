@@ -31,7 +31,7 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
-    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
+    "$MEDIA_PLAYER_SURFACE/surface/include",
   ]
 
   cflags = [
@@ -78,7 +78,7 @@ ohos_shared_library("native_avscreen_capture") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "qos_manager:qos",
     "window_manager:libdm",
@@ -108,7 +108,7 @@ ohos_shared_library("avplayer") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "window_manager:libdm",
   ]
