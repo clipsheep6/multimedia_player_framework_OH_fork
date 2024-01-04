@@ -477,8 +477,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         if (IsVideoMime(mime)) {
             Format videoTrackInfo {};
             videoTrackInfo.PutStringValue("codec_mime", mime);
-            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
             MEDIA_LOG_I("liyudebug video size changed, codec_mime = %{public}s", mime.c_str());
+            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
+            MEDIA_LOG_I("liyudebug video track_type = %{public}s", static_cast<int32_t>(MediaType::VIDEO));
             int32_t trackIndex;
             trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
             videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
@@ -487,10 +488,10 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
             videoTrackInfo.PutIntValue("bitrate", static_cast<int32_t>(bitRate));
             MEDIA_LOG_I("liyudebug video size changed, bitrate = %{public}d", bitRate);
-            int32_t frameRate;
+            double frameRate;
             trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
             videoTrackInfo.PutIntValue("frame_rate", static_cast<int32_t>(frameRate));
-            MEDIA_LOG_I("liyudebug video size changed, frame_rate = %{public}d", frameRate);
+            MEDIA_LOG_I("liyudebug video size changed, frame_rate = %{public}d", static_cast<int32_t>(frameRate));
             int32_t height;
             trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
             videoTrackInfo.PutIntValue("height", static_cast<int32_t>(height));
