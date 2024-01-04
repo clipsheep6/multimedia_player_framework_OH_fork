@@ -65,6 +65,7 @@ public:
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
+    int32_t SelectBitRate(uint32_t bitRate) override;
 
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
@@ -93,10 +94,13 @@ private:
     void NotifyPositionUpdate();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void DoInitializeForHttp();
+    bool EnableBufferingBySysParam() const;
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
+    bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};

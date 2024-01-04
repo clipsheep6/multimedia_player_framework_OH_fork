@@ -15,6 +15,7 @@
 
 #include "avmetadata_collector.h"
 #include <string>
+#include "ctime"
 #include "common/log.h"
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
@@ -139,11 +140,11 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
         if (innerKey.compare("") == 0) {
-            continue;
-        }
-
-        if (innerKey.compare(Tag::MIME_TYPE) == 0) {
-            continue;
+            std::string strVal;
+            if (innerMeta->GetData(innerKey, strVal) && !strVal.empty()) {
+                avmeta.SetMeta(avKey, ConvertTimestampToDatetime(strVal));
+            }
+            SetEmptyStringIfNoData(avmeta, avKey);
         }
 
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
@@ -151,28 +152,65 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             int32_t intVal;
             if (innerMeta->GetData(innerKey, intVal)) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
-                MEDIA_LOG_I("found innerKey: %{public}d, val: %{public}d", avKey, intVal);
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal)) {
                 avmeta.SetMeta(avKey, strVal);
-                MEDIA_LOG_I("found innerKey: %{public}d, val: %{public}s", avKey, strVal.c_str());
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
             Plugins::VideoRotation rotation;
             if (innerMeta->GetData(innerKey, rotation)) {
                 avmeta.SetMeta(avKey, std::to_string(rotation));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
             if (innerMeta->GetData(innerKey, duration)) {
-                avmeta.SetMeta(avKey, std::to_string(duration));
+                avmeta.SetMeta(avKey, std::to_string(duration / secondDividMs));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
+        } else if (Any::IsSameTypeWith<bool>(type)) {
+            bool isTrue;
+            if (innerMeta->GetData(innerKey, isTrue)) {
+                avmeta.SetMeta(avKey, isTrue ? "yes" : "");
+            }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else {
             MEDIA_LOG_E("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
     }
+}
+
+void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
+{
+    if (!avmeta.HasMeta(avKey)) {
+        avmeta.SetMeta(avKey, "");
+    }
+}
+
+std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &timestamp) const
+{
+    if (timestamp.empty()) {
+        MEDIA_LOG_E("datetime is empty, format failed");
+        return "";
+    }
+
+    time_t ts = stoi(timestamp);
+    tm *pTime;
+    char date[maxDateTimeSize];
+    char time[maxDateTimeSize];
+    pTime = localtime(&ts);
+    size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
+    size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
+    if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
+        MEDIA_LOG_E("datetime is invalid, format failed");
+        return "";
+    }
+
+    return std::string(date) + " " + std::string(time);
 }
 } // namespace Media
 } // namespace OHOS

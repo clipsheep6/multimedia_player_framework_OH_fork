@@ -117,6 +117,9 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
     } else {
+        if (url_.find("http") == 0 || url_.find("https") == 0) {
+            isNetWorkPlay_ = true;
+        }
         OnStateChanged(PlayerStateId::INIT);
     }
     return TransStatus(ret);
@@ -185,9 +188,46 @@ int HiPlayerImpl::PrepareAsync()
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs);
     NotifyResolutionChange();
     NotifyPositionUpdate();
+    DoInitializeForHttp();
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
     return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
+{
+    if (demuxer_ == nullptr) {
+        MEDIA_LOG_E("SelectBitRate failed, demuxer_ is null");
+    }
+    Status ret = demuxer_->SelectBitRate(bitRate);
+    if (ret == Status::OK) {
+        MEDIA_LOG_I("SelectBitRate success");
+        return MSERR_OK;
+    }
+    MEDIA_LOG_I("SelectBitRate failed");
+    return MSERR_INVALID_OPERATION;
+}
+
+void HiPlayerImpl::DoInitializeForHttp()
+{
+    if (!isNetWorkPlay_) {
+        return;
+    }
+    std::vector<uint32_t> vBitRates;
+    MEDIA_LOG_I("DoInitializeForHttp");
+    auto ret = demuxer_->GetBitRates(vBitRates);
+    if (ret == Status::OK && vBitRates.size() > 0) {
+        int mSize = vBitRates.size();
+        const int size = mSize;
+        uint32_t* bitrates = vBitRates.data();
+        Format bitRateFormat;
+        (void)bitRateFormat.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
+            static_cast<uint8_t *>(static_cast<void *>(bitrates)), size * sizeof(uint32_t));
+        callbackLooper_.OnInfo(INFO_TYPE_BITRATE_COLLECT, 0, bitRateFormat);
+        MEDIA_LOG_I("OnInfo INFO_TYPE_BITRATE_COLLEC");
+    } else {
+        MEDIA_LOG_E("GetBitRates failed, ret %{public}d", ret);
+    }
 }
 
 int32_t HiPlayerImpl::Play()
