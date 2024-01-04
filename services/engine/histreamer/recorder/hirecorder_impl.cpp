@@ -331,7 +331,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         return (int32_t)Status::ERROR_INVALID_OPERATION;
     }
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
-    ret = audioCaptureFilter_->SendEos();
+    if (audioCaptureFilter_) {
+        ret = audioCaptureFilter_->SendEos();
+    }
     ret = pipeline_->Stop();
     if (ret == Status::OK) {
         OnStateChanged(StateId::INIT);
