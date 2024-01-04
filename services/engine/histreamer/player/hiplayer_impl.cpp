@@ -27,6 +27,7 @@
 #include "media_utils.h"
 
 namespace {
+constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 }
@@ -660,6 +661,14 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleCompleteEvent(event);
             break;
         }
+        case EventType::EVENT_AUDIO_INTERRUPT: {
+            NotifyAudioInterrupt(event);
+            break;
+        }
+        case EventType::EVENT_AUDIO_FIRST_FRAME: {
+            NotifyAudioFirstFrame(event);
+            break;
+        }
         default:
             break;
     }
@@ -768,6 +777,28 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
+}
+
+void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
+{
+    Format format;
+    uint32_t value = AnyCast<uint32_t>(event.param);
+    int32_t hintType = value & 0x000000FF;
+    int32_t forceType = (value >> INTERRUPT_EVENT_SHIFT) & 0x000000FF;
+    int32_t eventType = value >> (INTERRUPT_EVENT_SHIFT * 2);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
+    callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+}
+
+void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
+{
+    uint64_t latency = AnyCast<uint64_t>(event.param);
+    MEDIA_LOG_I("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
+    Format format;
+    (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
+    callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
 }
 
 void HiPlayerImpl::NotifyResolutionChange()

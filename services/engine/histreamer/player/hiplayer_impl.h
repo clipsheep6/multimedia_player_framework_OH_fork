@@ -90,6 +90,8 @@ private:
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     void NotifySeekDone(int32_t seekPos);
+    void NotifyAudioInterrupt(const Event& event);
+    void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
