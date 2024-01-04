@@ -105,6 +105,7 @@ private:
     OHOS::Media::ConditionVariable cond_{};
     int64_t duration_{-1};
     std::atomic<bool> singleLoop_ {false};
+    std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
