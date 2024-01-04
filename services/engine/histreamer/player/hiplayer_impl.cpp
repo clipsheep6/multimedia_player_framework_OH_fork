@@ -650,13 +650,18 @@ Status HiPlayerImpl::Resume()
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
-    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
+    bool isSingleLoop = singleLoop_.load();
+    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
     isStreaming_ = false;
     Format format;
-    OnStateChanged(PlayerStateId::EOS);
-    callbackLooper_.StopReportMediaProgress();
-    callbackLooper_.ManualReportMediaProgressOnce();
-    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
+
+    if (!isSingleLoop) {
+        OnStateChanged(PlayerStateId::EOS);
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.ManualReportMediaProgressOnce();
+    }
+
+    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
