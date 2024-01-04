@@ -30,7 +30,7 @@ ohos_fuzztest("PlayerStubFuzzTest") {
     "../../../../test/fuzztest/player_fuzztest",
     "../../../../interfaces/inner_api/native",
     "../../../../test/fuzztest/common",
-    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
+    "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]
   cflags = [
     "-std=c++17",
@@ -65,7 +65,7 @@ ohos_fuzztest("PlayerStubFuzzTest") {
   deps = [ "../../../../services/services:media_service" ]
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
     "player_framework:media_client",

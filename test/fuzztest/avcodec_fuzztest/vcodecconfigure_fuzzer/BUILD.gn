@@ -96,7 +96,7 @@ ohos_fuzztest("VCodecConfigureFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

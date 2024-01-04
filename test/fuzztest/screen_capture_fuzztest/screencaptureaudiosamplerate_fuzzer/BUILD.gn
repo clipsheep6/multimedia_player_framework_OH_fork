@@ -59,8 +59,6 @@ ohos_fuzztest("ScreenCaptureAudioSampleRateFuzzTest") {
     ]
   }
   deps = [
-    "$MEDIA_PLAYER_GRAPHIC:libsurface",
-    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface:surface",
     "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_PLAYER_GRAPHIC/utils:sync_fence",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
@@ -69,6 +67,7 @@ ohos_fuzztest("ScreenCaptureAudioSampleRateFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

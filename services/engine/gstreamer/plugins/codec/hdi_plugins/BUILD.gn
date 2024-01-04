@@ -114,7 +114,7 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "c_utils:utils",
     "drivers_peripheral_codec:libcodec_hdi_omx_client",
     "drivers_peripheral_display:hdi_gralloc_client",
-    "graphic_2d:surface",
+    "graphic_surface:surface",
     "hdf_core:libhdf_host",
     "hdf_core:libhdf_ipc_adapter",
     "hdf_core:libhdf_utils",

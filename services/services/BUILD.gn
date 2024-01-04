@@ -205,7 +205,7 @@ ohos_shared_library("media_service") {
   ]
 
   if (multimedia_player_framework_support_video) {
-    external_deps += [ "graphic_2d:surface" ]
+    external_deps += [ "graphic_surface:surface" ]
   }
 
   if (multimedia_player_framework_support_screen_capture) {
