@@ -77,37 +77,6 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_EXTEND_START      = MS_ERR_OFFSET + 0xF000, // extend err start.
 };
 
-// // media api error code
-// enum MediaServiceExtErrCode : ErrCode {
-//     MSERR_EXT_OK = 0,
-//     MSERR_EXT_NO_MEMORY = 1,           // no memory.
-//     MSERR_EXT_OPERATE_NOT_PERMIT = 2,  // opertation not be permitted.
-//     MSERR_EXT_INVALID_VAL = 3,         // invalid argument.
-//     MSERR_EXT_IO = 4,                  // IO error.
-//     MSERR_EXT_TIMEOUT = 5,             // network timeout.
-//     MSERR_EXT_UNKNOWN = 6,             // unknown error.
-//     MSERR_EXT_SERVICE_DIED = 7,        // media service died.
-//     MSERR_EXT_INVALID_STATE = 8,       // the state is not support this operation.
-//     MSERR_EXT_UNSUPPORT = 9,           // unsupport interface.
-//     MSERR_EXT_EXTEND_START = 100,      // extend err start.
-// };
-
-// // media api9 error code
-// enum MediaServiceExtErrCodeAPI9 : ErrCode {
-//     MSERR_EXT_API9_OK = 0,                          // use for determine error
-//     MSERR_EXT_API9_NO_PERMISSION = 201,             // permission denied (AccessToken).
-//     MSERR_EXT_API9_PERMISSION_DENIED = 202,         // permission denied (system API).
-//     MSERR_EXT_API9_INVALID_PARAMETER = 401,         // invalid parameter.
-//     MSERR_EXT_API9_UNSUPPORT_CAPABILITY = 801,      // unsupport api.
-//     MSERR_EXT_API9_NO_MEMORY = 5400101,             // no memory.
-//     MSERR_EXT_API9_OPERATE_NOT_PERMIT = 5400102,    // opertation not be permitted.
-//     MSERR_EXT_API9_IO = 5400103,                    // IO error.
-//     MSERR_EXT_API9_TIMEOUT = 5400104,               // opertate timeout.
-//     MSERR_EXT_API9_SERVICE_DIED = 5400105,          // media service died.
-//     MSERR_EXT_API9_UNSUPPORT_FORMAT = 5400106,      // unsupport format.
-//     MSERR_EXT_API9_AUDIO_INTERRUPTED = 5400107,      // audio interrupted.
-// };
-
 __attribute__((visibility("default"))) std::string MSErrorToString(MediaServiceErrCode code);
 __attribute__((visibility("default"))) std::string MSExtErrorToString(MediaServiceExtErrCode code);
 __attribute__((visibility("default"))) std::string MSErrorToExtErrorString(MediaServiceErrCode code);

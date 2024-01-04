@@ -280,12 +280,6 @@ struct AutoRef {
     napi_ref cb_;
 };
 
-// struct AVFileDescriptor {
-//     int32_t fd = 0;
-//     int64_t offset = 0;
-//     int64_t length = -1;
-// };
-
 struct AVDataSrcDescriptor {
     int64_t fileSize = 0;
     napi_value callback = nullptr;
