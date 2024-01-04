@@ -83,6 +83,7 @@ private:
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
     void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
+    bool CheckAudioSourceType(AudioSourceType sourceType);
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);

@@ -129,8 +129,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 {
     MEDIA_LOG_I("SetAudioSource enter.");
     sourceId = INVALID_SOURCE_ID;
-    FALSE_RETURN_V(source != AudioSourceType::AUDIO_SOURCE_INVALID,
-        (int32_t)Status::ERROR_INVALID_PARAMETER);
+    FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
@@ -140,6 +139,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     if (audioCaptureFilter_ == nullptr) {
         MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
     }
+    audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioCapture to pipeline fail");
     if (ret == Status::OK) {
@@ -251,13 +251,13 @@ int32_t HiRecorderImpl::Prepare()
 {
     MEDIA_LOG_I("Prepare enter.");
     if (audioCaptureFilter_) {
-        audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
         audioEncFormat_->Set<Tag::APP_UID>(appUid_);
         audioEncFormat_->Set<Tag::APP_PID>(appPid_);
         audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
+        audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
         audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
     }
@@ -595,6 +595,21 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
         default:
             break;
     }
+}
+
+bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
+{
+    switch (sourceType) {
+        case AUDIO_SOURCE_DEFAULT:
+        case AUDIO_MIC:
+        case AUDIO_SOURCE_VOICE_CALL:
+            return true;
+        case AUDIO_INNER:
+        case AUDIO_SOURCE_INVALID:
+        default:
+            break;
+    }
+    return false;
 }
 
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
