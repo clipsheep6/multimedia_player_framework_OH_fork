@@ -23,6 +23,7 @@
 #include "av_common.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "mediafoundation_common_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -279,11 +280,11 @@ struct AutoRef {
     napi_ref cb_;
 };
 
-struct AVFileDescriptor {
-    int32_t fd = 0;
-    int64_t offset = 0;
-    int64_t length = -1;
-};
+// struct AVFileDescriptor {
+//     int32_t fd = 0;
+//     int64_t offset = 0;
+//     int64_t length = -1;
+// };
 
 struct AVDataSrcDescriptor {
     int64_t fileSize = 0;

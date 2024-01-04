@@ -25,6 +25,7 @@
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
+#include "mediafoundation_recorder.h"
 
 namespace OHOS {
 namespace Media {
@@ -205,27 +206,27 @@ enum RecorderErrorType : int32_t {
     RECORDER_ERROR_EXTEND_START = 0X10000,
 };
 
-/**
- * @brief Enumerates the container format types.
- */
-class ContainerFormatType {
-public:
-    static constexpr std::string_view CFT_MPEG_4A = "m4a";
-    static constexpr std::string_view CFT_MPEG_4 = "mp4";
-};
+// /**
+//  * @brief Enumerates the container format types.
+//  */
+// class ContainerFormatType {
+// public:
+//     static constexpr std::string_view CFT_MPEG_4A = "m4a";
+//     static constexpr std::string_view CFT_MPEG_4 = "mp4";
+// };
 
-/**
- * @brief the struct of geolocation
- *
- * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
- * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
- * @since  3.1
- * @version 3.1
- */
-struct Location {
-    float latitude = 0;
-    float longitude = 0;
-};
+// /**
+//  * @brief the struct of geolocation
+//  *
+//  * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
+//  * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
+//  * @since  3.1
+//  * @version 3.1
+//  */
+// struct Location {
+//     float latitude = 0;
+//     float longitude = 0;
+// };
 
 struct AudioCapturerInfo {
     int32_t sourceType;
