@@ -478,7 +478,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             Format videoTrackInfo {};
             videoTrackInfo.PutStringValue("codec_mime", mime);
             videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
-            MEDIA_LOG_I("liyudebug video size changed, codec_mime = %{public}s", mime);
+            MEDIA_LOG_I("liyudebug video size changed, codec_mime = %{public}s", mime.c_str());
             int32_t trackIndex;
             trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
             videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
