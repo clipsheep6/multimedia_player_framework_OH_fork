@@ -183,6 +183,8 @@ int HiPlayerImpl::PrepareAsync()
     int32_t durationMs = 0;
     GetDuration(durationMs);
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs);
+    NotifyResolutionChange();
+    NotifyPositionUpdate();
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
     return TransStatus(ret);
@@ -724,6 +726,38 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
+}
+
+void HiPlayerImpl::NotifyResolutionChange()
+{
+    std::vector<Format> videoTrackInfo;
+    GetVideoTrackInfo(videoTrackInfo);
+    if (videoTrackInfo.size() == 0) {
+        return;
+    }
+    for (auto& videoTrack : videoTrackInfo) {
+        int32_t height;
+        videoTrack.GetIntValue("height", height);
+        int32_t width;
+        videoTrack.GetIntValue("width", width);
+        if (height <= 0 && width <= 0) {
+            continue;
+        }
+        Format format;
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
+        MEDIA_LOG_I("video size changed, width = %{public}d, height = %{public}d", width, height);
+        callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
+        break;
+    }
+}
+
+void HiPlayerImpl::NotifyPositionUpdate()
+{
+    int32_t currentPosMs = 0;
+    GetCurrentTime(currentPosMs);
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
 void HiPlayerImpl::OnStateChanged(PlayerStateId state)
