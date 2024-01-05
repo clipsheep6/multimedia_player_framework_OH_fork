@@ -475,7 +475,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         if (IsVideoMime(mime)) {
             Format videoTrackInfo {};
             videoTrackInfo.PutStringValue("codec_mime", mime);
-            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::VIDEO));
+            videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::VIDEO));
             uint32_t trackIndex;
             trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
             videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
@@ -512,7 +512,7 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
         if (mime.find("audio/") == 0) {
             Format audioTrackInfo {};
             audioTrackInfo.PutStringValue("codec_mime", mime);
-            audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(MediaType::AUDIO));
+            audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::AUDIO));
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);

@@ -25,7 +25,7 @@
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
-#include "mediafoundation_recorder.h"
+#include "media_code.h"
 
 namespace OHOS {
 namespace Media {
