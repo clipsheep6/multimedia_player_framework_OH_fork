@@ -51,6 +51,7 @@ ohos_static_library("media_engine_dfx") {
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//third_party/glib:g_mem_dfx",
   ]
+  external_deps = [ "media_foundation:media_foundation" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
