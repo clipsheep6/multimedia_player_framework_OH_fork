@@ -313,7 +313,10 @@ int32_t SoundDecoderCallback::Release()
     }
     if (demuxer_ != nullptr) demuxer_.reset();
     if (listener_ != nullptr) listener_.reset();
-    if (!availableAudioBuffers_.empty()) availableAudioBuffers_.clear();
+    if (!availableAudioBuffers_.empty()) {
+        availableAudioBuffers_.clear();
+        availableAudioBuffers_.shrink_to_fit();
+    }
     if (callback_ != nullptr) callback_.reset();
     return ret;
 }

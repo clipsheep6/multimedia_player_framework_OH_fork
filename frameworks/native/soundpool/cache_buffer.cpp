@@ -337,7 +337,10 @@ int32_t CacheBuffer::Release()
         audioRenderer_ = nullptr;
     }
     if (!cacheData_.empty()) cacheData_.clear();
-    if (!reCombineCacheData_.empty()) reCombineCacheData_.clear();
+    if (!reCombineCacheData_.empty()) {
+        reCombineCacheData_.clear();
+        reCombineCacheData_.shrink_to_fit();
+    }
     if (callback_ != nullptr) callback_.reset();
     if (cacheBufferCallback_ != nullptr) cacheBufferCallback_.reset();
     if (frameWriteCallback_ != nullptr) frameWriteCallback_.reset();
