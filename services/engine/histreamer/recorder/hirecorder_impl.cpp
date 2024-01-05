@@ -185,6 +185,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_BITRATE:
         case RecorderPublicParamType::VID_FRAMERATE:
         case RecorderPublicParamType::VID_ENC_FMT:
+        case RecorderPublicParamType::VID_IS_HDR:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
