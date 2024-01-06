@@ -70,9 +70,6 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::RELEASE,
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_AV_RECORDER_CONFIG,
-        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
-        AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_PREPARED, {
@@ -113,8 +110,6 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::PREPARE,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
-        AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO,
-        AVRecordergOpt::GET_MAX_AMPLITUDE,
         AVRecordergOpt::GET_ENCODER_INFO,
         AVRecordergOpt::GET_AV_RECORDER_CONFIG
     }},
