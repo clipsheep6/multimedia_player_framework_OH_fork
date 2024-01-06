@@ -150,7 +150,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
         if (Any::IsSameTypeWith<int32_t>(type)) {
             int32_t intVal;
-            if (innerMeta->GetData(innerKey, intVal)) {
+            if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
             }
             SetEmptyStringIfNoData(avmeta, avKey);
