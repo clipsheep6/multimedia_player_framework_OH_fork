@@ -284,6 +284,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
                 continue;
             }
         }
+        promiseCtx->status = ERR_OK;
     } else {
         promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
@@ -400,6 +401,7 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
 
     if (status == napi_ok && context->errCode == napi_ok) {
         result = Media::PixelMapNapi::CreatePixelMap(env, context->artPicture_);
+        context->status = ERR_OK;
     } else {
         context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
         napi_get_undefined(env, &result);
