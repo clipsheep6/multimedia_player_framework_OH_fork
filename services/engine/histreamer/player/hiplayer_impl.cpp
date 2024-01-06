@@ -649,6 +649,10 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 void HiPlayerImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
+        case EventType::EVENT_IS_LIVE_STREAM: {
+            HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
+            break;
+        }
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
             break;
@@ -697,6 +701,12 @@ Status HiPlayerImpl::Resume()
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
     return ret;
+}
+
+void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
+{
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
 }
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
