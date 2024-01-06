@@ -98,8 +98,6 @@ struct DataSrcSeek {
   setErrorCallback(): void {
     this.avPlayer.on('error', (error) => {
       Logger.error(TAG, 'error happened,message is :' + error.message);
-      // 当error上报时自动播放下一个视频或者音频
-      this.nextVideo();
     })
   }
   // 注销回调函数接口
@@ -455,7 +453,7 @@ struct DataSrcSeek {
             .onClick(() => {
               this.nextVideo();
             })
-        }.width('100%').justifyContent(FlexAlign.Center)
+        }.width('100%').justifyContent(FlexAlign.Center).margin({bottom: '40vp'})
       }
       .justifyContent(FlexAlign.Start)
     }
