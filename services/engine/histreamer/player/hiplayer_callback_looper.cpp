@@ -228,9 +228,11 @@ void HiPlayerCallbackLooper::EventQueue::Quit()
 void HiPlayerCallbackLooper::EventQueue::RemoveMediaProgressEvent()
 {
     OHOS::Media::AutoLock lock(queueMutex_);
-    queue_.remove_if([](const std::shared_ptr<Event>& event) {
-        return event->what == WHAT_MEDIA_PROGRESS;
-    });
+    for (auto iter = queue_.begin(); iter != queue_.end(); iter++) {
+        if ((*iter)->what == WHAT_MEDIA_PROGRESS) {
+            (*iter)->what = WHAT_NONE;
+        }
+    }
 }
 }  // namespace Media
 }  // namespace OHOS
