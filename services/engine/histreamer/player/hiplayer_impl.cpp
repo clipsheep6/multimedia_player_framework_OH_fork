@@ -321,18 +321,12 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     auto seekMode = Transform2SeekMode(mode);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.DropMediaProgress();
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Pause();
             audioDecoder_->Flush();
             audioDecoder_->Start();
         } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
             pipeline_->Pause();
-        } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-            audioDecoder_->Flush();
-            audioDecoder_->Start();
-            audioSink_->Flush();
         }
         MEDIA_LOG_I("Do seek ...");
         int64_t realSeekTime = seekPos;
@@ -352,7 +346,6 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         }
     }
     NotifySeekDone(seekPos);
-    callbackLooper_.StartReportMediaProgress();
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
