@@ -179,8 +179,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
 
 Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, int32_t usage)
 {
-    Reset();
-
     Status ret;
     if (usage_ == AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
         ret = demuxerFilter_->SetDataSource(std::make_shared<MediaSource>(uri));
