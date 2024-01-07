@@ -93,12 +93,6 @@ void HiPlayerCallbackLooper::StopReportMediaProgress()
     reportMediaProgress_ = false;
 }
 
-void HiPlayerCallbackLooper::DropMediaProgress()
-{
-    isDropMediaProgress_ = true;
-    eventQueue_.RemoveMediaProgressEvent();
-}
-
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
@@ -223,16 +217,6 @@ void HiPlayerCallbackLooper::EventQueue::Quit()
     OHOS::Media::AutoLock lock(queueMutex_);
     quit_ = true;
     queueHeadUpdatedCond_.NotifyOne();
-}
-
-void HiPlayerCallbackLooper::EventQueue::RemoveMediaProgressEvent()
-{
-    OHOS::Media::AutoLock lock(queueMutex_);
-    for (auto iter = queue_.begin(); iter != queue_.end(); iter++) {
-        if ((*iter)->what == WHAT_MEDIA_PROGRESS) {
-            (*iter)->what = WHAT_NONE;
-        }
-    }
 }
 }  // namespace Media
 }  // namespace OHOS
