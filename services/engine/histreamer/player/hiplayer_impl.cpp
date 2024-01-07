@@ -25,6 +25,7 @@
 #include "osal/utils/dump_buffer.h"
 #include "common/plugin_time.h"
 #include "media_utils.h"
+#include "meta/media_types.h"
 
 namespace {
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
@@ -279,6 +280,14 @@ int32_t HiPlayerImpl::Stop()
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
     }
+
+    // triger drm waiting condition
+    if (isDrmProtected_) {
+        std::unique_lock<std::mutex> drmLock(drmMutex_);
+        stopWaitingDrmConfig_ = true;
+        drmConfigCond_.notify_all();
+    }
+
     OnStateChanged(PlayerStateId::STOPPED);
     return TransStatus(ret);
 }
@@ -383,6 +392,28 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
         return TransStatus(videoDecoder_->SetVideoSurface(surface));
     }
     surface_ = surface;
+#endif
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
+    bool svp)
+{
+    MEDIA_LOG_I("SetDecryptConfig entered.");
+#ifdef SUPPORT_DRM
+    FALSE_RETURN_V_MSG_E(keySessionProxy != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
+        "SetDecryptConfig failed, keySessionProxy == nullptr");
+    keySessionServiceProxy_ = keySessionProxy;
+    if (svp) {
+        svpMode_ = HiplayerSvpMode::SVP_TRUE;
+    } else {
+        svpMode_ = HiplayerSvpMode::SVP_FALSE;
+    }
+
+    std::unique_lock<std::mutex> drmLock(drmMutex_);
+    MEDIA_LOG_I("For Drmcond SetDecryptConfig will trig drmPreparedCond");
+    isDrmPrepared_ = true;
+    drmConfigCond_.notify_all();
 #endif
     return TransStatus(Status::OK);
 }
@@ -673,6 +704,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             NotifyAudioFirstFrame(event);
             break;
         }
+        case EventType::EVENT_DRM_INFO_UPDATED: {
+            HandleDrmInfoUpdatedEvent(event);
+            break;
+        }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             Format format;
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
@@ -723,6 +758,59 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
 
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
+}
+
+void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
+{
+    MEDIA_LOG_I("HandleDrmInfoUpdatedEvent");
+
+    std::multimap<std::string, std::vector<uint8_t>> drmInfo =
+        AnyCast<std::multimap<std::string, std::vector<uint8_t>>>(event.param);
+    int32_t infoCount = drmInfo.size();
+    if (infoCount > DrmConstant::DRM_MAX_DRM_INFO_COUNT || infoCount <= 0) {
+        MEDIA_LOG_E("HandleDrmInfoUpdatedEvent info count is invalid");
+        return;
+    }
+    DrmInfoItem *drmInfoArray = new DrmInfoItem[infoCount];
+    if (drmInfoArray == nullptr) {
+        MEDIA_LOG_E("HandleDrmInfoUpdatedEvent new drm info failed");
+        return;
+    }
+    int32_t i = 0;
+    for (auto item : drmInfo) {
+        uint32_t step = 2;
+        for (uint32_t j = 0; j < item.first.size(); j += step) {
+            std::string byteString = item.first.substr(j, step);
+            unsigned char byte = (unsigned char)strtol(byteString.c_str(), NULL, 16);
+            drmInfoArray[i].uuid[j / step] = byte;
+        }
+
+        errno_t ret = memcpy_s(drmInfoArray[i].pssh, sizeof(drmInfoArray[i].pssh),
+            item.second.data(), item.second.size());
+        if (ret != EOK) {
+            MEDIA_LOG_E("HandleDrmInfoUpdatedEvent memcpy drm info pssh failed");
+            delete []drmInfoArray;
+            return;
+        }
+        drmInfoArray[i].psshLen = item.second.size();
+        i++;
+    }
+
+    // report event
+    Format format;
+    size_t drmInfoSize = static_cast<size_t>(infoCount) * sizeof(DrmInfoItem);
+    (void) format.PutBuffer(PlayerKeys::PLAYER_DRM_INFO_ADDR,
+        reinterpret_cast<const uint8_t *>(drmInfoArray), drmInfoSize);
+    (void) format.PutIntValue(PlayerKeys::PLAYER_DRM_INFO_COUNT, static_cast<int32_t>(infoCount));
+    callbackLooper_.OnInfo(INFO_TYPE_DRM_INFO_UPDATED, static_cast<int32_t>(singleLoop_.load()), format);
+
+    // triger waiting
+    MEDIA_LOG_I("HiPlayerImpl has received drminfo event, and this is drm protected");
+    std::unique_lock<std::mutex> lock(drmMutex_);
+    isDrmProtected_ = true;
+    lock.unlock();
+
+    delete []drmInfoArray;
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
@@ -917,6 +1005,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
+
 #ifdef SUPPORT_VIDEO
 Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
@@ -929,6 +1018,23 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         videoDecoder_->SetSyncCenter(syncManager_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
+        }
+
+        // set decrypt config for drm videos
+        if (isDrmProtected_) {
+            std::unique_lock<std::mutex> lock(drmMutex_);
+            static constexpr int32_t timeout = 5;
+            bool notTimeout = drmConfigCond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
+                return this->isDrmPrepared_ || this->stopWaitingDrmConfig_;
+            });
+            if (notTimeout && isDrmPrepared_) {
+                MEDIA_LOG_I("HiPlayerImpl::LinkVideoDecoderFilter will SetDecryptConfig");
+                bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
+                videoDecoder_->SetDecryptConfig(keySessionServiceProxy_, svpFlag);
+            } else {
+                MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
+                return Status::ERROR_INVALID_OPERATION;
+            }
         }
     }
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);

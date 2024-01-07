@@ -982,6 +982,7 @@ int32_t PlayerServer::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionS
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
 
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_VAL, "playerEngine_ is nullptr");
     int32_t res = playerEngine_->SetDecryptConfig(keySessionProxy, svp);
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
         static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetDecryptConfig Failed!");

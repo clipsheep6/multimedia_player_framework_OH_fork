@@ -58,6 +58,8 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
+    int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
+        bool svp) override;
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format& params) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs>& obs) override;
@@ -81,10 +83,18 @@ public:
     void OnStateChanged(PlayerStateId state);
     void OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
+
 private:
+    enum HiplayerSvpMode : int32_t {
+        SVP_CLEAR = -1, /* it's not a protection video */
+        SVP_FALSE, /* it's a protection video but not need secure decoder */
+        SVP_TRUE, /* it's a protection video and need secure decoder */
+    };
+
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
     void HandleCompleteEvent(const Event& event);
+    void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
@@ -139,6 +149,14 @@ private:
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
 
     bool isStreaming_{false};
+
+    std::mutex drmMutex_;
+    std::condition_variable drmConfigCond_;
+    bool isDrmProtected_ = false;
+    bool isDrmPrepared_ = false;
+    bool stopWaitingDrmConfig_ = false;
+    sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
+    int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
 };
 } // namespace Media
 } // namespace OHOS
