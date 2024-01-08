@@ -259,7 +259,7 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
     rendererOptions_.streamInfo.format = AudioStandard::SAMPLE_S16LE;
     rendererOptions_.streamInfo.channels = AudioStandard::MONO;
     LISTENER(audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOptions_, appInfo),
-        "AudioRenderer::Create", PlayerXCollie::timerTimeout)
+        "AudioRenderer::Create", false, 15) // 15 timeout for create
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     SetMuteVolumeBySysParam();
     OHOS::AudioStandard::AudioEffectMode effectMode = DisableAudioEffectBySysParam() ?
