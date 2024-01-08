@@ -308,7 +308,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
-    int32_t durationMs;
+    int32_t durationMs = 0;
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, (int32_t) Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
@@ -323,8 +323,10 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (rtv == Status::OK) {
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Pause();
-            audioDecoder_->Flush();
-            audioDecoder_->Start();
+            if (audioDecoder_ != nullptr) {
+                audioDecoder_->Flush();
+                audioDecoder_->Start();
+            }
         } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
             pipeline_->Pause();
         }
@@ -474,8 +476,7 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
         duration_ = Plugins::HstTime2Us(duration);
     }
     int64_t tmp = 0;
-    duration = std::max(duration, tmp);
-    durationMs = duration_;
+    durationMs = std::max(duration_, tmp);
     MEDIA_LOG_W("Get media duration " PUBLIC_LOG_D32, durationMs);
     return TransStatus(Status::OK);
 }
