@@ -119,10 +119,6 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
 
-    ret = PlayerXCollie::GetInstance().Dump(fd);
-    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
-        OHOS::INVALID_OPERATION, "Failed to write xcollie dump information");
-
     ret = MonitorServiceStub::GetInstance()->DumpInfo(fd,
         argSets.find(u"monitor") != argSets.end());
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,

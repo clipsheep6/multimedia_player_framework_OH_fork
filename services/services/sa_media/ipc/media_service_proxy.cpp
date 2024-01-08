@@ -49,7 +49,8 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
     (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
     (void)data.WriteRemoteObject(listener);
     int32_t error = -1;
-    error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
+    LISTENER(error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option),
+        "MediaServiceProxy::GetSubSystemAbility", false)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "Create player proxy failed, error: %{public}d", error);
     return reply.ReadRemoteObject();
