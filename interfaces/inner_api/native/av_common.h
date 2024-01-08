@@ -18,10 +18,30 @@
 #include <vector>
 #include <string>
 #include "meta/format.h"
-#include "media_core.h"
 
 namespace OHOS {
 namespace Media {
+/**
+ * @brief Media type
+ *
+ * @since 3.1
+ * @version 3.1
+ */
+enum MediaType : int32_t {
+    /**
+     * track is audio.
+     */
+    MEDIA_TYPE_AUD = 0,
+    /**
+     * track is video.
+     */
+    MEDIA_TYPE_VID = 1,
+    /**
+     * track is subtitle.
+     */
+    MEDIA_TYPE_SUBTITLE = 2,
+};
+
 /**
  * @brief
  *
@@ -76,6 +96,22 @@ enum VideoRotation : uint32_t {
     VIDEO_ROTATION_270 = 270,
 };
 
+/**
+ * @brief Enumerates the state change reason.
+ *
+ * @since 3.2
+ * @version 3.2
+ */
+enum StateChangeReason {
+    /**
+     * audio/video state change by user
+     */
+    USER = 1,
+    /**
+     * audio/video state change by system
+     */
+    BACKGROUND = 2,
+};
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

@@ -22,10 +22,10 @@
 #include "meta/video_types.h"
 #include "recorder.h"
 #include "avmetadatahelper.h"
+#include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "recorder_profiles.h"
 #include "av_common.h"
-#include "mime_type.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
@@ -269,21 +269,21 @@ static const std::vector<struct JsEnumString> g_containerFormatType = {
 };
 
 static const std::vector<struct JsEnumString> g_codecMimeType = {
-    { "VIDEO_H263", OHOS::Media::Plugins::MimeType::VIDEO_H263 },
-    { "VIDEO_AVC", OHOS::Media::Plugins::MimeType::VIDEO_AVC },
-    { "VIDEO_MPEG2", OHOS::Media::Plugins::MimeType::VIDEO_MPEG2 },
-    { "VIDEO_HEVC", OHOS::Media::Plugins::MimeType::VIDEO_HEVC },
-    { "VIDEO_MPEG4", OHOS::Media::Plugins::MimeType::VIDEO_MPEG4 },
-    { "VIDEO_VP8", OHOS::Media::Plugins::MimeType::VIDEO_VP8 },
-    { "VIDEO_VP9", OHOS::Media::Plugins::MimeType::VIDEO_VP9 },
-    { "AUDIO_AMR_NB", OHOS::Media::Plugins::MimeType::AUDIO_AMR_NB },
-    { "AUDIO_AMR_WB", OHOS::Media::Plugins::MimeType::AUDIO_AMR_WB },
-    { "AUDIO_MPEG", OHOS::Media::Plugins::MimeType::AUDIO_MPEG },
-    { "AUDIO_AAC", OHOS::Media::Plugins::MimeType::AUDIO_AAC },
-    { "AUDIO_VORBIS", OHOS::Media::Plugins::MimeType::AUDIO_VORBIS },
-    { "AUDIO_OPUS", OHOS::Media::Plugins::MimeType::AUDIO_OPUS },
-    { "AUDIO_FLAC", OHOS::Media::Plugins::MimeType::AUDIO_FLAC },
-    { "AUDIO_RAW", OHOS::Media::Plugins::MimeType::AUDIO_RAW },
+    { "VIDEO_H263", CodecMimeType::VIDEO_H263 },
+    { "VIDEO_AVC", CodecMimeType::VIDEO_AVC },
+    { "VIDEO_MPEG2", CodecMimeType::VIDEO_MPEG2 },
+    { "VIDEO_HEVC", CodecMimeType::VIDEO_HEVC },
+    { "VIDEO_MPEG4", CodecMimeType::VIDEO_MPEG4 },
+    { "VIDEO_VP8", CodecMimeType::VIDEO_VP8 },
+    { "VIDEO_VP9", CodecMimeType::VIDEO_VP9 },
+    { "AUDIO_AMR_NB", CodecMimeType::AUDIO_AMR_NB },
+    { "AUDIO_AMR_WB", CodecMimeType::AUDIO_AMR_WB },
+    { "AUDIO_MPEG", CodecMimeType::AUDIO_MPEG },
+    { "AUDIO_AAC", CodecMimeType::AUDIO_AAC },
+    { "AUDIO_VORBIS", CodecMimeType::AUDIO_VORBIS },
+    { "AUDIO_OPUS", CodecMimeType::AUDIO_OPUS },
+    { "AUDIO_FLAC", CodecMimeType::AUDIO_FLAC },
+    { "AUDIO_RAW", CodecMimeType::AUDIO_RAW },
 };
 
 static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {

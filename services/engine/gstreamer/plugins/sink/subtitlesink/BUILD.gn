@@ -83,10 +83,7 @@ ohos_shared_library("gst_subtitle_sink") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [
-    "media_foundation:media_foundation",
-    "qos_manager:qos",
-  ]
+  external_deps = [ "qos_manager:qos" ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
@@ -101,10 +98,7 @@ ohos_static_library("gst_subtitle_sink_base") {
     "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
   ]
 
-  external_deps = [
-    "media_foundation:media_foundation",
-    "qos_manager:qos",
-  ]
+  external_deps = [ "qos_manager:qos" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }

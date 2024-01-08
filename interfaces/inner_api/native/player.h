@@ -17,7 +17,6 @@
 #define PLAYER_H
 
 #include <cstdint>
-#include "media_core.h"
 #ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
@@ -77,6 +76,17 @@ public:
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
     static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
+};
+
+enum BufferingInfoType : int32_t {
+    /* begin to b buffering */
+    BUFFERING_START = 1,
+    /* end to buffering */
+    BUFFERING_END = 2,
+    /* buffering percent */
+    BUFFERING_PERCENT = 3,
+    /* cached duration in milliseconds */
+    CACHED_DURATION = 4,
 };
 
 enum PlayerErrorType : int32_t {
@@ -183,6 +193,17 @@ enum PlayerStates : int32_t {
     PLAYER_PLAYBACK_COMPLETE = 8,
     /* released states */
     PLAYER_RELEASED = 9,
+};
+
+enum PlayerSeekMode : int32_t {
+    /* sync to keyframes after the time point. */
+    SEEK_NEXT_SYNC = 0,
+    /* sync to keyframes before the time point. */
+    SEEK_PREVIOUS_SYNC,
+    /* sync to closest keyframes. */
+    SEEK_CLOSEST_SYNC,
+    /* seek to frames closest the time point. */
+    SEEK_CLOSEST,
 };
 
 enum PlaybackRateMode : int32_t {

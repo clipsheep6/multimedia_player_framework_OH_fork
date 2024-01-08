@@ -70,7 +70,6 @@ ohos_static_library("media_engine_gst_loader") {
     "c_utils:utils",
     "hilog:libhilog",
     "init:libbegetutil",
-    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 
