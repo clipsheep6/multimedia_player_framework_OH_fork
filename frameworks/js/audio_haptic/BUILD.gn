@@ -46,6 +46,7 @@ ohos_shared_library("audiohaptic") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
     "napi:ace_napi",
   ]
   relative_install_dir = "module/multimedia"
