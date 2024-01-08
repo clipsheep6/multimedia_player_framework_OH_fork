@@ -32,7 +32,7 @@ public:
     constexpr static uint32_t timerTimeout = 10;
 private:
     PlayerXCollie() = default;
-    ~PlayerXCollie() = default;
+    ~PlayerXCollie();
     void TimerCallback(void *data);
 
     std::mutex mutex_;

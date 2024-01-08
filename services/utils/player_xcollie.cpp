@@ -35,6 +35,16 @@ PlayerXCollie &PlayerXCollie::GetInstance()
     return instance;
 }
 
+PlayerXCollie::~PlayerXCollie()
+{
+    MEDIA_LOGI("~PlayerXCollie()");
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto &iter : dfxDumper_) {
+        HiviewDFX::XCollie::GetInstance().CancelTimer(iter.first);
+    }
+    dfxDumper_.clear();
+}
+
 void PlayerXCollie::TimerCallback(void *data)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -104,6 +114,9 @@ void PlayerXCollie::CancelTimer(int32_t id)
 #ifdef HICOLLIE_ENABLE
     if (id != HiviewDFX::INVALID_ID) {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (dfxDumper_.size() == 0) {
+            return;
+        }
         auto it = dfxDumper_.find(id);
         if (it != dfxDumper_.end()) {
             dfxDumper_.erase(it);
