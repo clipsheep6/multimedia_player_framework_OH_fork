@@ -147,6 +147,7 @@ private:
     int32_t StartHomeVideoCapture();
     int32_t StartHomeVideoCaptureFile();
     int32_t CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer);
+    VirtualScreenOption InitVirtualScreenOption(const std::string name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();

@@ -90,6 +90,9 @@
     <target name="screen_capture_native_unit_test">
         <preparer>
             <option name="push" value="res_recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_01.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_02.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_03.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_02.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_03.mp4"/>
@@ -109,6 +112,9 @@
     <target name="screen_capture_capi_unit_test">
         <preparer>
             <option name="push" value="res_recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_01.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_02.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_screen_file_03.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_02.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_specified_window_file_03.mp4"/>

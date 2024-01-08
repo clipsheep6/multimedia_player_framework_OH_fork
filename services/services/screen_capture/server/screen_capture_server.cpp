@@ -56,10 +56,6 @@ int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
         MEDIA_LOGI("invalid capture mode");
         return MSERR_INVALID_VAL;
     }
-    if (captureMode == CAPTURE_SPECIFIED_SCREEN) {
-        MEDIA_LOGI("the capture Mode:%{public}d still not supported", captureMode);
-        return MSERR_UNSUPPORT;
-    }
     captureMode_ = captureMode;
     return MSERR_OK;
 }
@@ -487,7 +483,8 @@ int32_t ScreenCaptureServer::StartVideoCapture()
     if (!GetUsingPermissionFromPrivacy(START_VIDEO)) {
         MEDIA_LOGE("getUsingPermissionFromPrivacy");
     }
-    if (captureMode_ == CAPTURE_HOME_SCREEN || captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
+    if (captureMode_ == CAPTURE_HOME_SCREEN || captureMode_ == CAPTURE_SPECIFIED_SCREEN ||
+        captureMode_ == CAPTURE_SPECIFIED_WINDOW) {
         if (dataType_ == DataType::CAPTURE_FILE) {
             return StartHomeVideoCaptureFile();
         } else {
@@ -544,16 +541,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCaptureFile()
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OHOS::Surface> consumer)
 {
     isConsumerStart_ = true;
-    VirtualScreenOption virScrOption = {
-        .name_ = name,
-        .width_ = videoInfo_.videoFrameWidth,
-        .height_ = videoInfo_.videoFrameHeight,
-        .density_ = 0,
-        .surface_ = consumer,
-        .flags_ = 0,
-        .isForShot_ = true,
-        .missionIds_ = {},
-    };
+    VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
         MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
@@ -586,9 +574,34 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(screenId_);
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
+
+    if (captureMode_ == CAPTURE_SPECIFIED_SCREEN) {
+        for (int i = 0; i < screens.size() ; i++) {
+            if (screens[i]->GetId() == videoInfo_.displayId) {
+                ScreenManager::GetInstance().MakeMirror(screens[i]->GetId(), mirrorIds, mirrorGroup);
+                MEDIA_LOGI("MakeMirror extand screen success");
+                return MSERR_OK;
+            }
+        }
+    }
     ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
-    MEDIA_LOGI("MakeMirror success");
+    MEDIA_LOGI("MakeMirror main screen success");
     return MSERR_OK;
+}
+
+VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string name, sptr<OHOS::Surface> consumer)
+{
+    VirtualScreenOption virScrOption = {
+        .name_ = name,
+        .width_ = videoInfo_.videoFrameWidth,
+        .height_ = videoInfo_.videoFrameHeight,
+        .density_ = 0,
+        .surface_ = consumer,
+        .flags_ = 0,
+        .isForShot_ = true,
+        .missionIds_ = {},
+    };
+    return virScrOption;
 }
 
 int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)

@@ -595,6 +595,158 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
 }
 
 /**
+ * @tc.name: screen_capture_specified_screen_file_01
+ * @tc.desc: do screencapture with specified screen
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_specified_screen_file_01.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+
+    std::vector<sptr<Screen>> screens;
+    ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens = size-1 : %{public}s",
+    std::to_string(screens[screens.size()-1]->GetId()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens = 0 : %{public}s",
+    std::to_string(screens[0]->GetId()).c_str());
+    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_specified_screen_file_02
+ * @tc.desc: do screencapture with specified screen
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_02.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+
+    std::vector<sptr<Screen>> screens;
+    ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 size : %{public}s",
+    std::to_string(screens.size()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens = size-1 : %{public}s",
+    std::to_string(screens[screens.size()-1]->GetId()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens = 0 : %{public}s",
+    std::to_string(screens[0]->GetId()).c_str());
+
+    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 after");
+}
+
+/**
+ * @tc.name: screen_capture_specified_screen_file_03
+ * @tc.desc: do screencapture with specified screen
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_03, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_03.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::MIC
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
+
+    std::vector<sptr<Screen>> screens;
+    ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens = size-1 : %{public}s",
+    std::to_string(screens[screens.size()-1]->GetId()).c_str());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens = 0 : %{public}s",
+    std::to_string(screens[0]->GetId()).c_str());
+    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 after");
+}
+
+/**
+ * @tc.name: screen_capture_specified_screen_01
+ * @tc.desc: screen capture specified screen test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Level1)
+{
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    std::vector<sptr<Screen>> screens;
+    ScreenManager::GetInstance().GetAllScreens(screens);
+    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+
+    OpenFile("screen_capture_specified_screen_01");
+
+    aFlag = 1;
+    vFlag = 1;
+    bool isMicrophone = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(3);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+}
+
+/**
  * @tc.name: screen_capture_check_param_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC
@@ -1545,74 +1697,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_close_open_close, TestSize.Le
     sleep(3);
     isMicrophone = false;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    sleep(3);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    CloseFile();
-}
-
-/**
- * @tc.name: screen_capture_displayId
- * @tc.desc: screen capture displayId test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_displayId, TestSize.Level1)
-{
-    AVScreenCaptureConfig config_;
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    config_.videoInfo.videoCapInfo.displayId = 10;
-    OpenFile("screen_capture_displayId");
-
-    aFlag = 1;
-    vFlag = 1;
-    bool isMicrophone = true;
-    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
-    ASSERT_NE(nullptr, screenCaptureCb_);
-    screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
-    sleep(3);
-    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
-    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    CloseFile();
-}
-
-/**
- * @tc.name: screen_capture_taskIDs
- * @tc.desc: screen capture taskIDs test
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_taskIDs, TestSize.Level1)
-{
-    AVScreenCaptureConfig config_;
-    SetConfig(config_);
-    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    int32_t num[] = { 111, 222, 333, 444, 555 };
-    list<int32_t> listInt_A(num, num + size(num));
-
-    (config_.videoInfo.videoCapInfo.taskIDs).assign(++listInt_A.begin(), --listInt_A.end());
-    cout << "taskIDs: ";
-    for (list<int>::iterator it = (config_.videoInfo.videoCapInfo.taskIDs).begin();
-        it != (config_.videoInfo.videoCapInfo.taskIDs).end(); it++)
-    {
-        cout << *it << " ";
-    }
-    cout << endl;
-    OpenFile("screen_capture_taskIDs");
-
-    aFlag = 1;
-    vFlag = 1;
-    bool isMicrophone = true;
-    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
-    ASSERT_NE(nullptr, screenCaptureCb_);
-    screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(3);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
