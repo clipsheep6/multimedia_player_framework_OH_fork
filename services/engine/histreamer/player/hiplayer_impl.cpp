@@ -203,6 +203,8 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
     }
     Status ret = demuxer_->SelectBitRate(bitRate);
     if (ret == Status::OK) {
+        Format bitRateFormat;
+        callbackLooper_.OnInfo(INFO_TYPE_BITRATEDONE, bitRate, bitRateFormat);
         MEDIA_LOG_I("SelectBitRate success");
         return MSERR_OK;
     }
