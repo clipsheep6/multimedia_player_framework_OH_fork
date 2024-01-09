@@ -58,6 +58,7 @@ public:
 
 private:
     Status SetSourceInternel(const std::string &uri, int32_t usage);
+    Status SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc);
     int32_t ExtractMetadata();
     void Reset();
     void Destroy();
