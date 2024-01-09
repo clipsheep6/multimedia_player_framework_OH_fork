@@ -16,10 +16,14 @@
 #include "avmetadata_collector.h"
 #include <string>
 #include "ctime"
-#include "common/log.h"
+#include "media_log.h"
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
 #include "meta/any.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaDataCollector"};
+}
 
 namespace OHOS {
 namespace Media {
@@ -46,18 +50,19 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
 
 AVMetaDataCollector::AVMetaDataCollector()
 {
-    MEDIA_LOG_D("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
 AVMetaDataCollector::~AVMetaDataCollector()
 {
-    MEDIA_LOG_D("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
 std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const std::shared_ptr<Meta> &globalInfo,
     const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
-    FALSE_RETURN_V_MSG_E(globalInfo != nullptr && trackInfos.size() != 0, {}, "globalInfo or trackInfos are invalid.");
+    CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr && trackInfos.size() != 0,
+        {}, "globalInfo or trackInfos are invalid.");
     std::vector<TagType> keys;
     globalInfo->GetKeys(keys);
     for (int32_t i = 0; i < static_cast<int32_t>(keys.size()); i++) {
@@ -75,13 +80,13 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
         if (meta == nullptr) {
-            MEDIA_LOG_E("meta is invalid, index: %zu", index);
+            MEDIA_LOGE("meta is invalid, index: %zu", index);
             return metadata.tbl_;
         }
 
         Plugins::MediaType mediaType;
         if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
-            MEDIA_LOG_E("mediaType not found, index: %zu", index);
+            MEDIA_LOGE("mediaType not found, index: %zu", index);
             return metadata.tbl_;
         }
 
@@ -89,7 +94,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     }
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
-        MEDIA_LOG_I("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
+        MEDIA_LOGI("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
             AVMETA_KEY_TO_X_MAP.find(it->first)->second.c_str(), it->second.c_str());
         it++;
     }
@@ -98,12 +103,12 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
 
 std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
-    MEDIA_LOG_I("GetArtPicture In");
+    MEDIA_LOGI("GetArtPicture In");
     size_t trackCount = trackInfos.size();
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
         if (meta == nullptr) {
-            MEDIA_LOG_W("meta is invalid, index: %zu", index);
+            MEDIA_LOGW("meta is invalid, index: %zu", index);
             continue;
         }
 
@@ -116,7 +121,7 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
         if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > artPictureMaxSize) {
-            MEDIA_LOG_E("InvalidArtPictureSize %d", coverAddr.size());
+            MEDIA_LOGE("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
         uint8_t *addr = coverAddr.data();
@@ -125,14 +130,14 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::ve
             static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
         errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
         if (rc != EOK) {
-            MEDIA_LOG_E("memcpy_s failed, trackCount no %{public}d", index);
+            MEDIA_LOGE("memcpy_s failed, trackCount no %{public}d", index);
             return nullptr;
         }
         
-        MEDIA_LOG_I("GetArtPicture Out");
+        MEDIA_LOGI("GetArtPicture Out");
         return artPicMem;
     }
-    MEDIA_LOG_E("GetArtPicture Failed");
+    MEDIA_LOGE("GetArtPicture Failed");
     return nullptr;
 }
 
@@ -152,12 +157,14 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             int32_t intVal;
             if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
+                MEDIA_LOGI("found innerKey: %{public}d, val: %{public}d", avKey, intVal);
             }
             SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal)) {
                 avmeta.SetMeta(avKey, strVal);
+                MEDIA_LOGI("found innerKey: %{public}d, val: %{public}s", avKey, strVal.c_str());
             }
             SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
@@ -179,7 +186,7 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             }
             SetEmptyStringIfNoData(avmeta, avKey);
         } else {
-            MEDIA_LOG_E("not found type matched with innerKey: %{public}s", innerKey.c_str());
+            MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
     }
 }
@@ -194,7 +201,7 @@ void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey
 std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &timestamp) const
 {
     if (timestamp.empty()) {
-        MEDIA_LOG_E("datetime is empty, format failed");
+        MEDIA_LOGE("datetime is empty, format failed");
         return "";
     }
 
@@ -206,7 +213,7 @@ std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &t
     size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
     size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
     if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
-        MEDIA_LOG_E("datetime is invalid, format failed");
+        MEDIA_LOGE("datetime is invalid, format failed");
         return "";
     }
 

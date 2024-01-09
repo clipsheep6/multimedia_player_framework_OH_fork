@@ -60,11 +60,13 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
   ]
 
   deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   external_deps = [
+    "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
