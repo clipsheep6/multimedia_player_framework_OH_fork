@@ -117,7 +117,12 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 
 int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
-    MEDIA_LOG_I("SetSource");
+    MEDIA_LOG_I("SetSource dataSrc");
+    mediaDemuxer_ = std::make_shared<MediaDemuxer>();
+    Status ret = SetSourceInternel(dataSrc);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
+
+    MEDIA_LOG_I("set source success");
     return MSERR_OK;
 }
 
@@ -193,6 +198,14 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, int32_t u
     return Status::OK;
 }
 
+Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    Status ret;
+    ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(dataSrc));
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "Failed to call SetDataSource");
+    return Status::OK;
+}
+
 Status AVMetadataHelperImpl::PrepareInternel()
 {
     Status ret = Status::OK;
@@ -206,7 +219,6 @@ Status AVMetadataHelperImpl::PrepareInternel()
 
 int32_t AVMetadataHelperImpl::ExtractMetadata()
 {
-    FALSE_RETURN_V_MSG_E(usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, MSERR_INVALID_OPERATION, "usage error");
     FALSE_RETURN_V_MSG_E(mediaDemuxer_ != nullptr, MSERR_INVALID_OPERATION, "mediaDemuxer_ is nullptr");
 
     if (!hasCollectMeta_) {
