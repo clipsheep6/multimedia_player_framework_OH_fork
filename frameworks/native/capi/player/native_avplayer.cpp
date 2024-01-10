@@ -23,7 +23,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeAVPlayer"};
     constexpr uint32_t STATE_MAP_LENGTH = 9;
-    constexpr uint32_t INFO_TYPE_LENGTH = 17;
+    constexpr uint32_t INFO_TYPE_LENGTH = 18;
 }
 
 using namespace OHOS::Media;
@@ -69,6 +69,7 @@ static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_TRACKCHANGE, AV_INFO_TYPE_TRACKCHANGE },
     { INFO_TYPE_TRACK_INFO_UPDATE, AV_INFO_TYPE_TRACK_INFO_UPDATE },
     { INFO_TYPE_SUBTITLE_UPDATE, AV_INFO_TYPE_SUBTITLE_UPDATE },
+    { INFO_TYPE_AUDIO_DEVICE_CHANGE, AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE},
 };
 
 struct PlayerObject : public OH_AVPlayer {
