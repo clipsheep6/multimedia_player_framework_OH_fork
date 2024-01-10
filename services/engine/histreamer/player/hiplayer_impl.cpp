@@ -556,6 +556,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             int32_t width;
             trackInfo->GetData(Tag::VIDEO_WIDTH, width);
             videoTrackInfo.PutIntValue("width", static_cast<int32_t>(width));
+            Plugins::VideoRotation rotation;
+            trackInfo->Get<Tag::VIDEO_ROTATION>(rotation);
+            videoTrackInfo.PutIntValue(Tag::VIDEO_ROTATION, rotation);
             videoTrack.emplace_back(std::move(videoTrackInfo));
         }
     }
@@ -921,9 +924,13 @@ void HiPlayerImpl::NotifyResolutionChange()
         if (height <= 0 && width <= 0) {
             continue;
         }
+        int32_t rotation = 0;
+        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+            && (rotation == rotation90 || rotation == rotation270);
+        MEDIA_LOG_D("rotation %{public}d", rotation);
         Format format;
-        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
-        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), !needSwapWH ? width : height);
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), !needSwapWH ? height : width);
         MEDIA_LOG_I("video size changed, width = %{public}d, height = %{public}d", width, height);
         callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
         break;

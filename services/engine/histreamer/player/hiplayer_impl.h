@@ -158,6 +158,9 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+
+    int32_t rotation90 = 90;
+    int32_t rotation270 = 270;
 };
 } // namespace Media
 } // namespace OHOS
