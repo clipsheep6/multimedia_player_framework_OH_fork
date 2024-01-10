@@ -229,6 +229,12 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             HandleTrackInfoCallback(extra, infoBody);
             break;
         }
+        case INFO_TYPE_AUDIO_DEVICE_CHANGE: {
+            int32_t reason;
+            infoBody.GetIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
+            std::cout << "device change reason is " << reason;
+            break;
+        }
         default:
             break;
     }
