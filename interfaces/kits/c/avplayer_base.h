@@ -146,6 +146,10 @@ typedef enum AVPlayerOnInfoType {
     AV_INFO_TYPE_TRACK_INFO_UPDATE = 15,
     /* return the subtitle of playback. */
     AV_INFO_TYPE_SUBTITLE_UPDATE = 16,
+    /** Return the reason when the audio output device changes. When this info is reported, the extra param of
+     * {@link OH_AVPlayerOnInfo} is the same as {@OH_AudioStream_DeviceChangeReason} in audio framework.
+     */
+    AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE = 17,
 } AVPlayerOnInfoType;
 
 /**

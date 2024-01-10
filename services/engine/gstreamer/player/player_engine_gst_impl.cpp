@@ -524,7 +524,7 @@ void PlayerEngineGstImpl::HandleDeviceChangeMessage(const PlayBinMessage &msg)
         (void)format.PutBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE,
             parcel.ReadBuffer(parcelSize), parcelSize);
         format.PutIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, reason);
-        notifyObs->OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, 0, format);
+        notifyObs->OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, reason, format);
     }
 }
 

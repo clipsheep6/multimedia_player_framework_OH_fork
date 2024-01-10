@@ -103,6 +103,7 @@ public:
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
 private:
+    void HandleTrackChangeCallback(int32_t extra, const Format &infoBody);
     void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
     void HandleTrackInfoCallback(int32_t extra, const Format &infoBody);
 };
