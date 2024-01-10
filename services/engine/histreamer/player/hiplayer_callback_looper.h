@@ -50,6 +50,8 @@ public:
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
+    void DoReportCompletedTime();
+
 private:
 
     void LoopOnce();

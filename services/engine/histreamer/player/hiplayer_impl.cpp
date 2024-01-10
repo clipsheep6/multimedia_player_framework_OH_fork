@@ -750,9 +750,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     if (!isSingleLoop) {
         OnStateChanged(PlayerStateId::EOS);
         callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
     }
-
+    callbackLooper_.DoReportCompletedTime();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
 }
 

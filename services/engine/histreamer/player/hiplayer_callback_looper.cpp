@@ -99,6 +99,22 @@ void HiPlayerCallbackLooper::DropMediaProgress()
     eventQueue_.RemoveMediaProgressEvent();
 }
 
+void HiPlayerCallbackLooper::DoReportCompletedTime()
+{
+    OHOS::Media::AutoLock lock(loopMutex_);
+    auto obs = obs_.lock();
+    if (obs) {
+        Format format;
+        int32_t currentPositionMs;
+        if (playerEngine_->GetDuration(currentPositionMs) == 0) {
+            MEDIA_LOG_DD("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
+            obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
+        } else {
+            MEDIA_LOG_W("get player engine current time error");
+        }
+    }
+}
+
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
