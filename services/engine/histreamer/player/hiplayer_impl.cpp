@@ -885,6 +885,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
+    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
 }
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
