@@ -667,7 +667,7 @@ int32_t RecorderServiceStub::GetAVRecorderConfig(MessageParcel &data, MessagePar
     (void)reply.WriteInt32(configMap["audioBitrate"]);
     (void)reply.WriteInt32(configMap["audioChannels"]);
     (void)reply.WriteInt32(configMap["audioCodec"]);
-    (void)reply.WriteInt32(configMap["auidoSampleRate"]);
+    (void)reply.WriteInt32(configMap["audioSampleRate"]);
     (void)reply.WriteInt32(configMap["fileFormat"]);
     (void)reply.WriteInt32(configMap["videoBitrate"]);
     (void)reply.WriteInt32(configMap["videoCodec"]);
