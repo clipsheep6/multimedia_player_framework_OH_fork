@@ -31,6 +31,7 @@
 #include "player_track_parse.h"
 #include "av_common.h"
 #include "gst_utils.h"
+#include "common_utils.h"
 
 namespace OHOS {
 namespace Media {
@@ -134,6 +135,8 @@ private:
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioFirstFrameEventCb(const GstElement *audioSink, const uint64_t latency, gpointer userData);
+    static void OnDeviceChangeEventCb(const GstElement *audioSink, gpointer deviceInfo,
+        const int32_t reason, gpointer userData);
     static void OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData);
     static void OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
@@ -148,6 +151,7 @@ private:
 #endif
     void SetupInterruptEventCb();
     void SetupFirstAudioFrameEventCb();
+    void SetupAudioDeviceEventCb();
     void SetupAudioSegmentEventCb();
     void SetupAudioDiedEventCb();
     void OnElementSetup(GstElement &elem);

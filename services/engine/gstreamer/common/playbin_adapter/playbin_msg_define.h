@@ -79,6 +79,7 @@ enum PlayBinMsgSubType : int32_t {
 enum PlayBinMsgAudioSink : int32_t {
     PLAYBIN_MSG_INTERRUPT_EVENT,
     PLAYBIN_MSG_FIRST_FRAME_EVENT,
+    PLAYBIN_MSG_DEVICE_CHANGE_EVENT,
 };
 
 enum PlayBinState : int32_t {

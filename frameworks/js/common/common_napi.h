@@ -24,6 +24,8 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "media_core.h"
+#include "audio_info.h"
+#include "audio_system_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -59,6 +61,15 @@ public:
     static bool AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec);
     static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value);
     static bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
+
+    static void ConvertDeviceInfoToAudioDeviceDescriptor(
+        sptr<AudioStandard::AudioDeviceDescriptor> audioDeviceDescriptor, const AudioStandard::DeviceInfo &deviceInfo);
+    static napi_status SetValueDeviceInfo(const napi_env &env, const AudioStandard::DeviceInfo &deviceInfo,
+        napi_value &result);
+    static napi_status SetDeviceDescriptor(const napi_env &env, const AudioStandard::AudioDeviceDescriptor &deviceInfo,
+        napi_value &result);
+    static napi_status SetDeviceDescriptors(const napi_env &env,
+        const std::vector<sptr<AudioStandard::AudioDeviceDescriptor>> &deviceDescriptors, napi_value &result);
 };
 
 class MediaJsResult {

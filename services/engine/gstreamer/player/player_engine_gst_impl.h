@@ -110,6 +110,7 @@ private:
 
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioFirstFrameMessage(const PlayBinMessage &msg);
+    void HandleDeviceChangeMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleSubtitleUpdate(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);

@@ -27,25 +27,32 @@ namespace OHOS {
 namespace Media {
 class AudioRendererMediaCallback
     : public AudioStandard::AudioRendererCallback,
-      public AudioStandard::AudioRendererFirstFrameWritingCallback  {
+      public AudioStandard::AudioRendererFirstFrameWritingCallback,
+      public AudioStandard::AudioRendererOutputDeviceChangeCallback  {
 public:
     using InterruptCbFunc = std::function<void(GstBaseSink *, guint, guint, guint)>;
     using StateCbFunc = std::function<void(GstBaseSink *, guint)>;
     using FirstFrameCbFunc = std::function<void(GstBaseSink *, guint)>;
+    using DeviceChangeFunc = std::function<void(GstBaseSink *,
+        gpointer deviceInfo, gint32 reason)>;
     explicit AudioRendererMediaCallback(GstBaseSink *audioSink);
     ~AudioRendererMediaCallback();
     void SaveInterruptCallback(InterruptCbFunc interruptCb);
     void SaveStateCallback(StateCbFunc stateCb);
     void SaveFirstFrameCallback(FirstFrameCbFunc firstFrameCb);
+    void SaveDeviceChangeCallback(DeviceChangeFunc deviceCb);
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnStateChange(const AudioStandard::RendererState state,
         const AudioStandard::StateChangeCmdType cmdType) override;
     void OnFirstFrameWriting(uint64_t latency) override;
+    void OnOutputDeviceChange(const AudioStandard::DeviceInfo &deviceInfo,
+        const AudioStandard::AudioStreamDeviceChangeReason reason) override;
 private:
     GstBaseSink *audioSink_ = nullptr;
     InterruptCbFunc interruptCb_ = nullptr;
     StateCbFunc stateCb_ = nullptr;
     FirstFrameCbFunc firstFrameCb_ = nullptr;
+    DeviceChangeFunc deviceCb_ = nullptr;
     TaskQueue taskQue_;
 };
 
@@ -90,6 +97,8 @@ public:
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
                         void (*firstFrameCb)(GstBaseSink *, gulong),
+                        void (*deviceCb)(GstBaseSink *, gpointer deviceInfo,
+                        gint32 reason),
                         void (*errorCb)(GstBaseSink *, const std::string &),
                         void (*audioDiedCb)(GstBaseSink *)) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
@@ -226,12 +235,15 @@ public:
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
                         void (*firstFrameCb)(GstBaseSink *, gulong),
+                        void (*deviceCb)(GstBaseSink *, gpointer deviceInfo,
+                        gint32 reason),
                         void (*errorCb)(GstBaseSink *, const std::string &),
                         void (*audioDiedCb)(GstBaseSink *)) override
     {
         (void)interruptCb;
         (void)stateCb;
         (void)firstFrameCb;
+        (void)deviceCb;
         (void)errorCb;
         (void)audioDiedCb;
     }

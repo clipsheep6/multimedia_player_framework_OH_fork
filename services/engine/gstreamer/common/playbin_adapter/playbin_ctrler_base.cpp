@@ -417,6 +417,18 @@ void PlayBinCtrlerBase::SetAudioInterruptMode(const int32_t interruptMode)
     }
 }
 
+void PlayBinCtrlerBase::SetupAudioDeviceEventCb()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(audioSink_, "device-change-event",
+        G_CALLBACK(&PlayBinCtrlerBase::OnDeviceChangeEventCb), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
+}
+
+
 int32_t PlayBinCtrlerBase::SetAudioEffectMode(const int32_t effectMode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -790,6 +802,7 @@ void PlayBinCtrlerBase::SetupCustomElement()
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
             SetupFirstAudioFrameEventCb();
+            SetupAudioDeviceEventCb();
             SetupAudioSegmentEventCb();
             SetupAudioDiedEventCb();
         }
@@ -1539,6 +1552,18 @@ void PlayBinCtrlerBase::OnAudioFirstFrameEventCb(const GstElement *audioSink, co
     PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_FIRST_FRAME_EVENT, 0, value };
     thizStrong->ReportMessage(msg);
 }
+
+void PlayBinCtrlerBase::OnDeviceChangeEventCb(const GstElement *audioSink, gpointer deviceInfo,
+    const int32_t reason, gpointer userData)
+{
+    (void)audioSink;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    std::pair<void*, const int32_t> value = {deviceInfo, reason};
+    PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_DEVICE_CHANGE_EVENT, 0, value };
+    thizStrong->ReportMessage(msg);
+}
+
 
 void PlayBinCtrlerBase::OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData)
 {
