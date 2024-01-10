@@ -682,6 +682,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_ERROR: {
             OnStateChanged(PlayerStateId::ERROR);
+            HandleErrorEvent(AnyCast<int32_t>(event.param));
             break;
         }
         case EventType::EVENT_READY: {
@@ -738,6 +739,12 @@ void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_IS_LIVE_STREAM, isLiveStream, format);
+}
+
+void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
+{
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, errorCode, format);
 }
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)

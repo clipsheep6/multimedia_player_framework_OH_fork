@@ -1263,6 +1263,16 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
 
+    if (type == INFO_TYPE_ERROR_MSG) {
+        int32_t errorCode = extra;
+        Format newInfo = infoBody;
+        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+        newInfo.PutIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errorCode);
+        newInfo.PutStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), errorMsg);
+        playerCb_->OnInfo(type, extra, newInfo);
+        return;
+    }
+
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
             MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
