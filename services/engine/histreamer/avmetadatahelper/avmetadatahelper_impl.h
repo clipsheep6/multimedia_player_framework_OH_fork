@@ -92,6 +92,7 @@ private:
 
     int64_t seekTime_{0};
     std::atomic_bool hasFetchedFrame_{false};
+    std::atomic_bool stopProcessing_{false};
     std::string trackMime_;
     std::shared_ptr<Meta> trackInfo_;
     size_t trackIndex_{0};

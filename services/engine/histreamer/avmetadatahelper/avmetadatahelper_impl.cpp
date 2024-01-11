@@ -145,16 +145,30 @@ void AVMetadataHelperImpl::OnOutputFormatChanged(const MediaAVCodec::Format &for
 
 void AVMetadataHelperImpl::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
-    MEDIA_LOGI("OnInputBufferAvailable");
+    MEDIA_LOGD("OnInputBufferAvailable index:%{public}u", index);
+    if (stopProcessing_.load()) {
+        MEDIA_LOGI("Has stopped processing, will not queue input buffer.");
+        return;
+    }
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
     mediaDemuxer_->ReadSample(trackIndex_, buffer);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnInputBufferAvailable decoder is nullptr.");
     videoDecoder_->QueueInputBuffer(index);
 }
 
+void AVMetadataHelperImpl::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
+{
+    MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
+    if (stopProcessing_.load()) {
+        MEDIA_LOGI("Has stopped processing, will not release output buffer.");
+        return;
+    }
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnOutputBufferAvailable videoDecoder_ is nullptr");
+    videoDecoder_->ReleaseOutputBuffer(index, true);
+}
+
 void AVMetadataHelperImpl::OnFetchedFrameBufferAvailable()
 {
-    MEDIA_LOGI("OnFetchedFrameBufferAvailable");
     CHECK_AND_RETURN_LOG(consumerSurface_ != nullptr, "consumerSurface_ is nullptr");
     sptr<SurfaceBuffer> surfaceBuffer;
     sptr<SyncFence> fence;
@@ -165,9 +179,9 @@ void AVMetadataHelperImpl::OnFetchedFrameBufferAvailable()
         MEDIA_LOGW("OnFetchedFrameBufferAvailable AcquireBuffer failed, err:%{public}d", err);
         return;
     }
-    MEDIA_LOGI("OnFetchedFrameBufferAvailable AcquireBuffer OK timestamp:%{public}" PRId64"", timestamp);
+    MEDIA_LOGD("OnFetchedFrameBufferAvailable AcquireBuffer OK timestamp:%{public}" PRId64"", timestamp);
 
-    if (timestamp >= seekTime_ && !hasFetchedFrame_) {
+    if (timestamp >= seekTime_ && !hasFetchedFrame_.load()) {
         ConvertToAVSharedMemory(surfaceBuffer);
         hasFetchedFrame_ = true;
         cond_.notify_all();
@@ -197,7 +211,10 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
 
     // copy src Y component to dst
     for (int32_t y = 0; y < height; y++) {
-        memcpy_s(dstPtr, width, srcPtr, width);
+        auto ret = memcpy_s(dstPtr, width, srcPtr, width);
+        if (ret != EOK) {
+            MEDIA_LOGW("Memcpy Y component failed.");
+        }
         srcPtr += outputWidth;
         dstPtr += width;
     }
@@ -206,7 +223,10 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
 
     // copy src UV component to dst, height(UV) = height(Y) / 2
     for (int32_t uv = 0; uv < height / 2; uv++) {
-        memcpy_s(dstPtr, width, srcPtr, width);
+        auto ret = memcpy_s(dstPtr, width, srcPtr, width);
+        if (ret != EOK) {
+            MEDIA_LOGW("Memcpy UV component failed.");
+        }
         srcPtr += outputWidth;
         dstPtr += width;
     }
@@ -221,7 +241,7 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
     int32_t stride = surfaceBuffer->GetStride();
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
-    MEDIA_LOGI("ConvertToAVSharedMemory format:%{public}d, size:%{public}d, stride:%{public}d, "
+    MEDIA_LOGI("Convert to AVSharedMemory format:%{public}d, size:%{public}d, stride:%{public}d, "
         "width:%{public}d, height:%{public}d", format, size, stride, width, height);
 
     std::unique_ptr<PixelMap> yuvPixelMap = GetYuvDataAlignStride(surfaceBuffer);
@@ -258,22 +278,15 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
     return true;
 }
 
-void AVMetadataHelperImpl::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
-{
-    MEDIA_LOGI("OnOutputBufferAvailable.");
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnOutputBufferAvailable videoDecoder_ is nullptr.");
-    videoDecoder_->ReleaseOutputBuffer(index, true);
-}
-
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
-    MEDIA_LOGI("Enter AVMetadataHelperImpl, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGI("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     metaCollector_ = std::make_shared<AVMetaDataCollector>();
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
 {
-    MEDIA_LOGI("Enter ~AVMetadataHelperImpl, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGI("Destructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     Destroy();
 }
 
@@ -390,18 +403,19 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetTargetTrackInfo()
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const OutputConfiguration &param)
 {
-    MEDIA_LOGI("FetchFrameAtTime 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64", option:%{public}d,"
+    MEDIA_LOGI("Fetch frame 0x%{public}06" PRIXPTR " timeUs:%{public}" PRId64", option:%{public}d,"
         "dstWidth:%{public}d, dstHeight:%{public}d, colorFormat:%{public}d", FAKE_POINTER(this),
         timeUs, option, param.dstWidth, param.dstHeight, static_cast<int32_t>(param.colorFormat));
     CHECK_AND_RETURN_RET_LOG(usage_ == AVMetadataUsage::AV_META_USAGE_PIXEL_MAP, nullptr,
-        "FetchFrameAtTime usage invalid");
+        "Fetch frame usage invalid");
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, nullptr, "FetchFrameAtTime demuxer is nullptr");
 
     hasFetchedFrame_ = false;
     outputConfig_ = param;
     seekTime_ = timeUs;
-
-    trackInfo_ = GetTargetTrackInfo();
+    if (trackInfo_ == nullptr) {
+        trackInfo_ = GetTargetTrackInfo();
+    }
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
 
     CHECK_AND_RETURN_RET_LOG(InitSurface() == Status::OK, nullptr, "FetchFrameAtTime InitSurface failed.");
@@ -411,16 +425,20 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t realSeekTime = timeUs;
     mediaDemuxer_->SeekTo(timeUs, static_cast<Plugins::SeekMode>(option), realSeekTime);
     MEDIA_LOGI("FetchFrameAtTime realSeekTime:%{public}" PRId64"", realSeekTime);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
 
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    // wait up to 3s to fetch frame AVSharedMemory at time.
-    if (cond_.wait_for(lock, std::chrono::seconds(3), [this] {return hasFetchedFrame_.load();})) {
-        MEDIA_LOGI("Fetch target frame OK.");
-    } else {
-        hasFetchedFrame_ = true;
-        MEDIA_LOGI("Fetch target frame timeout.");
+        // wait up to 3s to fetch frame AVSharedMemory at time.
+        if (cond_.wait_for(lock, std::chrono::seconds(3), [this] {return hasFetchedFrame_.load();})) {
+            MEDIA_LOGI("Fetch frame OK srcUri_:%{private}s, width:%{public}d, height:%{public}d",
+                srcUri_.c_str(), outputConfig_.dstWidth, outputConfig_.dstHeight);
+        } else {
+            hasFetchedFrame_ = true;
+            MEDIA_LOGI("Fetch frame timeout srcUri_:%{private}s, width:%{public}d, height:%{public}d",
+                srcUri_.c_str(), outputConfig_.dstWidth, outputConfig_.dstHeight);
+        }
     }
+    
     return fetchedFrameAtTime_;
 }
 
@@ -468,6 +486,7 @@ void AVMetadataHelperImpl::Reset()
     }
 
     hasFetchedFrame_ = false;
+    trackInfo_ = nullptr;
     hasCollectMeta_ = false;
     collectedArtPicture_ = nullptr;
 
@@ -477,14 +496,14 @@ void AVMetadataHelperImpl::Reset()
 
 void AVMetadataHelperImpl::Destroy()
 {
-    if (mediaDemuxer_ != nullptr) {
-        mediaDemuxer_->Stop();
-    }
+    stopProcessing_ = true;
 
     if (videoDecoder_ != nullptr) {
         videoDecoder_->Stop();
         videoDecoder_->Release();
     }
+
+    MEDIA_LOGI("Finish Destroy.");
 }
 
 Status AVMetadataHelperImpl::InitDecoder()
@@ -493,7 +512,7 @@ Status AVMetadataHelperImpl::InitDecoder()
         MEDIA_LOGD("InitDecoder already.");
         return Status::OK;
     }
-    MEDIA_LOGD("AVMetadataHelperImpl InitDecoder.");
+    MEDIA_LOGI("Init decoder start.");
     videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY,
         "Create videoDecoder_ is nullptr");
@@ -503,7 +522,7 @@ Status AVMetadataHelperImpl::InitDecoder()
     int32_t height;
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width);
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, height);
-    MEDIA_LOGI("InitDecoder trackFormat width:%{public}d, height:%{public}d", width, height);
+    MEDIA_LOGI("Init decoder trackFormat width:%{public}d, height:%{public}d", width, height);
     trackFormat.PutIntValue(MediaDescriptionKey::MD_KEY_PIXEL_FORMAT,
         static_cast<int32_t>(Plugins::VideoPixelFormat::NV12));
     videoDecoder_->Configure(trackFormat);
@@ -513,6 +532,7 @@ Status AVMetadataHelperImpl::InitDecoder()
     videoDecoder_->SetOutputSurface(producerSurface_);
     videoDecoder_->Prepare();
     videoDecoder_->Start();
+    MEDIA_LOGI("Init decoder success.");
     return Status::OK;
 }
 
@@ -522,7 +542,7 @@ Status AVMetadataHelperImpl::InitSurface()
         MEDIA_LOGD("InitSurface already.");
         return Status::OK;
     }
-    MEDIA_LOGD("AVMetadataHelperImpl InitSurface enter");
+    MEDIA_LOGD("Init surface start.");
     consumerSurface_ = Surface::CreateSurfaceAsConsumer("AVMetadataHelperSurface");
     CHECK_AND_RETURN_RET_LOG(consumerSurface_ != nullptr, Status::ERROR_NO_MEMORY,
         "InitSurface create consumer surface failed.");
@@ -539,6 +559,7 @@ Status AVMetadataHelperImpl::InitSurface()
     producerSurface_ = Surface::CreateSurfaceAsProducer(producer);
     CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, Status::ERROR_NO_MEMORY,
         "InitSurface create producer surface failed.");
+    MEDIA_LOGD("Init surface success.");
     return Status::OK;
 }
 } // namespace Media
