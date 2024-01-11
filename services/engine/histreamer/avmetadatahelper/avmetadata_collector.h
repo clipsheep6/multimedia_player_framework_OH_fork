@@ -84,6 +84,24 @@ private:
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
     std::string ConvertTimestampToDatetime(const std::string &timestamp) const;
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
+    void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
+    void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
+    void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
+    std::string FormatDateTimeByTimeZone(const std::string &creationTime);
+
+    const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
+        {Plugins::FileType::UNKNOW, "uknown"},
+        {Plugins::FileType::MP4, "mp4"},
+        {Plugins::FileType::MPEGTS, "mpeg"},
+        {Plugins::FileType::MKV, "mkv"},
+        {Plugins::FileType::AMR, "amr"},
+        {Plugins::FileType::AAC, "aac"},
+        {Plugins::FileType::MP3, "mpeg"},
+        {Plugins::FileType::FLAC, "flac"},
+        {Plugins::FileType::OGG, "ogg"},
+        {Plugins::FileType::M4A, "m4a"},
+        {Plugins::FileType::WAV, "wav"}
+    };
 };
 } // namespace Media
 } // namespace OHOS

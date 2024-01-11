@@ -16,6 +16,9 @@
 #include "avmetadata_collector.h"
 #include <string>
 #include "ctime"
+#include "iomanip"
+#include "sstream"
+#include "chrono"
 #include "media_log.h"
 #include "meta/video_types.h"
 #include "buffer/avsharedmemorybase.h"
@@ -34,7 +37,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_AUTHOR, Tag::MEDIA_AUTHOR },
     { AV_KEY_COMPOSER, Tag::MEDIA_COMPOSER },
     { AV_KEY_DATE_TIME, Tag::MEDIA_DATE },
-    { AV_KEY_DATE_TIME_FORMAT, "" },
+    { AV_KEY_DATE_TIME_FORMAT, Tag::MEDIA_CREATION_TIME },
     { AV_KEY_DURATION, Tag::MEDIA_DURATION },
     { AV_KEY_GENRE, Tag::MEDIA_GENRE },
     { AV_KEY_HAS_AUDIO, Tag::MEDIA_HAS_AUDIO },
@@ -63,25 +66,26 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
 {
     CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr && trackInfos.size() != 0,
         {}, "globalInfo or trackInfos are invalid.");
-    std::vector<TagType> keys;
-    globalInfo->GetKeys(keys);
-    for (int32_t i = 0; i < static_cast<int32_t>(keys.size()); i++) {
-        std::string strVal;
-        int32_t intVal;
-        if (!globalInfo->GetData(keys[i], strVal)) {
-            globalInfo->GetData(keys[i], intVal);
-        }
-    }
 
     Metadata metadata;
     ConvertToAVMeta(globalInfo, metadata);
 
+    int32_t imageTrackCount = 0;
     size_t trackCount = trackInfos.size();
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
         if (meta == nullptr) {
             MEDIA_LOGE("meta is invalid, index: %zu", index);
             return metadata.tbl_;
+        }
+
+        std::string mime;
+        meta->Get<Tag::MIME_TYPE>(mime);
+        int32_t imageTypeLength = 5;
+        if (mime.substr(0, imageTypeLength).compare("image") == 0) {
+            MEDIA_LOGI("skip image track");
+            ++imageTrackCount;
+            continue;
         }
 
         Plugins::MediaType mediaType;
@@ -92,6 +96,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
 
         ConvertToAVMeta(meta, metadata);
     }
+    FormatAVMeta(metadata, imageTrackCount, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         MEDIA_LOGI("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
@@ -157,14 +162,12 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             int32_t intVal;
             if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
-                MEDIA_LOGI("found innerKey: %{public}d, val: %{public}d", avKey, intVal);
             }
             SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal)) {
                 avmeta.SetMeta(avKey, strVal);
-                MEDIA_LOGI("found innerKey: %{public}d, val: %{public}s", avKey, strVal.c_str());
             }
             SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
@@ -189,6 +192,72 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
         }
     }
+}
+
+void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount,
+    const std::shared_ptr<Meta> &globalInfo)
+{
+    std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
+    if (!str.empty()) {
+        avmeta.SetMeta(AV_KEY_NUM_TRACKS, std::to_string(std::stoi(str) - imageTrackCount));
+    }
+    FormatMimeType(avmeta, globalInfo);
+    FormatDateTime(avmeta, globalInfo);
+}
+
+void AVMetaDataCollector::FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+{
+    Plugins::FileType fileType;
+    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    CHECK_AND_RETURN_LOG(fileType != Plugins::FileType::UNKNOW, "unknown file type");
+    if (fileTypeMap.find(fileType) == fileTypeMap.end()) {
+        return;
+    }
+    if (avmeta.GetMeta(AV_KEY_HAS_VIDEO).compare("yes") == 0) {
+        avmeta.SetMeta(AV_KEY_MIME_TYPE, "video/" + fileTypeMap.at(fileType));
+        return;
+    }
+    if (avmeta.GetMeta(AV_KEY_HAS_AUDIO).compare("yes") == 0) {
+        avmeta.SetMeta(AV_KEY_MIME_TYPE, "audio/" + fileTypeMap.at(fileType));
+    }
+}
+
+void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo)
+{
+    std::string date;
+    std::string creationTime;
+    globalInfo->GetData(Tag::MEDIA_DATE, date);
+    globalInfo->GetData(Tag::MEDIA_CREATION_TIME, creationTime);
+    CHECK_AND_RETURN(date.empty() && !creationTime.empty());
+    std::string formattedDateTime = FormatDateTimeByTimeZone(creationTime);
+    avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
+    avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT, formattedDateTime);
+}
+
+std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &creationTime)
+{
+    // parse UTC string
+    std::istringstream iss(creationTime);
+    std::tm tm;
+    iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+
+    // get local timezone
+    time_t t = mktime(&tm);
+    long timezone = 0;
+    if (t != -1) {
+        timezone = localtime(&t)->tm_gmtoff;
+    }
+    auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone);
+
+    // convert time to localtime
+    std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
+    std::tm localTm = *std::localtime(&localTimeT);
+
+    // format local time
+    std::ostringstream oss;
+    oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
+
+    return oss.str();
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
