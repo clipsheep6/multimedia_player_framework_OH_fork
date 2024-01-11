@@ -49,6 +49,7 @@ const std::unordered_map<VibrationType, std::string> EFFECT_ID_MAP = {
 
 int32_t SystemSoundVibrator::StartVibrator(VibrationType type)
 {
+    MEDIA_LOGD("StartVibrator: for vibration type %{public}d", type);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     bool setUsageRet = Sensors::SetUsage(VIBRATOR_USAGE_MAP.at(type));

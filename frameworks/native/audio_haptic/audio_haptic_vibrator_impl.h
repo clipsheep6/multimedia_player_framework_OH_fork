@@ -21,7 +21,9 @@
 #include <cstdint>
 #include <string>
 
+#ifdef SUPPORT_VIBRATOR
 #include "vibrator_agent.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -43,10 +45,12 @@ private:
 
     AudioHapticPlayer &audioHapticPlayer_;
 
+#ifdef SUPPORT_VIBRATOR
     std::shared_ptr<VibratorFileDescription> vibratorFD_ = nullptr;
     std::shared_ptr<VibratorPackage> vibratorPkg_ = nullptr;
-    std::mutex vibrateMutex_;
     std::condition_variable vibrateCV_;
+#endif
+    std::mutex vibrateMutex_;
     bool isStopped_ = false;
 };
 } // namespace Media

@@ -23,15 +23,22 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticVibratorImpl"};
+#ifdef SUPPORT_VIBRATOR
 constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms
+#endif
 }
 
 namespace OHOS {
 namespace Media {
 
 AudioHapticVibratorImpl::AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer)
-    : audioHapticPlayer_(audioHapticPlayer) {}
+    : audioHapticPlayer_(audioHapticPlayer)
+{
+    if (audioHapticPlayer_.IsMuted(AUDIO_HAPTIC_TYPE_HAPTIC)) {
+        MEDIA_LOGW("The muteHaptic value of audioHapticPlayer_ is true. No need to vibrate.");
+    }
+}
 
 AudioHapticVibratorImpl::~AudioHapticVibratorImpl() {}
 
@@ -47,6 +54,7 @@ std::unique_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibra
 
 int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri)
 {
+#ifdef SUPPORT_VIBRATOR
     int32_t fd = open(hapticUri.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
@@ -68,7 +76,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri)
     if (result != 0) {
         MEDIA_LOGE("PreProcess: %{public}d", result);
     }
-
+#endif
     return MSERR_OK;
 }
 
@@ -76,6 +84,7 @@ int32_t AudioHapticVibratorImpl::Release()
 {
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     isStopped_ = true;
+#ifdef SUPPORT_VIBRATOR
     int32_t result = Sensors::Cancel();
     if (result != 0) {
         MEDIA_LOGE("Failed to stop vibrator: result %{public}d", result);
@@ -89,11 +98,13 @@ int32_t AudioHapticVibratorImpl::Release()
     if (vibratorFD_ != nullptr) {
         vibratorFD_ = nullptr;
     }
+#endif
     return MSERR_OK;
 }
 
 int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMode)
 {
+    MEDIA_LOGD("StartVibrate: for latency mode %{public}d", latencyMode);
     if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
         return StartVibrateForAVPlayer();
     } else if (latencyMode == AUDIO_LATENCY_MODE_FAST) {
@@ -108,6 +119,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
     int32_t vibrateTime = 0; // record the pattern time which has been played
     for (int32_t i = 0; i < vibratorPkg_->patternNum; ++i) {
         isStopped_ = false;
@@ -123,6 +135,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
             return result;
         }
     }
+#endif
     return result;
 }
 
@@ -131,6 +144,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
     std::unique_lock<std::mutex> lock(vibrateMutex_);
 
     int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
     int32_t vibrateTime = 0; // record the pattern time which has been played
     for (int32_t i = 0; i < vibratorPkg_->patternNum; ++i) {
         // the delay time of first frame has been handled in audio haptic player
@@ -159,6 +173,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
             vibrateTime = audioHapticPlayer_.GetAudioCurrentTime() + GetDelayTime();
         }
     }
+#endif
     return result;
 }
 
@@ -166,16 +181,21 @@ int32_t AudioHapticVibratorImpl::StopVibrate()
 {
     std::lock_guard<std::mutex> lock(vibrateMutex_);
     isStopped_ = true;
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
     vibrateCV_.notify_one();
-    int32_t result = Sensors::Cancel();
+    result = Sensors::Cancel();
     MEDIA_LOGI("StopVibrate: %{public}d", result);
+#endif
     return result;
 }
 
 int32_t AudioHapticVibratorImpl::GetDelayTime()
 {
     int32_t delayTime = 0;
+#ifdef SUPPORT_VIBRATOR
     (void)Sensors::GetDelayTime(delayTime);
+#endif
     return delayTime;
 }
 } // namesapce Media
