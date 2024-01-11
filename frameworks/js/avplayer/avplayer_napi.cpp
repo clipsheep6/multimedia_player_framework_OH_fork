@@ -212,7 +212,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PrepareTask", false, 18)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -290,7 +290,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PlayTask", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -366,7 +366,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PauseTask", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -434,7 +434,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "StopTask", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -571,7 +571,7 @@ void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
     std::unique_lock<std::mutex> lock(taskMutex_);
-    LISTENER(stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; }), "StopTaskQue", false)
+    stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
 
@@ -996,7 +996,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
                 return;
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
             MEDIA_LOGI("Set source network out");
         }
     });
@@ -1018,7 +1018,7 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
                 return;
             }
             stopWait_ = false;
-            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
             MEDIA_LOGI("Set source fd out");
         }
     });
