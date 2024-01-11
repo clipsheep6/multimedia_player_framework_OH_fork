@@ -327,7 +327,9 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
 {
     auto seekMode = Transform2SeekMode(mode);
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+        if (audioSink_ != nullptr) {
+            audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+        }
         pipeline_->Pause();
         if (audioDecoder_ != nullptr) {
             audioDecoder_->Flush();
@@ -343,6 +345,10 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
             audioSink_->Pause();
             audioSink_->Flush();
         }
+    } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
+        if (audioSink_ != nullptr) {
+            audioSink_->Flush();
+        }
     }
     MEDIA_LOG_I("Do seek ...");
     int64_t realSeekTime = seekPos;
@@ -352,7 +358,9 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     }
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         pipeline_->Resume();
-        audioSink_->Resume();
+        if (audioSink_ != nullptr) {
+            audioSink_->Resume();
+        }
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
         pipeline_->Resume();
