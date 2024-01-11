@@ -114,6 +114,7 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
+    Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};

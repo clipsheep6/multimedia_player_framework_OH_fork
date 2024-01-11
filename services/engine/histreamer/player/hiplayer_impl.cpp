@@ -30,6 +30,8 @@
 namespace {
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
+const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
+const int32_t FADE_OUT_LATENCY = 0; // fade out latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 }
 
@@ -260,8 +262,14 @@ int32_t HiPlayerImpl::Play()
 int32_t HiPlayerImpl::Pause()
 {
     MEDIA_LOG_I("Pause entered.");
+    if (audioSink_ != nullptr) {
+        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+    }
     auto ret = pipeline_->Pause();
     syncManager_->Pause();
+    if (audioSink_ != nullptr) {
+        audioSink_->Pause();
+    }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -274,6 +282,9 @@ int32_t HiPlayerImpl::Pause()
 int32_t HiPlayerImpl::Stop()
 {
     MEDIA_LOG_I("Stop entered.");
+    if (audioSink_ != nullptr) {
+        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+    }
     // close demuxer first to avoid concurrent problem
     if (demuxer_ != nullptr) {
         demuxer_->Stop();
@@ -281,6 +292,12 @@ int32_t HiPlayerImpl::Stop()
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
+    }
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->Flush();
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->Flush();
     }
 
     // triger drm waiting condition
@@ -306,6 +323,47 @@ int32_t HiPlayerImpl::Reset()
     return ret;
 }
 
+Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
+{
+    auto seekMode = Transform2SeekMode(mode);
+    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
+        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+        pipeline_->Pause();
+        if (audioDecoder_ != nullptr) {
+            audioDecoder_->Flush();
+            audioDecoder_->Start();
+        }
+        if (audioSink_ != nullptr) {
+            audioSink_->Pause();
+            audioSink_->Flush();
+        }
+    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
+        pipeline_->Pause();
+        if (audioSink_ != nullptr) {
+            audioSink_->Pause();
+            audioSink_->Flush();
+        }
+    }
+    MEDIA_LOG_I("Do seek ...");
+    int64_t realSeekTime = seekPos;
+    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    if (rtv == Status::OK) {
+        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
+        pipeline_->Resume();
+        audioSink_->Resume();
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
+        pipeline_->Resume();
+    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.ManualReportMediaProgressOnce();
+        OnStateChanged(PlayerStateId::PAUSE);
+    }
+    return rtv;
+}
+
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
@@ -320,34 +378,9 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     }
     mSeconds = mSeconds < 0 ? 0 : mSeconds;
     int64_t seekPos = mSeconds;
-    auto seekMode = Transform2SeekMode(mode);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-            pipeline_->Pause();
-            if (audioDecoder_ != nullptr) {
-                audioDecoder_->Flush();
-                audioDecoder_->Start();
-            }
-        } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-            pipeline_->Pause();
-        }
-        MEDIA_LOG_I("Do seek ...");
-        int64_t realSeekTime = seekPos;
-        rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-        if (rtv == Status::OK) {
-            syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
-        }
-        if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-            pipeline_->Resume();
-        }
-        if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
-            pipeline_->Resume();
-        } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
-            callbackLooper_.StopReportMediaProgress();
-            callbackLooper_.ManualReportMediaProgressOnce();
-            OnStateChanged(PlayerStateId::PAUSE);
-        }
+        rtv = SeekInner(seekPos, mode);
     }
     NotifySeekDone(seekPos);
     if (rtv != Status::OK) {
@@ -732,6 +765,9 @@ Status HiPlayerImpl::Resume()
 {
     syncManager_->Resume();
     auto ret = pipeline_->Resume();
+    if (audioSink_ != nullptr) {
+        audioSink_->Resume();
+    }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
