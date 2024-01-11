@@ -1369,8 +1369,8 @@ int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, 
     unsigned char* ivAddress = static_cast<uint8_t*>(iv);
     std::vector<uint8_t> ivVector(ivAddress, ivAddress + ivLength);
     cryptInfo.iv = ivVector;
-    cryptInfo.pattern.encryptBlocks = cryptByteBlock;
-    cryptInfo.pattern.skipBlocks = skipByteBlock;
+    cryptInfo.pattern.encryptBlocks = static_cast<int32_t>(cryptByteBlock);
+    cryptInfo.pattern.skipBlocks = static_cast<int32_t>(skipByteBlock);
     DrmStandard::IMediaDecryptModuleService::SubSample *subSamples =
         static_cast<DrmStandard::IMediaDecryptModuleService::SubSample*>(subsamples);
     for (uint32_t i = 0; i < subsampleCount; i++) {

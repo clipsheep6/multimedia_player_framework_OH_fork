@@ -576,7 +576,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string name, sptr<OH
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
 
     if (captureMode_ == CAPTURE_SPECIFIED_SCREEN) {
-        for (int i = 0; i < screens.size() ; i++) {
+        for (uint32_t i = 0; i < screens.size() ; i++) {
             if (screens[i]->GetId() == videoInfo_.displayId) {
                 ScreenManager::GetInstance().MakeMirror(screens[i]->GetId(), mirrorIds, mirrorGroup);
                 MEDIA_LOGI("MakeMirror extand screen success");
