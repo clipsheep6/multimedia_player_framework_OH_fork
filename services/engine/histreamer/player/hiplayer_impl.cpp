@@ -339,6 +339,12 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         if (rtv == Status::OK) {
             syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
         }
+        if (audioDecoder_) {
+            audioDecoder_->SeekTo(mSeconds);
+        }
+        if (videoDecoder_) {
+            videoDecoder_->SeekTo(mSeconds);
+        }
         if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
             pipeline_->Resume();
         }
