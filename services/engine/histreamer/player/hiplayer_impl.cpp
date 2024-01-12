@@ -1069,8 +1069,14 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         if (audioInterruptMode_ != nullptr) {
             audioSink_->SetParameter(audioInterruptMode_);
         }
-        if (demuxer_) {
-            audioSink_->SetParameter(demuxer_->GetGlobalMetaInfo());
+        std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+        if (demuxer_ != nullptr) {
+            globalMeta = demuxer_->GetGlobalMetaInfo();
+        }
+        if (globalMeta != nullptr) {
+            globalMeta->SetData(Tag::APP_PID, appPid_);
+            globalMeta->SetData(Tag::APP_UID, appUid_);
+            audioSink_->SetParameter(globalMeta);
         }
         audioSink_->SetSyncCenter(syncManager_);
     }
