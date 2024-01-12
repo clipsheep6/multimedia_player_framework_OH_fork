@@ -292,9 +292,6 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MEDIA_LOG_I("Stop enter.");
     Status ret = Status::OK;
-    if (curState_ == StateId::INIT || curState_ == StateId::READY) {
-        return (int32_t)Status::ERROR_INVALID_OPERATION;
-    }
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
     if (audioCaptureFilter_) {
         ret = audioCaptureFilter_->SendEos();
@@ -324,19 +321,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 int32_t HiRecorderImpl::Reset()
 {
     MEDIA_LOG_I("Reset enter.");
-    Status ret = Status::OK;
-    if (curState_ == StateId::RECORDING) {
-        Stop(false);
-    }
-    ret = pipeline_->Stop();
-    if (ret == Status::OK) {
-        OnStateChanged(StateId::INIT);
-    }
-    audioCount_ = 0;
-    videoCount_ = 0;
-    audioSourceId_ = 0;
-    videoSourceId_ = 0;
-    return (int32_t)ret;
+    return Stop(false);
 }
 
 int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
@@ -478,6 +463,9 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::AUD_BITRATE: {
             AudBitRate audBitRate = static_cast<const AudBitRate&>(recParam);
+            if (audBitRate.bitRate <= 0) {
+                OnEvent({"audioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+            }
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audBitRate.bitRate);
             break;
         }
@@ -516,6 +504,9 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_BITRATE: {
             VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
+            if (vidBitRate.bitRate <= 0) {
+                OnEvent({"vidioBitRate", EventType::EVENT_ERROR, Status::ERROR_AUDIO_INTERRUPT});
+            }
             videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
             break;
         }
