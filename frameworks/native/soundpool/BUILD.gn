@@ -49,6 +49,7 @@ ohos_shared_library("soundpool_client") {
     "av_codec:av_codec_client",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
     "qos_manager:qos",
