@@ -512,6 +512,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 stopWait_ = false;
+                stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
             }
         }
         MEDIA_LOGI("Reset Task Out");
