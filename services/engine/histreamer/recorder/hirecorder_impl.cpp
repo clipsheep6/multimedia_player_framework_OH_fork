@@ -101,8 +101,10 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
     if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
         source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
         videoSourceIsYuv_ = true;
-        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        if (!videoEncoderFilter_) {
+            videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
+                ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        }
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_YUV.");
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
@@ -205,47 +207,15 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("GetSurface enter.");
     if (producerSurface_) {
-        int32_t queueSize = consumerSurface_->GetQueueSize();
-        for (int i = 0; i < queueSize; i++) {
-            sptr<SurfaceBuffer> buffer;
-            sptr<SyncFence> fence;
-            int64_t timestamp;
-            OHOS::Rect damage;
-            GSError ret = consumerSurface_->AcquireBuffer(buffer, fence, timestamp, damage);
-            if (ret == GSERROR_OK) {
-                MEDIA_LOG_I("AcquireBuffer 0x%{public}x succ", ENCODE_USAGE);
-            } else {
-                MEDIA_LOG_I("AcquireBuffer 0x%{public}x failed", ENCODE_USAGE);
-            }
-            consumerSurface_->ReleaseBuffer(buffer, -1);
-        }
-        videoEncoderFilter_->SetInputSurface(consumerSurface_);
         return producerSurface_;
     }
-    sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer("EncoderSurface");
-    if (consumerSurface == nullptr) {
-        MEDIA_LOG_I("Create the surface consummer fail");
-        return nullptr;
+    if (videoEncoderFilter_) {
+        producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
-    GSError err = consumerSurface->SetDefaultUsage(ENCODE_USAGE);
-    if (err == GSERROR_OK) {
-        MEDIA_LOG_I("set consumer usage 0x%{public}x succ", ENCODE_USAGE);
-    } else {
-        MEDIA_LOG_I("set consumer usage 0x%{public}x failed", ENCODE_USAGE);
+    if (videoCaptureFilter_) {
+        producerSurface_ = videoCaptureFilter_->GetInputSurface();
     }
-    sptr<IBufferProducer> producer = consumerSurface->GetProducer();
-    if (producer == nullptr) {
-        MEDIA_LOG_I("Get the surface producer fail");
-        return nullptr;
-    }
-    sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
-    if (producerSurface == nullptr) {
-        MEDIA_LOG_I("CreateSurfaceAsProducer fail");
-        return nullptr;
-    }
-    producerSurface_ = producerSurface;
-    consumerSurface_ = consumerSurface;
-    return producerSurface;
+    return producerSurface_;
 }
 
 int32_t HiRecorderImpl::Prepare()
@@ -286,12 +256,6 @@ int32_t HiRecorderImpl::Start()
     if (curState_ == StateId::PAUSE) {
         ret = pipeline_->Resume();
     } else {
-        if (videoEncoderFilter_ && consumerSurface_) {
-            videoEncoderFilter_->SetInputSurface(consumerSurface_);
-        }
-        if (videoCaptureFilter_ && consumerSurface_) {
-            videoCaptureFilter_->SetInputSurface(consumerSurface_);
-        }
         ret = pipeline_->Start();
     }
     if (ret == Status::OK) {
