@@ -16,6 +16,8 @@
 #ifndef NATIVE_AVSCREEN_CAPTURE_BASE_H
 #define NATIVE_AVSCREEN_CAPTURE_BASE_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
