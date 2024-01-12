@@ -476,6 +476,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
                 case OHOS::Media::AudioCodecFormat::AAC_LC:
                     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
                     audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
+                    break;
                 default:
                     break;
             }

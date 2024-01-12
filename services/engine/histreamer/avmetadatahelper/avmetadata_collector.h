@@ -77,8 +77,8 @@ public:
 
 private:
     const int maxDateTimeSize = 20;
-    const int standardDateStrSize = 10;
-    const int standardTimeStrSize = 8;
+    const size_t standardDateStrSize = 10;
+    const size_t standardTimeStrSize = 8;
     const int secondDividMs = 1000;
 
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
