@@ -346,6 +346,9 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
             audioSink_->Flush();
         }
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
+        if (audioDecoder_ != nullptr) {
+            audioDecoder_->Flush();
+        }
         if (audioSink_ != nullptr) {
             audioSink_->Flush();
         }
