@@ -55,7 +55,13 @@ public:
         SystemToneType systemToneType) override;
 
 private:
-    void LoadSystemSoundUriMap(void);
+    void InitDefaultUriMap();
+    void InitDefaultRingtoneUriMap(const std::string &ringtoneJsonPath);
+    void InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath);
+    std::string GetFullPath(const std::string &originalUri);
+    std::string GetJsonValue(const std::string &jsonPath);
+
+    void LoadSystemSoundUriMap();
     void WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
@@ -64,10 +70,16 @@ private:
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
 
+    std::string systemSoundPath_ = "";
+    std::mutex uriMutex_;
+    std::mutex playerMutex_;
+    std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<RingtoneType, std::string> ringtoneUriMap_;
     std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
+    std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
     std::unordered_map<SystemToneType, std::string> systemToneUriMap_;
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
+
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRingerModeCallback> ringerModeCallback_ = nullptr;

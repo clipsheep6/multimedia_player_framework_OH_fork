@@ -43,7 +43,7 @@ const std::unordered_map<VibrationType, int32_t> LOOP_COUNT_MAP = {
 const std::unordered_map<VibrationType, std::string> EFFECT_ID_MAP = {
     // Default effectId
     {VibrationType::VIBRATION_RINGTONE, "haptic.ringtone.Dream_It_Possible"},
-    {VibrationType::VIBRATION_SYSTEM_TONE, "haptic.notice.Rise"},
+    {VibrationType::VIBRATION_SYSTEM_TONE, "haptic.pattern.type4"},
 };
 #endif
 

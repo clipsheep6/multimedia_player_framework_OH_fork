@@ -15,13 +15,19 @@
 
 #include "system_sound_manager_impl.h"
 
+#include <fstream>
+
+#include "config_policy_utils.h"
+#include "file_ex.h"
+#include "nlohmann/json.hpp"
+
 #include "media_log.h"
 #include "media_errors.h"
-
 #include "ringtone_player_impl.h"
 #include "system_tone_player_impl.h"
 
 using namespace std;
+using namespace nlohmann;
 using namespace OHOS::AbilityRuntime;
 
 namespace {
@@ -32,16 +38,28 @@ namespace OHOS {
 namespace Media {
 const std::string RING_TONE = "ring_tone";
 const std::string SYSTEM_TONE = "system_tone";
-unique_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
-{
-    unique_ptr<SystemSoundManagerImpl> systemSoundMgr = make_unique<SystemSoundManagerImpl>();
-    CHECK_AND_RETURN_RET_LOG(systemSoundMgr != nullptr, nullptr, "Failed to create sound manager object");
+const std::string DEFAULT_SYSTEM_SOUND_PATH = "resource/media/audio/";
+const std::string DEFAULT_RINGTONE_URI_JSON = "ringtone_incall.json";
+const std::string DEFAULT_RINGTONE_PATH = "ringtones/";
+const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json";
+const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 
-    return systemSoundMgr;
+std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::systemSoundManager_ = nullptr;
+std::mutex SystemSoundManagerFactory::systemSoundManagerMutex_;
+
+std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
+{
+    std::lock_guard<std::mutex> lock(systemSoundManagerMutex_);
+    if (systemSoundManager_ == nullptr) {
+        systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
+    }
+    CHECK_AND_RETURN_RET_LOG(systemSoundManager_ != nullptr, nullptr, "Failed to create sound manager object");
+    return systemSoundManager_;
 }
 
 SystemSoundManagerImpl::SystemSoundManagerImpl()
 {
+    InitDefaultUriMap();
     LoadSystemSoundUriMap();
     InitRingerMode();
 }
@@ -94,19 +112,139 @@ bool SystemSoundManagerImpl::isSystemToneTypeValid(SystemToneType systemToneType
     }
 }
 
-void SystemSoundManagerImpl::LoadSystemSoundUriMap(void)
+void SystemSoundManagerImpl::InitDefaultUriMap()
 {
-    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
-        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
-    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
-        GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_1));
+    systemSoundPath_ = GetFullPath(DEFAULT_SYSTEM_SOUND_PATH);
 
+    std::string ringtoneJsonPath = systemSoundPath_ + DEFAULT_RINGTONE_URI_JSON;
+    InitDefaultRingtoneUriMap(ringtoneJsonPath);
+
+    std::string systemToneJsonPath = systemSoundPath_ + DEFAULT_SYSTEM_TONE_URI_JSON;
+    InitDefaultSystemToneUriMap(systemToneJsonPath);
+}
+
+void SystemSoundManagerImpl::InitDefaultRingtoneUriMap(const std::string &ringtoneJsonPath)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    std::string jsonValue = GetJsonValue(ringtoneJsonPath);
+    nlohmann::json ringtoneJson = json::parse(jsonValue, nullptr, false);
+    if (ringtoneJson.contains("preset_ringtone_sim1") && ringtoneJson["preset_ringtone_sim1"].is_string()) {
+        std::string defaultRingtoneName = ringtoneJson["preset_ringtone_sim1"];
+        defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
+            systemSoundPath_ + DEFAULT_RINGTONE_PATH + defaultRingtoneName + ".ogg";
+        MEDIA_LOGI("preset_ringtone_sim1 is [%{public}s]", defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0].c_str());
+    } else {
+        defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] = "";
+        MEDIA_LOGW("InitDefaultRingtoneUriMap: failed to load uri of preset_ringtone_sim1");
+    }
+    if (ringtoneJson.contains("preset_ringtone_sim2") && ringtoneJson["preset_ringtone_sim2"].is_string()) {
+        std::string defaultRingtoneName = ringtoneJson["preset_ringtone_sim2"];
+        defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
+            systemSoundPath_ + DEFAULT_RINGTONE_PATH + defaultRingtoneName + ".ogg";
+        MEDIA_LOGI("preset_ringtone_sim1 is [%{public}s]", defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1].c_str());
+    } else {
+        defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] = "";
+        MEDIA_LOGW("InitDefaultRingtoneUriMap: failed to load uri of preset_ringtone_sim2");
+    }
+}
+
+void SystemSoundManagerImpl::InitDefaultSystemToneUriMap(const std::string &systemToneJsonPath)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    std::string jsonValue = GetJsonValue(systemToneJsonPath);
+    nlohmann::json systemToneJson = json::parse(jsonValue, nullptr, false);
+    if (systemToneJson.contains("preset_ringtone_sms") && systemToneJson["preset_ringtone_sms"].is_string()) {
+        std::string defaultSystemToneName = systemToneJson["preset_ringtone_sms"];
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
+            systemSoundPath_ + DEFAULT_SYSTEM_TONE_PATH + defaultSystemToneName + ".ogg";
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] =
+            systemSoundPath_ + DEFAULT_SYSTEM_TONE_PATH + defaultSystemToneName + ".ogg";
+        MEDIA_LOGI("preset_ringtone_sms is [%{public}s]",
+            defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0].c_str());
+    } else {
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] = "";
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] = "";
+        MEDIA_LOGW("InitDefaultSystemToneUriMap: failed to load uri of preset_ringtone_sms");
+    }
+    if (systemToneJson.contains("preset_ringtone_notification") &&
+        systemToneJson["preset_ringtone_notification"].is_string()) {
+        std::string defaultSystemToneName = systemToneJson["preset_ringtone_notification"];
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] =
+            systemSoundPath_ + DEFAULT_SYSTEM_TONE_PATH + defaultSystemToneName + ".ogg";
+        MEDIA_LOGI("preset_ringtone_notification is [%{public}s]",
+            defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION].c_str());
+    } else {
+        defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] = "";
+        MEDIA_LOGW("InitDefaultSystemToneUriMap: failed to load uri of preset_ringtone_notification");
+    }
+}
+
+std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
+{
+    char buf[MAX_PATH_LEN];
+    char *path = GetOneCfgFile(originalUri.c_str(), buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("GetOneCfgFile for %{public}s failed.", originalUri.c_str());
+        return "";
+    }
+    std::string filePath = path;
+    MEDIA_LOGI("GetFullPath for [%{public}s], result: [%{public}s]", originalUri.c_str(), filePath.c_str());
+    return filePath;
+}
+
+std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
+{
+    std::string jsonValue = "";
+
+    ifstream file(jsonPath.c_str());
+    if (!file.is_open()) {
+        MEDIA_LOGI("file not open! try open first ! ");
+        file.open(jsonPath.c_str(), ios::app);
+        if (!file.is_open()) {
+            MEDIA_LOGE("open file again fail !");
+            return "";
+        }
+    }
+    file.seekg(0, ios::end);
+
+    const long maxFileLength = 32 * 1024 * 1024; // max size of the json file
+    const long fileLength = file.tellg();
+    if (fileLength > maxFileLength) {
+        MEDIA_LOGE("invalid file length(%{public}ld)!", fileLength);
+        return "";
+    }
+
+    jsonValue.clear();
+    file.seekg(0, ios::beg);
+    copy(istreambuf_iterator<char>(file), istreambuf_iterator<char>(), back_inserter(jsonValue));
+    return jsonValue;
+}
+
+void SystemSoundManagerImpl::LoadSystemSoundUriMap()
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    std::string temp = "";
+    // Load ringtone uri. If the value is "", use default uri.
+    temp = GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
+    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
+        (temp == "") ? defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] : temp;
+    temp = GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_1));
+    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
+        (temp == "") ? defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] : temp;
+
+    //Load system tone uri. If the value is "", use default uri.
+    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
     systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
-        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
+        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] : temp;
+    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
     systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] =
-        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
+        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] : temp;
+    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICATION));
     systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] =
-        GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICATION));
+        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] : temp;
 }
 
 void SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
@@ -157,6 +295,7 @@ std::string SystemSoundManagerImpl::GetKeyForDatabase(const std::string &systemS
 int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &context, const string &uri,
     RingtoneType ringtoneType)
 {
+    std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "invalid ringtone type");
     MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
     ringtoneUriMap_[ringtoneType] = uri;
@@ -164,17 +303,19 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     return MSERR_OK;
 }
 
-string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
+std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
+    std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), "", "invalid ringtone type");
     MEDIA_LOGI("GetRingtoneUri: for ringtoneType %{public}d", ringtoneType);
 
     return ringtoneUriMap_[ringtoneType];
 }
 
-shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const shared_ptr<Context> &context,
+std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const shared_ptr<Context> &context,
     RingtoneType ringtoneType)
 {
+    std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), nullptr, "invalid ringtone type");
     MEDIA_LOGI("GetRingtonePlayer: for ringtoneType %{public}d", ringtoneType);
 
@@ -195,6 +336,7 @@ shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const share
 std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType)
 {
+    std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
@@ -213,6 +355,7 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
 int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &context, const string &uri,
     SystemToneType systemToneType)
 {
+    std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "invalid system tone type");
     MEDIA_LOGI("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
 
@@ -224,6 +367,7 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
 std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     SystemToneType systemToneType)
 {
+    std::lock_guard<std::mutex> lock(uriMutex_);
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), "", "invalid system tone type");
     MEDIA_LOGI("GetSystemToneUri: for systemToneType %{public}d", systemToneType);
 

@@ -160,7 +160,7 @@ int32_t RingtonePlayerImpl::Start()
 
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
-    if (player_->IsPlaying() || isStartQueued_) {
+    if (isStartQueued_ || player_->IsPlaying()) {
         MEDIA_LOGE("Play in progress, cannot start now");
         return MSERR_START_FAILED;
     }
@@ -193,7 +193,7 @@ int32_t RingtonePlayerImpl::Stop()
     MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
-    if (ringtoneState_ != STATE_STOPPED && player_->IsPlaying()) {
+    if (ringtoneState_ != STATE_STOPPED) {
         (void)player_->Stop();
         (void)SystemSoundVibrator::StopVibrator();
     }

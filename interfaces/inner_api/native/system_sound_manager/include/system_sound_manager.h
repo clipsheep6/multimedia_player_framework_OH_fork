@@ -112,9 +112,11 @@ public:
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {
 public:
-    static std::unique_ptr<SystemSoundManager> CreateSystemSoundManager();
+    static std::shared_ptr<SystemSoundManager> CreateSystemSoundManager();
 
 private:
+    static std::shared_ptr<SystemSoundManager> systemSoundManager_;
+    static std::mutex systemSoundManagerMutex_;
     SystemSoundManagerFactory() = default;
     ~SystemSoundManagerFactory() = default;
 };
