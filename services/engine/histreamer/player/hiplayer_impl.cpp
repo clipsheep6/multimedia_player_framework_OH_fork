@@ -359,6 +359,12 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     if (rtv == Status::OK) {
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
     }
+    if (audioDecoder_) {
+        audioDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
+    }
+    if (videoDecoder_) {
+        videoDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
+    }
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         pipeline_->Resume();
         if (audioSink_ != nullptr) {
@@ -379,6 +385,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
+    isSeek_ = true;
     int32_t durationMs = 0;
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, (int32_t) Status::ERROR_INVALID_PARAMETER,
@@ -397,6 +404,7 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
+    isSeek_ = false;
     return TransStatus(rtv);
 }
 
@@ -502,8 +510,14 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
+    if (isSeek_.load()) {
+        return TransStatus(Status::ERROR_UNKNOWN);
+    }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
     currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
+    if (currentPositionMs < 0) {
+        currentPositionMs = 0;
+    }
     return TransStatus(Status::OK);
 }
 
