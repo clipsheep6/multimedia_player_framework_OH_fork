@@ -409,7 +409,9 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 {
     MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
-    ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    if (ptr != nullptr) {
+        ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
+    }
 }
 
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
