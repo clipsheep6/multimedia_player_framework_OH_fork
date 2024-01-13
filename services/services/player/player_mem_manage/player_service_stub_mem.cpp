@@ -125,11 +125,9 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 {
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
         if (playerServer_ != nullptr) {
             std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
         }
-        PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });
     (void)taskQue_.EnqueueTask(task);
