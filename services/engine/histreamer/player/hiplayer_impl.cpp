@@ -510,6 +510,10 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
+    if (curState_ == PlayerStateId::EOS) {
+        GetDuration(currentPositionMs);
+        return TransStatus(Status::OK);
+    }
     if (isSeek_.load()) {
         return TransStatus(Status::ERROR_UNKNOWN);
     }
