@@ -359,11 +359,15 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     if (rtv == Status::OK) {
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
     }
+    std::promise<bool> videoSeekSuccess;
+    std::future<bool> videoSeekFuture = videoSeekSuccess.get_future();
     if (audioDecoder_) {
-        audioDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
+        audioDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime), std::move(videoSeekFuture));
     }
     if (videoDecoder_) {
-        videoDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime));
+        videoDecoder_->SeekTo(Plugins::HstTime2Us(realSeekTime), std::move(videoSeekSuccess));
+    } else {
+        videoSeekSuccess.set_value(true);
     }
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         pipeline_->Resume();
