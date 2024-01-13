@@ -194,12 +194,13 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
 {
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
+    int32_t stride = surfaceBuffer->GetStride();
     int32_t outputWidth;
     int32_t outputHeight;
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
-    MEDIA_LOGI("GetYuvDataAlignStride outputWidth:%{public}d, outputHeight:%{public}d",
-        outputWidth, outputHeight);
+    MEDIA_LOGI("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
+        stride, outputWidth, outputHeight);
     
     InitializationOptions initOpts;
     initOpts.size = {width, height};
@@ -215,11 +216,11 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
         if (ret != EOK) {
             MEDIA_LOGW("Memcpy Y component failed.");
         }
-        srcPtr += outputWidth;
+        srcPtr += stride;
         dstPtr += width;
     }
 
-    srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + outputWidth * outputHeight;
+    srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + stride * outputHeight;
 
     // copy src UV component to dst, height(UV) = height(Y) / 2
     for (int32_t uv = 0; uv < height / 2; uv++) {
@@ -227,7 +228,7 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
         if (ret != EOK) {
             MEDIA_LOGW("Memcpy UV component failed.");
         }
-        srcPtr += outputWidth;
+        srcPtr += stride;
         dstPtr += width;
     }
 
@@ -238,11 +239,10 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
 {
     int32_t format = surfaceBuffer->GetFormat();
     int32_t size = surfaceBuffer->GetSize();
-    int32_t stride = surfaceBuffer->GetStride();
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
-    MEDIA_LOGI("Convert to AVSharedMemory format:%{public}d, size:%{public}d, stride:%{public}d, "
-        "width:%{public}d, height:%{public}d", format, size, stride, width, height);
+    MEDIA_LOGI("Convert to AVSharedMemory format:%{public}d, size:%{public}d, "
+        "width:%{public}d, height:%{public}d", format, size, width, height);
 
     std::unique_ptr<PixelMap> yuvPixelMap = GetYuvDataAlignStride(surfaceBuffer);
     SourceOptions srcOpts;
