@@ -1253,7 +1253,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     // notify info
     int32_t ret = HandleMessage(type, extra, infoBody);
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
-        isLiveStream_ = true;
+        isLiveStream_ = bool(extra);
     } else if (type == INFO_TYPE_TRACK_NUM_UPDATE) {
         subtitleTrackNum_ = static_cast<uint32_t>(extra);
         return;
