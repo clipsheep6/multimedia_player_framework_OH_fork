@@ -779,6 +779,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             break;
         }
+        case EventType::EVENT_AUDIO_DEVICE_CHANGE : {
+            NotifyAudioDeviceChange(event);
+            break;
+        }
         default:
             break;
     }
@@ -968,6 +972,20 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
     callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+}
+
+void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
+{
+    auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::DeviceInfo,
+        AudioStandard::AudioStreamDeviceChangeReason>>(event.param);
+    Format format;
+    Parcel parcel;
+    deviceInfo.Marshalling(parcel);
+    auto parcelSize = parcel.GetReadableBytes();
+    (void)format.PutBuffer(PlayerKeys::AUDIO_DEVICE_CHANGE,
+        parcel.ReadBuffer(parcelSize), parcelSize);
+    format.PutIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, static_cast<int32_t>(reason));
+    callbackLooper_.OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, static_cast<int32_t>(reason), format);
 }
 
 void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
