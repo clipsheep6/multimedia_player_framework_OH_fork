@@ -43,7 +43,8 @@ public:
     explicit MediaDataSourceProxy(const sptr<IRemoteObject> &impl);
     virtual ~MediaDataSourceProxy();
 
-    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) override;
+    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1,
+        bool isHistreamer = false) override;
     int32_t GetSize(int64_t &size) override;
 
 private:

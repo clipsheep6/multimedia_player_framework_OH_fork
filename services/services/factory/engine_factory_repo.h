@@ -26,13 +26,14 @@ namespace Media {
 class EngineFactoryRepo {
 public:
     static EngineFactoryRepo &Instance();
-    std::shared_ptr<IEngineFactory> GetEngineFactory(IEngineFactory::Scene scene, const std::string &uri = "");
+    std::shared_ptr<IEngineFactory> GetEngineFactory(IEngineFactory::Scene scene, const int32_t& appUid,
+        const std::string &uri = "");
 
 private:
     EngineFactoryRepo() = default;
     ~EngineFactoryRepo();
     int32_t LoadGstreamerEngine();
-    int32_t LoadHistreamerEngine();
+    int32_t LoadHistreamerEngine(const int32_t& appUid);
     __attribute__((no_sanitize("cfi"))) int32_t LoadLib(const std::string &libPath);
     __attribute__((no_sanitize("cfi"))) void UnloadLib();
 
