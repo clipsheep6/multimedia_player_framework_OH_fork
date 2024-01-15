@@ -76,28 +76,28 @@ static void GstLogPrint(const GstLogPrintInfo &info)
         case GST_LEVEL_DEBUG:
             DfxLogDump::GetInstance().SaveLog("LOGD", gstLable, "{%s():%d} [gst::%s:%" PRIXPTR "] %s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
-            (void)::OHOS::HiviewDFX::HiLog::Debug(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_INFO:
             DfxLogDump::GetInstance().SaveLog("LOGI", gstLable, "{%s():%d} [gst::%s:%" PRIXPTR "] %s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
-            (void)::OHOS::HiviewDFX::HiLog::Info(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_WARNING:
             DfxLogDump::GetInstance().SaveLog("LOGW", gstLable, "{%s():%d} [gst::%s:%" PRIXPTR "] %s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
-            (void)::OHOS::HiviewDFX::HiLog::Warn(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_ERROR:
             DfxLogDump::GetInstance().SaveLog("LOGE", gstLable, "{%s():%d} [gst::%s:%" PRIXPTR "] %s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
-            (void)::OHOS::HiviewDFX::HiLog::Error(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
@@ -116,22 +116,22 @@ static void GstLogPrint(const GstLogPrintInfo &info)
         case GST_LEVEL_TRACE: // no break
         case GST_LEVEL_LOG:   // no break
         case GST_LEVEL_DEBUG:
-            (void)::OHOS::HiviewDFX::HiLog::Debug(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_INFO:
-            (void)::OHOS::HiviewDFX::HiLog::Info(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_WARNING:
-            (void)::OHOS::HiviewDFX::HiLog::Warn(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_ERROR:
-            (void)::OHOS::HiviewDFX::HiLog::Error(gstLable,
+            (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, gstLable.tag,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
@@ -189,12 +189,12 @@ static void GLogCallbackFunc(const gchar *logDomain, GLogLevelFlags level, const
 
     switch (level) {
         case G_LOG_LEVEL_WARNING:
-            (void)::OHOS::HiviewDFX::HiLog::Warn(glibLable, "[glog] %{public}s", message);
+            (void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, glibLable.tag, "[glog] %{public}s", message);
             break;
         case G_LOG_LEVEL_CRITICAL: // no break
         case G_LOG_LEVEL_ERROR:    // no break
         case G_LOG_FLAG_RECURSION:
-            (void)::OHOS::HiviewDFX::HiLog::Error(glibLable, "[glog] %{public}s", message);
+            (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, glibLable.tag, "[glog] %{public}s", message);
             break;
         default:
             break;
