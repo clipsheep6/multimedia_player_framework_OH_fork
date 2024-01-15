@@ -831,7 +831,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("can not find buffering update callback!");
+        MEDIA_LOGD("can not find buffering update callback!");
         return;
     }
 
