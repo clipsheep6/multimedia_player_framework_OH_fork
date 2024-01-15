@@ -358,7 +358,8 @@ MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code)
         return MSERRCODE_TO_EXTERRORCODEAPI9.at(code);
     }
     // If error not in map, need add error and should not return default MSERR_EXT_API9_IO.
-    return MSERR_EXT_API9_IO;
+    MediaServiceExtErrCodeAPI9 api9Code = static_cast<MediaServiceExtErrCodeAPI9>(code);
+    return MSEXTERRCODE_API9_INFOS.count(api9Code) != 0 ? api9Code : MSERR_EXT_API9_IO;
 }
 } // namespace Media
 } // namespace OHOS
