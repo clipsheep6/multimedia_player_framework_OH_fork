@@ -45,6 +45,8 @@ constexpr uint64_t DECODER_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRIT
     | BUFFER_USAGE_VIDEO_DECODER;
 }
 
+constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
+
 class FetchedFrameConsumerListener : public IBufferConsumerListener {
 public:
     explicit FetchedFrameConsumerListener(AVMetadataHelperImpl *helperImpl) : helperImpl_(helperImpl) {}
@@ -190,6 +192,40 @@ void AVMetadataHelperImpl::OnFetchedFrameBufferAvailable()
     CHECK_AND_RETURN_LOG(err == GSERROR_OK, "ReleaseBuffer failed, err:%{public}d", err);
 }
 
+static void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12,
+    int32_t strideWidth, int32_t strideHeight)
+{
+    int32_t width = surfaceBuffer->GetWidth();
+    int32_t height = surfaceBuffer->GetHeight();
+    uint8_t *srcP010 = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
+
+    // copy src Y component to dst
+    for (int32_t i = 0; i < height; i++) {
+        uint16_t *srcY = (uint16_t *)(srcP010 + strideWidth * i);
+        uint8_t *dstY = dstNV12 + width * i;
+        for (int32_t j = 0; j < width; j++) {
+            *dstY = (uint8_t)(*srcY >> SHIFT_BITS_P010_2_NV12);
+            srcY++;
+            dstY++;
+        }
+    }
+
+    srcP010 = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + strideWidth * strideHeight;
+    dstNV12 = dstNV12 + width * height;
+
+    // copy src UV component to dst, height(UV) = height(Y) / 2;
+    for (int32_t i = 0; i < height / 2; i++) {
+        uint16_t *srcUV = (uint16_t *)(srcP010 + strideWidth * i);
+        uint8_t *dstUV = dstNV12 + width * i;
+        for (int32_t j = 0; j < width; j++) {
+            *dstUV = (uint8_t)(*srcUV >> SHIFT_BITS_P010_2_NV12);
+            *(dstUV + 1) = (uint8_t)(*(srcUV + 1) >> SHIFT_BITS_P010_2_NV12);
+            srcUV += 2; // srcUV move by 2 to process U and V component
+            dstUV += 2; // dstUV move by 2 to process U and V component
+        }
+    }
+}
+
 std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
     int32_t width = surfaceBuffer->GetWidth();
@@ -201,7 +237,7 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
     MEDIA_LOGI("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
         stride, outputWidth, outputHeight);
-    
+
     InitializationOptions initOpts;
     initOpts.size = {width, height};
     initOpts.srcPixelFormat = PixelFormat::NV12;
@@ -209,6 +245,11 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     uint8_t *dstData = static_cast<uint8_t *>(yuvPixelMap->GetWritablePixels());
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     uint8_t *dstPtr = dstData;
+    int32_t format = surfaceBuffer->GetFormat();
+    if (format == static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010)) {
+        ConvertP010ToNV12(surfaceBuffer, dstPtr, stride, outputHeight);
+        return yuvPixelMap;
+    }
 
     // copy src Y component to dst
     for (int32_t y = 0; y < height; y++) {
