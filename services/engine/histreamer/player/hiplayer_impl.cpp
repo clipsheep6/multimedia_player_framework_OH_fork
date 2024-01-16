@@ -114,6 +114,7 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
 {
     std::string fileHead = "file://";
     std::string tempUrlPath;
+
     if (url.find(fileHead) == 0 && url.size() > fileHead.size()) {
         tempUrlPath = url.substr(fileHead.size());
     } else {
@@ -123,7 +124,14 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
         MEDIA_LOG_E("invalid url. The Url (%{public}s) path may be invalid.", tempUrlPath.c_str());
         return MSERR_FILE_ACCESS_FAILED;
     }
-    realUrlPath = tempUrlPath;
+    bool ret = PathToRealPath(tempUrlPath, realUrlPath);
+    if (!ret) {
+        MEDIA_LOG_E("invalid url. The Url (%{public}s) path may be invalid.", url.c_str());
+        return MSERR_OPEN_FILE_FAILED;
+    }
+    if (access(realUrlPath.c_str(), R_OK) != 0) {
+        return MSERR_FILE_ACCESS_FAILED;
+    }
     return MSERR_OK;
 }
 
