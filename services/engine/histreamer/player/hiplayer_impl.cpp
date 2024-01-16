@@ -385,6 +385,13 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     return rtv;
 }
 
+int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("SeekToCurrentTime entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
+                mSeconds, static_cast<int32_t>(mode));
+    return Seek(mSeconds, mode);
+}
+
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
