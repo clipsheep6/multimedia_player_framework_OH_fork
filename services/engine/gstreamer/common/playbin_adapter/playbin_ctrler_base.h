@@ -72,10 +72,8 @@ public:
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
     int32_t SetAudioEffectMode(const int32_t effectMode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
-#ifdef SUPPORT_DRM
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
-#endif
 
     void SetElemSetupListener(ElemSetupListener listener) final;
     void SetElemUnSetupListener(ElemSetupListener listener) final;

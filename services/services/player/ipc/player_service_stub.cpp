@@ -110,9 +110,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
     playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
     playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
-#ifdef SUPPORT_DRM
     playerFuncs_[SET_DECRYPT_CONFIG] = { &PlayerServiceStub::SetDecryptConfig, "Player::SetDecryptConfig" };
-#endif
 
     (void)RegisterMonitor(appPid_);
 }
@@ -378,16 +376,20 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 }
 #endif
 
-#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
+#ifdef SUPPORT_DRM
     MediaTrace trace("binder::SetDecryptConfig");
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetDecryptConfig(keySessionProxy, svp);
-}
+#else
+    (void)keySessionProxy;
+    (void)svp;
+    return 0;
 #endif
+}
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -732,10 +734,10 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
 }
 #endif
 
-#ifdef SUPPORT_DRM
 int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &reply)
 {
     MEDIA_LOGI("PlayerServiceStub SetDecryptConfig");
+#ifdef SUPPORT_DRM
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "KeySessionServiceProxy object is nullptr");
     bool svp = data.ReadBool();
@@ -749,8 +751,12 @@ int32_t PlayerServiceStub::SetDecryptConfig(MessageParcel &data, MessageParcel &
     }
     MEDIA_LOGE("PlayerServiceStub keySessionServiceProxy is nullptr!");
     return MSERR_INVALID_VAL;
-}
+#else
+    (void)data;
+    (void)reply;
+    return 0;
 #endif
+}
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

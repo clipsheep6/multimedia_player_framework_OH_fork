@@ -152,11 +152,11 @@ int32_t PlayerEngineGstImpl::SetVideoSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
-#ifdef SUPPORT_DRM
 int32_t PlayerEngineGstImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
     bool svp)
 {
     MEDIA_LOGD("SetDecryptConfig ok in");
+#ifdef SUPPORT_DRM
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keySessionProxy is nullptr");
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_VAL, "playBinCtrler_ is nullptr");
@@ -166,8 +166,12 @@ int32_t PlayerEngineGstImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeyS
 
     MEDIA_LOGD("SetDecryptConfig ok out");
     return MSERR_OK;
-}
+#else
+    (void)keySessionProxy;
+    (void)svp;
+    return 0;
 #endif
+}
 
 int32_t PlayerEngineGstImpl::PrepareAsync()
 {

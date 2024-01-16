@@ -23,10 +23,7 @@
 #endif
 #include "meta/format.h"
 #include "media_data_source.h"
-#ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_mediadecryptmodule_service.h"
-#endif
 
 namespace OHOS {
 namespace Media {
@@ -632,10 +629,13 @@ public:
      */
     virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
 
-#ifdef SUPPORT_DRM
     virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-#endif
+        bool svp)
+    {
+        (void)keySessionProxy;
+        (void)svp;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

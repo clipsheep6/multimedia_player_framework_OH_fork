@@ -24,10 +24,7 @@
 #include "playbin_sink_provider.h"
 #include "gst_appsrc_engine.h"
 #include "meta/format.h"
-#ifdef SUPPORT_DRM
-#include "i_keysession_service.h"
-#include "i_mediadecryptmodule_service.h"
-#endif
+#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -72,10 +69,8 @@ public:
     virtual int32_t SetLoop(bool loop) = 0;
     virtual void SetVolume(const float &leftVolume, const float &rightVolume) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-#ifdef SUPPORT_DRM
     virtual int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) = 0;
-#endif
     virtual void SetAudioInterruptMode(const int32_t interruptMode) = 0;
     virtual int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) = 0;
     virtual int32_t SetAudioEffectMode(const int32_t effectMode) = 0;
