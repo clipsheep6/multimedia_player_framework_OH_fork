@@ -562,8 +562,8 @@ bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
         case AUDIO_SOURCE_DEFAULT:
         case AUDIO_MIC:
         case AUDIO_SOURCE_VOICE_CALL:
-            return true;
         case AUDIO_INNER:
+            return true;
         case AUDIO_SOURCE_INVALID:
         default:
             break;
