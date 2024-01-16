@@ -112,6 +112,8 @@ private:
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
+    bool IsFileUrl(const std::string &url) const;
+    int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);

@@ -20,6 +20,7 @@
 #include "audio_info.h"
 #include "common/log.h"
 #include "common/media_source.h"
+#include "directory_ex.h"
 #include "filter/filter_factory.h"
 #include "media_errors.h"
 #include "osal/utils/dump_buffer.h"
@@ -110,12 +111,42 @@ Status HiPlayerImpl::Init()
     return Status::OK;
 }
 
+int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
+{
+    std::string fileHead = "file://";
+    std::string tempUrlPath;
+    if (url.find(fileHead) == 0 && url.size() > fileHead.size()) {
+        tempUrlPath = url.substr(fileHead.size());
+    } else {
+        tempUrlPath = url;
+    }
+    if (tempUrlPath.find("..") != std::string::npos) {
+        MEDIA_LOG_E("invalid url. The Url (%{public}s) path may be invalid.", tempUrlPath.c_str());
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+    realUrlPath = tempUrlPath;
+    return MSERR_OK;
+}
+
+bool HiPlayerImpl::IsFileUrl(const std::string &url) const
+{
+    return url.find("://") == std::string::npos || url.find("file://") == 0;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
     auto ret = Init();
     if (ret == Status::OK) {
         url_ = uri;
+        if (IsFileUrl(uri)) {
+            std::string realUriPath;
+            int32_t result = GetRealPath(uri, realUriPath);
+            if (result != MSERR_OK) {
+                return result;
+            }
+            url_ = "file://" + realUriPath;
+        }
         ret = DoSetSource(std::make_shared<MediaSource>(url_));
     }
     if (ret != Status::OK) {
