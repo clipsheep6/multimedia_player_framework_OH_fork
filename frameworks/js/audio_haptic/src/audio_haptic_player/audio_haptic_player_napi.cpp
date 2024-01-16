@@ -30,8 +30,6 @@ const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 const std::string END_OF_STREAM_CALLBACK_NAME = "endOfStream";
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticPlayerNapi"};
-
-const int SUCCESS = 0;
 }
 
 namespace OHOS {
@@ -146,54 +144,41 @@ napi_value AudioHapticPlayerNapi::CreatePlayerInstance(napi_env env,
 napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
-    napi_value resource = nullptr;
+    napi_get_boolean(env, false, &result);
+
     size_t argc = ARGS_ONE;
     napi_value argv[ARGS_ONE] = {0};
     napi_value thisVar = nullptr;
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
-    napi_get_undefined(env, &result);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result, "IsMuted: napi_get_cb_info fail");
     if (argc != ARGS_ONE) {
         MEDIA_LOGE("IsMuted: requires 1 parameters");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
         return result;
     }
 
-    std::unique_ptr<AudioHapticPlayerAsyncContext> asyncContext = std::make_unique<AudioHapticPlayerAsyncContext>();
-    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
-        "RegisterSource: Failed to unwrap object");
+    void *native = nullptr;
+    status = napi_unwrap(env, thisVar, &native);
+    auto *audioHapticPlayerNapi = reinterpret_cast<AudioHapticPlayerNapi *>(native);
+    if (status != napi_ok || audioHapticPlayerNapi == nullptr) {
+        MEDIA_LOGE("IsMuted: unwrap failure!");
+        return result;
+    }
 
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[PARAM0], &valueType);
-    int32_t audioHapticType = -1;
+    int32_t jsAudioHapticType = -1;
     if (valueType == napi_number) {
-        napi_get_value_int32(env, argv[PARAM0], &audioHapticType);
+        napi_get_value_int32(env, argv[PARAM0], &jsAudioHapticType);
     }
-    if (!IsLegalAudioHapticType(audioHapticType)) {
+    if (!IsLegalAudioHapticType(jsAudioHapticType)) {
         MEDIA_LOGE("IsMuted: the param type mismatch");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
         return result;
     }
-    asyncContext->audioHapticType = static_cast<AudioHapticType>(audioHapticType);
-    napi_create_promise(env, &asyncContext->deferred, &result);
 
-    napi_create_string_utf8(env, "IsMuted", NAPI_AUTO_LENGTH, &resource);
-    status = napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void *data) {
-            AudioHapticPlayerAsyncContext *context = static_cast<AudioHapticPlayerAsyncContext*>(data);
-            context->isMuted = context->objectInfo->audioHapticPlayer_->IsMuted(context->audioHapticType);
-            context->status = SUCCESS;
-        },
-        IsMutedAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
-    if (status != napi_ok) {
-        MEDIA_LOGE("IsMuted: Failed to get create async work");
-        napi_get_undefined(env, &result);
-    } else {
-        napi_queue_async_work(env, asyncContext->work);
-        asyncContext.release();
-    }
+    AudioHapticType audioHapticType = static_cast<AudioHapticType>(jsAudioHapticType);
+    bool isMuted = audioHapticPlayerNapi->audioHapticPlayer_->IsMuted(audioHapticType);
+    napi_get_boolean(env, isMuted, &result);
 
     return result;
 }
@@ -209,35 +194,6 @@ bool AudioHapticPlayerNapi::IsLegalAudioHapticType(int32_t audioHapticType)
     }
     MEDIA_LOGE("IsLegalAudioHapticType: audioHapticType %{public}d is invalid", audioHapticType);
     return false;
-}
-
-void AudioHapticPlayerNapi::IsMutedAsyncCallbackComp(napi_env env, napi_status status, void *data)
-{
-    auto context = static_cast<AudioHapticPlayerAsyncContext *>(data);
-    napi_value result[2] = {};
-
-    if (!context->status) {
-        napi_get_undefined(env, &result[PARAM0]);
-        napi_get_boolean(env, context->isMuted, &result[PARAM1]);
-    } else {
-        napi_value message = nullptr;
-        napi_create_string_utf8(env, "GetTitle Error: Operation is not supported or failed",
-            NAPI_AUTO_LENGTH, &message);
-        napi_create_error(env, nullptr, message, &result[PARAM0]);
-        napi_get_undefined(env, &result[PARAM1]);
-    }
-
-    if (context->deferred) {
-        if (!context->status) {
-            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
-        } else {
-            napi_reject_deferred(env, context->deferred, result[PARAM0]);
-        }
-    }
-    napi_delete_async_work(env, context->work);
-
-    delete context;
-    context = nullptr;
 }
 
 void AudioHapticPlayerNapi::CommonAsyncCallbackComp(napi_env env, napi_status status, void *data)

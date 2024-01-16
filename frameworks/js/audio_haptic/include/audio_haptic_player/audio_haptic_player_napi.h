@@ -57,7 +57,6 @@ private:
     static napi_value UnregisterAudioHapticPlayerCallback(napi_env env, const std::string& cbName,
         AudioHapticPlayerNapi *audioHapticPlayerNapi);
 
-    static void IsMutedAsyncCallbackComp(napi_env env, napi_status status, void *data);
     static void CommonAsyncCallbackComp(napi_env env, napi_status status, void *data);
 
     static bool IsLegalAudioHapticType(int32_t audioHapticType);
@@ -76,10 +75,6 @@ struct AudioHapticPlayerAsyncContext {
     napi_deferred deferred;
     bool status;
     AudioHapticPlayerNapi *objectInfo;
-    bool isMuted;
-    AudioHapticType audioHapticType;
-    AudioStandard::StreamUsage streamUsage;
-    int32_t rendererFlags;
 };
 } // namespace Media
 } // namespace OHOS
