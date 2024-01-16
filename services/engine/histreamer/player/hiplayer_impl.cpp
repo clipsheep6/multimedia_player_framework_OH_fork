@@ -29,7 +29,6 @@
 #include "meta/media_types.h"
 
 namespace {
-constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
 const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
 const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
@@ -1005,10 +1004,10 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 {
     Format format;
-    uint32_t value = AnyCast<uint32_t>(event.param);
-    int32_t hintType = value & 0x000000FF;
-    int32_t forceType = (value >> INTERRUPT_EVENT_SHIFT) & 0x000000FF;
-    int32_t eventType = value >> (INTERRUPT_EVENT_SHIFT * 2);
+    auto interruptEvent = AnyCast<AudioStandard::InterruptEvent>(event.param);
+    int32_t hintType = interruptEvent.hintType;
+    int32_t forceType = interruptEvent.forceType;
+    int32_t eventType = interruptEvent.eventType;
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
