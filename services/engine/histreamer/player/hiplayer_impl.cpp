@@ -356,6 +356,9 @@ int32_t HiPlayerImpl::Reset()
 
 Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
 {
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    }
     auto seekMode = Transform2SeekMode(mode);
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         if (audioSink_ != nullptr) {
