@@ -17,7 +17,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
-#include "ipc_skeleton.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListServer"};
@@ -48,9 +47,7 @@ AVCodecListServer::~AVCodecListServer()
 
 int32_t AVCodecListServer::Init()
 {
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-        IEngineFactory::Scene::SCENE_AVCODECLIST, appUid);
+    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_AVCODECLIST);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_REC_ENGINE_FAILED, "failed to get factory");
     codecListEngine_ = engineFactory->CreateAVCodecListEngine();
     CHECK_AND_RETURN_RET_LOG(codecListEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,

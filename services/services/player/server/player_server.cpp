@@ -207,8 +207,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
     MEDIA_LOGI("current url is : %{public}s", url.c_str());
-    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-        IEngineFactory::Scene::SCENE_PLAYBACK, appUid_, url);
+    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);

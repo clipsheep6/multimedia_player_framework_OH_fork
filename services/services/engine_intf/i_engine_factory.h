@@ -45,10 +45,9 @@ public:
     };
 
     virtual ~IEngineFactory() = default;
-    virtual int32_t Score(Scene scene, const int32_t& appUid, const std::string &uri = "")
+    virtual int32_t Score(Scene scene, const std::string &uri = "")
     {
         (void)scene;
-        (void)appUid;
         (void)uri;
         return 0;
     }
