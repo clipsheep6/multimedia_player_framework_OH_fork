@@ -371,9 +371,9 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
             audioSink_->Flush();
         }
     } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        pipeline_->Pause();
+        pipeline_->PauseTransitent();
         if (audioSink_ != nullptr) {
-            audioSink_->Pause();
+            audioSink_->PauseTransitent();
             audioSink_->Flush();
         }
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
