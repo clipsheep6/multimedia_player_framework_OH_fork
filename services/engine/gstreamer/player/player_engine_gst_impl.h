@@ -60,10 +60,8 @@ public:
     int32_t SetParameter(const Format &param) override;
     int32_t GetVideoHeight() override;
     int32_t SetLooping(bool loop) override;
-#ifdef SUPPORT_DRM
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
-#endif
     int32_t SetVideoScaleType(Plugins::VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
         const int32_t rendererFlag) override;

@@ -16,6 +16,7 @@
 #ifndef AV_PLAYER_NAPI_H
 #define AV_PLAYER_NAPI_H
 
+#include <shared_mutex>
 #include "player.h"
 #include "media_errors.h"
 #include "napi/native_api.h"
@@ -58,7 +59,7 @@ const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_TRACKCHANGE = "trackChange";
 const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
-const std::string EVENT_DRM_INFO_UPDATE = "drmInfoUpdate";
+const std::string EVENT_DRM_INFO_UPDATE = "mediaKeySystemInfoUpdate";
 const std::string EVENT_SET_DECRYPT_CONFIG_DONE = "setDecryptConfigDone";
 const std::string EVENT_AUDIO_DEVICE_CHANGE = "audioOutputDeviceChangeWithInfo";
 const std::string EVENT_ERROR = "error";
@@ -218,9 +219,13 @@ private:
      */
     static napi_value JsGetCurrentTrack(napi_env env, napi_callback_info info);
     /**
-     * setDecryptConfig(handle:drm.MediaKeySession, svp:boolean) :void;
+     * setDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: boolean): void;
      */
     static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
+    /**
+     * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
+     */
+    static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      * off(type: 'stateChange'): void;
@@ -250,6 +255,8 @@ private:
      * off(type: 'availableBitrates'): void;
      * on(type: 'error', callback: ErrorCallback): void;
      * off(type: 'error'): void;
+     * on(type: 'mediaKeySystemInfoUpdate', callback: (mediaKeySystemInfo: Array<MediaKeySystemInfo>) => void): void;
+     * off(type: 'mediaKeySystemInfoUpdate'): void;
      */
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
@@ -288,6 +295,7 @@ private:
     void NotifyState(PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
     void NotifyIsLiveStream() override;
+    void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
 
@@ -342,6 +350,8 @@ private:
     int32_t position_ = -1;
     int32_t duration_ = -1;
     bool isLiveStream_ = false;
+    std::shared_mutex drmMutex_{};
+    std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -68,10 +68,14 @@ public:
     virtual int32_t SelectTrack(int32_t index) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
-#ifdef SUPPORT_DRM
+
     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
-        bool svp) = 0;
-#endif
+        bool svp)
+    {
+        (void)keySessionProxy;
+        (void)svp;
+        return 0;
+    }
     /**
      * IPC code ID
      */

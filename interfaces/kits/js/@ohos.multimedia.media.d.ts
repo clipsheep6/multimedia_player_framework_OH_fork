@@ -1135,22 +1135,22 @@ declare namespace media {
      */
 
     /**
-     * Set MediaKeySession object and svp flag if the media content is encrypted for decryption.
-     * Note, Call this function when the app received a "drmInfoUpdate" event.
-     * @param handle A Media MediaKeySession instance.
-     * @param svp Secure Video Path.
-     * @since 9
+     * Set decryption session to codec module.
+     * @param { drm.MediaKeySession } mediaKeySession - Handle of MediaKeySession to decrypt encrypted media.
+     * @param { boolean } secureVideoPath - Secure video path required or not.
+     * @throws { BusinessError } 401 - Invalid parameter.
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @since 11
      */
-    setDecryptConfig(handle:drm.MediaKeySession, svp:boolean): void;
+    setDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: boolean): void;
 
     /**
-     * Get the latest drmInfos.
-     * @returns A Promise instance used to return the drm info in DrmInfo Pair.
-     * @since 9
+     * Get media key system info from media source.
+     * @returns { Array<drm.MediaKeySystemInfo> } MediaKeySystemInfo with PSSH.
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @since 11
      */
-    getDrmInfo(): Array<Object>;
+    getMediaKeySystemInfos(): Array<Object>;
 
     url ?: string;
 
@@ -1494,16 +1494,25 @@ declare namespace media {
      * @atomicservice
      */
     off(type: 'error'): void;
+
     /**
-     * Register or unregister listens for drm info.
-     * This event will be reported after the {@link #prepare} called.
-     * @since 9
+     * Register listens for mediaKeySystemInfoUpdate events.
+     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
+     * @param { function } callback - Callback used to listen for the mediaKeySystemInfoUpdate event.
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return drminfos.
+     * @since 11
      */
-    on(type: 'drmInfoUpdate', callback: (drmInfo: Array<Object>) => void): void;
-    off(type: 'drmInfoUpdate'): void;
+    on(type: 'mediaKeySystemInfoUpdate', callback: (mediaKeySystemInfo: Array<Object>) => void): void;
+
+    /**
+     * Unregister listens for mediaKeySystemInfoUpdate events.
+     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
+     * @param { function } callback - Callback for event.
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @since 11
+     */
+    off(type: 'mediaKeySystemInfoUpdate'): void;
+
   }
 
   /**

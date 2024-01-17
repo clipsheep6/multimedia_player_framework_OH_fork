@@ -313,15 +313,21 @@ int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
     return playerService_->GetCurrentTrack(trackType, index);
 }
 
-#ifdef SUPPORT_DRM
+
 int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp)
 {
     MEDIA_LOGI("PlayerImpl DRM SetDecryptConfig");
+#ifdef SUPPORT_DRM
     CHECK_AND_RETURN_RET_LOG(keySessionProxy != nullptr, MSERR_INVALID_VAL, "keysessionproxy is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     MEDIA_LOGD("And it's count is: %{public}d in PlayerImpl", keySessionProxy->GetSptrRefCount());
     return playerService_->SetDecryptConfig(keySessionProxy, svp);
-}
+#else
+    (void)keySessionProxy;
+    (void)svp;
+    return 0;
 #endif
+}
+
 } // namespace Media
 } // namespace OHOS

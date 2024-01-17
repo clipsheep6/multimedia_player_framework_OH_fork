@@ -34,6 +34,7 @@ public:
     virtual void NotifyState(PlayerStates state) = 0;
     virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
     virtual void NotifyIsLiveStream() = 0;
+    virtual void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) = 0;
 };
 
 class AVPlayerCallback : public PlayerCallback {

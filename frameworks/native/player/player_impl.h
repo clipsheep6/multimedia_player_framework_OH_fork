@@ -19,9 +19,7 @@
 #include "player.h"
 #include "nocopyable.h"
 #include "i_player_service.h"
-#ifdef SUPPORT_DRM
-#include "i_keysession_service.h"
-#endif
+
 
 namespace OHOS {
 namespace Media {
@@ -66,10 +64,8 @@ public:
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
-#ifdef SUPPORT_DRM
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
-#endif
     int32_t Init();
 private:
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
