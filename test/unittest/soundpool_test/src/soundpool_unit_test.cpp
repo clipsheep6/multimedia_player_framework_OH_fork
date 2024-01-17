@@ -32,15 +32,9 @@ static const std::string g_fileName[6] = {
 
 namespace OHOS {
 namespace Media {
-void SoundPoolUnitTest::SetUpTestCase(void)
-{
-    system("param set debug.media_service.histreamer 0");
-}
+void SoundPoolUnitTest::SetUpTestCase(void) {}
 
-void SoundPoolUnitTest::TearDownTestCase(void)
-{
-    system("param set debug.media_service.histreamer 0");
-}
+void SoundPoolUnitTest::TearDownTestCase(void) {}
 
 void SoundPoolUnitTest::SetUp(void)
 {

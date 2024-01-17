@@ -95,15 +95,9 @@ void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> su
     }
 }
 
-void ScreenCaptureUnitTest::SetUpTestCase(void)
-{
-    system("param set debug.media_service.histreamer 0");
-}
+void ScreenCaptureUnitTest::SetUpTestCase(void) {}
 
-void ScreenCaptureUnitTest::TearDownTestCase(void)
-{
-    system("param set debug.media_service.histreamer 0");
-}
+void ScreenCaptureUnitTest::TearDownTestCase(void) {}
 
 void ScreenCaptureUnitTest::SetUp(void)
 {
