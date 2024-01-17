@@ -59,8 +59,8 @@ PlayerServiceStub::~PlayerServiceStub()
     (void)CancellationMonitor(appPid_);
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            LISTENER((void)playerServer_->Release(); playerServer_ = nullptr,
-                "PlayerServiceStub::~PlayerServiceStub", false)
+            (void)playerServer_->Release();
+            playerServer_ = nullptr;
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -158,7 +158,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
                 (void)IpcRecovery(false);
                 int32_t ret = -1;
-                LISTENER(ret = (this->*memberFunc)(data, reply), funcName, false)
+                ret = (this->*memberFunc)(data, reply);
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);
