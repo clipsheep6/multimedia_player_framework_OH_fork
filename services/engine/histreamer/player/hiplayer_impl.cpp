@@ -1150,11 +1150,33 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         if (globalMeta != nullptr) {
             globalMeta->SetData(Tag::APP_PID, appPid_);
             globalMeta->SetData(Tag::APP_UID, appUid_);
+
+            bool hasVideo = CheckHasVideo();
+            globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, static_cast<int32_t>(hasVideo));
             audioSink_->SetParameter(globalMeta);
         }
         audioSink_->SetSyncCenter(syncManager_);
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
+}
+
+bool HiPlayerImpl::CheckHasVideo()
+{
+    bool hasVideo = false;
+#ifdef SUPPORT_VIDEO
+    std::string mime;
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    for (const auto& trackInfo : metaInfo) {
+        if (!(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
+            continue;
+        }
+        if (IsVideoMime(mime)) {
+            hasVideo = true;
+            break;
+        }
+    }
+#endif
+    return hasVideo;
 }
 
 #ifdef SUPPORT_VIDEO
