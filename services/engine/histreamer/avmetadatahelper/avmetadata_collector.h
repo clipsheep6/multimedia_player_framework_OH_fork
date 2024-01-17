@@ -87,7 +87,7 @@ private:
     void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
-    std::string FormatDateTimeByTimeZone(const std::string &creationTime);
+    std::string FormatDateTimeByTimeZone(const std::string &iso8601Str);
 
     const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
         {Plugins::FileType::UNKNOW, "uknown"},
@@ -95,11 +95,11 @@ private:
         {Plugins::FileType::MPEGTS, "mpeg"},
         {Plugins::FileType::MKV, "mkv"},
         {Plugins::FileType::AMR, "amr"},
-        {Plugins::FileType::AAC, "aac"},
+        {Plugins::FileType::AAC, "aac-adts"},
         {Plugins::FileType::MP3, "mpeg"},
         {Plugins::FileType::FLAC, "flac"},
         {Plugins::FileType::OGG, "ogg"},
-        {Plugins::FileType::M4A, "m4a"},
+        {Plugins::FileType::M4A, "mp4"},
         {Plugins::FileType::WAV, "wav"}
     };
 };

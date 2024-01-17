@@ -14,10 +14,12 @@
  */
 
 #include "avmetadata_collector.h"
-#include <string>
-#include "ctime"
-#include "iomanip"
+#include "string"
+#include "iostream"
 #include "sstream"
+#include "regex"
+#include "iomanip"
+#include "ctime"
 #include "chrono"
 #include "media_log.h"
 #include "meta/video_types.h"
@@ -228,35 +230,57 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     std::string creationTime;
     globalInfo->GetData(Tag::MEDIA_DATE, date);
     globalInfo->GetData(Tag::MEDIA_CREATION_TIME, creationTime);
-    CHECK_AND_RETURN(date.empty() && !creationTime.empty());
-    std::string formattedDateTime = FormatDateTimeByTimeZone(creationTime);
+    std::string formattedDateTime;
+    if (!date.empty()) {
+        formattedDateTime = FormatDateTimeByTimeZone(date);
+    } else if (!creationTime.empty()) {
+        formattedDateTime = FormatDateTimeByTimeZone(creationTime);
+    }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT, formattedDateTime);
 }
 
-std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &creationTime)
+std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso8601Str)
 {
-    // parse UTC string
-    std::istringstream iss(creationTime);
-    std::tm tm;
-    iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
-
-    // get local timezone
-    time_t t = mktime(&tm);
-    long timezone = 0;
-    if (t != -1) {
-        timezone = localtime(&t)->tm_gmtoff;
+    std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?((\+|-\d{4})?)Z?)");
+    std::smatch match;
+    if (!std::regex_match(iso8601Str, match, pattern)) {
+        return iso8601Str; // not standard ISO8601 type string
     }
-    auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm)) + std::chrono::seconds(timezone);
+
+    std::istringstream iss(iso8601Str);
+    std::tm tm;
+    if (!(iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S"))) {
+        return iso8601Str;  // cant prase time
+    }
+
+    // time zone
+    time_t tt = mktime(&tm);
+    if (tt == -1) {
+        return iso8601Str;
+    }
+    uint32_t length = iso8601Str.length();
+    long diffTime = 0;
+    if (iso8601Str.substr(length - 1, length).compare("Z") != 0) {
+        int mins = std::stoi(iso8601Str.substr(length - 2, 2));
+        int hours = std::stoi(iso8601Str.substr(length - 4, 2));
+        char symbol = iso8601Str.at(length - 5);
+        long seconds = (hours * 60  + mins) * 60;
+        diffTime = symbol == '+' ? seconds : -seconds;
+    }
 
     // convert time to localtime
+    long timezone = 0;
+    std::tm timeWithOffset = *localtime(&tt);
+    if (timeWithOffset.tm_gmtoff != 0) {
+        timezone = timeWithOffset.tm_gmtoff;
+    }
+    auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm))
+        + std::chrono::seconds(timezone - diffTime);
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
     std::tm localTm = *std::localtime(&localTimeT);
-
-    // format local time
     std::ostringstream oss;
     oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
-
     return oss.str();
 }
 
