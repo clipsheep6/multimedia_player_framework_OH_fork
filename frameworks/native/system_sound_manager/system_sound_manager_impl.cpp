@@ -67,7 +67,7 @@ SystemSoundManagerImpl::SystemSoundManagerImpl()
 SystemSoundManagerImpl::~SystemSoundManagerImpl()
 {
     if (audioGroupManager_ != nullptr) {
-        (void)audioGroupManager_->UnsetRingerModeCallback(getpid());
+        (void)audioGroupManager_->UnsetRingerModeCallback(getpid(), ringerModeCallback_);
         ringerModeCallback_ = nullptr;
         audioGroupManager_ = nullptr;
     }
