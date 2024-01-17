@@ -126,7 +126,11 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
-    ChangeState(HelperStates::HELPER_PREPARED);
+    if (result.Value() == MSERR_OK) {
+        ChangeState(HelperStates::HELPER_PREPARED);
+    } else {
+        ChangeState(HelperStates::HELPER_STATE_ERROR);
+    }
     return result.Value();
 }
 
@@ -300,6 +304,10 @@ void AVMetadataHelperServer::ChangeState(const HelperStates state)
             } else {
                 NotifyErrorCallback(HelperErrorType::INVALID_OPERATION, "State error, current Operation is invalid.");
             }
+            break;
+        case HELPER_STATE_ERROR:
+            currState_ = HELPER_STATE_ERROR;
+            NotifyInfoCallback(HELPER_INFO_TYPE_STATE_CHANGE, currState_);
             break;
         default:
             MEDIA_LOGI("Changed state is invalid.");

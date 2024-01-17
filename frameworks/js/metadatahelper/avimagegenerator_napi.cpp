@@ -602,7 +602,7 @@ void AVImageGeneratorNapi::SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHel
         if (helper_ != nullptr) {
             if (helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length,
                 AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) != MSERR_OK) {
-                OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Helper SetSource FileDescriptor failed");
+                MEDIA_LOGE("Helper SetSource FileDescriptor failed");
             }
             stopWait_ = false;
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }),
