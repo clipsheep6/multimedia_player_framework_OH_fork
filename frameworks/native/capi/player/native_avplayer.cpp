@@ -353,17 +353,17 @@ OH_AVErrCode  OH_AVPlayer_SetVideoSurface(OH_AVPlayer *player, OHNativeWindow *w
 
 bool OH_AVPlayer_IsPlaying(OH_AVPlayer *player)
 {
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, false, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
-    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, false, "player_ is null");
     return playerObj->player_->IsPlaying();
 }
 
 bool OH_AVPlayer_IsLooping(OH_AVPlayer *player)
 {
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, false, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
-    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, false, "player_ is null");
     return playerObj->player_->IsLooping();
 }
 
