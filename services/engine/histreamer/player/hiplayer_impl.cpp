@@ -597,6 +597,34 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetAudioEffectMode(int32_t effectMode)
+{
+    MEDIA_LOG_I("SetAudioEffectMode entered.");
+    Status res = Status::OK;
+    if (audioSink_ != nullptr) {
+        res = audioSink_->SetAudioEffectMode(effectMode);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("audioSink set AudioEffectMode error.");
+        return MSERR_UNKNOWN;
+    }
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
+{
+    MEDIA_LOG_I("GetAudioEffectMode entered.");
+    Status res = Status::OK;
+    if (audioSink_ != nullptr) {
+        res = audioSink_->GetAudioEffectMode(effectMode);
+    }
+    if (res != Status::OK) {
+        MEDIA_LOG_E("audioSink get AudioEffectMode error.");
+        return MSERR_UNKNOWN;
+    }
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     MEDIA_LOG_I("SetPlaybackSpeed entered.");

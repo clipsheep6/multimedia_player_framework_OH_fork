@@ -68,6 +68,8 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t GetAudioEffectMode(int32_t &effectMode) override;
+    int32_t SetAudioEffectMode(int32_t effectMode) override;
 
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
