@@ -131,7 +131,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     jsPlayer->player_ = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(jsPlayer->player_ != nullptr, result, "failed to CreatePlayer");
 
-    jsPlayer->taskQue_ = std::make_unique<TaskQueue>("AVPlayerNapi");
+    jsPlayer->taskQue_ = std::make_unique<TaskQueue>("OS_AVPlayerNapi");
     (void)jsPlayer->taskQue_->Start();
 
     jsPlayer->playerCb_ = std::make_shared<AVPlayerCallback>(env, jsPlayer);

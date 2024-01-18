@@ -131,7 +131,7 @@ void MonitorClient::MediaServerDied()
 
 void MonitorClient::ClickThread()
 {
-    pthread_setname_np(pthread_self(), "MonitorClick");
+    pthread_setname_np(pthread_self(), "OS_MonitorClick");
     MEDIA_LOGI("ClickThread start");
     static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
 

@@ -120,7 +120,7 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     jsRecorder->recorder_ = RecorderFactory::CreateRecorder();
     CHECK_AND_RETURN_RET_LOG(jsRecorder->recorder_ != nullptr, result, "failed to CreateRecorder");
 
-    jsRecorder->taskQue_ = std::make_unique<TaskQueue>("AVRecorderNapi");
+    jsRecorder->taskQue_ = std::make_unique<TaskQueue>("OS_AVRecordNapi");
     (void)jsRecorder->taskQue_->Start();
 
     jsRecorder->recorderCb_ = std::make_shared<AVRecorderCallback>(env);
