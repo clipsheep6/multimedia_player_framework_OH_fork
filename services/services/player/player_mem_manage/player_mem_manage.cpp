@@ -157,7 +157,6 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
             auto task = std::make_shared<TaskHandler<void>>([this] {
                 ProbeTask();
             });
-            CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
         }
     }
 
