@@ -84,6 +84,13 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+    "soundpool_fuzztest/soundpoolcreate_fuzzer:SoundPoolCreateFuzzTest",
+    "soundpool_fuzztest/soundpoolloadunload_fuzzer:SoundPoolLoadUnloadFuzzTest",
+    "soundpool_fuzztest/soundpoolplaystop_fuzzer:SoundPoolPlayStopFuzzTest",
+    "soundpool_fuzztest/soundpoolsetloop_fuzzer:SoundPoolSetLoopFuzzTest",
+    "soundpool_fuzztest/soundpoolsetpriority_fuzzer:SoundPoolSetPriorityFuzzTest",
+    "soundpool_fuzztest/soundpoolsetrate_fuzzer:SoundPoolSetRateFuzzTest",
+    "soundpool_fuzztest/soundpoolsetvolume_fuzzer:SoundPoolSetVolumeFuzzTest",
   ]
 }
 ###############################################################################

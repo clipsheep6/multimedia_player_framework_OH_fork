@@ -118,7 +118,7 @@ bool SoundPoolLoadUnloadFuzzer::FuzzSoundPoolUnload(uint8_t *data, size_t size)
     sleep(waitTime3);
 
     TestSoundPool::Unload(urlSoundid);
-    TestSoundPool::Unload(FdSoundid);
+    TestSoundPool::Unload(fdSoundid);
     if (size >= sizeof(int32_t)) {
         int32_t soundID = *reinterpret_cast<int32_t *>(data);
         TestSoundPool::Unload(soundID);
