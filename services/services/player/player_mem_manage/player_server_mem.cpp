@@ -778,11 +778,11 @@ int32_t PlayerServerMem::NetworkResourceRelease()
 {
     if (!isReleaseMemByManage_) {
         MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
-        MEDIA_LOGI("enter");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease enter", FAKE_POINTER(this));
         int32_t ret = HandleCodecBuffers(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
         isReleaseMemByManage_ = true;
-        MEDIA_LOGI("exit");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease exit", FAKE_POINTER(this));
     }
     return MSERR_OK;
 }

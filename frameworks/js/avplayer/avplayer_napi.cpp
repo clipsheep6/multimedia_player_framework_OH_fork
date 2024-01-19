@@ -2139,7 +2139,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::on");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetOnCallback In");
+    MEDIA_LOGD("JsSetOnCallback In");
 
     constexpr size_t requireArgc = 2;
     napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
@@ -2171,7 +2171,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->SaveCallbackReference(callbackName, autoRef);
 
-    MEDIA_LOGI("JsSetOnCallback Out");
+    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
     return result;
 }
 

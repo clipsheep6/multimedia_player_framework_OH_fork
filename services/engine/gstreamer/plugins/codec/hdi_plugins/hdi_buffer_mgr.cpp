@@ -92,7 +92,7 @@ void HdiBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_pt
 
 std::vector<std::shared_ptr<HdiBufferWrap>> HdiBufferMgr::PreUseAshareMems(std::vector<GstBuffer *> &buffers)
 {
-    MEDIA_LOGI("Enter PreUseAshareMems");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter PreUseAshareMems", FAKE_POINTER(this));
     std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, mPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, preBuffers, "HdiGetParameter failed");
@@ -121,7 +121,7 @@ std::vector<std::shared_ptr<HdiBufferWrap>> HdiBufferMgr::PreUseAshareMems(std::
 
 int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> &buffers)
 {
-    MEDIA_LOGI("Enter UseHdiBuffers");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter UseHdiBuffers", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, GST_CODEC_ERROR, "BufferNum error");
     for (auto buffer : buffers) {
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
@@ -138,7 +138,7 @@ int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> 
 void HdiBufferMgr::FreeCodecBuffers()
 {
     // Caller lock protection
-    MEDIA_LOGI("Enter FreeCodecBuffers");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter FreeCodecBuffers", FAKE_POINTER(this));
     for (auto codecBuffer : availableBuffers_) {
         CHECK_AND_BREAK_LOG(!bufferReleased_, "bufferRleased!");
         int32_t ret = HDF_SUCCESS;
@@ -149,12 +149,12 @@ void HdiBufferMgr::FreeCodecBuffers()
         }
     }
     EmptyList(availableBuffers_);
-    MEDIA_LOGI("Enter FreeCodecBuffers End");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter FreeCodecBuffers End", FAKE_POINTER(this));
 }
 
 int32_t HdiBufferMgr::Stop(bool isFormatChange)
 {
-    MEDIA_LOGI("Enter Stop");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter Stop", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     isStart_ = false;
     isFormatChange_ = isFormatChange;
@@ -181,7 +181,7 @@ int32_t HdiBufferMgr::Flush(bool enable)
 
 void HdiBufferMgr::WaitFlushed()
 {
-    MEDIA_LOGI("Enter WaitFlushed");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter WaitFlushed", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_; });
 }
@@ -213,7 +213,8 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
 void HdiBufferMgr::ClearCodingBuffers()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances unref buffer %{public}zu",
+        FAKE_POINTER(this), codingBuffers_.size());
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
         gst_buffer_unref(iter->second);
     }

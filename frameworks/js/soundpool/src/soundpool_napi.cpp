@@ -198,7 +198,7 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
             }
-            MEDIA_LOGI("The js thread of load finishes execution and returns");
+            MEDIA_LOGI("The js thread of load finishes execution and returns, soundId: %{public}d", soundId);
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     } else {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
@@ -509,7 +509,8 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
             if (ret != MSERR_OK) {
                 asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unLoad soundID failed");
             }
-            MEDIA_LOGI("The js thread of Unload finishes execution and returns");
+            MEDIA_LOGI("The js thread of Unload finishes execution and returns, soundID: %{public}d",
+                asyncCtx->soundId_);
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
@@ -560,7 +561,7 @@ napi_value SoundPoolNapi::JsRelease(napi_env env, napi_callback_info info)
 napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("SoundPool::JsSetOnCallback");
-    MEDIA_LOGI("JsSetOnCallback Start");
+    MEDIA_LOGD("JsSetOnCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -578,6 +579,7 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
     if (callbackName != SoundPoolEvent::EVENT_LOAD_COMPLETED && callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED &&
         callbackName != SoundPoolEvent::EVENT_ERROR) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
@@ -591,7 +593,7 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     soundPoolNapi->SetCallbackReference(callbackName, autoRef);
 
-    MEDIA_LOGI("JsSetOnCallback End");
+    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
     return result;
 }
 
@@ -632,7 +634,7 @@ SoundPoolNapi* SoundPoolNapi::GetJsInstanceAndArgs(napi_env env, napi_callback_i
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
-    MEDIA_LOGI("argCount:%{public}zu", argCount);
+    MEDIA_LOGI("0x:%{public}06" PRIXPTR " instance argCount:%{public}zu", FAKE_POINTER(jsThis), argCount);
 
     SoundPoolNapi *soundPoolNapi = nullptr;
 
@@ -716,7 +718,7 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
     napi_env env, napi_value *argv, size_t argCount)
 {
     int32_t ret = MSERR_OK;
-    MEDIA_LOGI("ParserLoadOptionFromJs argCount %{public}zu", argCount);
+    MEDIA_LOGI("ParserPlayOptionFromJs argCount %{public}zu", argCount);
     napi_status status = napi_get_value_int32(env, argv[PARAM0], &asyncCtx->soundId_);
     CHECK_AND_RETURN_RET((status == napi_ok && asyncCtx->soundId_ > 0),
         (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
