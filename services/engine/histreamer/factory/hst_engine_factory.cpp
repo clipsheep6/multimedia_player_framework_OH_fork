@@ -15,6 +15,7 @@
 
 #include "i_engine_factory.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "common/log.h"
 #include "avmetadatahelper_impl.h"
 #ifdef SUPPORT_RECORDER
@@ -31,7 +32,7 @@ public:
     HstEngineFactory() = default;
     ~HstEngineFactory() override = default;
 
-    int32_t Score(Scene scene, const std::string& uri) override;
+    int32_t Score(Scene scene, const int32_t& appUid, const std::string& uri) override;
 #ifdef SUPPORT_PLAYER
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0) override;
 #endif
@@ -48,11 +49,18 @@ public:
 #endif
 };
 
-int32_t HstEngineFactory::Score(Scene scene, const std::string& uri)
+int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::string& uri)
 {
     MEDIA_LOG_E("Score in");
+    (void)scene;
     (void)uri;
-    return MAX_SCORE;
+
+    std::string bundleName = GetClientBundleName(appUid);
+    bool isEnableHst = IsEnableHiStreamer(bundleName, appUid);
+    MEDIA_LOG_I("Score histreamer engine factory, appUid = %{public}d, bundleName = %{public}s,"
+        "isEnableHiStreamer = %{public}d", appUid, bundleName.c_str(), isEnableHst);
+
+    return isEnableHst ? MAX_SCORE : MIN_SCORE;
 }
 
 #ifdef SUPPORT_RECORDER

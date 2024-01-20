@@ -35,7 +35,7 @@ public:
     GstEngineFactory() = default;
     ~GstEngineFactory() = default;
 
-    int32_t Score(Scene scene, const std::string &uri) override;
+    int32_t Score(Scene scene, const int32_t& appUid, const std::string &uri) override;
 #ifdef SUPPORT_PLAYER
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0) override;
 #endif
@@ -52,9 +52,10 @@ public:
 #endif
 };
 
-int32_t GstEngineFactory::Score(Scene scene, const std::string &uri)
+int32_t GstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::string &uri)
 {
     (void)uri;
+    (void)appUid;
     (void)scene;
     return MIN_SCORE + 1;
 }

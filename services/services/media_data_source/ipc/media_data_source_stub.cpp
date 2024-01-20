@@ -105,9 +105,10 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     }
 }
 
-int32_t MediaDataSourceStub::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
+int32_t MediaDataSourceStub::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos,
+    bool isHiStreamer)
 {
-    MEDIA_LOGD("ReadAt in");
+    MEDIA_LOGD("ReadAt in isHiStreamer =  %{public}d", isHiStreamer);
     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "mem is nullptr");
     return dataSrc_->ReadAt(mem, length, pos);

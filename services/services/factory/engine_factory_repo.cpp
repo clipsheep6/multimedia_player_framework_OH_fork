@@ -20,7 +20,7 @@
 #include "directory_ex.h"
 #include "media_errors.h"
 #include "media_log.h"
-#include "parameter.h"
+#include "media_utils.h"
 
 namespace {
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "EngineFactoryRepo"};
@@ -112,7 +112,7 @@ int32_t EngineFactoryRepo::LoadGstreamerEngine()
     return MSERR_OK;
 }
 
-int32_t EngineFactoryRepo::LoadHistreamerEngine()
+int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (isLoadHistreamer_) {
@@ -120,9 +120,12 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine()
         return MSERR_OK;
     }
 
-    char useHistreamer[10] = {0}; // 10 for system parameter usage
-    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
-    if (res == 1 && useHistreamer[0] == '1') {
+    std::string bundleName = GetClientBundleName(appUid);
+    bool isEnableHistreamer = IsEnableHiStreamer(bundleName, appUid);
+    MEDIA_LOGI("try to LoadHistreamerEngine, appUid = %{public}d, bundleName = %{public}s,"
+        "isEnableHistreamer = %{public}d", appUid, bundleName.c_str(), isEnableHistreamer);
+    if (isEnableHistreamer) {
+        MEDIA_LOGI("LoadHistreamerEngine succeed!");
         std::vector<std::string> allFiles;
         GetDirFiles(MEDIA_ENGINE_LIB_PATH, allFiles);
         for (auto &file : allFiles) {
@@ -141,10 +144,10 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine()
 }
 
 std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
-    IEngineFactory::Scene scene, const std::string &uri)
+    IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
     (void)LoadGstreamerEngine();
-    (void)LoadHistreamerEngine();
+    (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
         isLoadGstreamer_ = false;
@@ -156,7 +159,7 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     int32_t maxScore = std::numeric_limits<int32_t>::min();
     std::shared_ptr<IEngineFactory> target = nullptr;
     for (auto &factory : factorys_) {
-        int32_t score = factory->Score(scene, uri);
+        int32_t score = factory->Score(scene, appUid, uri);
         if (maxScore < score) {
             maxScore = score;
             target = factory;
@@ -166,7 +169,8 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
         target = factorys_.front();
     }
 
-    MEDIA_LOGI("Selected factory: 0x%{public}06" PRIXPTR ", score: %{public}d", FAKE_POINTER(target.get()), maxScore);
+    MEDIA_LOGI("Selected factory: 0x%{public}06" PRIXPTR ", score: %{public}d,"
+        "appUid: %{public}d", FAKE_POINTER(target.get()), maxScore, appUid);
     return target;
 }
 } // namespace Media

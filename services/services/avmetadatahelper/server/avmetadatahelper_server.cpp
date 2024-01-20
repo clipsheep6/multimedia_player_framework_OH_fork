@@ -19,6 +19,7 @@
 #include "engine_factory_repo.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
+#include "ipc_skeleton.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServer"};
@@ -44,6 +45,7 @@ std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 AVMetadataHelperServer::AVMetadataHelperServer()
     : taskQue_("AVMetadata")
 {
+    appUid_ = IPCSkeleton::GetCallingUid();
     (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -78,7 +80,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     }
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         auto metaEngineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-            IEngineFactory::Scene::SCENE_AVMETADATA, uriHelper_->FormattedUri());
+            IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, uriHelper_->FormattedUri());
         CHECK_AND_RETURN_RET_LOG(metaEngineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
             "Failed to get engine factory.");
         avMetadataHelperEngine_ = metaEngineFactory->CreateAVMetadataHelperEngine();
@@ -111,7 +113,7 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
 
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-            IEngineFactory::Scene::SCENE_AVMETADATA, uriHelper_->FormattedUri());
+            IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, uriHelper_->FormattedUri());
         CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
             "Failed to get engine factory");
         avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
@@ -146,7 +148,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
 
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
-            IEngineFactory::Scene::SCENE_AVMETADATA, config_.url);
+            IEngineFactory::Scene::SCENE_AVMETADATA, appUid_, config_.url);
         CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
             "Failed to get engine factory");
         avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();

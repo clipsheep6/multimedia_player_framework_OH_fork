@@ -17,6 +17,11 @@
 #include <media_errors.h>
 #include "common/log.h"
 #include "media_utils.h"
+#include "iservice_registry.h"
+#include "bundle_mgr_interface.h"
+#include "system_ability_definition.h"
+#include <unordered_set>
+#include "parameter.h"
 
 namespace OHOS {
 namespace Media {
@@ -41,7 +46,72 @@ const std::array<std::pair<PlaybackRateMode, float>, 5> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_75_X, 1.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_2_00_X, 2.00),
 };
+
+const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
+    "com.huawei.hmsapp.music",
+    "com.huawei.hmsapp.himovie",
+    "com.huawei.hmos.photos",
+    "com.ohos.medialibrary.medialibrarydata",
+    "com.huawei.ohos.screenrecorder",
+    "com.huawei.hmos.soundrecorder",
+    "com.huawei.hmos.camera",
+    "com.huawei.hmos.meetimeservice",
+    "com.huawei.hmos.filemanager",
+    "com.huawei.hmos.hipreview",
+    "com.huawei.hmos.callrecorder",
+};
 }  // namespace
+
+bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName, const int32_t& uid)
+{
+    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
+    bool enableHiStreamerBySwitch = (res == 1 && useHistreamer[0] == '1');
+    bool enableHiStreamerByBundleList = (HST_ENABLE_BUNDLE_LIST.count(clientBundleName) > 0);
+
+    char useGstreamerForBundle[10] = {0}; // 10 for system parameter usage
+    auto result = GetParameter("debug.media_service.gstreamer_bundle", "0", useGstreamerForBundle,
+        sizeof(useGstreamerForBundle));
+    bool enableGstreamerForBundle = (result == 1 && useGstreamerForBundle[0] == '1');
+
+    MEDIA_LOG_I("IsEnableHiStreamer enableHiStreamerBySwitch = %{public}d, enableHiStreamerByBundleList = %{public}d, "
+	    "enableGstreamerForBundle = %{public}d", enableHiStreamerBySwitch,
+        enableHiStreamerByBundleList, enableGstreamerForBundle);
+
+    return (!enableGstreamerForBundle && enableHiStreamerByBundleList) || enableHiStreamerBySwitch;
+}
+
+std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
+{
+    std::string bundleName = "";
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOG_E("Get ability manager failed");
+        return bundleName;
+    }
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (object == nullptr) {
+        MEDIA_LOG_E("object is NULL.");
+        return bundleName;
+    }
+
+    sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
+    if (bms == nullptr) {
+        MEDIA_LOG_E("bundle manager service is NULL.");
+        return bundleName;
+    }
+
+    auto result = bms->GetNameForUid(uid, bundleName);
+    if (result != ERR_OK) {
+        MEDIA_LOG_E("GetBundleNameForUid fail");
+        return "";
+    }
+    MEDIA_LOG_I("bundle name is %{public}s ", bundleName.c_str());
+
+    return bundleName;
+}
+
 
 int __attribute__((visibility("default"))) TransStatus(Status status)
 {
