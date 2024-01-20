@@ -32,14 +32,18 @@ public:
         std::string module);
     void EventWriteWithAppInfo(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         std::string module, std::string status, int32_t appUid, int32_t appPid);
+    void EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        std::string module, std::string status, int32_t appUid, int32_t appPid, std::string bundleName);
 private:
     std::string msg_;
 };
 
-__attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string moudle);
-__attribute__((visibility("default"))) void BehaviorEventWriteForScreencapture(std::string status,
-    std::string moudle, int32_t appUid, int32_t appPid);
-__attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string moudle);
+__attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string module);
+__attribute__((visibility("default"))) void BehaviorEventWriteForScreenCapture(std::string status,
+    std::string module, int32_t appUid, int32_t appPid);
+__attribute__((visibility("default"))) void StatisticEventWriteBundleName(std::string status,
+    std::string module);
+__attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string module);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

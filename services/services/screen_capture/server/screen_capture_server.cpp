@@ -473,7 +473,7 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     }
     int32_t ret = StartVideoCapture();
     if (ret == MSERR_OK) {
-        BehaviorEventWriteForScreencapture("start", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+        BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
     return ret;
 }
@@ -898,7 +898,7 @@ int32_t ScreenCaptureServer::StopScreenCapture()
         stopFlagSuccess = retAudio == MSERR_OK && retVideo == MSERR_OK ? MSERR_OK : MSERR_STOP_FAILED;
     }
     if (stopFlagSuccess == MSERR_OK) {
-        BehaviorEventWriteForScreencapture("stop", "AVScreencapture", appinfo_.appUid, appinfo_.appPid);
+        BehaviorEventWriteForScreenCapture("stop", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
     MEDIA_LOGI("ScreenCaptureServer stop result :%{public}d", stopFlagSuccess);
     return stopFlagSuccess;

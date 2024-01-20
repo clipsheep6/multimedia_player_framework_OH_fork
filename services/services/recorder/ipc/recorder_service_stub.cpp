@@ -22,6 +22,7 @@
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
+#include "media_dfx.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
@@ -37,6 +38,7 @@ sptr<RecorderServiceStub> RecorderServiceStub::Create()
 
     int32_t ret = recorderStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to recorder stub init");
+    StatisticEventWriteBundleName("create", "RecorderServiceStub");
     return recorderStub;
 }
 

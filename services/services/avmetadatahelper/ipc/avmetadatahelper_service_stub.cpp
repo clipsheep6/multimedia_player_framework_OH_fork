@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
 #include "media_data_source_proxy.h"
+#include "media_dfx.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServiceStub"};
@@ -33,6 +34,7 @@ sptr<AVMetadataHelperServiceStub> AVMetadataHelperServiceStub::Create()
 
     int32_t ret = avMetadataHelperStub->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to avmetadatahlper stub init");
+    StatisticEventWriteBundleName("create", "AVMetadataHelperServiceStub");
     return avMetadataHelperStub;
 }
 
