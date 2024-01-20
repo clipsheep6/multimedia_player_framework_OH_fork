@@ -69,7 +69,7 @@ void SystemTonePlayerImpl::InitPlayer()
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
     audioRendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
-    audioRendererInfo.rendererFlags = 1;
+    audioRendererInfo.rendererFlags = 0;
 
     player_ = SoundPoolFactory::CreateSoundPool(MAX_STREAMS, audioRendererInfo);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create system tone player instance");
