@@ -772,7 +772,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     }
 
     if (refMap_.find(AVPlayerEvent::EVENT_TIME_UPDATE) == refMap_.end()) {
-        MEDIA_LOGW("can not find timeupdate callback!");
+        MEDIA_LOGD("can not find timeupdate callback!");
         return;
     }
 
