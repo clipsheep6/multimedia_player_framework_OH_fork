@@ -107,6 +107,9 @@ Status HiPlayerImpl::Init()
     MEDIA_LOG_I("pipeline init start");
     pipeline_->Init(playerEventReceiver, playerFilterCallback);
     MEDIA_LOG_I("Init End.");
+    for (std::pair<std::string, bool>& item: completeState_) {
+        item.second = false;
+    }
     return Status::OK;
 }
 
@@ -320,6 +323,7 @@ int32_t HiPlayerImpl::Pause()
 int32_t HiPlayerImpl::Stop()
 {
     MEDIA_LOG_I("Stop entered.");
+    callbackLooper_.StopReportMediaProgress();
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
@@ -336,6 +340,9 @@ int32_t HiPlayerImpl::Stop()
     }
     if (audioSink_ != nullptr) {
         audioSink_->Flush();
+    }
+    for (std::pair<std::string, bool>& item: completeState_) {
+        item.second = false;
     }
 
     // triger drm waiting condition
@@ -563,6 +570,9 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
+    }
+    if (duration_ > 0 && currentPositionMs > duration_) {
+        currentPositionMs = duration_;
     }
     return TransStatus(Status::OK);
 }
@@ -891,17 +901,31 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
+    for (std::pair<std::string, bool>& item: completeState_) {
+        if (item.first == event.srcFilter) {
+            MEDIA_LOG_I("one eos event received " PUBLIC_LOG_S, item.first.c_str());
+            item.second = true;
+        }
+    }
+    for (auto item : completeState_) {
+        if (item.second == false) {
+            MEDIA_LOG_I("expect receive eos event " PUBLIC_LOG_S, item.first.c_str());
+            return;
+        }
+    }
     bool isSingleLoop = singleLoop_.load();
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
     isStreaming_ = false;
     Format format;
-
     if (!isSingleLoop) {
         OnStateChanged(PlayerStateId::EOS);
         callbackLooper_.StopReportMediaProgress();
     }
     callbackLooper_.DoReportCompletedTime();
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
+    for (std::pair<std::string, bool>& item: completeState_) {
+        item.second = false;
+    }
 }
 
 void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
@@ -1175,6 +1199,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         }
         audioSink_->SetSyncCenter(syncManager_);
     }
+    completeState_.emplace_back(std::make_pair("AudioSink", false));
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
 
@@ -1228,6 +1253,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             }
         }
     }
+    completeState_.emplace_back(std::make_pair("VideoSink", false));
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif

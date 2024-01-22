@@ -122,12 +122,14 @@ private:
 #endif
     Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
     bool CheckHasVideo();
+    void ResetCompleteState();
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};
     int64_t appFullTokenId_{0};
     OHOS::Media::Mutex stateMutex_{};
+    OHOS::Media::Mutex completeStateMutex_{};
     OHOS::Media::ConditionVariable cond_{};
     int64_t duration_{-1};
     std::atomic<bool> singleLoop_ {false};
@@ -167,6 +169,7 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+    std::vector<std::pair<std::string, bool>> completeState_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
