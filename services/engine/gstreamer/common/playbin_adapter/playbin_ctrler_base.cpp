@@ -1358,7 +1358,6 @@ int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, 
 {
     MEDIA_LOGI("OnMediaDecryptSignalReceived is called");
     (void)elem;
-    (void)length;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     int32_t retCode = DRM_SIGNAL_INVALID_PARAM;
 
@@ -1381,8 +1380,9 @@ int32_t PlayBinCtrlerBase::OnMediaDecryptSignalReceived(const GstElement *elem, 
             subSamples[i].payLoadLen });
         cryptInfo.subSample.emplace_back(temp);
     }
-    uint64_t srcBuffer = static_cast<uint64_t>(inputBuffer);
-    uint64_t dstBuffer = static_cast<uint64_t>(outputBuffer);
+
+    DrmStandard::IMediaDecryptModuleService::DrmBuffer srcBuffer{0, inputBuffer, length, 0, length, 0, 0};
+    DrmStandard::IMediaDecryptModuleService::DrmBuffer dstBuffer{0, outputBuffer, length, 0, length, 0, 0};
 
     if (thizStrong != nullptr && thizStrong->decryptModuleProxy_ != nullptr) {
         retCode = thizStrong->decryptModuleProxy_->DecryptMediaData(svp, cryptInfo, srcBuffer, dstBuffer);
