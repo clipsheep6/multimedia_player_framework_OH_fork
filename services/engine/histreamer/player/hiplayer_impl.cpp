@@ -366,6 +366,7 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
+    int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         if (audioSink_ != nullptr) {
@@ -395,7 +396,6 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         }
     }
     MEDIA_LOG_I("Do seek ...");
-    int64_t realSeekTime = seekPos;
     auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
     if (rtv == Status::OK) {
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
@@ -438,11 +438,11 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     }
     mSeconds = mSeconds < 0 ? 0 : mSeconds;
     int64_t seekPos = mSeconds;
+    NotifySeekDone(seekPos);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         rtv = SeekInner(seekPos, mode);
     }
-    NotifySeekDone(seekPos);
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
     }
@@ -1168,33 +1168,11 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         if (globalMeta != nullptr) {
             globalMeta->SetData(Tag::APP_PID, appPid_);
             globalMeta->SetData(Tag::APP_UID, appUid_);
-
-            bool hasVideo = CheckHasVideo();
-            globalMeta->SetData(Tag::MEDIA_HAS_VIDEO, static_cast<int32_t>(hasVideo));
             audioSink_->SetParameter(globalMeta);
         }
         audioSink_->SetSyncCenter(syncManager_);
     }
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
-}
-
-bool HiPlayerImpl::CheckHasVideo()
-{
-    bool hasVideo = false;
-#ifdef SUPPORT_VIDEO
-    std::string mime;
-    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    for (const auto& trackInfo : metaInfo) {
-        if (!(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
-            continue;
-        }
-        if (IsVideoMime(mime)) {
-            hasVideo = true;
-            break;
-        }
-    }
-#endif
-    return hasVideo;
 }
 
 #ifdef SUPPORT_VIDEO
