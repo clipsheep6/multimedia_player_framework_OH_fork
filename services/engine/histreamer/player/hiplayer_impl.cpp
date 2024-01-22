@@ -849,6 +849,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             NotifyAudioDeviceChange(event);
             break;
         }
+        case EventType::EVENT_AUDIO_SERVICE_DIED : {
+            NotifyAudioServiceDied();
+            break;
+        }
         default:
             break;
     }
@@ -1052,6 +1056,12 @@ void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
         parcel.ReadBuffer(parcelSize), parcelSize);
     format.PutIntValue(PlayerKeys::AUDIO_DEVICE_CHANGE_REASON, static_cast<int32_t>(reason));
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_DEVICE_CHANGE, static_cast<int32_t>(reason), format);
+}
+
+void HiPlayerImpl::NotifyAudioServiceDied()
+{
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, format);
 }
 
 void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)

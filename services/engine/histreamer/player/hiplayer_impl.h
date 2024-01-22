@@ -107,6 +107,7 @@ private:
     void NotifySeekDone(int32_t seekPos);
     void NotifyAudioInterrupt(const Event& event);
     void NotifyAudioDeviceChange(const Event& event);
+    void NotifyAudioServiceDied();
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
