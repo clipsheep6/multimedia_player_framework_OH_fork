@@ -23,6 +23,10 @@
 #include "sound_parser.h"
 #include "thread_pool.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolStreamIDManager"};
+}
+
 namespace OHOS {
 namespace Media {
 class StreamIDManager : public std::enable_shared_from_this<StreamIDManager> {

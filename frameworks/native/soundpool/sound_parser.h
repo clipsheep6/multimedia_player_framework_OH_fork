@@ -38,6 +38,10 @@ namespace OHOS {
 namespace Media {
 using namespace MediaAVCodec;
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolSoundParser"};
+}
+
 class SoundDecoderCallback : public AVCodecCallback, public NoCopyable {
 public:
     class SoundDecodeListener {

@@ -21,6 +21,7 @@
 namespace {
     static const std::string THREAD_POOL_NAME = "SoundParserThreadPool";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolSoundIDManager"};
 }
 
 namespace OHOS {

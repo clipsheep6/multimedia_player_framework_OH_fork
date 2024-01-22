@@ -19,6 +19,10 @@
 #include "media_errors.h"
 #include "securec.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolCacheBuffer"};
+}
+
 namespace OHOS {
 namespace Media {
 CacheBuffer::CacheBuffer(const Format &trackFormat,
