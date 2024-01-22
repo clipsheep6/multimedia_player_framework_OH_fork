@@ -425,7 +425,7 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 
 Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone) {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
-            seekPos, static_cast<int32_t>(mode));
+                mSeconds, static_cast<int32_t>(mode));
     int32_t durationMs = 0;
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
