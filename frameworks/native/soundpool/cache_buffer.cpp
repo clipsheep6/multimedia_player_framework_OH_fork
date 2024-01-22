@@ -19,6 +19,10 @@
 #include "media_errors.h"
 #include "securec.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolCacheBuffer"};
+}
+
 namespace OHOS {
 namespace Media {
 CacheBuffer::CacheBuffer(const Format &trackFormat,
@@ -28,12 +32,12 @@ CacheBuffer::CacheBuffer(const Format &trackFormat,
     cacheDataFrameNum_(0), havePlayedCount_(0)
 
 {
-    MEDIA_INFO_LOG("Construction CacheBuffer");
+    MEDIA_LOGI("Construction CacheBuffer");
 }
 
 CacheBuffer::~CacheBuffer()
 {
-    MEDIA_INFO_LOG("Destruction CacheBuffer dec");
+    MEDIA_LOGI("Destruction CacheBuffer dec");
     Release();
 }
 
@@ -73,7 +77,7 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
         AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
 
     if (audioRenderer == nullptr) {
-        MEDIA_ERR_LOG("create audiorenderer failed, try again.");
+        MEDIA_LOGE("create audiorenderer failed, try again.");
         rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
         rendererOptions.rendererInfo.rendererFlags = rendererFlags_;
         audioRenderer = AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
@@ -83,11 +87,11 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_CALLBACK);
     int32_t ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
     if (ret != MSERR_OK) {
-        MEDIA_ERR_LOG("audio renderer write callback fail, ret %{public}d.", ret);
+        MEDIA_LOGE("audio renderer write callback fail, ret %{public}d.", ret);
     }
     ret = audioRenderer->SetRendererFirstFrameWritingCallback(shared_from_this());
     if (ret != MSERR_OK) {
-        MEDIA_ERR_LOG("audio renderer first frame write callback fail, ret %{public}d.", ret);
+        MEDIA_LOGE("audio renderer first frame write callback fail, ret %{public}d.", ret);
     }
     return audioRenderer;
 }
@@ -100,7 +104,7 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
         audioRenderer_ = CreateAudioRenderer(streamID, audioRendererInfo, playParams);
         ReCombineCacheData();
     } else {
-        MEDIA_INFO_LOG("audio render inited.");
+        MEDIA_LOGI("audio render inited.");
     }
     // deal play params
     DealPlayParamsBeforePlay(streamID, playParams);
@@ -116,14 +120,14 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
         cacheDataFrameNum_ = 0;
         havePlayedCount_ = 0;
         if (!audioRenderer_->Start()) {
-            MEDIA_ERR_LOG("audioRenderer Start failed");
+            MEDIA_LOGE("audioRenderer Start failed");
             if (callback_ != nullptr) callback_->OnError(MSERR_INVALID_VAL);
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
         return MSERR_OK;
     }
-    MEDIA_ERR_LOG("Invalid audioRenderer.");
+    MEDIA_LOGE("Invalid audioRenderer.");
     return MSERR_INVALID_VAL;
 }
 
@@ -141,12 +145,12 @@ int32_t CacheBuffer::ReCombineCacheData()
     for (size_t reCombineCacheDataNum = 0; reCombineCacheDataNum < reCombineCacheDataSize; reCombineCacheDataNum++) {
         uint8_t *reCombineBuf = new(std::nothrow) uint8_t[bufferSize];
         if (reCombineBuf == nullptr) {
-            MEDIA_ERR_LOG("Invalid recombine buffer.");
+            MEDIA_LOGE("Invalid recombine buffer.");
             continue;
         }
         for (size_t bufferNum = 0; bufferNum < bufferSize; bufferNum++) {
             if (preAudioBuffer == nullptr) {
-                MEDIA_ERR_LOG("Invalid pre audio buffer.");
+                MEDIA_LOGE("Invalid pre audio buffer.");
                 continue;
             }
             if (cacheData_.size() > 1 && (preAudioBufferIndex == static_cast<size_t>(preAudioBuffer->size))) {
@@ -210,16 +214,16 @@ void CacheBuffer::OnWriteData(size_t length)
 {
     AudioStandard::BufferDesc bufDesc;
     if (audioRenderer_ == nullptr) {
-        MEDIA_ERR_LOG("audioRenderer is nullptr.");
+        MEDIA_LOGE("audioRenderer is nullptr.");
         return;
     }
     if (!isRunning_.load()) {
-        MEDIA_ERR_LOG("audioRenderer is stop.");
+        MEDIA_LOGE("audioRenderer is stop.");
         return;
     }
     if (cacheDataFrameNum_ == reCombineCacheData_.size()) {
         if (havePlayedCount_ == loop_) {
-            MEDIA_INFO_LOG("CacheBuffer stream write finish, cacheDataFrameNum_:%{public}zu,"
+            MEDIA_LOGI("CacheBuffer stream write finish, cacheDataFrameNum_:%{public}zu,"
                 " havePlayedCount_:%{public}d, loop:%{public}d, try to stop.", cacheDataFrameNum_,
                 havePlayedCount_, loop_);
             Stop(streamID_);
@@ -318,7 +322,7 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 {
     std::lock_guard lock(cacheBufferLock_);
     if (streamID == streamID_) {
-        MEDIA_INFO_LOG("CacheBuffer parallelPlayFlag:%{public}d.", parallelPlayFlag);
+        MEDIA_LOGI("CacheBuffer parallelPlayFlag:%{public}d.", parallelPlayFlag);
         if (audioRenderer_ != nullptr) {
             audioRenderer_->SetParallelPlayFlag(parallelPlayFlag);
         }
@@ -329,7 +333,7 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
 int32_t CacheBuffer::Release()
 {
     std::lock_guard lock(cacheBufferLock_);
-    MEDIA_INFO_LOG("CacheBuffer release, streamID:%{public}d", streamID_);
+    MEDIA_LOGI("CacheBuffer release, streamID:%{public}d", streamID_);
     isRunning_.store(false);
     if (audioRenderer_ != nullptr) {
         audioRenderer_->Stop();
