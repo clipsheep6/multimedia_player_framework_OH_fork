@@ -44,11 +44,11 @@ public:
     public:
         SoundDecodeListener()
         {
-            MEDIA_INFO_LOG("Construction SoundDecodeListener");
+            MEDIA_LOGI("Construction SoundDecodeListener");
         }
         virtual ~SoundDecodeListener()
         {
-            MEDIA_INFO_LOG("Destruction SoundDecodeListener");
+            MEDIA_LOGI("Destruction SoundDecodeListener");
         }
         virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
             availableAudioBuffers) = 0;
@@ -60,7 +60,7 @@ public:
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
-        MEDIA_INFO_LOG("%{public}s:%{public}d", __func__, __LINE__);
+        MEDIA_LOGI("%{public}s:%{public}d", __func__, __LINE__);
         CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_INVALID_VAL, "Invalid listener.");
         listener_ = listener;
         return MSERR_OK;
