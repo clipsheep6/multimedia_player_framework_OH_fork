@@ -122,6 +122,7 @@ private:
     bool IsVideoMime(const std::string& mime);
 #endif
     Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
+    Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};

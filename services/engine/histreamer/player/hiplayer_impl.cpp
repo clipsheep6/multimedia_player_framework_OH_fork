@@ -281,7 +281,7 @@ int32_t HiPlayerImpl::Play()
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         isStreaming_ = true;
-        ret = Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
+        ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         ret = TransStatus(Resume());
     } else {
@@ -423,31 +423,42 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
     return Seek(mSeconds, mode);
 }
 
-int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
-{
+Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone) {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
-                mSeconds, static_cast<int32_t>(mode));
-    isSeek_ = true;
+            seekPos, static_cast<int32_t>(mode));
     int32_t durationMs = 0;
     GetDuration(durationMs);
-    FALSE_RETURN_V_MSG_E(durationMs > 0, (int32_t) Status::ERROR_INVALID_PARAMETER,
-        "Seek, invalid operation, source is unseekable or invalid");
+    FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
+                         "Seek, invalid operation, source is unseekable or invalid");
+    isSeek_ = true;
     MEDIA_LOG_D("Seek durationMs : " PUBLIC_LOG_D32, durationMs);
     if (mSeconds >= durationMs) { // if exceeds change to duration
         mSeconds = durationMs;
     }
     mSeconds = mSeconds < 0 ? 0 : mSeconds;
     int64_t seekPos = mSeconds;
-    NotifySeekDone(seekPos);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         rtv = SeekInner(seekPos, mode);
     }
-    if (rtv != Status::OK) {
-        MEDIA_LOG_E("Seek done, seek error.");
+    // if it has no next key frames, seek previous.
+    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
+        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+        rtv = SeekInner(seekPos, mode);
     }
     isSeek_ = false;
-    return TransStatus(rtv);
+    if (rtv != Status::OK) {
+        MEDIA_LOG_E("Seek done, seek error.");
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+    } else if (notifySeekDone) {
+        NotifySeekDone(seekPos);
+    }
+    return rtv;
+}
+
+int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
+{
+    return TransStatus(Seek(mSeconds, mode, true));
 }
 
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
@@ -1028,7 +1039,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
-    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
+    NotifyPositionUpdate();
 }
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
