@@ -126,7 +126,8 @@ int32_t RingtonePlayerImpl::Stop()
 {
     MEDIA_LOGI("RingtonePlayerImpl::Stop");
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_STOPPED, MSERR_INVALID_OPERATION, "ringtone player has been stopped");
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_STOPPED, MSERR_INVALID_OPERATION,
+        "ringtone player has been stopped");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Stop();
@@ -139,7 +140,8 @@ int32_t RingtonePlayerImpl::Release()
 {
     MEDIA_LOGI("RingtonePlayerImpl::Release");
     std::lock_guard<std::mutex> lock(playerMutex_);
-    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION, "ringtone player has been released");
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
+        "ringtone player has been released");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
     (void)player_->Release();

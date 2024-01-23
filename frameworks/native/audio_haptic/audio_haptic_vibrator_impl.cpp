@@ -188,7 +188,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
             count++;
         }
         if (count == MAX_WAITING_LOOP_COUNT) {
-            MEDIA_LOGE("StartVibrateForAVPlayer: loop count has reached the max value.")
+            MEDIA_LOGE("StartVibrateForAVPlayer: loop count has reached the max value.");
             return MSERR_INVALID_OPERATION;
         }
     }

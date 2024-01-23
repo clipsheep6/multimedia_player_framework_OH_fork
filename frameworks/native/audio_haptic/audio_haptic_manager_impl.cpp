@@ -160,6 +160,7 @@ int32_t AudioHapticManagerImpl::SetStreamUsage(const int32_t &sourceID, const Au
 std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const int32_t &sourceID,
     const AudioHapticPlayerOptions &audioHapticPlayerOptions)
 {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
     if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
         MEDIA_LOGE("CreatePlayer failed for sourceID: %{public}d", sourceID);
         return nullptr;

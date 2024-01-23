@@ -49,8 +49,8 @@ ohos_shared_library("system_sound_client") {
 
   deps = [
     "./../../../interfaces/inner_api/native:media_client",
-    "./../soundpool:soundpool_client",
     "./../audio_haptic:audio_haptic",
+    "./../soundpool:soundpool_client",
   ]
 
   external_deps = [

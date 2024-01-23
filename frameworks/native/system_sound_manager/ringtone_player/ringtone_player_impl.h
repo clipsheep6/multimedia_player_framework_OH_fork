@@ -49,11 +49,9 @@ public:
 
 private:
     void InitPlayer(std::string &audioUri);
-    // int32_t PrepareRingtonePlayer(bool isReInitNeeded);
 
     float volume_ = 1.0f;
     bool loop_ = false;
-    // bool isStartQueued_ = false;
     std::string configuredUri_ = "";
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     int32_t sourceId_ = -1;

@@ -134,7 +134,6 @@ void SystemSoundManagerImpl::InitDefaultRingtoneUriMap(const std::string &ringto
         defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
             systemSoundPath_ + DEFAULT_RINGTONE_PATH + defaultRingtoneName + ".ogg";
         MEDIA_LOGI("preset_ringtone_sim1 is [%{public}s]", defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0].c_str());
-
     } else {
         defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] = "";
         MEDIA_LOGW("InitDefaultRingtoneUriMap: failed to load uri of preset_ringtone_sim1");
