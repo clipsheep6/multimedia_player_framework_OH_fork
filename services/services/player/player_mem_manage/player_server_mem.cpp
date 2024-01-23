@@ -345,11 +345,7 @@ int32_t PlayerServerMem::Stop()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Stop:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_) {
-            return !isRecoverMemByUser_;
-        } else {
-            return !isSeekToCurrentTime_;
-        }
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
@@ -361,7 +357,7 @@ int32_t PlayerServerMem::Reset()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Reset:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return (isLocalResource_ == true) ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
@@ -373,11 +369,7 @@ int32_t PlayerServerMem::Release()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Release:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_ == false) {
-            return !isSeekToCurrentTime_;
-        } else {
-            return !isRecoverMemByUser_;
-        }
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
@@ -700,7 +692,7 @@ int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode
     isSeekToCurrentTime_ = true;
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
-
+    recoverCond_.notify_all();
     return MSERR_OK;
 }
 
