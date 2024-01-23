@@ -423,7 +423,8 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
     return Seek(mSeconds, mode);
 }
 
-Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone) {
+Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
+{
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
     int32_t durationMs = 0;
