@@ -1219,5 +1219,23 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif
+
+int32_t HiPlayerImpl::GetAudioFrameCount(uint32_t &frameCount)
+{
+    FALSE_RETURN_V(audioSink_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    return TransStatus(audioSink_->GetFrameCount(frameCount));
+}
+
+int32_t HiPlayerImpl::GetAudioBufferSize(size_t &bufferSize)
+{
+    FALSE_RETURN_V(audioSink_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+    return TransStatus(audioSink_->GetBufferSize(bufferSize));
+}
+
+bool HiPlayerImpl::IsAudioWriteable()
+{
+    FALSE_RETURN_V(audioSink_ != nullptr, false);
+    return audioSink_->Writeable();
+}
 }  // namespace Media
 }  // namespace OHOS
