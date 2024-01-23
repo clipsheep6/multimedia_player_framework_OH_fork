@@ -235,12 +235,14 @@ int32_t HiRecorderImpl::Prepare()
     if (videoEncoderFilter_) {
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        videoEncoderFilter_->Configure(videoEncFormat_);
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+            ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
     if (videoCaptureFilter_) {
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        videoCaptureFilter_->Configure(videoEncFormat_);
+        FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
+            ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
