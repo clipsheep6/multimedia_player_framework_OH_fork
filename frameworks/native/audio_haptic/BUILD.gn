@@ -20,7 +20,7 @@ config("audio_haptic_client_public_config") {
       [ "./../../../interfaces/inner_api/native/system_sound_manager/include" ]
 }
 
-ohos_shared_library("audio_haptic") {
+ohos_shared_library("audio_haptic_client") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true

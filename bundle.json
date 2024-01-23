@@ -142,7 +142,7 @@
           },
           {
             "type": "none",
-            "name": "//foundation/multimedia/player_framework/frameworks/native/audio_haptic:audio_haptic",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/audio_haptic:audio_haptic_client",
             "header": {
               "header_files": [
                 "audio_haptic_manager.h",
