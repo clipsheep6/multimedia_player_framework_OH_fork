@@ -23,10 +23,9 @@ namespace Media {
 enum AudioHapticType {
     AUDIO_HAPTIC_TYPE_AUDIO = 0,
     AUDIO_HAPTIC_TYPE_HAPTIC = 1,
-    AUDIO_LATENCY_MODE_UNKNOWN = 2,
 };
 
-enum AudioHapticPlayerState {
+enum class AudioHapticPlayerState {
     /** INVALID state */
     STATE_INVALID = -1,
     /** Create New instance */
@@ -56,6 +55,10 @@ public:
     virtual int32_t Stop() = 0;
 
     virtual int32_t Release() = 0;
+
+    virtual int32_t SetVolume(float volume) = 0;
+
+    virtual int32_t SetLoop(bool loop) = 0;
 
     virtual int32_t SetAudioHapticPlayerCallback(
         const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) = 0;

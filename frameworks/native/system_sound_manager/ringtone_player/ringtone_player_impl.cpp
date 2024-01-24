@@ -29,10 +29,6 @@ namespace OHOS {
 namespace Media {
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
-const std::string DEFAULT_RINGTONE_URI_1 =
-    "sys_prod/resource/media/audio/ringtones/Dream_It_Possible.ogg";
-const std::string DEFAULT_RINGTONE_URI_2 =
-    "sys_prod/variant/region_comm/china/resource/media/audio/ringtones/Dream_It_Possible.ogg";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -42,8 +38,11 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
       systemSoundMgr_(sysSoundMgr),
       type_(type)
 {
-    InitPlayer();
-    (void)Configure(volume_, loop_);
+    audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
+    CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
+
+    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    InitPlayer(ringtoneUri);
 }
 
 RingtonePlayerImpl::~RingtonePlayerImpl()
@@ -56,133 +55,68 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
     }
 }
 
-void RingtonePlayerImpl::InitPlayer()
+void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
 {
-    player_ = PlayerFactory::CreatePlayer();
+    if (sourceId_ != -1) {
+        (void)audioHapticManager_->UnregisterSource(sourceId_);
+        sourceId_ = -1;
+    }
+
+    // Get the default haptic source uri.
+    std::string defaultRingtoneUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
+    // the size of "ogg" is 3 and the size of ".ogg" is 4.
+    std::string hapticUri = defaultRingtoneUri.replace(defaultRingtoneUri.find_last_of(".ogg") - 3, 4, ".json");
+
+    sourceId_ = audioHapticManager_->RegisterSource(audioUri, hapticUri);
+    CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
+    (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
+    (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE);
+
+    // std::lock_guard<std::mutex> lock(playerMutex_);
+    AudioHapticPlayerOptions options = {false, false};
+    player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
+    configuredUri_ = audioUri;
 
-    callback_ = std::make_shared<RingtonePlayerCallback>(*this);
+    if (callback_ == nullptr) {
+        callback_ = std::make_shared<RingtonePlayerCallback>(*this);
+    }
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "Failed to create callback object");
+    player_->SetAudioHapticPlayerCallback(callback_);
 
-    player_->SetPlayerCallback(callback_);
     ringtoneState_ = STATE_NEW;
-    configuredUri_ = "";
-}
-
-int32_t RingtonePlayerImpl::PrepareRingtonePlayer(bool isReInitNeeded)
-{
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
-    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_VAL, "Ringtone player instance is null");
-
-    // fetch uri from kvstore
-    auto kvstoreUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
-    if (kvstoreUri.empty()) {
-        // if kvstoreUri == "", try to use default path.
-        isReInitNeeded = true;
-    }
-
-    // If uri is different from from configure uri, reset the player
-    if (kvstoreUri != configuredUri_ || isReInitNeeded) {
-        (void)player_->Reset();
-
-        int32_t ret = player_->SetSource(kvstoreUri);
-        if (ret != MSERR_OK) {
-            // failed to set source, try to use default path.
-            ret = ApplyDefaultRingtoneUri(kvstoreUri);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source to default uri failed %{public}d", ret);
-            systemSoundMgr_.SetRingtoneUri(context_, kvstoreUri, type_);
-        }
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set source failed %{public}d", ret);
-
-        Format format;
-        format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_UNKNOWN);
-        format.PutIntValue(PlayerKeys::STREAM_USAGE, AudioStandard::STREAM_USAGE_RINGTONE);
-        ret = player_->SetParameter(format);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Set stream type to ring failed %{public}d", ret);
-
-        ret = player_->PrepareAsync();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Prepare failed %{public}d", ret);
-
-        configuredUri_ = kvstoreUri;
-        ringtoneState_ = STATE_NEW;
-    }
-
-    return MSERR_OK;
-}
-
-int32_t RingtonePlayerImpl::ApplyDefaultRingtoneUri(std::string &defaultUri)
-{
-    // kvstoreUri == "", try to use default ringtone uri 1.
-    int32_t ret = player_->SetSource(DEFAULT_RINGTONE_URI_1);
-    if (ret == MSERR_OK) {
-        defaultUri = DEFAULT_RINGTONE_URI_1;
-        MEDIA_LOGI("ApplyDefaultRingtoneUri: Set source to default ringtone uri 1.");
-        return ret;
-    }
-
-    // try to use default ringtone uri 2.
-    ret = player_->SetSource(DEFAULT_RINGTONE_URI_2);
-    if (ret == MSERR_OK) {
-        defaultUri = DEFAULT_RINGTONE_URI_2;
-        MEDIA_LOGI("ApplyDefaultRingtoneUri: Set source to default ringtone uri 2.");
-        return ret;
-    }
-
-    return ret;
 }
 
 int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
+    MEDIA_LOGI("RingtonePlayerImpl::Configure with volume %{public}f, loop %{public}d", volume, loop);
     CHECK_AND_RETURN_RET_LOG(volume >= LOW_VOL && volume <= HIGH_VOL,
         MSERR_INVALID_VAL, "Volume level invalid");
-    CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
     volume_ = volume;
     loop_ = loop;
-
-    if (ringtoneState_ != STATE_NEW) {
-        (void)player_->SetVolume(volume_, volume_);
-        (void)player_->SetLooping(loop_);
-        if (ringtoneState_ == STATE_RUNNING && std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
-            (void)SystemSoundVibrator::StopVibrator();
-        }
-    }
-
-    (void)PrepareRingtonePlayer(false);
+    (void)player_->SetVolume(volume_);
+    (void)player_->SetLoop(loop_);
 
     return MSERR_OK;
 }
 
 int32_t RingtonePlayerImpl::Start()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
-
+    MEDIA_LOGI("RingtonePlayerImpl::Start");
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RUNNING, MSERR_INVALID_OPERATION, "ringtone player is running");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
-    if (isStartQueued_ || player_->IsPlaying()) {
-        MEDIA_LOGE("Play in progress, cannot start now");
-        return MSERR_START_FAILED;
+    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    if (ringtoneUri != configuredUri_) {
+        MEDIA_LOGI("Ringtone uri changed. Reload player");
+        InitPlayer(ringtoneUri);
     }
-
-    // Player doesn't support play in stopped state. Hence reinitialise player for making start<-->stop to work
-    if (ringtoneState_ == STATE_STOPPED) {
-        (void)PrepareRingtonePlayer(true);
-    } else {
-        (void)PrepareRingtonePlayer(false);
-    }
-
-    if (ringtoneState_ == STATE_NEW) {
-        MEDIA_LOGI("Start received before player preparing is finished");
-        isStartQueued_ = true;
-        return MSERR_OK;
-    }
-
-    auto ret = player_->Play();
+    int32_t ret = player_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
-    if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT && volume_ > 0.0f) {
-        (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
-    }
     ringtoneState_ = STATE_RUNNING;
 
     return MSERR_OK;
@@ -190,29 +124,27 @@ int32_t RingtonePlayerImpl::Start()
 
 int32_t RingtonePlayerImpl::Stop()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
+    MEDIA_LOGI("RingtonePlayerImpl::Stop");
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_STOPPED, MSERR_INVALID_OPERATION,
+        "ringtone player has been stopped");
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
-    if (ringtoneState_ != STATE_STOPPED) {
-        (void)player_->Stop();
-        (void)SystemSoundVibrator::StopVibrator();
-    }
-
+    (void)player_->Stop();
     ringtoneState_ = STATE_STOPPED;
-    isStartQueued_ = false;
 
     return MSERR_OK;
 }
 
 int32_t RingtonePlayerImpl::Release()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s player", __func__);
+    MEDIA_LOGI("RingtonePlayerImpl::Release");
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
+        "ringtone player has been released");
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr && ringtoneState_ != STATE_INVALID, MSERR_INVALID_VAL, "no player_");
 
-    if (player_ != nullptr) {
-        (void)player_->Release();
-    }
-    (void)SystemSoundVibrator::StopVibrator();
-
+    (void)player_->Release();
     ringtoneState_ = STATE_RELEASED;
     player_ = nullptr;
     callback_ = nullptr;
@@ -222,60 +154,44 @@ int32_t RingtonePlayerImpl::Release()
 
 RingtoneState RingtonePlayerImpl::GetRingtoneState()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
+    MEDIA_LOGI("RingtonePlayerImpl::GetRingtoneState");
+    std::lock_guard<std::mutex> lock(playerMutex_);
     return ringtoneState_;
-}
-
-void RingtonePlayerImpl::SetPlayerState(RingtoneState ringtoneState)
-{
-    CHECK_AND_RETURN_LOG(player_ != nullptr, "Ringtone player instance is null");
-
-    if (ringtoneState_ != RingtoneState::STATE_RELEASED) {
-        ringtoneState_ = ringtoneState;
-    }
-
-    if (ringtoneState_ == RingtoneState::STATE_PREPARED) {
-        MEDIA_LOGI("Player prepared callback received. loop:%{public}d volume:%{public}f", loop_, volume_);
-        (void)player_->SetVolume(volume_, volume_);
-        (void)player_->SetLooping(loop_);
-
-        if (isStartQueued_) {
-            auto ret = player_->Play();
-            isStartQueued_ = false;
-            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Play failed %{public}d", ret);
-            ringtoneState_ = RingtoneState::STATE_RUNNING;
-            if (systemSoundMgr_.GetRingerMode() != AudioStandard::AudioRingerMode::RINGER_MODE_SILENT &&
-                volume_ > 0.0f) {
-                (void)SystemSoundVibrator::StartVibrator(VibrationType::VIBRATION_RINGTONE);
-            }
-        }
-    }
 }
 
 int32_t RingtonePlayerImpl::GetAudioRendererInfo(AudioStandard::AudioRendererInfo &rendererInfo) const
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
-    rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_RINGTONE;
-    rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE;
+    MEDIA_LOGI("RingtonePlayerImpl::GetAudioRendererInfo");
+    rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
+    rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE;
     rendererInfo.rendererFlags = 0;
     return MSERR_OK;
 }
 
 std::string RingtonePlayerImpl::GetTitle()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
-    std::string uri = systemSoundMgr_.GetRingtoneUri(context_, type_);
+    MEDIA_LOGI("RingtonePlayerImpl::GetTitle");
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    std::string uri = configuredUri_;
     return uri.substr(uri.find_last_of("/") + 1);
 }
+
 int32_t RingtonePlayerImpl::SetRingtonePlayerInterruptCallback(
     const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback)
 {
-    MEDIA_LOGI("RingtonePlayerImpl::%{public}s", __func__);
+    MEDIA_LOGI("RingtonePlayerImpl::SetRingtonePlayerInterruptCallback");
+    std::lock_guard<std::mutex> lock(playerMutex_);
     interruptCallback_ = interruptCallback;
     return MSERR_OK;
 }
 
-void RingtonePlayerImpl::NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent)
+void RingtonePlayerImpl::NotifyEndofStreamEvent()
+{
+    std::lock_guard<std::mutex> lock(playerMutex_);
+    ringtoneState_ = RingtoneState::STATE_STOPPED;
+}
+
+void RingtonePlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent)
 {
     if (interruptCallback_ != nullptr) {
         interruptCallback_->OnInterrupt(interruptEvent);
@@ -289,68 +205,16 @@ void RingtonePlayerImpl::NotifyInterruptEvent(AudioStandard::InterruptEvent &int
 RingtonePlayerCallback::RingtonePlayerCallback(RingtonePlayerImpl &ringtonePlayerImpl)
     : ringtonePlayerImpl_(ringtonePlayerImpl) {}
 
-void RingtonePlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
+void RingtonePlayerCallback::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    MEDIA_LOGE("Error reported from media server %{public}d", errorCode);
-}
-
-void RingtonePlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
-{
-    if (type == INFO_TYPE_STATE_CHANGE) {
-        HandleStateChangeEvent(extra, infoBody);
-    } else if (type == INFO_TYPE_INTERRUPT_EVENT) {
-        HandleAudioInterruptEvent(extra, infoBody);
-    } else {
-        return;
-    }
-}
-
-void RingtonePlayerCallback::HandleStateChangeEvent(int32_t extra, const Format &infoBody)
-{
-    MEDIA_LOGI("RingtonePlayerCallback::HandleStateChangeEvent");
-    state_ = static_cast<PlayerStates>(extra);
-    switch (state_) {
-        case PLAYER_STATE_ERROR:
-            ringtoneState_ = STATE_INVALID;
-            break;
-        case PLAYER_IDLE:
-        case PLAYER_INITIALIZED:
-        case PLAYER_PREPARING:
-            ringtoneState_ = STATE_NEW;
-            break;
-        case PLAYER_PREPARED:
-            ringtoneState_ = STATE_PREPARED;
-            break;
-        case PLAYER_STARTED:
-            ringtoneState_ = STATE_RUNNING;
-            break;
-        case PLAYER_PAUSED:
-            ringtoneState_ = STATE_PAUSED;
-            break;
-        case PLAYER_STOPPED:
-        case PLAYER_PLAYBACK_COMPLETE:
-            ringtoneState_ = STATE_STOPPED;
-            break;
-        default:
-            break;
-    }
-    ringtonePlayerImpl_.SetPlayerState(ringtoneState_);
-}
-
-void RingtonePlayerCallback::HandleAudioInterruptEvent(int32_t extra, const Format &infoBody)
-{
-    MEDIA_LOGI("RingtonePlayerCallback::HandleAudioInterruptEvent");
-    AudioStandard::InterruptEvent interruptEvent;
-    int32_t eventTypeValue = 0;
-    int32_t forceTypeValue = 0;
-    int32_t hintTypeValue = 0;
-    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventTypeValue);
-    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceTypeValue);
-    (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintTypeValue);
-    interruptEvent.eventType = static_cast<AudioStandard::InterruptType>(eventTypeValue);
-    interruptEvent.forceType = static_cast<AudioStandard::InterruptForceType>(forceTypeValue);
-    interruptEvent.hintType = static_cast<AudioStandard::InterruptHint>(hintTypeValue);
+    MEDIA_LOGI("RingtonePlayerCallback::OnInterrupt: hintTye %{public}d", interruptEvent.hintType);
     ringtonePlayerImpl_.NotifyInterruptEvent(interruptEvent);
+}
+
+void RingtonePlayerCallback::OnEndOfStream(void)
+{
+    MEDIA_LOGI("RingtonePlayerCallback::OnEndOfStream");
+    ringtonePlayerImpl_.NotifyEndofStreamEvent();
 }
 } // namesapce AudioStandard
 } // namespace OHOS

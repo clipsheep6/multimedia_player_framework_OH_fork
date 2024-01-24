@@ -62,6 +62,8 @@ private:
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayerInfo>> audioHapticPlayerMap_;
     int32_t curPlayerIndex_;
     int32_t curPlayerCount_;
+
+    std::mutex audioHapticManagerMutex_;
 };
 } // namespace Media
 } // namespace OHOS

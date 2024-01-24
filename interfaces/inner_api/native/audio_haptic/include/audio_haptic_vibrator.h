@@ -31,6 +31,7 @@ public:
 
     virtual int32_t PreLoad(const std::string &hapticUri) = 0;
     virtual int32_t Release() = 0;
+    virtual void ResetStopState() =0;
     virtual int32_t StartVibrate(const AudioLatencyMode &latencyMode) = 0;
     virtual int32_t StopVibrate() = 0;
     virtual int32_t GetDelayTime() = 0;

@@ -16,6 +16,7 @@
 #ifndef SYSTEM_SOUND_MANAGER_H
 #define SYSTEM_SOUND_MANAGER_H
 
+#include <mutex>
 #include <string>
 
 #include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"

@@ -139,6 +139,17 @@
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
             }
+          },
+          {
+            "type": "none",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/audio_haptic:audio_haptic_client",
+            "header": {
+              "header_files": [
+                "audio_haptic_manager.h",
+                "audio_haptic_player.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_haptic/include"
+            }
           }
         ],
         "test": [
