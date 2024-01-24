@@ -361,14 +361,14 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
 
             napi_value msgValStr = nullptr;
             nstatus = napi_create_string_utf8(ref->env_, event->errorMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
-            CHECK_AND_RETURN_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && msgValStr != nullptr, "create error message str fail");
 
             napi_value args[1] = { nullptr };
             nstatus = napi_create_error(ref->env_, nullptr, msgValStr, &args[0]);
-            CHECK_AND_RETURN_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
 
             nstatus = CommonNapi::FillErrorArgs(ref->env_, static_cast<int32_t>(event->errorCode), args[0]);
-            CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function
             napi_value result = nullptr;
