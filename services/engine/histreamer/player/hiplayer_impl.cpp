@@ -110,7 +110,17 @@ Status HiPlayerImpl::Init()
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
+    SetDefaultAudioRenderInfo();
     return Status::OK;
+}
+
+void HiPlayerImpl::SetDefaultAudioRenderInfo()
+{
+    Plugins::AudioRenderInfo audioRenderInfo {AudioStandard::CONTENT_TYPE_MUSIC, AudioStandard::STREAM_USAGE_MEDIA, 0};
+    if (audioRenderInfo_ == nullptr) {
+        audioRenderInfo_ = std::make_shared<Meta>();
+    }
+    audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
 }
 
 int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
@@ -814,9 +824,12 @@ int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleTy
 int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
                                            const int32_t rendererFlag)
 {
-    MEDIA_LOG_I("SetAudioRendererInfo entered.");
+    MEDIA_LOG_I("SetAudioRendererInfo entered, coutentType: " PUBLIC_LOG_D32 ", streamUsage: " PUBLIC_LOG_D32
+        ", rendererFlag: " PUBLIC_LOG_D32, contentType, streamUsage, rendererFlag);
     Plugins::AudioRenderInfo audioRenderInfo {contentType, streamUsage, rendererFlag};
-    audioRenderInfo_ = std::make_shared<Meta>();
+    if (audioRenderInfo_ == nullptr) {
+        audioRenderInfo_ = std::make_shared<Meta>();
+    }
     audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
     if (audioSink_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);

@@ -59,6 +59,7 @@ const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
     "com.huawei.hmos.filemanager",
     "com.huawei.hmos.hipreview",
     "com.huawei.hmos.callrecorder",
+    "com.sina.news.hm.next",
 };
 }  // namespace
 
