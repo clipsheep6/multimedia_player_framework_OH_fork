@@ -67,7 +67,8 @@
           "miscdevice",
           "drm_framework",
           "qos_manager",
-          "config_policy"
+          "config_policy",
+          "power_manager"
         ],
         "third_party": [
           "glib",

@@ -199,6 +199,7 @@ ohos_shared_library("media_service") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "napi:ace_napi",
+    "power_manager:powermgr_client",
     "qos_manager:concurrent_task_client",
     "qos_manager:qos",
     "safwk:system_ability_fwk",
