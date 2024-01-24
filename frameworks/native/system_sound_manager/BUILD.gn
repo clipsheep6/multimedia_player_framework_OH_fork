@@ -41,6 +41,7 @@ ohos_shared_library("system_sound_client") {
     "./ringtone_player",
     "./system_sound_vibrator",
     "./system_tone_player",
+    "./../../../interfaces/inner_api/native/audio_haptic/include",
     "./../../../interfaces/inner_api/native/soundpool/include",
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
     "./../../../services/utils/include",
@@ -48,6 +49,7 @@ ohos_shared_library("system_sound_client") {
 
   deps = [
     "./../../../interfaces/inner_api/native:media_client",
+    "./../audio_haptic:audio_haptic",
     "./../soundpool:soundpool_client",
   ]
 

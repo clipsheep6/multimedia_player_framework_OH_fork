@@ -38,6 +38,8 @@ public:
 
     int32_t SetRingerMode(const AudioStandard::AudioRingerMode &ringerMode);
     AudioStandard::AudioRingerMode GetRingerMode() const;
+    std::string GetDefaultRingtoneUri(RingtoneType ringtoneType);
+    std::string GetDefaultSystemToneUri(SystemToneType systemToneType);
 
     // SystemSoundManager override
     int32_t SetRingtoneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,

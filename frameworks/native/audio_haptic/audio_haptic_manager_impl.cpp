@@ -29,14 +29,20 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 
 namespace OHOS {
 namespace Media {
-const std::int32_t MAX_PLAYER_NUM = 32;
+const std::int32_t MAX_PLAYER_NUM = 128;
 
-std::unique_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
+std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::audioHapticManager_ = nullptr;
+std::mutex AudioHapticManagerFactory::audioHapticManagerMutex_;
+
+std::shared_ptr<AudioHapticManager> AudioHapticManagerFactory::CreateAudioHapticManager()
 {
-    std::unique_ptr<AudioHapticManagerImpl> audioHapticMgr = std::make_unique<AudioHapticManagerImpl>();
-    CHECK_AND_RETURN_RET_LOG(audioHapticMgr != nullptr, nullptr, "Failed to create audio haptic manager object");
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+    if (audioHapticManager_ == nullptr) {
+        audioHapticManager_ = std::make_shared<AudioHapticManagerImpl>();
+    }
+    CHECK_AND_RETURN_RET_LOG(audioHapticManager_ != nullptr, nullptr, "Failed to create audio haptic manager object");
 
-    return audioHapticMgr;
+    return audioHapticManager_;
 }
 
 AudioHapticManagerImpl::AudioHapticManagerImpl()
@@ -55,6 +61,8 @@ AudioHapticManagerImpl::~AudioHapticManagerImpl()
 
 int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, const std::string &hapticUri)
 {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+
     if (curPlayerCount_ >= MAX_PLAYER_NUM) {
         MEDIA_LOGE("RegisterSource failed curPlayerCount_: %{public}d", curPlayerCount_);
         return -1;
@@ -72,10 +80,17 @@ int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, cons
 
 int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)
 {
-    if (audioHapticPlayerMap_[sourceID] == nullptr) {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+
+    if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
         MEDIA_LOGE("UnregisterSource failed sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
+    if (audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ != nullptr) {
+        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_->Release();
+        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ = nullptr;
+    }
+    audioHapticPlayerMap_[sourceID] = nullptr;
     curPlayerCount_ -= 1;
 
     return MSERR_OK;
@@ -88,7 +103,8 @@ bool AudioHapticManagerImpl::CheckAudioLatencyMode(const AudioLatencyMode &laten
 
 int32_t AudioHapticManagerImpl::SetAudioLatencyMode(const int32_t &sourceID, const AudioLatencyMode &latencyMode)
 {
-    if (audioHapticPlayerMap_[sourceID] == nullptr) {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+    if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
         MEDIA_LOGE("SetAudioLatencyMode: failed for invalid sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
@@ -96,9 +112,7 @@ int32_t AudioHapticManagerImpl::SetAudioLatencyMode(const int32_t &sourceID, con
         MEDIA_LOGE("SetAudioLatencyMode: failed for invalid latencyMode: %{public}d", latencyMode);
         return MSERR_INVALID_VAL;
     }
-
-    std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
-    audioHapticPlayerInfo->latencyMode_ = latencyMode;
+    audioHapticPlayerMap_[sourceID]->latencyMode_ = latencyMode;
     return MSERR_OK;
 }
 
@@ -130,7 +144,8 @@ bool AudioHapticManagerImpl::CheckAudioStreamUsage(const AudioStandard::StreamUs
 
 int32_t AudioHapticManagerImpl::SetStreamUsage(const int32_t &sourceID, const AudioStandard::StreamUsage &streamUsage)
 {
-    if (audioHapticPlayerMap_[sourceID] == nullptr) {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+    if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
         MEDIA_LOGE("SetStreamUsage: failed for invalid sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
@@ -138,15 +153,15 @@ int32_t AudioHapticManagerImpl::SetStreamUsage(const int32_t &sourceID, const Au
         MEDIA_LOGE("SetStreamUsage: failed for invalid latencyMode: %{public}d", streamUsage);
         return MSERR_INVALID_VAL;
     }
-    std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
-    audioHapticPlayerInfo->streamUsage_ = streamUsage;
+    audioHapticPlayerMap_[sourceID]->streamUsage_ = streamUsage;
     return MSERR_OK;
 }
 
 std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const int32_t &sourceID,
     const AudioHapticPlayerOptions &audioHapticPlayerOptions)
 {
-    if (audioHapticPlayerMap_[sourceID] == nullptr) {
+    std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
+    if (audioHapticPlayerMap_.count(sourceID) == 0 || audioHapticPlayerMap_[sourceID] == nullptr) {
         MEDIA_LOGE("CreatePlayer failed for sourceID: %{public}d", sourceID);
         return nullptr;
     }
@@ -160,9 +175,9 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     audioHapticPlayer->SetPlayerOptions(audioHapticPlayerOptions.muteAudio, audioHapticPlayerOptions.muteHaptics);
     audioHapticPlayer->SetPlayerSource(audioHapticPlayerInfo->audioUri_, audioHapticPlayerInfo->hapticUri_);
     audioHapticPlayer->SetPlayerStreamUsage(audioHapticPlayerInfo->streamUsage_);
-    AudioLatencyMode latencyMode = audioHapticPlayerInfo->latencyMode_;
 
     // load audio player
+    AudioLatencyMode latencyMode = audioHapticPlayerInfo->latencyMode_;
     if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
         audioHapticPlayer->SetPlayerType(AUDIO_HAPTIC_TYPE_NORMAL);
         audioHapticPlayer->LoadAVPlayer();

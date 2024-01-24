@@ -32,15 +32,18 @@ enum AudioHapticPlayerType {
 class AudioHapticPlayerNativeCallback;
 class AudioHapticFirstFrameCb;
 
-class AudioHapticPlayerImpl : public AudioHapticPlayer {
+class AudioHapticPlayerImpl : public AudioHapticPlayer, public std::enable_shared_from_this<AudioHapticPlayerImpl> {
 public:
     AudioHapticPlayerImpl();
     ~AudioHapticPlayerImpl();
 
+    //  // AudioHapticPlayer override
     bool IsMuted(const AudioHapticType &audioHapticType) const override;
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Release() override;
+    int32_t SetVolume(float volume) override;
+    int32_t SetLoop(bool loop) override;
     int32_t SetAudioHapticPlayerCallback(const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) override;
     int32_t GetAudioCurrentTime() override;
 
@@ -55,8 +58,9 @@ public:
     // func for vibrate
     int32_t LoadVibratorSource();
     int32_t StartVibrate();
+    void StopVibrate();
+    void ResetVibrateState();
     void NotifyStartVibrate(uint64_t latency);
-    void SetAudioLatency(const uint64_t &latency);
 
     // func for soundpool
     int32_t LoadSoundPoolPlayer();
@@ -72,7 +76,7 @@ private:
     int32_t StopSoundPoolPlayer();
     int32_t ReleaseSoundPoolPlayer();
 
-    //fuc for avplayer
+    //func for avplayer
     int32_t PrepareAVPlayer(bool isReInitNeeded = false);
     int32_t StartAVPlayer();
     int32_t StopAVPlayer();
@@ -86,9 +90,14 @@ private:
     std::string audioUri_;
     std::string hapticUri_;
     std::string configuredAudioUri_;
-    std::shared_ptr<AudioHapticPlayerNativeCallback> callback_ = nullptr;
-    AudioHapticPlayerState playerState_ = STATE_INVALID;
-    std::shared_ptr<AudioHapticPlayerCallback> napiCallback_ = nullptr;
+    float volume_ = 1.0f;
+    bool loop_ = false;
+    AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
+
+    // var for callback
+    std::shared_ptr<PlayerCallback> avPlayerCallback_ = nullptr;
+    std::shared_ptr<ISoundPoolCallback> soundPoolCallback_ = nullptr;
+    std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;
     std::mutex audioHapticPlayerLock_;
     std::shared_ptr<AudioHapticFirstFrameCb> firstFrameCb_ = nullptr;
     uint64_t audioLatency_ = 0;
@@ -99,7 +108,7 @@ private:
     std::mutex waitStartVibrateMutex_;
     std::condition_variable condStartVibrate_;
     bool isAudioPlayFirstFrame_ = false;
-    bool isRelease_ = false;
+    bool isVibrationStopped_ = false;
 
     // var for soundpool
     std::shared_ptr<Media::ISoundPool> soundPoolPlayer_ = nullptr;
@@ -117,7 +126,7 @@ private:
 
 class AudioHapticPlayerNativeCallback : public ISoundPoolCallback, public PlayerCallback {
 public:
-    explicit AudioHapticPlayerNativeCallback(AudioHapticPlayerImpl &audioHapticPlayerImpl);
+    explicit AudioHapticPlayerNativeCallback(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl);
     virtual ~AudioHapticPlayerNativeCallback() = default;
 
     // ISoundPoolCallback
@@ -130,23 +139,23 @@ public:
     void OnInfo(Media::PlayerOnInfoType type, int32_t extra, const Media::Format &infoBody) override;
 
 private:
-    AudioHapticPlayerImpl &audioHapticPlayerImpl_;
+    std::weak_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl_;
 
     void HandleStateChangeEvent(int32_t extra, const Format &infoBody);
     void HandleAudioInterruptEvent(int32_t extra, const Format &infoBody);
     void HandleAudioFirstFrameEvent(int32_t extra, const Format &infoBody);
 
-    AudioHapticPlayerState playerState_ = STATE_INVALID;
+    AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
 };
 
 class AudioHapticFirstFrameCb : public ISoundPoolFrameWriteCallback {
 public:
-    explicit AudioHapticFirstFrameCb(AudioHapticPlayerImpl &audioHapticPlayerImpl);
+    explicit AudioHapticFirstFrameCb(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl);
     virtual ~AudioHapticFirstFrameCb() = default;
 
     void OnFirstAudioFrameWritingCallback(uint64_t &latency) override;
 private:
-    AudioHapticPlayerImpl &audioHapticPlayerImpl_;
+    std::weak_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl_;
 };
 
 

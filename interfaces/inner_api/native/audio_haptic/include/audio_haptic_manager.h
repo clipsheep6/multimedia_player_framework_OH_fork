@@ -16,6 +16,7 @@
 #ifndef AUDIO_HAPTIC_MANAGER_H
 #define AUDIO_HAPTIC_MANAGER_H
 
+#include <mutex>
 #include <string>
 
 #include "audio_info.h"
@@ -52,9 +53,11 @@ public:
 
 class __attribute__((visibility("default"))) AudioHapticManagerFactory {
 public:
-    static std::unique_ptr<AudioHapticManager> CreateAudioHapticManager();
+    static std::shared_ptr<AudioHapticManager> CreateAudioHapticManager();
 
 private:
+    static std::shared_ptr<AudioHapticManager> audioHapticManager_;
+    static std::mutex audioHapticManagerMutex_;
     AudioHapticManagerFactory() = default;
     ~AudioHapticManagerFactory() = default;
 };

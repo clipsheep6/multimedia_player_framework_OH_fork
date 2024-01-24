@@ -20,7 +20,7 @@ group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
     deps += [
-      "./../../../frameworks/js/audio_haptic:audiohaptic",
+      "./../../../frameworks/js/audio_haptic:audiohaptic_napi",
       "./../../../frameworks/js/system_sound_manager:systemsoundmanager",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",

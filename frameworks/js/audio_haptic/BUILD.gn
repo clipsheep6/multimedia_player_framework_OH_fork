@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-ohos_shared_library("audiohaptic") {
+ohos_shared_library("audiohaptic_napi") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -39,7 +39,7 @@ ohos_shared_library("audiohaptic") {
     "./src/audio_haptic_player/audio_haptic_player_options_napi.cpp",
   ]
 
-  deps = [ "./../../native/audio_haptic:audio_haptic_client" ]
+  deps = [ "./../../native/audio_haptic:audio_haptic" ]
 
   external_deps = [
     "audio_framework:audio_client",

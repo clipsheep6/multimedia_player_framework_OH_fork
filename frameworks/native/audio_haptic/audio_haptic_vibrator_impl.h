@@ -35,6 +35,7 @@ public:
 
     int32_t PreLoad(const std::string &hapticUri) override;
     int32_t Release() override;
+    void ResetStopState() override;
     int32_t StartVibrate(const AudioLatencyMode &latencyMode) override;
     int32_t StopVibrate() override;
     int32_t GetDelayTime() override;

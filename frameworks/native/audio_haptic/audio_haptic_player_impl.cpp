@@ -23,13 +23,14 @@
 #include "player.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticManagerImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticPlayerImpl"};
 }
 
 namespace OHOS {
 namespace Media {
 const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one system tone is playing.
 const int32_t LOAD_WAIT_SECONDS = 2;
+const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 20;
 
 AudioHapticPlayerImpl::AudioHapticPlayerImpl()
     : playerType_(AUDIO_HAPTIC_TYPE_DEFAULT),
@@ -37,32 +38,17 @@ AudioHapticPlayerImpl::AudioHapticPlayerImpl()
       muteHaptic_(false),
       audioUri_(""),
       hapticUri_(""),
-      configuredAudioUri_(""),
-      callback_(nullptr)
+      configuredAudioUri_("")
 {
 }
 
 AudioHapticPlayerImpl::~AudioHapticPlayerImpl()
 {
     if (soundPoolPlayer_ != nullptr) {
-        soundPoolPlayer_->Release();
-        soundPoolPlayer_ = nullptr;
+        ReleaseSoundPoolPlayer();
     }
     if (avPlayer_ != nullptr) {
-        avPlayer_->Release();
-        avPlayer_ = nullptr;
-    }
-    if (callback_ != nullptr) {
-        callback_ = nullptr;
-    }
-    if (audioHapticVibrator_ != nullptr) {
-        audioHapticVibrator_->Release();
-        audioHapticVibrator_ = nullptr;
-    }
-
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_ = nullptr;
+        ReleaseAVPlayer();
     }
 }
 
@@ -100,28 +86,58 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
 
     MEDIA_LOGI("Enter StartVibrate()");
     std::unique_lock<std::mutex> lockWait(waitStartVibrateMutex_);
-    bool waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::seconds(LOAD_WAIT_SECONDS),
-        [this]() { return isAudioPlayFirstFrame_; });
-    if (!waitResult) {
-        MEDIA_LOGE("StartVibrate: Failed to start vibrate (time out).");
-        return MSERR_INVALID_OPERATION;
-    }
-    isAudioPlayFirstFrame_ = false;
-
-    if (!isRelease_) {
-        int hapticDelay = audioHapticVibrator_->GetDelayTime();
-        int delay = (this->audioLatency_ - hapticDelay) > 0 ? this->audioLatency_ - hapticDelay : 0;
-        waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
-            [this]() { return isRelease_; });
-        if (!isRelease_) {
-            AudioLatencyMode latencyMode = AUDIO_LATENCY_MODE_NORMAL;
-            if (playerType_ == AUDIO_HAPTIC_TYPE_FAST) {
-                latencyMode = AUDIO_LATENCY_MODE_FAST;
-            }
-            audioHapticVibrator_->StartVibrate(latencyMode);
+    do {
+        int32_t waitTime = loop_ ? LOAD_WAIT_SECONDS_FOR_LOOP : LOAD_WAIT_SECONDS;
+        bool waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::seconds(waitTime),
+            [this]() { return isAudioPlayFirstFrame_ || isVibrationStopped_; });
+        if (!waitResult) {
+            MEDIA_LOGE("StartVibrate: Failed to start vibrate (time out).");
+            return MSERR_INVALID_OPERATION;
         }
-    }
+        if (isVibrationStopped_) {
+            MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+            return MSERR_OK;
+        }
+
+        isAudioPlayFirstFrame_ = false; // reset for next time.
+
+        int32_t hapticDelay = audioHapticVibrator_->GetDelayTime();
+        int32_t delay = (this->audioLatency_ - hapticDelay) > 0 ? this->audioLatency_ - hapticDelay : 0;
+        waitResult = condStartVibrate_.wait_for(lockWait, std::chrono::milliseconds(delay),
+            [this]() { return isVibrationStopped_; });
+        if (isVibrationStopped_) {
+            MEDIA_LOGI("StartVibrate: audio haptic player has been stopped.");
+            return MSERR_OK;
+        }
+        AudioLatencyMode latencyMode = AUDIO_LATENCY_MODE_NORMAL;
+        if (playerType_ == AUDIO_HAPTIC_TYPE_FAST) {
+            latencyMode = AUDIO_LATENCY_MODE_FAST;
+        }
+        audioHapticVibrator_->StartVibrate(latencyMode);
+    } while (loop_ && !isVibrationStopped_);
+
     return MSERR_OK;
+}
+
+void AudioHapticPlayerImpl::StopVibrate()
+{
+    MEDIA_LOGI("Stop vibrate for audio haptic player right now.");
+    audioHapticVibrator_->StopVibrate();
+    {
+        std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
+        isVibrationStopped_ = true;
+        condStartVibrate_.notify_one();
+    }
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
+    }
+}
+
+void AudioHapticPlayerImpl::ResetVibrateState()
+{
+    isVibrationStopped_ = false;
+    audioHapticVibrator_->ResetStopState();
 }
 
 int32_t AudioHapticPlayerImpl::LoadVibratorSource()
@@ -146,11 +162,11 @@ int32_t AudioHapticPlayerImpl::LoadSoundPoolPlayer()
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_VAL,
         "Failed to create sound pool player instance");
 
-    callback_ = std::make_shared<AudioHapticPlayerNativeCallback>(*this);
-    CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
-    soundPoolPlayer_->SetSoundPoolCallback(callback_);
+    soundPoolCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(shared_from_this());
+    CHECK_AND_RETURN_RET_LOG(soundPoolCallback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
+    soundPoolPlayer_->SetSoundPoolCallback(soundPoolCallback_);
 
-    firstFrameCb_ = std::make_shared<AudioHapticFirstFrameCb>(*this);
+    firstFrameCb_ = std::make_shared<AudioHapticFirstFrameCb>(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(firstFrameCb_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
     soundPoolPlayer_->SetSoundPoolFrameWriteCallback(firstFrameCb_);
 
@@ -195,7 +211,7 @@ int32_t AudioHapticPlayerImpl::PrepareSoundPoolSource()
     soundID_ = soundID;
     configuredAudioUri_ = audioUri_;
 
-    playerState_ = STATE_PREPARED;
+    playerState_ = AudioHapticPlayerState::STATE_PREPARED;
 
     return MSERR_OK;
 }
@@ -204,30 +220,28 @@ int32_t AudioHapticPlayerImpl::StartSoundPoolPlayer()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     MEDIA_LOGI("Enter StartSoundPoolPlayer()");
-    if (playerState_ != STATE_PREPARED && playerState_ != STATE_RUNNING && playerState_ != STATE_STOPPED) {
+    if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
+        playerState_ != AudioHapticPlayerState::STATE_RUNNING &&
+        playerState_ != AudioHapticPlayerState::STATE_STOPPED) {
         MEDIA_LOGE("SoundPoolPlayer not Prepared");
         return MSERR_START_FAILED;
     }
     if (vibrateThread_ == nullptr) {
+        ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
 
     PlayParams playParams {
-        .loop = 0,
+        .loop = (loop_ ? -1 : 0),
         .rate = 0, // default AudioRendererRate::RENDER_RATE_NORMAL
-        .leftVolume = 1.0,
-        .rightVolume = 1.0,
+        .leftVolume = volume_ * (muteAudio_ ? 0 : 1),
+        .rightVolume = volume_ * (muteAudio_ ? 0 : 1),
         .priority = 0,
         .parallelPlayFlag = false,
     };
-
-    int32_t streamID = soundPoolPlayer_->Play(soundID_, playParams);
-    streamID_ = streamID;
-    if (muteAudio_) {
-        soundPoolPlayer_->SetVolume(streamID_, 0, 0);
-    }
-    playerState_ = STATE_RUNNING;
+    streamID_ = soundPoolPlayer_->Play(soundID_, playParams);
+    playerState_ = AudioHapticPlayerState::STATE_RUNNING;
 
     return MSERR_OK;
 }
@@ -239,46 +253,46 @@ int32_t AudioHapticPlayerImpl::StopSoundPoolPlayer()
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
 
     (void)soundPoolPlayer_->Stop(streamID_);
-    audioHapticVibrator_->StopVibrate();
-
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_.reset();
-    }
-
-    playerState_ = STATE_STOPPED;
+    StopVibrate();
+    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
 
     return MSERR_OK;
 }
 
 int32_t AudioHapticPlayerImpl::ReleaseSoundPoolPlayer()
 {
-    MEDIA_LOGI("Enter Release()");
+    MEDIA_LOGI("Enter ReleaseSoundPoolPlayer()");
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
+        "The audio haptic player has been released.");
     {
         std::lock_guard<std::mutex> lockStatus(loadUriMutex_);
-        loadCompleted_ = false;
+        loadCompleted_ = true;
         condLoadUri_.notify_one();
     }
-    audioHapticVibrator_->Release();
+    (void)audioHapticVibrator_->Release();
     {
         // When player is releasing，notify vibrate thread immediately
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
         isAudioPlayFirstFrame_ = true;
-        isRelease_ = true;
+        isVibrationStopped_ = true;
         condStartVibrate_.notify_one();
     }
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-    CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
+    }
 
+    CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
     (void)soundPoolPlayer_->Release();
     soundPoolPlayer_ = nullptr;
     if (fileDes_ != -1) {
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-    callback_ = nullptr;
+    soundPoolCallback_ = nullptr;
 
-    playerState_ = STATE_RELEASED;
+    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
 
     return MSERR_OK;
 }
@@ -325,10 +339,71 @@ int32_t AudioHapticPlayerImpl::Release()
     return MSERR_OK;
 }
 
+int32_t AudioHapticPlayerImpl::SetVolume(float volume)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetVolume %{public}f", volume);
+    if (volume < 0.0f || volume > 1.0f) {
+        MEDIA_LOGE("SetVolume: the volume value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    int32_t result = MSERR_OK;
+    volume_ = volume;
+
+    if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
+        playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
+        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        return result;
+    }
+    float actualVolume = volume_ * (muteAudio_ ? 0 : 1);
+    if (playerType_ == AUDIO_HAPTIC_TYPE_NORMAL) {
+        result = avPlayer_->SetVolume(actualVolume, actualVolume);
+        // if the volume_ is 0.0f, stop vibrate for voice call.
+        if (std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
+            StopVibrate();
+        }
+    } else if (playerType_ == AUDIO_HAPTIC_TYPE_FAST) {
+        if (streamID_ != -1) {
+            result = soundPoolPlayer_->SetVolume(streamID_, actualVolume, actualVolume);
+        }
+    }
+    return result;
+}
+
+int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetLoop %{public}d", loop);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    int32_t result = MSERR_OK;
+    loop_ = loop;
+
+    if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
+        playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
+        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        return result;
+    }
+    if (playerType_ == AUDIO_HAPTIC_TYPE_NORMAL) {
+        result = avPlayer_->SetLooping(loop_);
+    } else if (playerType_ == AUDIO_HAPTIC_TYPE_FAST) {
+        if (streamID_ != -1) {
+            int32_t loopCount = loop_ ? -1 : 0;
+            result = soundPoolPlayer_->SetLoop(streamID_, loopCount);
+        }
+    }
+    return MSERR_OK;
+}
+
 int32_t AudioHapticPlayerImpl::SetAudioHapticPlayerCallback(
     const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback)
 {
-    napiCallback_ = playerCallback;
+    if (playerCallback == nullptr) {
+        MEDIA_LOGE("The audio haptic player callback is nullptr.");
+        return MSERR_INVALID_VAL;
+    }
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    audioHapticPlayerCallback_ = playerCallback;
     return MSERR_OK;
 }
 
@@ -355,11 +430,11 @@ int32_t AudioHapticPlayerImpl::LoadAVPlayer()
     avPlayer_ = PlayerFactory::CreatePlayer();
     CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr, MSERR_INVALID_VAL, "Failed to create AvPlayer instance");
 
-    callback_ = std::make_shared<AudioHapticPlayerNativeCallback>(*this);
-    CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
+    avPlayerCallback_ = std::make_shared<AudioHapticPlayerNativeCallback>(shared_from_this());
+    CHECK_AND_RETURN_RET_LOG(avPlayerCallback_ != nullptr, MSERR_INVALID_VAL, "Failed to create callback object");
 
-    avPlayer_->SetPlayerCallback(callback_);
-    playerState_ = STATE_NEW;
+    avPlayer_->SetPlayerCallback(avPlayerCallback_);
+    playerState_ = AudioHapticPlayerState::STATE_NEW;
     configuredAudioUri_ = "";
 
     return MSERR_OK;
@@ -396,7 +471,7 @@ int32_t AudioHapticPlayerImpl::PrepareAVPlayer(bool isReInitNeeded)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Prepare failed %{public}d", ret);
 
         configuredAudioUri_ = audioUri_;
-        playerState_ = STATE_NEW;
+        playerState_ = AudioHapticPlayerState::STATE_NEW;
     }
 
     return MSERR_OK;
@@ -405,30 +480,27 @@ int32_t AudioHapticPlayerImpl::PrepareAVPlayer(bool isReInitNeeded)
 int32_t AudioHapticPlayerImpl::StartAVPlayer()
 {
     MEDIA_LOGI("StartAVPlayer");
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != AudioHapticPlayerState::STATE_INVALID,
+        MSERR_INVALID_VAL, "StartAVPlayer: no available AVPlayer_");
 
-    CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != STATE_INVALID, MSERR_INVALID_VAL,
-        "StartAVPlayer: no available AVPlayer_");
-
-    if (avPlayer_->IsPlaying() || isStartQueued_) {
+    if (playerState_ == AudioHapticPlayerState::STATE_RUNNING || isStartQueued_) {
         MEDIA_LOGE("Play in progress, cannot start now");
         return MSERR_START_FAILED;
     }
 
     // Player doesn't support play in stopped state. Hence reinitialise player for making start<-->stop to work
-    if (playerState_ == STATE_STOPPED) {
+    if (playerState_ == AudioHapticPlayerState::STATE_STOPPED) {
         (void)PrepareAVPlayer(true);
     } else {
         (void)PrepareAVPlayer(false);
     }
 
-    if (muteAudio_) {
-        avPlayer_->SetVolume(0, 0);
-    }
-
     if (vibrateThread_ == nullptr) {
+        ResetVibrateState();
         vibrateThread_ = std::make_shared<std::thread>([this] { StartVibrate(); });
     }
-    if (playerState_ == STATE_NEW) {
+    if (playerState_ == AudioHapticPlayerState::STATE_NEW) {
         MEDIA_LOGI("Start received before AVPlayer is prepared. Wait for callback");
         isStartQueued_ = true;
         return MSERR_OK;
@@ -437,26 +509,23 @@ int32_t AudioHapticPlayerImpl::StartAVPlayer()
     auto ret = avPlayer_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_START_FAILED, "Start failed %{public}d", ret);
 
-    playerState_ = STATE_RUNNING;
+    playerState_ = AudioHapticPlayerState::STATE_RUNNING;
     return MSERR_OK;
 }
 
 int32_t AudioHapticPlayerImpl::StopAVPlayer()
 {
     MEDIA_LOGI("StopAVPlayer");
-    CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != STATE_INVALID, MSERR_INVALID_VAL,
-        "StopAVPlayer: no available AVPlayer_");
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != AudioHapticPlayerState::STATE_INVALID,
+        MSERR_INVALID_VAL, "StopAVPlayer: no available AVPlayer_");
 
-    if (playerState_ != STATE_STOPPED && avPlayer_->IsPlaying()) {
+    if (playerState_ != AudioHapticPlayerState::STATE_STOPPED) {
         (void)avPlayer_->Stop();
-        audioHapticVibrator_->StopVibrate();
-    }
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_.reset();
+        StopVibrate();
     }
 
-    playerState_ = STATE_STOPPED;
+    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     isStartQueued_ = false;
 
     return MSERR_OK;
@@ -465,36 +534,38 @@ int32_t AudioHapticPlayerImpl::StopAVPlayer()
 int32_t AudioHapticPlayerImpl::ReleaseAVPlayer()
 {
     MEDIA_LOGI("ReleaseAVPlayer");
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
+        "The audio haptic player has been released.");
 
     audioHapticVibrator_->Release();
     {
         // When player is releasing，notify vibrate thread immediately
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
         isAudioPlayFirstFrame_ = true;
-        isRelease_ = true;
+        isVibrationStopped_ = true;
         condStartVibrate_.notify_one();
     }
-
-    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-
-    if (playerState_ != STATE_STOPPED) {
-        StopAVPlayer();
+    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
+        vibrateThread_->join();
+        vibrateThread_.reset();
     }
 
     if (avPlayer_ != nullptr) {
         (void)avPlayer_->Release();
+        avPlayer_ = nullptr;
     }
+    avPlayerCallback_ = nullptr;
 
-    playerState_ = STATE_RELEASED;
-    avPlayer_ = nullptr;
-    callback_ = nullptr;
-
+    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
     return MSERR_OK;
 }
 
 
 void AudioHapticPlayerImpl::SetAVPlayerState(AudioHapticPlayerState playerState)
 {
+    MEDIA_LOGI("SetAVPlayerState, state %{public}d", playerState);
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_LOG(avPlayer_ != nullptr, "AVPlayer instance is null");
 
     if (playerState_ != AudioHapticPlayerState::STATE_RELEASED) {
@@ -503,6 +574,9 @@ void AudioHapticPlayerImpl::SetAVPlayerState(AudioHapticPlayerState playerState)
 
     if (playerState_ == AudioHapticPlayerState::STATE_PREPARED) {
         MEDIA_LOGI("Player prepared callback received. Start now");
+        float actualVolume = volume_ * (muteAudio_ ? 0 : 1);
+        (void)avPlayer_->SetVolume(actualVolume, actualVolume);
+        (void)avPlayer_->SetLooping(loop_);
         if (isStartQueued_) {
             auto ret = avPlayer_->Play();
             isStartQueued_ = false;
@@ -514,29 +588,26 @@ void AudioHapticPlayerImpl::SetAVPlayerState(AudioHapticPlayerState playerState)
 
 void AudioHapticPlayerImpl::NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent)
 {
-    if (napiCallback_ != nullptr) {
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
+    if (cb != nullptr) {
         MEDIA_LOGI("NotifyInterruptEvent for napi object");
-        napiCallback_->OnInterrupt(interruptEvent);
+        cb->OnInterrupt(interruptEvent);
     } else {
-        MEDIA_LOGE("NotifyInterruptEvent: napiCallback_ is nullptr");
+        MEDIA_LOGE("NotifyInterruptEvent: audioHapticPlayerCallback_ is nullptr");
     }
 }
 
 void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
-    audioHapticVibrator_->StopVibrate();
-    if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
-        vibrateThread_->join();
-        vibrateThread_.reset();
-    }
-
-    playerState_ = STATE_STOPPED;
-
-    if (napiCallback_ != nullptr) {
+    MEDIA_LOGI("NotifyEndOfStreamEvent");
+    StopVibrate();
+    playerState_ = AudioHapticPlayerState::STATE_STOPPED;
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
+    if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for napi object");
-        napiCallback_->OnEndOfStream();
+        cb->OnEndOfStream();
     } else {
-        MEDIA_LOGE("NotifyEndOfStreamEvent: napiCallback_ is nullptr");
+        MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
     }
 }
 
@@ -548,26 +619,32 @@ void AudioHapticPlayerImpl::NotifyStartVibrate(uint64_t latency)
     this->condStartVibrate_.notify_one();
 }
 
-void AudioHapticPlayerImpl::SetAudioLatency(const uint64_t &latency)
-{
-    audioLatency_ = latency;
-}
-
 // Callback class symbols
-AudioHapticPlayerNativeCallback::AudioHapticPlayerNativeCallback(AudioHapticPlayerImpl &audioHapticPlayerImpl)
+AudioHapticPlayerNativeCallback::AudioHapticPlayerNativeCallback(
+    std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl)
     : audioHapticPlayerImpl_(audioHapticPlayerImpl) {}
 
 // SoundPool callback
 void AudioHapticPlayerNativeCallback::OnLoadCompleted(int32_t soundId)
 {
     MEDIA_LOGI("OnLoadCompleted reported from sound pool.");
-    audioHapticPlayerImpl_.NotifySoundPoolSourceLoadCompleted();
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifySoundPoolSourceLoadCompleted();
 }
 
 void AudioHapticPlayerNativeCallback::OnPlayFinished()
 {
     MEDIA_LOGI("OnPlayFinished reported from sound pool.");
-    audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyEndOfStreamEvent();
 }
 
 void AudioHapticPlayerNativeCallback::OnError(int32_t errorCode)
@@ -603,32 +680,37 @@ void AudioHapticPlayerNativeCallback::HandleStateChangeEvent(int32_t extra, cons
     PlayerStates avPlayerState = static_cast<PlayerStates>(extra);
     switch (avPlayerState) {
         case PLAYER_STATE_ERROR:
-            playerState_ = STATE_INVALID;
+            playerState_ = AudioHapticPlayerState::STATE_INVALID;
             break;
         case PLAYER_IDLE:
         case PLAYER_INITIALIZED:
         case PLAYER_PREPARING:
-            playerState_ = STATE_NEW;
+            playerState_ = AudioHapticPlayerState::STATE_NEW;
             break;
         case PLAYER_PREPARED:
-            playerState_ = STATE_PREPARED;
+            playerState_ = AudioHapticPlayerState::STATE_PREPARED;
             break;
         case PLAYER_STARTED:
-            playerState_ = STATE_RUNNING;
+            playerState_ = AudioHapticPlayerState::STATE_RUNNING;
             break;
         case PLAYER_PAUSED:
-            playerState_ = STATE_PAUSED;
+            playerState_ = AudioHapticPlayerState::STATE_PAUSED;
             break;
         case PLAYER_STOPPED:
         case PLAYER_PLAYBACK_COMPLETE:
-            playerState_ = STATE_STOPPED;
+            playerState_ = AudioHapticPlayerState::STATE_STOPPED;
             break;
         default:
             break;
     }
-    audioHapticPlayerImpl_.SetAVPlayerState(playerState_);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->SetAVPlayerState(playerState_);
     if (avPlayerState == PLAYER_PLAYBACK_COMPLETE) {
-        audioHapticPlayerImpl_.NotifyEndOfStreamEvent();
+        player->NotifyEndOfStreamEvent();
     }
 }
 
@@ -645,25 +727,41 @@ void AudioHapticPlayerNativeCallback::HandleAudioInterruptEvent(int32_t extra, c
     interruptEvent.eventType = static_cast<AudioStandard::InterruptType>(eventTypeValue);
     interruptEvent.forceType = static_cast<AudioStandard::InterruptForceType>(forceTypeValue);
     interruptEvent.hintType = static_cast<AudioStandard::InterruptHint>(hintTypeValue);
-    audioHapticPlayerImpl_.NotifyInterruptEvent(interruptEvent);
+
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyInterruptEvent(interruptEvent);
 }
 
 void AudioHapticPlayerNativeCallback::HandleAudioFirstFrameEvent(int32_t extra, const Format &infoBody)
 {
-    MEDIA_LOGI("HandleAudioFirstFrameEvent from AVPlayer");
     int64_t value = 0;
     (void)infoBody.GetLongValue(PlayerKeys::AUDIO_FIRST_FRAME, value);
     uint64_t latency = static_cast<uint64_t>(value);
-    audioHapticPlayerImpl_.NotifyStartVibrate(latency);
+    MEDIA_LOGI("HandleAudioFirstFrameEvent from AVPlayer. Latency %{public}" PRIu64 "", latency);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyStartVibrate(latency);
 }
 
-AudioHapticFirstFrameCb::AudioHapticFirstFrameCb(AudioHapticPlayerImpl &audioHapticPlayerImpl)
+AudioHapticFirstFrameCb::AudioHapticFirstFrameCb(std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayerImpl)
     : audioHapticPlayerImpl_(audioHapticPlayerImpl) {}
 
 void AudioHapticFirstFrameCb::OnFirstAudioFrameWritingCallback(uint64_t &latency)
 {
-    MEDIA_LOGI("OnFirstAudioFrameWritingCallback from Sound pool");
-    audioHapticPlayerImpl_.NotifyStartVibrate(latency);
+    MEDIA_LOGI("OnFirstAudioFrameWritingCallback from Soundpool. Latency %{public}" PRIu64 "", latency);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyStartVibrate(latency);
 }
 } // namesapce AudioStandard
 } // namespace OHOS

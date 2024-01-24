@@ -16,6 +16,7 @@
 #ifndef RINGTONE_PLAYER_IMPL_H
 #define RINGTONE_PLAYER_IMPL_H
 
+#include "audio_haptic_manager.h"
 #include "player.h"
 #include "system_sound_manager_impl.h"
 #include "system_sound_vibrator.h"
@@ -32,9 +33,10 @@ public:
     RingtonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &sysSoundMgr, RingtoneType type);
     ~RingtonePlayerImpl();
-    void SetPlayerState(RingtoneState ringtoneState);
+    void NotifyEndofStreamEvent();
+    void NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent);
 
-    // IRingtone override
+    // RingtonePlayer override
     RingtoneState GetRingtoneState() override;
     int32_t Configure(const float &volume, const bool &loop) override;
     int32_t Start() override;
@@ -44,39 +46,35 @@ public:
     std::string GetTitle() override;
     int32_t SetRingtonePlayerInterruptCallback(
         const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback) override;
-    void NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent);
 
 private:
-    void InitPlayer();
-    int32_t PrepareRingtonePlayer(bool isReInitNeeded);
-    int32_t ApplyDefaultRingtoneUri(std::string &defaultUri);
+    void InitPlayer(std::string &audioUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;
-    bool isStartQueued_ = false;
     std::string configuredUri_ = "";
-    std::shared_ptr<Media::Player> player_ = nullptr;
+    std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
+    int32_t sourceId_ = -1;
+    std::shared_ptr<AudioHapticPlayer> player_ = nullptr;
     std::shared_ptr<AbilityRuntime::Context> context_;
-    std::shared_ptr<RingtonePlayerCallback> callback_ = nullptr;
+    std::shared_ptr<AudioHapticPlayerCallback> callback_ = nullptr;
     std::shared_ptr<RingtonePlayerInterruptCallback> interruptCallback_ = nullptr;
     SystemSoundManagerImpl &systemSoundMgr_;
     RingtoneType type_ = RINGTONE_TYPE_SIM_CARD_0;
     RingtoneState ringtoneState_ = STATE_NEW;
+
+    std::mutex playerMutex_;
 };
 
-class RingtonePlayerCallback : public PlayerCallback {
+class RingtonePlayerCallback : public AudioHapticPlayerCallback {
 public:
     explicit RingtonePlayerCallback(RingtonePlayerImpl &ringtonePlayerImpl);
     virtual ~RingtonePlayerCallback() = default;
-    void OnError(int32_t errorCode, const std::string &errorMsg) override;
-    void OnInfo(Media::PlayerOnInfoType type, int32_t extra, const Media::Format &infoBody) override;
+
+    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
+    void OnEndOfStream(void) override;
 
 private:
-    void HandleStateChangeEvent(int32_t extra, const Format &infoBody);
-    void HandleAudioInterruptEvent(int32_t extra, const Format &infoBody);
-
-    Media::PlayerStates state_ = Media::PLAYER_IDLE;
-    RingtoneState ringtoneState_ = STATE_NEW;
     RingtonePlayerImpl &ringtonePlayerImpl_;
 };
 } // namespace Media
