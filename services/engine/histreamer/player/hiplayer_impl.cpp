@@ -473,6 +473,8 @@ int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
         volume = (leftVolume + rightVolume) / 2;  // 2
     }
     volume /= MAX_MEDIA_VOLUME;  // normalize to 0~1
+    FALSE_RETURN_V_MSG_E(audioSink_ != nullptr, (int32_t)TransStatus(Status::ERROR_INVALID_OPERATION),
+        "Set volume failed, audio sink is nullptr");
     Status ret = audioSink_->SetVolume(volume);
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetVolume failed with error " PUBLIC_LOG_D32, static_cast<int>(ret));
