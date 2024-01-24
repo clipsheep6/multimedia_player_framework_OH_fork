@@ -1150,7 +1150,7 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @since 11
      */
-    getMediaKeySystemInfos(): Array<Object>;
+    getMediaKeySystemInfos(): Array<drm.MediaKeySystemInfo>;
 
     url ?: string;
 
@@ -1288,6 +1288,23 @@ declare namespace media {
      */
     setBitrate(bitrate: number): void;
 
+    /**
+     * Register listens for mediaKeySystemInfoUpdate events.
+     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
+     * @param { function } callback - Callback used to listen for the mediaKeySystemInfoUpdate event.
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @since 11
+     */
+    on(type: 'mediaKeySystemInfoUpdate', callback: (mediaKeySystemInfo: Array<drm.MediaKeySystemInfo>) => void): void;
+
+    /**
+     * Unregister listens for mediaKeySystemInfoUpdate events.
+     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
+     * @param { function } callback - Callback for event.
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @since 11
+     */
+    off(type: 'mediaKeySystemInfoUpdate', callback?: (mediaKeySystemInfo: Array<drm.MediaKeySystemInfo>) => void): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -1494,25 +1511,6 @@ declare namespace media {
      * @atomicservice
      */
     off(type: 'error'): void;
-
-    /**
-     * Register listens for mediaKeySystemInfoUpdate events.
-     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
-     * @param { function } callback - Callback used to listen for the mediaKeySystemInfoUpdate event.
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @since 11
-     */
-    on(type: 'mediaKeySystemInfoUpdate', callback: (mediaKeySystemInfo: Array<Object>) => void): void;
-
-    /**
-     * Unregister listens for mediaKeySystemInfoUpdate events.
-     * @param { 'mediaKeySystemInfoUpdate' } type - Type of the event to listen for.
-     * @param { function } callback - Callback for event.
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @since 11
-     */
-    off(type: 'mediaKeySystemInfoUpdate'): void;
-
   }
 
   /**
