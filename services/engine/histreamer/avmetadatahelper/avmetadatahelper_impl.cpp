@@ -136,7 +136,6 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 {
     MEDIA_LOGI("OnError errorType:%{public}d, errorCode:%{public}d",
         static_cast<int32_t>(errorType), errorCode);
-    Destroy();
 }
 
 void AVMetadataHelperImpl::OnOutputFormatChanged(const MediaAVCodec::Format &format)
