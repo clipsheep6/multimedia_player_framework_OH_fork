@@ -455,7 +455,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     }
     mSeconds = mSeconds < 0 ? 0 : mSeconds;
     int64_t seekPos = mSeconds;
-    NotifySeekDone(seekPos);
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         rtv = SeekInner(seekPos, mode);
