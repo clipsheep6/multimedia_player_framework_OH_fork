@@ -32,6 +32,8 @@ public:
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t StartScreenCapture() override;
     int32_t StopScreenCapture() override;
+    int32_t StartScreenRecording() override;
+    int32_t StopScreenRecording() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audiobuffer, AudioCaptureSourceType type) override;
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
@@ -44,6 +46,7 @@ private:
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
+    DataType dataType_;
 };
 } // namespace Media
 } // namespace OHOS
