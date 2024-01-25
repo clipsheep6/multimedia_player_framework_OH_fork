@@ -173,6 +173,7 @@ napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
     }
     if (!IsLegalAudioHapticType(jsAudioHapticType)) {
         MEDIA_LOGE("IsMuted: the param type mismatch");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
         return result;
     }
 
