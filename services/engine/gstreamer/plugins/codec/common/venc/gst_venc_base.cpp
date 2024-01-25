@@ -688,9 +688,7 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     if (self->first_in_frame) {
         GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: first in frame");
     }
-    if (gst_venc_base_is_flushing(self)) {
-        return GST_FLOW_FLUSHING;
-    }
+    g_return_val_if_fail(!gst_venc_base_is_flushing(self), GST_FLOW_FLUSHING);
     if (!self->prepared) {
         if (!gst_venc_base_prepare(self)) {
             GST_WARNING_OBJECT(self, "hdi video dec enable failed");

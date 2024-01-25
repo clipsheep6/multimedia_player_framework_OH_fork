@@ -1079,10 +1079,7 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     }
     napi_value sessionObj;
     status = napi_coerce_to_object(env, args[0], &sessionObj);
-    if (status != napi_ok) {
-        MEDIA_LOGE("JsSetDecryptConfig get sessionObj failure!");
-        return result;
-    }
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "JsSetDecryptConfig get sessionObj failure!");
     napi_valuetype valueType;
     if (argCount < 1 || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "keysession is not napi_object");
@@ -1092,19 +1089,14 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     std::string type = "MediaKeySessionNative";
     bool exist = false;
     status = napi_has_named_property(env, sessionObj, type.c_str(), &exist);
-    if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
-        return result;
-    }
-    if (napi_get_named_property(env, sessionObj, type.c_str(), &nativePointer) != napi_ok) {
-        MEDIA_LOGE("get %{public}s property fail", type.c_str());
-        return result;
-    }
+
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && exist, result, "can not find %{public}s property", type.c_str());
+    CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, sessionObj, type.c_str(), &nativePointer) == napi_ok,
+        result, "get %{public}s property fail", type.c_str());
+
     int64_t nativePointerInt;
-    if (napi_get_value_int64(env, nativePointer, &nativePointerInt) != napi_ok) {
-        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
-        return result;
-    }
+    CHECK_AND_RETURN_RET_LOG(napi_get_value_int64(env, nativePointer, &nativePointerInt) == napi_ok, result,
+        "get %{public}s property value fail", type.c_str());
     DrmStandard::MediaKeySessionImpl* keySessionImpl =
         reinterpret_cast<DrmStandard::MediaKeySessionImpl*>(nativePointerInt);
     if (keySessionImpl != nullptr) {
