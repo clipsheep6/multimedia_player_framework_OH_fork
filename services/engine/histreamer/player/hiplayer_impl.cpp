@@ -1232,6 +1232,12 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         if (globalMeta != nullptr) {
             globalMeta->SetData(Tag::APP_PID, appPid_);
             globalMeta->SetData(Tag::APP_UID, appUid_);
+            if (audioRenderInfo_ != nullptr) {
+                for (MapIt iter = audioRenderInfo_->begin(); iter != audioRenderInfo_->end(); iter++) {
+                    globalMeta->SetData(iter->first, iter->second);
+                }
+            }
+
             audioSink_->SetParameter(globalMeta);
         }
         audioSink_->SetSyncCenter(syncManager_);
