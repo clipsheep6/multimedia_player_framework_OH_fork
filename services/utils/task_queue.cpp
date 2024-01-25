@@ -48,7 +48,7 @@ int32_t TaskQueue::Stop() noexcept
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (isExit_) {
-        MEDIA_LOGI("Stopped already, ignore ! [%{public}s]", name_.c_str());
+        MEDIA_LOGD("Stopped already, ignore ! [%{public}s]", name_.c_str());
         return MSERR_OK;
     }
 

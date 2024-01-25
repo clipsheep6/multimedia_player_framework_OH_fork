@@ -184,7 +184,7 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
     bool isFind = false;
     {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        MEDIA_LOGI("Deregister PlayerServerTask");
+        MEDIA_LOGD("Deregister PlayerServerTask");
         for (auto &[uid, pidPlayersInfo] : playerManage_) {
             for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
                 FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);

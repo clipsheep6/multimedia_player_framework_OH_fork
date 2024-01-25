@@ -651,8 +651,8 @@ int32_t PlayerServerMem::HandleCodecBuffers(bool enable)
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
-            GetStatusDescription(lastOpStatus_).c_str());
+        MEDIA_LOGE("0x%{public}06" PRIXPTR " Instance Can not HandleCodecBuffers, currentState is %{public}s",
+            FAKE_POINTER(this), GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
     return playerEngine_->HandleCodecBuffers(enable);
@@ -770,11 +770,12 @@ int32_t PlayerServerMem::NetworkResourceRelease()
 {
     if (!isReleaseMemByManage_) {
         MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease enter", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance NetworkResourceRelease enter", FAKE_POINTER(this));
         int32_t ret = HandleCodecBuffers(true);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " Instance FreeCodecBuffers Fail",
+            FAKE_POINTER(this));
         isReleaseMemByManage_ = true;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances NetworkResourceRelease exit", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance NetworkResourceRelease success", FAKE_POINTER(this));
     }
     return MSERR_OK;
 }
