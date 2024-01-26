@@ -33,6 +33,7 @@ const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 t
 const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
 const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
+const int32_t MS_TO_US = 1000; // the unit of seek time transfer from ms to us
 }
 
 namespace OHOS {
@@ -384,7 +385,37 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
     int64_t realSeekTime = seekPos;
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->SetSeekTime(realSeekTime * MS_TO_US);
+    }
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->SetSeekTime(realSeekTime * MS_TO_US);
+    }
     auto seekMode = Transform2SeekMode(mode);
+    PrepareForSeek();
+    MEDIA_LOG_I("Do seek ...");
+    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    if (rtv == Status::OK) {
+        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
+        pipeline_->Resume();
+        if (audioSink_ != nullptr) {
+            audioSink_->Resume();
+        }
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
+        pipeline_->Resume();
+    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.ManualReportMediaProgressOnce();
+        OnStateChanged(PlayerStateId::PAUSE);
+    }
+    return rtv;
+}
+
+Status HiPlayerImpl::PrepareForSeek()
+{
     if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
         if (audioSink_ != nullptr) {
             audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
@@ -412,25 +443,7 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
             audioSink_->Flush();
         }
     }
-    MEDIA_LOG_I("Do seek ...");
-    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-    if (rtv == Status::OK) {
-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        pipeline_->Resume();
-        if (audioSink_ != nullptr) {
-            audioSink_->Resume();
-        }
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
-        pipeline_->Resume();
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
-        OnStateChanged(PlayerStateId::PAUSE);
-    }
-    return rtv;
+    return Status::OK;
 }
 
 int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
