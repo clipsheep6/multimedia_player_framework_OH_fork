@@ -195,9 +195,6 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
         return false;
     }
 
-    if (!PrivacyKit::IsAllowedUsingPermission(clientTokenId, "ohos.permission.CAPTURE_SCREEN")) {
-        MEDIA_LOGE("app background, not allow using perm for client %{public}d", clientTokenId);
-    }
     return true;
 }
 
