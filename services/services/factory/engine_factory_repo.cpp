@@ -24,7 +24,7 @@
 
 namespace {
     static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "EngineFactoryRepo"};
-#ifdef __aarch64__
+#if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
     static const std::string MEDIA_ENGINE_LIB_PATH = "/system/lib64/media";
 #else
     static const std::string MEDIA_ENGINE_LIB_PATH = "/system/lib/media";
