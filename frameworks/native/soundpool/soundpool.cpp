@@ -46,7 +46,7 @@ SoundPool::SoundPool()
 SoundPool::~SoundPool()
 {
     MEDIA_INFO_LOG("Destruction SoundPool.");
-    Release();
+    ReleaseInner();
 }
 
 int32_t SoundPool::Init(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
@@ -176,6 +176,11 @@ int32_t SoundPool::Unload(int32_t soundID)
 }
 
 int32_t SoundPool::Release()
+{
+    return ReleaseInner();
+}
+
+int32_t SoundPool::ReleaseInner()
 {
     std::lock_guard lock(soundPoolLock_);
     MEDIA_INFO_LOG("Release SoundPool.");

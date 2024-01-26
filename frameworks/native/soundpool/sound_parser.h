@@ -51,7 +51,7 @@ public:
             MEDIA_INFO_LOG("Destruction SoundDecodeListener");
         }
         virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
-            availableAudioBuffers) = 0;
+            &availableAudioBuffers) = 0;
         virtual void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) = 0;
     };
 
@@ -116,7 +116,7 @@ private:
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
 
-        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers) override
+        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override
         {
             std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             if (!soundParserInner_.expired()) {
