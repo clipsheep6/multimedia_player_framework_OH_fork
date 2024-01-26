@@ -163,18 +163,6 @@ int32_t ScreenCaptureCapiMock::StopScreenCapture()
     return OH_AVScreenCapture_StopScreenCapture(screenCapture_);
 }
 
-int32_t ScreenCaptureCapiMock::StartScreenRecording()
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    return OH_AVScreenCapture_StartScreenRecording(screenCapture_);
-}
-
-int32_t ScreenCaptureCapiMock::StopScreenRecording()
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    return OH_AVScreenCapture_StopScreenRecording(screenCapture_);
-}
-
 int32_t ScreenCaptureCapiMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");

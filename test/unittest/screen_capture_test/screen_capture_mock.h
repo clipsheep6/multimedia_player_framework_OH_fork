@@ -49,8 +49,6 @@ public:
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StopScreenCapture() = 0;
-    virtual int32_t StartScreenRecording() = 0;
-    virtual int32_t StopScreenRecording() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;

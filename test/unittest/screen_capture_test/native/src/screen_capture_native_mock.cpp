@@ -14,7 +14,6 @@
  */
 
 #include "screen_capture_native_mock.h"
-#include "media_log.h"
 
 using namespace std;
 using namespace OHOS;
@@ -25,7 +24,6 @@ namespace OHOS {
 namespace Media {
 void ScreenCaptureNativeCallbackMock::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     (void)errorType;
     if (mockCb_ != nullptr) {
         mockCb_->OnError(errorCode);
@@ -34,7 +32,6 @@ void ScreenCaptureNativeCallbackMock::OnError(ScreenCaptureErrorType errorType, 
 
 void ScreenCaptureNativeCallbackMock::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (mockCb_ != nullptr) {
         mockCb_->OnAudioBufferAvailable(isReady, type);
     }
@@ -42,29 +39,17 @@ void ScreenCaptureNativeCallbackMock::OnAudioBufferAvailable(bool isReady, Audio
 
 void ScreenCaptureNativeCallbackMock::OnVideoBufferAvailable(bool isReady)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (mockCb_ != nullptr) {
         mockCb_->OnVideoBufferAvailable(isReady);
     }
-}
-
-void ScreenCaptureNativeCallbackMock::OnRelease()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    mockCb_ = nullptr;
-}
-
-ScreenCaptureNativeMock::~ScreenCaptureNativeMock()
-{
-    MEDIA_LOGI("ScreenCaptureNativeMock::~ScreenCaptureNativeMock");
 }
 
 int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     if (callback != nullptr) {
-        cb_ = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
-        return screenCapture_->SetScreenCaptureCallback(cb_);
+        auto cb = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
+        return screenCapture_->SetScreenCaptureCallback(cb);
     }
     return MSERR_INVALID_OPERATION;
 }
@@ -87,25 +72,9 @@ int32_t ScreenCaptureNativeMock::StopScreenCapture()
     return screenCapture_->StopScreenCapture();
 }
 
-int32_t ScreenCaptureNativeMock::StartScreenRecording()
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    return screenCapture_->StartScreenRecording();
-}
-
-int32_t ScreenCaptureNativeMock::StopScreenRecording()
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    return screenCapture_->StopScreenRecording();
-}
-
 int32_t ScreenCaptureNativeMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    if (cb_ != nullptr) {
-        cb_->OnRelease();
-        cb_ = nullptr;
-    }
     return screenCapture_->Release();
 }
 
