@@ -53,7 +53,7 @@ int32_t SoundPoolManager::Release(const pid_t pid)
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
-        MEDIA_INFO_LOG("Release soundpool, pid:%{pulibc}d.", pid);
+        MEDIA_INFO_LOG("Release soundpool, pid:%{public}d.", pid);
         soundPools_.erase(it);
         return MSERR_OK;
     }
