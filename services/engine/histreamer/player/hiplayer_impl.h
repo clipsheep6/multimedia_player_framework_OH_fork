@@ -125,6 +125,14 @@ private:
     Status PrepareForSeek();
     Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
+    
+    Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
+    Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
+
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
