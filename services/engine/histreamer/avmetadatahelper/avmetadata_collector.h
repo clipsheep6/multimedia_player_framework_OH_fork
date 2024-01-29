@@ -88,6 +88,7 @@ private:
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     std::string FormatDateTimeByTimeZone(const std::string &iso8601Str);
+    std::string FormatDataTimeByString(const std::string &dataTime);
 
     const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
         {Plugins::FileType::UNKNOW, "uknown"},
