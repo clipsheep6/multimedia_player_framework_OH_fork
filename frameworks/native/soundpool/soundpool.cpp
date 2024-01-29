@@ -23,7 +23,6 @@ namespace Media {
 std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo)
 {
-    pthread_setname_np(pthread_self(), "OS_SoundPool");
     std::shared_ptr<SoundPool> impl;
     if (!SoundPool::CheckInitParam(maxStreams, audioRenderInfo)) {
         return nullptr;
