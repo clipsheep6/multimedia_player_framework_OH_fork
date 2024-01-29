@@ -52,20 +52,6 @@ public:
     static void ThrowError(napi_env env, int32_t code);
     static std::string GetMessageByCode(int32_t &code);
 };
-
-struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb) : env_(env), cb_(cb) {}
-
-    ~AutoRef()
-    {
-        if (env_ != nullptr && cb_ != nullptr) {
-            (void)napi_delete_reference(env_, cb_);
-        }
-    }
-
-    napi_env env_;
-    napi_ref cb_;
-};
 } // namespace Media
 } // namespace OHOS
 #endif // RINGTONE_COMMON_NAPI_H
