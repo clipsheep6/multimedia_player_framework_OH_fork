@@ -16,6 +16,7 @@
 #include "ringtone_player_napi.h"
 
 #include "audio_renderer_info_napi.h"
+#include "avplayer_napi.h"
 #include "media_log.h"
 
 using namespace std;
@@ -38,6 +39,16 @@ const int SUCCESS = 0;
 
 namespace OHOS {
 namespace Media {
+static const std::map<RingtoneState, std::string> STATEMAP = {
+    {STATE_INVALID, AVPlayerState::STATE_ERROR},
+    {STATE_NEW, AVPlayerState::STATE_INITIALIZED},
+    {STATE_PREPARED, AVPlayerState::STATE_PREPARED},
+    {STATE_RUNNING, AVPlayerState::STATE_PLAYING},
+    {STATE_STOPPED, AVPlayerState::STATE_STOPPED},
+    {STATE_RELEASED, AVPlayerState::STATE_RELEASED},
+    {STATE_PAUSED, AVPlayerState::STATE_PAUSED},
+};
+
 napi_ref RingtonePlayerNapi::sConstructor_ = nullptr;
 shared_ptr<RingtonePlayer> RingtonePlayerNapi::sRingtonePlayer_ = nullptr;
 
@@ -594,16 +605,17 @@ napi_value RingtonePlayerNapi::GetAudioState(napi_env env, napi_callback_info in
         return result;
     }
 
+    std::string curState = AVPlayerState::STATE_ERROR;
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext
         = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok) {
-        int32_t state = asyncContext->objectInfo->ringtonePlayer_->GetRingtoneState();
-        napi_create_int32(env, state, &result);
-        if (status == napi_ok) {
-            return result;
+        RingtoneState ringtoneState_ = asyncContext->objectInfo->ringtonePlayer_->GetRingtoneState();
+        if (STATEMAP.find(ringtoneState_) != STATEMAP.end()) {
+            curState = STATEMAP.at(ringtoneState_);
         }
     }
+    napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &result);
 
     return result;
 }
