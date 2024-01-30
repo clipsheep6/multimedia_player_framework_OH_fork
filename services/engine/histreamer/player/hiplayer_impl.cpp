@@ -381,6 +381,9 @@ int32_t HiPlayerImpl::Reset()
 
 Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
 {
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(true);
+    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
@@ -410,6 +413,9 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();
         OnStateChanged(PlayerStateId::PAUSE);
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
     }
     return rtv;
 }
