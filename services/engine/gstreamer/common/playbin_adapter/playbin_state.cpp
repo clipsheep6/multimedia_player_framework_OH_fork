@@ -111,9 +111,10 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
     MEDIA_LOGD("BaseState::HandleStateChange");
     if (msg.extend.has_value() && std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
         GstState targetState = static_cast<GstState>(msg.detail2);
-        MEDIA_LOGI("state changed from %{public}s to %{public}s",
+        MEDIA_LOGI("state changed from %{public}s to %{public}s, Instances 0x%{public}06" PRIXPTR,
             gst_element_state_get_name(static_cast<GstState>(msg.detail1)),
-            gst_element_state_get_name(targetState));
+            gst_element_state_get_name(targetState),
+            FAKE_POINTER(this));
         if (targetState == GST_STATE_PLAYING) {
             int32_t tickType = INNER_MSG_POSITION_UPDATE;
             uint32_t interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
@@ -211,12 +212,12 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg()
 
 void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
 {
-    MEDIA_LOGI("BaseState::HandleAsyncDone");
+    MEDIA_LOGD("BaseState::HandleAsyncDone");
     if (std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
         GstState state = GST_STATE_NULL;
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
-        MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d",
+        MEDIA_LOGD("BaseState::HandleAsyncDone %{public}d, %{public}d",
             static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
             HandleAsyncDoneMsg();
@@ -376,7 +377,7 @@ int32_t PlayBinCtrlerBase::PreparingState::Stop()
 
 void PlayBinCtrlerBase::PreparingState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PreparingState::ProcessStateChange");
+    MEDIA_LOGD("PreparingState::ProcessStateChange");
     if ((msg.detail1 == GST_STATE_READY) && (msg.detail2 == GST_STATE_PAUSED)) {
         std::unique_lock<std::mutex> lock(ctrler_.mutex_);
         ctrler_.ChangeState(ctrler_.preparedState_);
@@ -432,7 +433,7 @@ int32_t PlayBinCtrlerBase::PreparedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PreparedState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PreparingState::ProcessStateChange");
+    MEDIA_LOGD("PreparingState::ProcessStateChange");
     if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
         ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
@@ -542,7 +543,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PlayingState::ProcessStateChange");
+    MEDIA_LOGD("PlayingState::ProcessStateChange");
     if (msg.detail1 == GST_STATE_PLAYING && msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;

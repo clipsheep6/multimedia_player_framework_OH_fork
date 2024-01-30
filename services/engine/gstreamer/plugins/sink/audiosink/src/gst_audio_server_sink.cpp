@@ -398,7 +398,9 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
 static void gst_audio_server_sink_get_delay(GstAudioServerSink *sink, GValue *value)
 {
     g_return_if_fail(sink != nullptr);
-    g_return_if_fail(sink->audio_sink != nullptr);
+    if (sink->audio_sink == nullptr) {
+        return;
+    }
     g_mutex_lock(&sink->render_lock);
     int32_t mode;
     (void)sink->audio_sink->GetAudioEffectMode(mode);
