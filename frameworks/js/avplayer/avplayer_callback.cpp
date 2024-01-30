@@ -638,7 +638,8 @@ void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &inf
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
-    MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
+        FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);

@@ -204,7 +204,7 @@ void GstMetaParser::ParseStreamCaps(const GstCaps &caps, Format &metadata)
             continue;
         }
 
-        MEDIA_LOGI("parse mimetype %{public}s's caps", mimeType.data());
+        MEDIA_LOGD("parse mimetype %{public}s's caps", mimeType.data());
 
         std::string_view streamType = mimeType.substr(0, delimPos);
         auto it = STREAM_CAPS_FIELDS.find(streamType);

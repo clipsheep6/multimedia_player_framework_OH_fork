@@ -77,7 +77,8 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
         return nullptr;
     }
     if (acquireFence == nullptr || acquireFence == SyncFence::INVALID_FENCE) {
-        GST_WARNING_OBJECT(allocator, "Acquire surface buffer sync fence is null, no need wait");
+        GST_WARNING_OBJECT(allocator, "Acquire surface buffer sync fence is null, no need wait, allocat:0x%06" PRIXPTR,
+            FAKE_POINTER(allocator));
     } else {
         acquireFence->Wait(FENCE_TIMEOUT);
     }

@@ -402,7 +402,7 @@ int32_t PlayBinCtrlerBase::SetAudioRendererInfo(const uint32_t rendererInfo, con
     rendererInfo_ = rendererInfo;
     rendererFlag_ = rendererFlag;
     if (audioSink_ != nullptr) {
-        MEDIA_LOGI("SetAudioRendererInfo to audio sink");
+        MEDIA_LOGD("SetAudioRendererInfo to audio sink");
         g_object_set(audioSink_, "audio-renderer-desc", rendererInfo, nullptr);
         g_object_set(audioSink_, "audio-renderer-flag", rendererFlag, nullptr);
     }
@@ -918,7 +918,7 @@ int64_t PlayBinCtrlerBase::QueryPosition()
     gint64 position = 0;
     gboolean ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
     if (!ret) {
-        MEDIA_LOGW("query position failed");
+        MEDIA_LOGW("instance: 0x%{public}06" PRIXPTR " query position failed", FAKE_POINTER(this));
         return lastTime_ / USEC_PER_MSEC;
     }
 

@@ -40,7 +40,7 @@ int32_t TaskQueue::Start()
         MSERR_OK, "Started already, ignore ! [%{public}s]", name_.c_str());
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
-    MEDIA_LOGI("thread started [%{public}s]", name_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance thread started [%{public}s]", FAKE_POINTER(this), name_.c_str());
     return MSERR_OK;
 }
 
@@ -146,16 +146,16 @@ __attribute__((no_sanitize("cfi"))) void TaskQueue::CancelNotExecutedTaskLocked(
 
 __attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
 {
-    MEDIA_LOGI("Enter TaskProcessor [%{public}s]", name_.c_str());
     constexpr uint32_t nameSizeMax = 15;
     tid_ = gettid();
+    MEDIA_LOGI("Enter TaskProcessor [%{public}s], tid_: (%{public}d)", name_.c_str(), tid_);
     pthread_setname_np(pthread_self(), name_.substr(0, nameSizeMax).c_str());
     (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait(lock, [this] { return isExit_ || !taskList_.empty(); });
         if (isExit_) {
-            MEDIA_LOGI("Exit TaskProcessor [%{public}s]", name_.c_str());
+            MEDIA_LOGI("Exit TaskProcessor [%{public}s], tid_: (%{public}d)", name_.c_str(), tid_);
             return;
         }
         TaskHandlerItem item = taskList_.front();
