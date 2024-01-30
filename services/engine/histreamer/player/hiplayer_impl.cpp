@@ -553,6 +553,7 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doCompletedSeek.");
+    pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
     if (isStreaming_) {
         pipeline_->Resume();
