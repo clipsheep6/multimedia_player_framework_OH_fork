@@ -118,7 +118,7 @@ bool SoundPoolLoadUnloadFuzzer::FuzzSoundPoolUnload(uint8_t *data, size_t size)
     sleep(waitTime3);
 
     TestSoundPool::Unload(urlSoundid);
-    TestSoundPool::Unload(FdSoundid);
+    TestSoundPool::Unload(fdSoundid);
     if (size >= sizeof(int32_t)) {
         int32_t soundID = *reinterpret_cast<int32_t *>(data);
         TestSoundPool::Unload(soundID);
@@ -131,18 +131,12 @@ bool SoundPoolLoadUnloadFuzzer::FuzzSoundPoolUnload(uint8_t *data, size_t size)
 bool FuzzTestSoundPoolLoad(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolLoadUnloadFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolLoad(data, size);
 }
 
 bool FuzzTestSoundPoolUnload(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolLoadUnloadFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolUnload(data, size);
 }
 } // namespace OHOS

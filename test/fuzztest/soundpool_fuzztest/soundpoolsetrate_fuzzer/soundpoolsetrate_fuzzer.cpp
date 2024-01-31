@@ -91,10 +91,6 @@ bool SoundPoolSetRateFuzzer::FuzzSoundPoolSetRate(uint8_t *data, size_t size)
 bool FuzzTestSoundPoolSetRate(uint8_t *data, size_t size)
 {
     auto soundPool = std::make_unique<SoundPoolSetRateFuzzer>();
-    if (soundPool == nullptr) {
-        cout << "soundPool is null" << endl;
-        return true;
-    }
     return soundPool->FuzzSoundPoolSetRate(data, size);
 }
 } // namespace OHOS

@@ -1267,7 +1267,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
 
-    if (type == INFO_TYPE_ERROR_MSG) {
+    if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
         auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
@@ -1291,7 +1291,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             playerCb_->OnInfo(type, extra, infoBody);
         }
     } else {
-        MEDIA_LOGI("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
+        MEDIA_LOGW("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
     }
 }
 

@@ -135,17 +135,11 @@ bool SoundPoolPlayStopFuzzer::FuzzSoundPoolStop(uint8_t *data, size_t size)
 bool FuzzTestSoundPoolPlay(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolPlayStopFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolPlay(data, size);
 }
 bool FuzzTestSoundPoolStop(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolPlayStopFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolStop(data, size);
 }
 } // namespace OHOS

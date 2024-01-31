@@ -134,8 +134,9 @@ void AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
 
 void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
 {
-    MEDIA_LOGI("OnError errorType:%{public}d, errorCode:%{public}d",
+    MEDIA_LOGE("OnError errorType:%{public}d, errorCode:%{public}d",
         static_cast<int32_t>(errorType), errorCode);
+    stopProcessing_ = true;
 }
 
 void AVMetadataHelperImpl::OnOutputFormatChanged(const MediaAVCodec::Format &format)

@@ -37,8 +37,6 @@ SoundPoolNapi::~SoundPoolNapi()
 
 napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
 {
-    MEDIA_LOGI("%s", __FUNCTION__);
-
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createSoundPool", JsCreateSoundPool),
     };

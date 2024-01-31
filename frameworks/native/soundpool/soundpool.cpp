@@ -39,13 +39,13 @@ std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
 
 SoundPool::SoundPool()
 {
-    MEDIA_INFO_LOG("Construction SoundPool.");
+    MEDIA_LOGI("Construction SoundPool.");
 }
 
 SoundPool::~SoundPool()
 {
-    MEDIA_INFO_LOG("Destruction SoundPool.");
-    Release();
+    MEDIA_LOGI("Destruction SoundPool.");
+    ReleaseInner();
 }
 
 int32_t SoundPool::Init(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
@@ -97,7 +97,7 @@ int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
 
     CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Invalid sound.");
     if (!soundParser->IsSoundParserCompleted()) {
-        MEDIA_ERR_LOG("sound load no completed. ");
+        MEDIA_LOGE("sound load no completed. ");
         return -1;
     }
     const int32_t streamID = streamIdManager_->Play(soundParser, playParameters);
@@ -130,7 +130,7 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
         if (priority < MIN_STREAM_PRIORITY) {
-            MEDIA_INFO_LOG("Invalid priority, align priority to min.");
+            MEDIA_LOGI("Invalid priority, align priority to min.");
             priority = MIN_STREAM_PRIORITY;
         }
         return cacheBuffer->SetPriority(streamID, priority);
@@ -176,8 +176,13 @@ int32_t SoundPool::Unload(int32_t soundID)
 
 int32_t SoundPool::Release()
 {
+    return ReleaseInner();
+}
+
+int32_t SoundPool::ReleaseInner()
+{
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_INFO_LOG("Release SoundPool.");
+    MEDIA_LOGI("Release SoundPool.");
     if (streamIdManager_ != nullptr) {
         streamIdManager_.reset();
     }
@@ -196,7 +201,7 @@ int32_t SoundPool::Release()
 
 int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback)
 {
-    MEDIA_INFO_LOG("SoundPool::%{public}s", __func__);
+    MEDIA_LOGI("SoundPool::%{public}s", __func__);
     if (soundIDManager_ != nullptr) soundIDManager_->SetCallback(soundPoolCallback);
     if (streamIdManager_ != nullptr) streamIdManager_->SetCallback(soundPoolCallback);
     callback_ = soundPoolCallback;
@@ -206,7 +211,7 @@ int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback
 int32_t SoundPool::SetSoundPoolFrameWriteCallback(
     const std::shared_ptr<ISoundPoolFrameWriteCallback> &frameWriteCallback)
 {
-    MEDIA_INFO_LOG("SoundPool::%{public}s", __func__);
+    MEDIA_LOGI("SoundPool::%{public}s", __func__);
     if (streamIdManager_ != nullptr) streamIdManager_->SetFrameWriteCallback(frameWriteCallback);
     frameWriteCallback_ = frameWriteCallback;
     return MSERR_OK;
@@ -216,11 +221,11 @@ bool SoundPool::CheckVolumeVaild(float *leftVol, float *rightVol)
 {
     if (*leftVol != std::clamp(*leftVol, 0.f, 1.f) ||
         *rightVol != std::clamp(*rightVol, 0.f, 1.f)) {
-        MEDIA_INFO_LOG("volume l=%{public}f r=%{public}f out of (0.f, 1.f) bounds, using 1.f", *leftVol, *rightVol);
+        MEDIA_LOGI("volume l=%{public}f r=%{public}f out of (0.f, 1.f) bounds, using 1.f", *leftVol, *rightVol);
         *leftVol = *rightVol = 1.f;
     }
     if (*leftVol != *rightVol) {
-        MEDIA_INFO_LOG("left volume %{public}f set not eq the right volume %{public}f ,use the left volume",
+        MEDIA_LOGI("left volume %{public}f set not eq the right volume %{public}f ,use the left volume",
                        *leftVol, *rightVol);
         *rightVol = *leftVol;
     }

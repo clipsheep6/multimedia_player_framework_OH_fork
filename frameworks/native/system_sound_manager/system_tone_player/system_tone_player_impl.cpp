@@ -52,7 +52,6 @@ SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
     if (player_ != nullptr) {
         player_->Release();
-        (void)SystemSoundVibrator::StopVibrator();
         player_ = nullptr;
         callback_ = nullptr;
     }
@@ -213,12 +212,15 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 
 int32_t SystemTonePlayerImpl::Stop(const int32_t &streamID)
 {
-    MEDIA_LOGI("Enter Stop() with streamID");
+    MEDIA_LOGI("Enter Stop() with streamID %{public}d", streamID);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
-    (void)player_->Stop(streamID);
-
-    (void)SystemSoundVibrator::StopVibrator();
+    if (streamID > 0) {
+        (void)player_->Stop(streamID);
+        (void)SystemSoundVibrator::StopVibrator();
+    } else {
+        MEDIA_LOGW("The streamID %{public}d is invalid!", streamID);
+    }
 
     return MSERR_OK;
 }
@@ -232,8 +234,6 @@ int32_t SystemTonePlayerImpl::Release()
     soundID_ = -1;
 
     (void)player_->Release();
-    (void)SystemSoundVibrator::StopVibrator();
-
     player_ = nullptr;
     callback_ = nullptr;
 

@@ -22,7 +22,9 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
+#ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServer"};
@@ -70,7 +72,9 @@ RecorderServer::~RecorderServer()
         std::lock_guard<std::mutex> lock(mutex_);
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             recorderEngine_ = nullptr;
+#ifdef SUPPORT_POWER_MANAGER
             syncCallback_ = nullptr;
+#endif
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -104,8 +108,9 @@ int32_t RecorderServer::Init()
 
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
-
+#ifdef SUPPORT_POWER_MANAGER
     syncCallback_ = new SaveDocumentSyncCallback();
+#endif
     return MSERR_OK;
 }
 
@@ -551,12 +556,14 @@ int32_t RecorderServer::Start()
         MEDIA_LOGE("Can not repeat Start");
         return MSERR_INVALID_OPERATION;
     }
+#ifdef SUPPORT_POWER_MANAGER
     if (syncCallback_) {
         syncCallback_->SetRecorderServer(this);
         syncCallback_->isRecorderServerReleased = false;
         shutdownClient_.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
             PowerMgr::ShutdownPriority::HIGH);
     }
+#endif
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -665,6 +672,7 @@ int32_t RecorderServer::Release()
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
+#ifdef SUPPORT_POWER_MANAGER
         if (syncCallback_) {
             syncCallback_->isRecorderServerReleased = true;
             if (!syncCallback_->isShutdown) {
@@ -672,6 +680,7 @@ int32_t RecorderServer::Release()
                     (syncCallback_));
             }
         }
+#endif
     }
     return MSERR_OK;
 }
@@ -796,6 +805,7 @@ int32_t RecorderServer::GetMaxAmplitude()
     return result.Value();
 }
 
+#ifdef SUPPORT_POWER_MANAGER
 void SaveDocumentSyncCallback::OnSyncShutdown()
 {
     isShutdown = true;
@@ -816,5 +826,6 @@ void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService *recorderServe
 {
     recorderServer_ = recorderServer;
 }
+#endif
 } // namespace Media
 } // namespace OHOS

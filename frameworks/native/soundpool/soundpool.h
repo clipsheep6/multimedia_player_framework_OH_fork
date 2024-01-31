@@ -57,6 +57,7 @@ public:
 
 private:
     bool CheckVolumeVaild(float *leftVol, float *rightVol);
+    int32_t ReleaseInner();
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
     std::mutex soundPoolLock_;

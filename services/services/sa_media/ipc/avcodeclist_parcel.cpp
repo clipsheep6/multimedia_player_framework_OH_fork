@@ -141,6 +141,8 @@ bool AVCodecListParcel::Unmarshalling(MessageParcel &parcel, std::vector<Capabil
 bool AVCodecListParcel::Unmarshalling(MessageParcel &parcel, std::map<ImgSize, Range> &mapSizeToRange)
 {
     uint32_t size = parcel.ReadUint32();
+    constexpr uint32_t MAX_PARCEL_SIZE = 256;
+    CHECK_AND_RETURN_RET(size <= MAX_PARCEL_SIZE, false);
     for (uint32_t index = 0; index < size; index++) {
         ImgSize key;
         Range values;
@@ -156,6 +158,8 @@ bool AVCodecListParcel::Unmarshalling(MessageParcel &parcel, std::map<ImgSize, R
 bool AVCodecListParcel::Unmarshalling(MessageParcel &parcel, std::map<int32_t, std::vector<int32_t>> &mapIntToVec)
 {
     uint32_t size = parcel.ReadUint32();
+    constexpr uint32_t MAX_PARCEL_SIZE = 256;
+    CHECK_AND_RETURN_RET(size <= MAX_PARCEL_SIZE, false);
     for (uint32_t index = 0; index < size; index++) {
         int32_t key;
         std::vector<int32_t> values;
