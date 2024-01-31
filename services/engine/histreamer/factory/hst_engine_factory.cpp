@@ -97,11 +97,11 @@ std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelpe
 {
     MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
     auto helper = std::make_unique<AVMetadataHelperImpl>();
-    if (helper) {
-        return helper;
+    if (helper == nullptr) {
+        MEDIA_LOG_E("create AVMetadataHelperImpl failed");
+        return nullptr;
     }
-    MEDIA_LOG_E("create AVMetadataHelperImpl failed");
-    return nullptr;
+    return helper;
 }
 #endif
 

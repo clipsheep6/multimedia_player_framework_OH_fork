@@ -1074,7 +1074,7 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
     std::multimap<std::string, std::vector<uint8_t>> drmInfo =
         AnyCast<std::multimap<std::string, std::vector<uint8_t>>>(event.param);
     uint32_t infoCount = drmInfo.size();
-    if (infoCount > DrmConstant::DRM_MAX_DRM_INFO_COUNT || infoCount <= 0) {
+    if (infoCount > DrmConstant::DRM_MAX_DRM_INFO_COUNT || infoCount == 0) {
         MEDIA_LOG_E("HandleDrmInfoUpdatedEvent info count is invalid");
         return;
     }
