@@ -451,7 +451,9 @@ public:
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(deviceChangeRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(deviceChangeRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(deviceChangeRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(deviceChangeRef->env_, deviceChangeRef->cb_, &jsCallback);

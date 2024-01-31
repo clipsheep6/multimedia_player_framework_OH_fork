@@ -29,7 +29,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1,
-        bool isHistreamer = false) override;
+        bool isHiStreamer = false) override;
     int32_t GetSize(int64_t &size) override;
 
 private:

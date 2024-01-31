@@ -1175,7 +1175,7 @@ static GstBuffer *gst_vdec_base_get_input_buffer(GstVdecBase *self, GstVdecBaseC
 {
     GstBuffer *buf = nullptr;
     const GstProtectionMeta *prot_meta = nullptr;
-    prot_meta = (GstProtectionMeta*)gst_buffer_get_protection_meta(frame->input_buffer);
+    prot_meta = static_cast<GstProtectionMeta*>gst_buffer_get_protection_meta(frame->input_buffer);
     if (prot_meta != nullptr) {
         self->crypto_info = gst_structure_copy(prot_meta->info);
     }

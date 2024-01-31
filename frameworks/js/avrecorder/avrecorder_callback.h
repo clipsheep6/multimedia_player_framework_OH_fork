@@ -34,7 +34,7 @@ public:
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
-    void SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &AudioRecorderChangeInfo);
+    void SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo);
     std::string GetState();
 
 protected:
@@ -70,10 +70,11 @@ public:
     ~AudioCaptureChangeInfoJsCallback() = default;
     napi_status GetJsResult(napi_env env, napi_value &result);
     napi_status SetAudioCapturerInfo(napi_env env, napi_value &captureInfo, napi_value &result);
-    napi_status SetDeviceInfo(napi_env env, napi_value &inputDeviceInfo, napi_value &result);
+    napi_status SetDeviceInfo(napi_env env, napi_value &deviceDescriptors, napi_value &result);
 
 private:
     AudioRecorderChangeInfo value_;
+    napi_status SetDeviceProperty(napi_env env, napi_value &element);
 };
 } // namespace Media
 } // namespace OHOS

@@ -396,8 +396,8 @@ static GstFlowReturn gst_vdec_base_gst_buffer_copy_to_ashmem(GstVdecBase *in_sel
         GST_ERROR_OBJECT(in_self, "Failed to map buffer");
         return GST_FLOW_NOT_SUPPORTED;
     }
-    in_ashmem_buf = (guint8 *)mmap(nullptr, map.size, PROT_READ | PROT_WRITE, MAP_SHARED,
-        in_self->drm_ashmem_infd, 0);
+    in_ashmem_buf = static_cast<guint8 *>(mmap(nullptr, map.size, PROT_READ | PROT_WRITE, MAP_SHARED,
+        in_self->drm_ashmem_infd, 0));
     if (in_ashmem_buf == nullptr) {
         GST_ERROR_OBJECT(in_self, "ashmem_inbuf mmap failed\n");
         ret = GST_FLOW_NOT_SUPPORTED;
@@ -429,8 +429,8 @@ static GstFlowReturn gst_vdec_base_ashmem_copy_to_gst_buffer(GstVdecBase *out_se
         GST_ERROR_OBJECT(out_self, "Failed to map buffer");
         return GST_FLOW_NOT_SUPPORTED;
     }
-    out_ashmem_buf = (guint8 *)mmap(nullptr, map.size, PROT_READ | PROT_WRITE, MAP_SHARED,
-        out_self->drm_ashmem_outfd, 0);
+    out_ashmem_buf = static_cast<guint8 *>(mmap(nullptr, map.size, PROT_READ | PROT_WRITE, MAP_SHARED,
+        out_self->drm_ashmem_outfd, 0));
     if (out_ashmem_buf == nullptr) {
         GST_ERROR_OBJECT(out_self, "ashmem_outbuf mmap failed\n");
         ret = GST_FLOW_NOT_SUPPORTED;
@@ -521,8 +521,8 @@ GstFlowReturn gst_vdec_base_drm_cenc_decrypt(GstVideoDecoder *decoder, GstBuffer
     gst_vdec_base_drm_set_ts_subsample(&map, subsample_info, &subsample_count,
         skip_byte_block, &crypt_byte_block);
 
-    g_signal_emit_by_name((GstElement *)self, "media-decrypt", (gint64)(self->drm_ashmem_infd),
-        (gint64)(self->drm_ashmem_outfd), map.size, keyid_data, keyid_size, iv_data, iv_size,
+    g_signal_emit_by_name((GstElement *)self, "media-decrypt", static_cast<gint64>(self->drm_ashmem_infd),
+        static_cast<gint64>(self->drm_ashmem_outfd), map.size, keyid_data, keyid_size, iv_data, iv_size,
         subsample_count, subsample_info, algo, 0, crypt_byte_block, skip_byte_block, &res);
 
     gst_vdec_base_ashmem_copy_to_gst_buffer(self, buf);
