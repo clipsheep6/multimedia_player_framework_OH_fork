@@ -19,14 +19,17 @@
 
 namespace OHOS {
 namespace Media {
+class ScreenCaptureNativeCallbackMock;
 class ScreenCaptureNativeMock : public ScreenCaptureMock {
 public:
     explicit ScreenCaptureNativeMock(std::shared_ptr<ScreenCapture> screencapture) : screenCapture_(screencapture) {}
-    ~ScreenCaptureNativeMock() = default;
+    ~ScreenCaptureNativeMock();
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StopScreenCapture() override;
+    int32_t StartScreenRecording() override;
+    int32_t StopScreenRecording() override;
     int32_t Release() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
@@ -36,6 +39,7 @@ public:
 
 private:
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
+    std::shared_ptr<ScreenCaptureNativeCallbackMock> cb_;
     AVScreenCaptureConfig config_;
 };
 
@@ -50,10 +54,12 @@ public:
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
+    void OnRelease();
 
 private:
     std::shared_ptr<ScreenCaptureCallBackMock> mockCb_ = nullptr;
     std::weak_ptr<ScreenCapture> screenCapture_;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS

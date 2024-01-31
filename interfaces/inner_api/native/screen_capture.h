@@ -167,6 +167,8 @@ public:
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StopScreenCapture() = 0;
+    virtual int32_t StartScreenRecording() = 0;
+    virtual int32_t StopScreenRecording() = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audiobuffer, AudioCaptureSourceType type) = 0;
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
