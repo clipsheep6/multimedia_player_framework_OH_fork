@@ -558,8 +558,6 @@ int32_t RecorderServer::Start()
     }
 #ifdef SUPPORT_POWER_MANAGER
     if (syncCallback_) {
-        syncCallback_->SetRecorderServer(this);
-        syncCallback_->isRecorderServerReleased = false;
         shutdownClient_.RegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>(syncCallback_),
             PowerMgr::ShutdownPriority::HIGH);
     }
@@ -674,7 +672,6 @@ int32_t RecorderServer::Release()
         (void)task->GetResult();
 #ifdef SUPPORT_POWER_MANAGER
         if (syncCallback_) {
-            syncCallback_->isRecorderServerReleased = true;
             if (!syncCallback_->isShutdown) {
                 shutdownClient_.UnRegisterShutdownCallback(static_cast<sptr<PowerMgr::ISyncShutdownCallback>>
                     (syncCallback_));
@@ -809,22 +806,7 @@ int32_t RecorderServer::GetMaxAmplitude()
 void SaveDocumentSyncCallback::OnSyncShutdown()
 {
     isShutdown = true;
-    if (!recorderServer_) {
-        return;
-    }
-    recorderServer_->Release();
-    for (int32_t i = 0; i < retryTimes; ++i) { // retry 40 times, 2000 ms
-        if (isRecorderServerReleased) {
-            return;
-        }
-        usleep(intervalTime); // wait 50 ms
-    }
-    recorderServer_ = nullptr;
-}
-
-void SaveDocumentSyncCallback::SetRecorderServer(IRecorderService *recorderServer)
-{
-    recorderServer_ = recorderServer;
+    usleep(intervalTime); // wait 500 ms
 }
 #endif
 } // namespace Media

@@ -156,8 +156,6 @@ if (multimedia_player_framework_support_vibrator) {
 
 if (multimedia_player_framework_support_power_manager) {
   player_framework_defines += [ "SUPPORT_POWER_MANAGER" ]
-} else {
-  player_framework_defines += [ "UNSUPPORT_POWER_MANAGER" ]
 }
 
 # Config path
