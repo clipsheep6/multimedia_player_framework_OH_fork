@@ -375,27 +375,42 @@ napi_status AudioCaptureChangeInfoJsCallback::SetAudioCapturerInfo(napi_env env,
     return napi_ok;
 }
 
+napi_status AudioCaptureChangeInfoJsCallback::SetDeviceProperty(napi_env env, napi_value &element)
+{
+    bool setRet = true;
+    setRet = CommonNapi::SetPropertyInt32(env, element, "deviceRole",
+        static_cast<int32_t>(value_.inputDeviceInfo.deviceRole));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, element, "deviceType",
+        static_cast<int32_t>(value_.inputDeviceInfo.deviceType));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, element, "id", value_.inputDeviceInfo.deviceId);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, element, "name", value_.inputDeviceInfo.deviceName);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, element, "address", value_.inputDeviceInfo.macAddress);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, element, "networkId", value_.inputDeviceInfo.networkId);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyString(env, element, "displayName", value_.inputDeviceInfo.displayName);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, element, "interruptGroupId",
+        value_.inputDeviceInfo.interruptGroupId);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, element, "volumeGroupId",
+        value_.inputDeviceInfo.volumeGroupId);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    return napi_ok;
+}
+
 napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
     napi_value &deviceDescriptors, napi_value &result)
 {
     napi_value element;
     napi_create_object(env, &element);
-    bool setRet = true;
-    setRet = CommonNapi::SetPropertyInt32(env, element, "deviceRole",
-        static_cast<int32_t>(value_.inputDeviceInfo.deviceRole));
-    setRet = CommonNapi::SetPropertyInt32(env, element, "deviceType",
-        static_cast<int32_t>(value_.inputDeviceInfo.deviceType));
-    setRet = CommonNapi::SetPropertyInt32(env, element, "id", value_.inputDeviceInfo.deviceId);
-    setRet = CommonNapi::SetPropertyString(env, element, "name", value_.inputDeviceInfo.deviceName);
-    setRet = CommonNapi::SetPropertyString(env, element, "address", value_.inputDeviceInfo.macAddress);
-    setRet = CommonNapi::SetPropertyString(env, element, "networkId", value_.inputDeviceInfo.networkId);
-    setRet = CommonNapi::SetPropertyString(env, element, "displayName", value_.inputDeviceInfo.displayName);
-    setRet = CommonNapi::SetPropertyInt32(env, element, "interruptGroupId",
-        value_.inputDeviceInfo.interruptGroupId);
-    setRet = CommonNapi::SetPropertyInt32(env, element, "volumeGroupId",
-        value_.inputDeviceInfo.volumeGroupId);
-    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    CHECK_AND_RETURN_RET(SetDeviceProperty(env, element) == napi_ok, napi_generic_failure);
 
+    bool setRet = true;
     napi_value sampleRates;
     setRet = CommonNapi::AddArrayInt(env, sampleRates,
         std::vector<int32_t>(value_.inputDeviceInfo.audioStreamInfo.samplingRate.begin(),
@@ -406,15 +421,18 @@ napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
     setRet = CommonNapi::AddArrayInt(env, channelCounts,
         std::vector<int32_t>(value_.inputDeviceInfo.audioStreamInfo.channels.begin(),
         value_.inputDeviceInfo.audioStreamInfo.channels.end()));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     napi_set_named_property(env, element, "channelCounts", channelCounts);
 
     napi_value channelMasks;
     setRet = CommonNapi::AddArrayInt(env, channelMasks, std::vector<int32_t>({value_.inputDeviceInfo.channelMasks}));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     napi_set_named_property(env, element, "channelMasks", channelMasks);
 
     napi_value channelIndexMasks;
     setRet = CommonNapi::AddArrayInt(env, channelIndexMasks,
         std::vector<int32_t>({value_.inputDeviceInfo.channelIndexMasks}));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     napi_set_named_property(env, element, "channelIndexMasks", channelIndexMasks);
 
     napi_value encodingTypes;

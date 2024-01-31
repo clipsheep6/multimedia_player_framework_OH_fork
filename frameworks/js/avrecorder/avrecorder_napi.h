@@ -292,6 +292,7 @@ private:
 
     static int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
         const int32_t sourceId, const int32_t qualityLevel);
+    static void MediaProfileLog(bool isVideo, AVRecorderProfile &profile);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
@@ -326,7 +327,6 @@ private:
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
-    void MediaProfileLog(bool isVideo, AVRecorderProfile &profile);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
@@ -358,7 +358,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
     std::shared_ptr<AVRecorderProfile> profile_ = nullptr;
     AudioRecorderChangeInfo changeInfo_;
-    int32_t maxAmplitude_;
+    int32_t maxAmplitude_ = 0;
     std::vector<EncoderCapabilityData> encoderInfo_;
 };
 
@@ -397,7 +397,7 @@ private:
 };
 class MediaJsEncoderInfo : public MediaJsResult {
 public:
-    explicit MediaJsEncoderInfo(std::vector<EncoderCapabilityData> encoderInfo)
+    explicit MediaJsEncoderInfo(const std::vector<EncoderCapabilityData> encoderInfo)
         : encoderInfo_(encoderInfo)
     {
     }

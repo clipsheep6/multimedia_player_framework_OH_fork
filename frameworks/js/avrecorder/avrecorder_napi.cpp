@@ -1699,7 +1699,6 @@ void AVRecorderAsyncContext::AVRecorderSignError(int32_t errCode, const std::str
 napi_status MediaJsAVRecorderConfig::GetJsResult(napi_env env, napi_value &result)
 {
     napi_status ret = napi_ok;
-    bool setRet = true;
     int32_t setState = MSERR_OK;
     CHECK_AND_RETURN_RET(value_ != nullptr, napi_generic_failure);
     CHECK_AND_RETURN_RET((ret = napi_create_object(env, &result)) == napi_ok, ret);
@@ -1713,6 +1712,7 @@ napi_status MediaJsAVRecorderConfig::GetJsResult(napi_env env, napi_value &resul
     CHECK_AND_RETURN_RET((ret = locationToSet(env, location, result)) == napi_ok, ret);
 
     if (value_->withAudio || value_->withVideo) {
+        bool setRet = true;
         setRet = CommonNapi::SetPropertyString(env, result, "url", value_->url);
         CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 

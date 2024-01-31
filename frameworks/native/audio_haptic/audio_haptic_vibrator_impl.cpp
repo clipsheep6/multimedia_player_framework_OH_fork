@@ -96,9 +96,8 @@ int32_t AudioHapticVibratorImpl::Release()
         Sensors::FreeVibratorPackage(*vibratorPkg_);
         vibratorPkg_ = nullptr;
     }
-    if (vibratorFD_ != nullptr) {
-        vibratorFD_ = nullptr;
-    }
+    vibratorFD_ = nullptr;
+
 #endif
     return MSERR_OK;
 }
