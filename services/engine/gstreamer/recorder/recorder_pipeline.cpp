@@ -263,14 +263,17 @@ int32_t RecorderPipeline::Reset()
 
 int32_t RecorderPipeline::DoElemAction(const ElemAction &action, bool needAllSucc)
 {
-    if (desc_ == nullptr)  {
+    if (desc_ == nullptr) {
         return MSERR_INVALID_OPERATION;
     }
 
     bool allSucc = true;
     for (auto &elem : desc_->allElems) {
         int32_t ret = action(*elem);
-        CHECK_AND_CONTINUE(ret != MSERR_OK);
+        if (ret == MSERR_OK) {
+            MEDIA_LOGD("DoElemAction check OK!");
+            continue;
+        }
         allSucc = false;
         // if one element execute action fail, exit immediately.
         CHECK_AND_RETURN_RET_LOG(!needAllSucc, ret, "element %{public}s execute action failed", elem->GetName().c_str())

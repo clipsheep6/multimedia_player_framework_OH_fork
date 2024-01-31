@@ -94,10 +94,6 @@ bool SoundPoolSetVolumeFuzzer::FuzzSoundPoolSetVolume(uint8_t *data, size_t size
 bool FuzzTestSoundPoolSetVolume(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolSetVolumeFuzzer>();
-    if (soundPool_ == nullptr) {
-        cout << "soundPool_ is null" << endl;
-        return true;
-    }
     return soundPool_->FuzzSoundPoolSetVolume(data, size);
 }
 } // namespace OHOS
