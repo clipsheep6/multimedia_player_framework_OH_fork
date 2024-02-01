@@ -23,6 +23,7 @@
 #include "directory_ex.h"
 #include "filter/filter_factory.h"
 #include "media_errors.h"
+#include "osal/task/jobutils.h"
 #include "osal/utils/dump_buffer.h"
 #include "common/plugin_time.h"
 #include "media_utils.h"
@@ -31,6 +32,7 @@
 namespace {
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
 const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 to 1.
+const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 }
@@ -956,6 +958,14 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
     isStreaming_ = false;
     Format format;
+    int32_t durationMs;
+    int32_t currentPositionMs;
+    GetDuration(durationMs);
+    GetCurrentTime(currentPositionMs);
+    if (durationMs > currentPositionMs && abs(durationMs - currentPositionMs) < AUDIO_SINK_MAX_LATENCY) {
+        MEDIA_LOG_I("OnComplete durationMs - currentPositionMs: " PUBLIC_LOG_D32, durationMs - currentPositionMs);
+        OHOS::Media::SleepInJob(durationMs - currentPositionMs);
+    }
     if (!isSingleLoop) {
         OnStateChanged(PlayerStateId::EOS);
         callbackLooper_.StopReportMediaProgress();
