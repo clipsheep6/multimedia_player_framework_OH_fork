@@ -205,7 +205,7 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
                 request.c_str());
 
             nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-            CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function
             napi_value result = nullptr;

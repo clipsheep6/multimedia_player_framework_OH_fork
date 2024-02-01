@@ -228,7 +228,11 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
+        if (work->data == nullptr) {
+            delete work;
+            MEDIA_LOGE("workdata is nullptr");
+            return;
+        }
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
         do {
@@ -285,7 +289,11 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
-        CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
+        if (work->data == nullptr) {
+            delete work;
+            MEDIA_LOGE("workdata is nullptr");
+            return;
+        }
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
         MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
@@ -314,7 +322,7 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
 
             nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
-            CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function
             napi_value result = nullptr;

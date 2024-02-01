@@ -88,10 +88,6 @@ bool SoundPoolSetPriorityFuzzer::FuzzSoundPoolSetPriority(uint8_t *data, size_t 
 bool FuzzTestSoundPoolSetPriority(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolSetPriorityFuzzer>();
-    if (soundPool_ == nullptr) {
-        cout << "soundPool_ is null" << endl;
-        return true;
-    }
     return soundPool_->FuzzSoundPoolSetPriority(data, size);
 }
 } // namespace OHOS

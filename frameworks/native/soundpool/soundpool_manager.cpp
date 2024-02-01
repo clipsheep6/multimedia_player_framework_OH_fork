@@ -20,7 +20,7 @@ namespace OHOS {
 namespace Media {
 SoundPoolManager::~SoundPoolManager()
 {
-    MEDIA_INFO_LOG("Destruction SoundPoolManager.");
+    MEDIA_LOGI("Destruction SoundPoolManager.");
     std::lock_guard<std::mutex> lock(mutex_);
     soundPools_.clear();
 };
@@ -39,7 +39,7 @@ int32_t SoundPoolManager::SetSoundPool(const pid_t pid, std::shared_ptr<SoundPoo
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
-        MEDIA_INFO_LOG("SoundPool have setted, use old object.");
+        MEDIA_LOGI("SoundPool have setted, use old object.");
         return MSERR_OK;
     }
     soundPool = std::make_shared<SoundPool>();
@@ -53,7 +53,7 @@ int32_t SoundPoolManager::Release(const pid_t pid)
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
-        MEDIA_INFO_LOG("Release soundpool, pid:%{pulibc}d.", pid);
+        MEDIA_LOGI("Release soundpool, pid:%{pulibc}d.", pid);
         soundPools_.erase(it);
         return MSERR_OK;
     }
