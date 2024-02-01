@@ -74,12 +74,14 @@ bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string
     auto result = GetParameter("debug.media_service.gstreamer_bundle", "0", useGstreamerForBundle,
         sizeof(useGstreamerForBundle));
     bool enableGstreamerForBundle = (result == 1 && useGstreamerForBundle[0] == '1');
+    bool enableHiStreamerByXtsCase = clientBundleName.find("ohos.acts.multimedia") != std::string::npos;
 
     MEDIA_LOG_I("IsEnableHiStreamer enableHiStreamerBySwitch = %{public}d, enableHiStreamerByBundleList = %{public}d, "
-	    "enableGstreamerForBundle = %{public}d", enableHiStreamerBySwitch,
-        enableHiStreamerByBundleList, enableGstreamerForBundle);
+        "enableGstreamerForBundle = %{public}d, enableHiStreamerByXtsCase = %{public}d", enableHiStreamerBySwitch,
+        enableHiStreamerByBundleList, enableGstreamerForBundle, enableHiStreamerByXtsCase);
 
-    return (!enableGstreamerForBundle && enableHiStreamerByBundleList) || enableHiStreamerBySwitch;
+    return (!enableGstreamerForBundle && (enableHiStreamerByBundleList || enableHiStreamerByXtsCase)) ||
+            enableHiStreamerBySwitch;
 }
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
