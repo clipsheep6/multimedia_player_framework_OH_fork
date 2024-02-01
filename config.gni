@@ -59,6 +59,11 @@ declare_args() {
       defined(global_parts_info.sensors_miscdevice)) {
     multimedia_player_framework_support_vibrator = true
   }
+  multimedia_player_framework_support_power_manager = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.powermgr_power_manager)) {
+    multimedia_player_framework_support_power_manager = true
+  }
 }
 
 player_framework_defines = []
@@ -147,6 +152,10 @@ if (multimedia_player_framework_support_vibrator) {
   player_framework_defines += [ "SUPPORT_VIBRATOR" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_VIBRATOR" ]
+}
+
+if (multimedia_player_framework_support_power_manager) {
+  player_framework_defines += [ "SUPPORT_POWER_MANAGER" ]
 }
 
 # Config path

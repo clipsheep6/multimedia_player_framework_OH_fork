@@ -1346,8 +1346,8 @@ void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerSta
             MEDIA_LOGD("exit state %{public}s", currState_->name_.c_str());
             currState_->StateExit();
         }
-
-        MEDIA_LOGI("change state to %{public}s", state->name_.c_str());
+        MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " change state to %{public}s",
+            FAKE_POINTER(this), state->name_.c_str());
         currState_ = state;
     }
     state->StateEnter();

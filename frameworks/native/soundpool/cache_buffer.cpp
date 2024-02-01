@@ -257,7 +257,7 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
     if (streamID == streamID_) {
         if (audioRenderer_ != nullptr && isRunning_.load()) {
             isRunning_.store(false);
-            if (rendererFlags_ == LOW_LATENCY_PLAY_RENDERER_FLAGS) {
+            if (audioRenderer_->IsFastRenderer()) {
                 audioRenderer_->Pause();
                 audioRenderer_->Flush();
             } else {

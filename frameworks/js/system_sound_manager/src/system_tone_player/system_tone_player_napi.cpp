@@ -16,6 +16,7 @@
 #include "system_tone_player_napi.h"
 
 #include "media_log.h"
+#include "common_napi.h"
 
 namespace {
 /* Constants for array index */
@@ -78,6 +79,7 @@ napi_value SystemTonePlayerNapi::SystemTonePlayerNapiConstructor(napi_env env, n
     if (status == napi_ok && thisVar != nullptr) {
         std::unique_ptr<SystemTonePlayerNapi> obj = std::make_unique<SystemTonePlayerNapi>();
         if (obj != nullptr) {
+            ObjectRefMap<SystemTonePlayerNapi>::Insert(obj.get());
             obj->env_ = env;
             if (obj->sSystemTonePlayer_ != nullptr) {
                 obj->systemTonePlayer_ = move(obj->sSystemTonePlayer_);
@@ -92,6 +94,7 @@ napi_value SystemTonePlayerNapi::SystemTonePlayerNapiConstructor(napi_env env, n
                 obj.release();
                 return thisVar;
             } else {
+                ObjectRefMap<SystemTonePlayerNapi>::Erase(obj.get());
                 MEDIA_LOGE("Failed to wrap the native system tone player object with JS.");
             }
         }
@@ -104,7 +107,7 @@ void SystemTonePlayerNapi::SystemTonePlayerNapiDestructor(napi_env env, void* na
 {
     SystemTonePlayerNapi *systemTonePlayerHelper = reinterpret_cast<SystemTonePlayerNapi*>(nativeObject);
     if (systemTonePlayerHelper != nullptr) {
-        systemTonePlayerHelper->~SystemTonePlayerNapi();
+        ObjectRefMap<SystemTonePlayerNapi>::DecreaseRef(systemTonePlayerHelper);
     }
 }
 
@@ -384,7 +387,10 @@ napi_value SystemTonePlayerNapi::Start(napi_env env, napi_callback_info info)
 void SystemTonePlayerNapi::AsyncStart(napi_env env, void *data)
 {
     SystemTonePlayerAsyncContext* context = static_cast<SystemTonePlayerAsyncContext*>(data);
-    context->streamID = context->objectInfo->systemTonePlayer_->Start(context->systemToneOptions);
+    auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+    ObjectRefMap objectGuard(obj);
+    auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    context->streamID = napiSystemTonePlayer->systemTonePlayer_->Start(context->systemToneOptions);
     context->status = MSERR_OK;
 }
 

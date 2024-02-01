@@ -154,6 +154,7 @@ napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result, "IsMuted: napi_get_cb_info fail");
     if (argc != ARGS_ONE) {
         MEDIA_LOGE("IsMuted: requires 1 parameters");
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
         return result;
     }
 

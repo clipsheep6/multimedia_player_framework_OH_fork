@@ -336,7 +336,7 @@ int32_t AudioSinkSvImpl::Pause()
 int32_t AudioSinkSvImpl::PauseTransitent()
 {
     MediaTrace trace("AudioSink::PauseTransitent");
-    MEDIA_LOGI("audioRenderer PauseTransitent In");
+    MEDIA_LOGD("audioRenderer PauseTransitent In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         LISTENER(
@@ -348,7 +348,7 @@ int32_t AudioSinkSvImpl::PauseTransitent()
             "AudioRenderer::PauseTransitent",
             PlayerXCollie::timerTimeout)
     }
-    MEDIA_LOGI("audioRenderer PauseTransitent Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance audioRenderer PauseTransitent Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 

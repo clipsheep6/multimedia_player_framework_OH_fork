@@ -451,7 +451,9 @@ public:
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(deviceChangeRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(deviceChangeRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(deviceChangeRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(deviceChangeRef->env_, deviceChangeRef->cb_, &jsCallback);
@@ -638,7 +640,8 @@ void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &inf
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
-    MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
+        FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);

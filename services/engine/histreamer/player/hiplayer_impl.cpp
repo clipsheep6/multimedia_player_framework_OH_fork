@@ -381,6 +381,9 @@ int32_t HiPlayerImpl::Reset()
 
 Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
 {
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(true);
+    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
@@ -443,7 +446,28 @@ Status HiPlayerImpl::PrepareForSeek()
             audioSink_->Flush();
         }
     }
-    return Status::OK;
+    MEDIA_LOG_I("Do seek ...");
+    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    if (rtv == Status::OK) {
+        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
+        pipeline_->Resume();
+        if (audioSink_ != nullptr) {
+            audioSink_->Resume();
+        }
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
+        pipeline_->Resume();
+    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.ManualReportMediaProgressOnce();
+        OnStateChanged(PlayerStateId::PAUSE);
+    }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
+    }
+    return rtv;
 }
 
 int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
@@ -981,7 +1005,7 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
     std::multimap<std::string, std::vector<uint8_t>> drmInfo =
         AnyCast<std::multimap<std::string, std::vector<uint8_t>>>(event.param);
     uint32_t infoCount = drmInfo.size();
-    if (infoCount > DrmConstant::DRM_MAX_DRM_INFO_COUNT || infoCount <= 0) {
+    if (infoCount > DrmConstant::DRM_MAX_DRM_INFO_COUNT || infoCount == 0) {
         MEDIA_LOG_E("HandleDrmInfoUpdatedEvent info count is invalid");
         return;
     }

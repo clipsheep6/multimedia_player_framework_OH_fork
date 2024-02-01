@@ -201,10 +201,10 @@ static void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t 
 
     // copy src Y component to dst
     for (int32_t i = 0; i < height; i++) {
-        uint16_t *srcY = (uint16_t *)(srcP010 + strideWidth * i);
+        uint16_t *srcY = reinterpret_cast<uint16_t *>(srcP010 + strideWidth * i);
         uint8_t *dstY = dstNV12 + width * i;
         for (int32_t j = 0; j < width; j++) {
-            *dstY = (uint8_t)(*srcY >> SHIFT_BITS_P010_2_NV12);
+            *dstY = static_cast<uint8_t>(*srcY >> SHIFT_BITS_P010_2_NV12);
             srcY++;
             dstY++;
         }
@@ -215,11 +215,11 @@ static void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t 
 
     // copy src UV component to dst, height(UV) = height(Y) / 2;
     for (int32_t i = 0; i < height / 2; i++) {
-        uint16_t *srcUV = (uint16_t *)(srcP010 + strideWidth * i);
+        uint16_t *srcUV = reinterpret_cast<uint16_t *>(srcP010 + strideWidth * i);
         uint8_t *dstUV = dstNV12 + width * i;
         for (int32_t j = 0; j < width; j++) {
-            *dstUV = (uint8_t)(*srcUV >> SHIFT_BITS_P010_2_NV12);
-            *(dstUV + 1) = (uint8_t)(*(srcUV + 1) >> SHIFT_BITS_P010_2_NV12);
+            *dstUV = static_cast<uint8_t>(*srcUV >> SHIFT_BITS_P010_2_NV12);
+            *(dstUV + 1) = static_cast<uint8_t>(*(srcUV + 1) >> SHIFT_BITS_P010_2_NV12);
             srcUV += 2; // srcUV move by 2 to process U and V component
             dstUV += 2; // dstUV move by 2 to process U and V component
         }

@@ -221,6 +221,10 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 int32_t HiRecorderImpl::Prepare()
 {
     MEDIA_LOG_I("Prepare enter.");
+    if (lseek(fd_, 0, SEEK_CUR) == -1) {
+        MEDIA_LOG_E("The fd is invalid.");
+        return (int32_t)Status::ERROR_UNKNOWN;
+    }
     if (audioCaptureFilter_) {
         audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
         audioEncFormat_->Set<Tag::APP_UID>(appUid_);
@@ -345,7 +349,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
                         break;
                     default:
-                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, -1);
+                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
                         break;
                 }
             }
