@@ -62,17 +62,23 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
         sourceId_ = -1;
     }
 
+    AudioHapticPlayerOptions options = {false, false};
     // Get the default haptic source uri.
+    std::string hapticUri = "";
     std::string defaultRingtoneUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
-    // the size of "ogg" is 3 and the size of ".ogg" is 4.
-    std::string hapticUri = defaultRingtoneUri.replace(defaultRingtoneUri.find_last_of(".ogg") - 3, 4, ".json");
+    if (defaultRingtoneUri == "") {
+        MEDIA_LOGW("Default ringtone uri is empty. Play ringtone without vibration");
+        options.muteHaptics = true;
+    } else {
+        // the size of "ogg" is 3 and the size of ".ogg" is 4.
+        hapticUri = defaultRingtoneUri.replace(defaultRingtoneUri.find_last_of(".ogg") - 3, 4, ".json");
+    }
 
     sourceId_ = audioHapticManager_->RegisterSource(audioUri, hapticUri);
     CHECK_AND_RETURN_LOG(sourceId_ != -1, "Failed to register source for audio haptic manager");
     (void)audioHapticManager_->SetAudioLatencyMode(sourceId_, AUDIO_LATENCY_MODE_NORMAL);
     (void)audioHapticManager_->SetStreamUsage(sourceId_, AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE);
 
-    AudioHapticPlayerOptions options = {false, false};
     if (systemSoundMgr_.GetRingerMode() == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
         options.muteHaptics = true;
     }
