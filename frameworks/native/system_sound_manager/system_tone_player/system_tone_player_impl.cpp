@@ -52,7 +52,6 @@ SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
     if (player_ != nullptr) {
         player_->Release();
-        (void)SystemSoundVibrator::StopVibrator();
         player_ = nullptr;
         callback_ = nullptr;
     }
@@ -84,6 +83,7 @@ void SystemTonePlayerImpl::InitPlayer()
 int32_t SystemTonePlayerImpl::Prepare()
 {
     MEDIA_LOGI("Enter Prepare()");
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
     auto systemToneUri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
@@ -95,7 +95,6 @@ int32_t SystemTonePlayerImpl::Prepare()
     if (soundID_ != -1) {
         (void)player_->Unload(soundID_);
         soundID_ = -1;
-        std::lock_guard<std::mutex> lock(loadStatusMutex_);
         loadCompleted_ = false;
     }
     if (fileDes_ != -1) {
@@ -121,9 +120,13 @@ int32_t SystemTonePlayerImpl::Prepare()
         return MSERR_OPEN_FILE_FAILED;
     }
     std::unique_lock<std::mutex> lockWait(loadUriMutex_);
-    bool waitResult = condLoadUri_.wait_for(lockWait, std::chrono::seconds(LOAD_WAIT_SECONDS),
-        [this]() { return loadCompleted_; });
-    if (!waitResult) {
+    condLoadUri_.wait_for(lockWait, std::chrono::seconds(LOAD_WAIT_SECONDS),
+        [this]() { return loadCompleted_ || isReleased_; });
+    if (isReleased_) {
+        MEDIA_LOGE("Prepare: The system tone player is released when it is preparing.");
+        return MSERR_INVALID_OPERATION;
+    }
+    if (!loadCompleted_) {
         MEDIA_LOGE("Prepare: Failed to load system tone uri (time out).");
         return MSERR_OPEN_FILE_FAILED;
     }
@@ -157,7 +160,7 @@ int32_t SystemTonePlayerImpl::ApplyDefaultSystemToneUri(std::string &defaultUri)
 
 int32_t SystemTonePlayerImpl::NotifyLoadCompleted()
 {
-    std::lock_guard<std::mutex> lock(loadStatusMutex_);
+    std::lock_guard<std::mutex> lockWait(loadUriMutex_);
     loadCompleted_ = true;
     condLoadUri_.notify_one();
     return MSERR_OK;
@@ -166,6 +169,7 @@ int32_t SystemTonePlayerImpl::NotifyLoadCompleted()
 int32_t SystemTonePlayerImpl::Start()
 {
     MEDIA_LOGI("Enter Start()");
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
     PlayParams playParams {
@@ -189,6 +193,7 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 {
     MEDIA_LOGI("Enter Start() with systemToneOptions: muteAudio %{public}d, muteHaptics %{public}d",
         systemToneOptions.muteAudio, systemToneOptions.muteHaptics);
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
     int32_t streamID = -1;
@@ -213,12 +218,16 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
 
 int32_t SystemTonePlayerImpl::Stop(const int32_t &streamID)
 {
-    MEDIA_LOGI("Enter Stop() with streamID");
+    MEDIA_LOGI("Enter Stop() with streamID %{public}d", streamID);
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
-    (void)player_->Stop(streamID);
-
-    (void)SystemSoundVibrator::StopVibrator();
+    if (streamID > 0) {
+        (void)player_->Stop(streamID);
+        (void)SystemSoundVibrator::StopVibrator();
+    } else {
+        MEDIA_LOGW("The streamID %{public}d is invalid!", streamID);
+    }
 
     return MSERR_OK;
 }
@@ -226,24 +235,26 @@ int32_t SystemTonePlayerImpl::Stop(const int32_t &streamID)
 int32_t SystemTonePlayerImpl::Release()
 {
     MEDIA_LOGI("Enter Release()");
+    {
+        std::lock_guard<std::mutex> lockWait(loadUriMutex_);
+        isReleased_ = true;
+        condLoadUri_.notify_all();
+    }
+
+    std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
     (void)player_->Unload(soundID_);
     soundID_ = -1;
-
-    (void)player_->Release();
-    (void)SystemSoundVibrator::StopVibrator();
-
-    player_ = nullptr;
-    callback_ = nullptr;
-
+    loadCompleted_ = false;
     if (fileDes_ != -1) {
         (void)close(fileDes_);
         fileDes_ = -1;
     }
 
-    std::lock_guard<std::mutex> lock(loadStatusMutex_);
-    loadCompleted_ = false;
+    (void)player_->Release();
+    player_ = nullptr;
+    callback_ = nullptr;
 
     return MSERR_OK;
 }

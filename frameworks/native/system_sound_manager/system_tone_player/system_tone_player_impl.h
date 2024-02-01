@@ -56,7 +56,8 @@ private:
     int32_t soundID_ = -1;
     int32_t fileDes_ = -1;
     bool loadCompleted_ = false;
-    std::mutex loadStatusMutex_;
+    bool isReleased_ = false;
+    std::mutex systemTonePlayerMutex_;
     std::mutex loadUriMutex_;
     std::condition_variable condLoadUri_;
 };

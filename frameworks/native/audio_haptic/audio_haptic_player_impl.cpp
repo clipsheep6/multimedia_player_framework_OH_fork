@@ -145,6 +145,7 @@ int32_t AudioHapticPlayerImpl::LoadVibratorSource()
     audioHapticVibrator_ = AudioHapticVibrator::CreateAudioHapticVibrator(*this);
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Failed to create audio haptic vibrator instance");
+    CHECK_AND_RETURN_RET_LOG(hapticUri_ != "", MSERR_INVALID_VAL, "Invalid val: haptic uri is empty");
 
     return audioHapticVibrator_->PreLoad(hapticUri_);
 }
