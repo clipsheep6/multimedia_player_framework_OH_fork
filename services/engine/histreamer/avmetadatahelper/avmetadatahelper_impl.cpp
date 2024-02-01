@@ -197,6 +197,12 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     int32_t outputHeight;
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
     outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
+#if !(defined(__x86_64__) || defined(__aarch64__))
+    MEDIA_LOGI("32Bit OS GetYuvDataAlignStride");
+    if (outputHeight == 0) {
+        outputHeight = height;
+    }
+#endif
     MEDIA_LOGI("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
         stride, outputWidth, outputHeight);
 
@@ -434,7 +440,6 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
             MEDIA_LOGI("Fetch frame OK srcUri_:%{private}s, width:%{public}d, height:%{public}d",
                 srcUri_.c_str(), outputConfig_.dstWidth, outputConfig_.dstHeight);
             videoDecoder_->Flush();
-            videoDecoder_->Stop();
         } else {
             hasFetchedFrame_ = true;
             MEDIA_LOGI("Fetch frame timeout srcUri_:%{private}s, width:%{public}d, height:%{public}d",
