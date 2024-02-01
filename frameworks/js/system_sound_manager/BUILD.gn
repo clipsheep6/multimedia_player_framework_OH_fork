@@ -34,6 +34,7 @@ ohos_shared_library("systemsoundmanager") {
     "./../../../interfaces/inner_api/native/system_sound_manager/include",
     "./../../../services/utils/include",
     "//third_party/libuv/include",
+    "./../common",
   ]
 
   sources = [
