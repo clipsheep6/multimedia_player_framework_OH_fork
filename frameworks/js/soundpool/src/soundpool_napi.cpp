@@ -119,7 +119,6 @@ void SoundPoolNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             napi->soundPool_->Release();
             napi->soundPool_ = nullptr;
         }
-        maxStreams = 0;
         delete napi;
     }
     MEDIA_LOGD("Destructor success");
