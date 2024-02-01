@@ -122,17 +122,27 @@ private:
 
         void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> &availableAudioBuffers) override
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             if (!soundParserInner_.expired()) {
+                while (!soundParserInner_.lock()->soundParserLock_.try_lock()) {
+                    if (!soundParserInner_.lock()->isParsing_.load()) {
+                        return;
+                    }
+                }
                 soundData_ = availableAudioBuffers;
                 isSoundParserCompleted_.store(true);
+                soundParserInner_.lock()->soundParserLock_.unlock();
             }
         }
         void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             if (!soundParserInner_.expired()) {
+                while (!soundParserInner_.lock()->soundParserLock_.try_lock()) {
+                    if (!soundParserInner_.lock()->isParsing_.load()) {
+                        return;
+                    }
+                }
                 soundBufferTotalSize_ = soundBufferTotalSize;
+                soundParserInner_.lock()->soundParserLock_.unlock();
             }
         }
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
@@ -171,6 +181,7 @@ private:
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;
+    std::atomic<bool> isParsing_ = false;
 
     MediaAVCodec::Format trackFormat_;
 
