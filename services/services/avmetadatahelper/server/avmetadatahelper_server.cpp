@@ -87,7 +87,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
             (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "0x%{public}06" PRIXPTR " SetSource failed", FAKE_POINTER(this));
         return ret;
     });
     int32_t ret = taskQue_.EnqueueTask(task);

@@ -69,7 +69,7 @@ napi_value SoundPoolNapi::Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    MEDIA_LOGI("Init success");
+    MEDIA_LOGD("Init success");
     return exports;
 }
 
@@ -240,7 +240,7 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
             } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(streamId);
             }
-            MEDIA_LOGI("The js thread of play finishes execution and returns");
+            MEDIA_LOGI("The js thread of play finishes execution and returns, streamId: %{public}d", streamId);
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     } else {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
@@ -597,7 +597,7 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("SoundPool::JsClearOnCallback");
-    MEDIA_LOGI("JsClearOnCallback Start");
+    MEDIA_LOGD("JsClearOnCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -621,7 +621,7 @@ napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info inf
 
     soundPoolNapi->CancelCallbackReference(callbackName);
 
-    MEDIA_LOGI("JsClearOnCallback End");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(soundPoolNapi));
     return result;
 }
 
