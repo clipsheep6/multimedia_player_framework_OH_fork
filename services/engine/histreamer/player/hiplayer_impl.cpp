@@ -229,7 +229,11 @@ int HiPlayerImpl::PrepareAsync()
         return MSERR_INVALID_OPERATION;
     }
     if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
-        SetSource(url_);
+        int32_t ret = SetSource(url_);
+        if (ret != MSERR_OK) {
+            OnStateChanged(PlayerStateId::ERROR);
+            return Status::ERROR_UNSUPPORTED_FORMAT;
+        }
     }
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
@@ -714,6 +718,9 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
     auto tmpMeta = demuxer_->GetGlobalMetaInfo();
+    if (tmpMeta == nullptr) {
+        MEDIA_LOG_E("GetDuration failed, Meta is null.");
+    }
     sourceMeta_ = tmpMeta;
     int64_t duration = 0;
     bool found = false;
