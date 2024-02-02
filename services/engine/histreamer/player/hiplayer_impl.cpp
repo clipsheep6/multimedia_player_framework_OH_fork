@@ -160,7 +160,9 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
     auto ret = Init();
-    if (ret == Status::OK) {
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
+    } else {
         url_ = uri;
         if (IsFileUrl(uri)) {
             std::string realUriPath;
@@ -170,11 +172,6 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
             }
             url_ = "file://" + realUriPath;
         }
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
-    }
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
-    } else {
         if (url_.find("http") == 0 || url_.find("https") == 0) {
             isNetWorkPlay_ = true;
         }
@@ -186,13 +183,14 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
-    auto ret = Init();
-    if (ret == Status::OK) {
-        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc));
+    if (dataSrc == nullptr) {
+        MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
+    auto ret = Init();
     if (ret != Status::OK) {
         MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
     } else {
+        dataSrc_ = dataSrc;
         OnStateChanged(PlayerStateId::INIT);
     }
     return TransStatus(ret);
@@ -228,18 +226,23 @@ int HiPlayerImpl::PrepareAsync()
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
-    if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
-        int32_t ret = SetSource(url_);
-        if (ret != MSERR_OK) {
-            OnStateChanged(PlayerStateId::ERROR);
-            return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        }
+    auto ret = Status::OK;
+
+    if (dataSrc_ != nullptr) {
+        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
+    } else {
+        ret = DoSetSource(std::make_shared<MediaSource>(url_));
     }
+    if (ret != MSERR_OK) {
+        OnStateChanged(PlayerStateId::ERROR);
+        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+    }
+
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
         StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
-    auto ret = pipeline_->Prepare();
+    ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
