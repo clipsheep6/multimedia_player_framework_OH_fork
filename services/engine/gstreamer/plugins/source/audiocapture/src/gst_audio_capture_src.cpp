@@ -314,6 +314,23 @@ static gboolean process_caps_info(GstAudioCaptureSrc *src)
     return TRUE;
 }
 
+static GstStateChangeReturn gst_state_change_ready_to_paused(GstAudioCaptureSrc *src)
+{
+    g_return_val_if_fail(src != nullptr, GST_STATE_CHANGE_FAILURE);
+    CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
+    AudioCapture::AppInfo appInfo = {};
+    appInfo.appUid = src->appuid;
+    appInfo.appPid = src->apppid;
+    appInfo.appTokenId = src->token_id;
+    appInfo.appFullTokenId = src->full_token_id;
+    if (src->audio_capture->SetCaptureParameter(src->bitrate, src->channels, src->sample_rate, appInfo) != MSERR_OK) {
+        GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, ("SetCaptureParameter failed"),
+            ("SetCaptureParameter failed"));
+        return GST_STATE_CHANGE_FAILURE;
+    }
+    return GST_STATE_CHANGE_SUCCESS;
+}
+
 static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSrc *src, GstStateChange transition)
 {
     g_return_val_if_fail(src != nullptr, GST_STATE_CHANGE_FAILURE);
@@ -326,15 +343,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
-            AudioCapture::AppInfo appInfo = {};
-            appInfo.appUid = src->appuid;
-            appInfo.appPid = src->apppid;
-            appInfo.appTokenId = src->token_id;
-            appInfo.appFullTokenId = src->full_token_id;
-            CHECK_AND_BREAK_REP_ERR(src->audio_capture->SetCaptureParameter(src->bitrate, src->channels,
-                src->sample_rate, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
-            break;
+            return gst_state_change_ready_to_paused(src);
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
