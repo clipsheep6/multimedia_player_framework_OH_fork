@@ -63,7 +63,7 @@ private:
     std::multimap<int32_t, TimeInfo> timesMap_;
     std::mutex mutex_;
     std::mutex thredMutex_;
-    std::unique_ptr<std::thread> thread_;
+    std::unique_ptr<std::thread> thread_ = nullptr;
     bool threadRunning_ = false;
     std::condition_variable cond_;
 };
