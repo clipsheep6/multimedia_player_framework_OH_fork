@@ -62,7 +62,6 @@ private:
     int32_t ExtractMetadata();
     void Reset();
     void Destroy();
-    Status InitSurface();
     Status InitDecoder();
 
     std::shared_ptr<Meta> GetTargetTrackInfo();
