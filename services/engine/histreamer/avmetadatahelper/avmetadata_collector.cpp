@@ -101,7 +101,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const 
     FormatAVMeta(metadata, imageTrackCount, globalInfo);
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
-        MEDIA_LOGI("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
+        MEDIA_LOGD("metadata tbl, key: %{public}d, keyName: %{public}s, val: %{public}s", it->first,
             AVMETA_KEY_TO_X_MAP.find(it->first)->second.c_str(), it->second.c_str());
         it++;
     }

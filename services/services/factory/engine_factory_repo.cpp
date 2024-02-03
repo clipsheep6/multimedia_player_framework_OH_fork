@@ -116,7 +116,7 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (isLoadHistreamer_) {
-        MEDIA_LOGI("Histreamer is enabled");
+        MEDIA_LOGD("Histreamer is enabled");
         return MSERR_OK;
     }
 

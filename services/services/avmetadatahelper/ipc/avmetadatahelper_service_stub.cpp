@@ -81,7 +81,8 @@ int32_t AVMetadataHelperServiceStub::DestroyStub()
 int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}u is received", code);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
+        FAKE_POINTER(this), code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (AVMetadataHelperServiceStub::GetDescriptor() != remoteDescriptor) {

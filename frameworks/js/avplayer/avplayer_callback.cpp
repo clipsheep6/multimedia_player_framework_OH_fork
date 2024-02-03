@@ -691,7 +691,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
 
     MEDIA_LOGD("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find vol change callback!");
+        MEDIA_LOGD("can not find vol change callback!");
         return;
     }
 

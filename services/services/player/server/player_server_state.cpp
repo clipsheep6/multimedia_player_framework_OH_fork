@@ -113,8 +113,8 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
     } else {
         HandleStateChange(extra);
         BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
-        MEDIA_LOGI("Callback State change, currentState is %{public}s",
-            server_.GetStatusDescription(extra).c_str());
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change, currentState is %{public}s",
+            FAKE_POINTER(this), server_.GetStatusDescription(extra).c_str());
     }
 
     if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {

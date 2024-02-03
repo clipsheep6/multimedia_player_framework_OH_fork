@@ -140,7 +140,7 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 
 void AVMetadataHelperImpl::OnOutputFormatChanged(const MediaAVCodec::Format &format)
 {
-    MEDIA_LOGI("OnOutputFormatChanged");
+    MEDIA_LOGD("OnOutputFormatChanged");
     outputFormat_ = format;
 }
 
@@ -148,7 +148,7 @@ void AVMetadataHelperImpl::OnInputBufferAvailable(uint32_t index, std::shared_pt
 {
     MEDIA_LOGD("OnInputBufferAvailable index:%{public}u", index);
     if (stopProcessing_.load()) {
-        MEDIA_LOGI("Has stopped processing, will not queue input buffer.");
+        MEDIA_LOGD("Has stopped processing, will not queue input buffer.");
         return;
     }
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
@@ -161,7 +161,7 @@ void AVMetadataHelperImpl::OnOutputBufferAvailable(uint32_t index, std::shared_p
 {
     MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
     if (stopProcessing_.load()) {
-        MEDIA_LOGI("Has stopped processing, will not release output buffer.");
+        MEDIA_LOGD("Has stopped processing, will not release output buffer.");
         return;
     }
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnOutputBufferAvailable videoDecoder_ is nullptr");
@@ -287,8 +287,8 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
     int32_t size = surfaceBuffer->GetSize();
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
-    MEDIA_LOGI("Convert to AVSharedMemory format:%{public}d, size:%{public}d, "
-        "width:%{public}d, height:%{public}d", format, size, width, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " format:%{public}d, size:%{public}d, "
+        "width:%{public}d, height:%{public}d", FAKE_POINTER(this), format, size, width, height);
 
     std::unique_ptr<PixelMap> yuvPixelMap = GetYuvDataAlignStride(surfaceBuffer);
     SourceOptions srcOpts;
@@ -350,11 +350,12 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
     }
 
     usage_ = usage;
-    MEDIA_LOGI("SetSource uri: %{private}s, type:%{public}d, usage: %{public}d", uri.c_str(),
-        uriHelper.UriType(), usage);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetSource uri: %{private}s, type:%{public}d, usage: %{public}d",
+        FAKE_POINTER(this), uri.c_str(), uriHelper.UriType(), usage);
 
     Status ret = SetSourceInternel(uri, usage);
-    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
+        "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -390,12 +391,12 @@ std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 {
-    MEDIA_LOGI("enter ResolveMetadata");
+    MEDIA_LOGD("enter ResolveMetadata");
 
     int32_t ret = ExtractMetadata();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "Failed to call ExtractMetadata");
 
-    MEDIA_LOGI("exit ResolveMetadata");
+    MEDIA_LOGD("exit ResolveMetadata");
     return collectedMeta_;
 }
 
@@ -433,12 +434,11 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetTargetTrackInfo()
             Plugins::MediaType mediaType;
             CHECK_AND_RETURN_RET_LOG(trackInfos[index]->GetData(Tag::MEDIA_TYPE, mediaType), nullptr,
                 "GetTargetTrackInfo failed to get mediaType, index:%{public}d", index);
-            MEDIA_LOGI("GetData mediaType:%{public}d", static_cast<int32_t>(mediaType));
             CHECK_AND_RETURN_RET_LOG(mediaType == Plugins::MediaType::VIDEO, nullptr,
                 "GetTargetTrackInfo mediaType is not video, index:%{public}d", index);
             trackIndex_ = index;
-            MEDIA_LOGI("GetTargetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
-                trackIndex_, trackMime_.c_str());
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
+                FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
             return trackInfos[trackIndex_];
         }
     }
@@ -470,14 +470,15 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     mediaDemuxer_->SeekTo(timeUs, static_cast<Plugins::SeekMode>(option), realSeekTime);
-    MEDIA_LOGI("FetchFrameAtTime realSeekTime:%{public}" PRId64"", realSeekTime);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " FetchFrameAtTime realSeekTime:%{public}" PRId64"",
+        FAKE_POINTER(this), realSeekTime);
     {
         std::unique_lock<std::mutex> lock(mutex_);
 
         // wait up to 3s to fetch frame AVSharedMemory at time.
         if (cond_.wait_for(lock, std::chrono::seconds(3), [this] {return hasFetchedFrame_.load();})) {
-            MEDIA_LOGI("Fetch frame OK srcUri_:%{private}s, width:%{public}d, height:%{public}d",
-                srcUri_.c_str(), outputConfig_.dstWidth, outputConfig_.dstHeight);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
+                FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
         } else {
             hasFetchedFrame_ = true;
             MEDIA_LOGI("Fetch frame timeout srcUri_:%{private}s, width:%{public}d, height:%{public}d",
@@ -497,7 +498,8 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::string &uri, int32_t u
         "SetSourceInternel demuxer is nullptr");
     mediaDemuxer_->SetEventReceiver(std::make_shared<HelperEventReceiver>(this));
     Status ret = mediaDemuxer_->SetDataSource(std::make_shared<MediaSource>(srcUri_));
-    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret, "SetSourceInternel demuxer failed to call SetDataSource");
+    CHECK_AND_RETURN_RET_LOG(ret == Status::OK, ret,
+        "0x%{public}06" PRIXPTR " SetSourceInternel demuxer failed to call SetDataSource", FAKE_POINTER(this));
     return Status::OK;
 }
 
@@ -549,7 +551,7 @@ void AVMetadataHelperImpl::Destroy()
         videoDecoder_->Release();
     }
 
-    MEDIA_LOGI("Finish Destroy.");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
 }
 
 Status AVMetadataHelperImpl::InitDecoder()
@@ -558,7 +560,7 @@ Status AVMetadataHelperImpl::InitDecoder()
         MEDIA_LOGD("InitDecoder already.");
         return Status::OK;
     }
-    MEDIA_LOGI("Init decoder start.");
+    MEDIA_LOGD("Init decoder start.");
     videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_);
     CHECK_AND_RETURN_RET_LOG(videoDecoder_ != nullptr, Status::ERROR_NO_MEMORY,
         "Create videoDecoder_ is nullptr");
@@ -568,7 +570,8 @@ Status AVMetadataHelperImpl::InitDecoder()
     int32_t height;
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, width);
     trackFormat.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, height);
-    MEDIA_LOGI("Init decoder trackFormat width:%{public}d, height:%{public}d", width, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Init decoder trackFormat width:%{public}d, height:%{public}d",
+        FAKE_POINTER(this), width, height);
     trackFormat.PutIntValue(MediaDescriptionKey::MD_KEY_PIXEL_FORMAT,
         static_cast<int32_t>(Plugins::VideoPixelFormat::NV12));
     videoDecoder_->Configure(trackFormat);
@@ -578,7 +581,7 @@ Status AVMetadataHelperImpl::InitDecoder()
     videoDecoder_->SetOutputSurface(producerSurface_);
     videoDecoder_->Prepare();
     videoDecoder_->Start();
-    MEDIA_LOGI("Init decoder success.");
+    MEDIA_LOGD("Init decoder success.");
     return Status::OK;
 }
 
