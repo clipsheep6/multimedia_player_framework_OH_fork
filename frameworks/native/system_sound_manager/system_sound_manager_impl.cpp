@@ -60,7 +60,6 @@ std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSound
 SystemSoundManagerImpl::SystemSoundManagerImpl()
 {
     InitDefaultUriMap();
-    LoadSystemSoundUriMap();
     InitRingerMode();
 }
 
@@ -242,36 +241,12 @@ std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
     return jsonValue;
 }
 
-void SystemSoundManagerImpl::LoadSystemSoundUriMap()
-{
-    std::lock_guard<std::mutex> lock(uriMutex_);
-
-    std::string temp = "";
-    // Load ringtone uri. If the value is "", use default uri.
-    temp = GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_0));
-    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
-        (temp == "") ? defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] : temp;
-    temp = GetUriFromDatabase(GetKeyForDatabase(RING_TONE, RINGTONE_TYPE_SIM_CARD_1));
-    ringtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] =
-        (temp == "") ? defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_1] : temp;
-
-    //Load system tone uri. If the value is "", use default uri.
-    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_0));
-    systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
-        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] : temp;
-    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_SIM_CARD_1));
-    systemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] =
-        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_1] : temp;
-    temp = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, SYSTEM_TONE_TYPE_NOTIFICATION));
-    systemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] =
-        (temp == "") ? defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_NOTIFICATION] : temp;
-}
-
-void SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
+int32_t SystemSoundManagerImpl::WriteUriToDatabase(const std::string &key, const std::string &uri)
 {
     int32_t result = AudioStandard::AudioSystemManager::GetInstance()->SetSystemSoundUri(key, uri);
     MEDIA_LOGI("WriteUriToDatabase: key: %{public}s, uri: %{public}s, result: %{public}d",
         key.c_str(), uri.c_str(), result);
+    return result;
 }
 
 std::string SystemSoundManagerImpl::GetUriFromDatabase(const std::string &key)
@@ -316,20 +291,26 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "invalid ringtone type");
+    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), MSERR_INVALID_VAL, "Invalid ringtone type");
+
     MEDIA_LOGI("SetRingtoneUri: ringtoneType %{public}d, uri %{public}s", ringtoneType, uri.c_str());
-    ringtoneUriMap_[ringtoneType] = uri;
-    WriteUriToDatabase(GetKeyForDatabase(RING_TONE, ringtoneType), uri);
-    return MSERR_OK;
+    int32_t result = WriteUriToDatabase(GetKeyForDatabase(RING_TONE, ringtoneType), uri);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_OPERATION,
+        "Failed to write ringtone uri to database: result %{public}d", result);
+    return result;
 }
 
 std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), "", "invalid ringtone type");
-    MEDIA_LOGI("GetRingtoneUri: for ringtoneType %{public}d", ringtoneType);
+    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType), "", "Invalid ringtone type");
 
-    return ringtoneUriMap_[ringtoneType];
+    std::string ringtoneUri = GetUriFromDatabase(GetKeyForDatabase(RING_TONE, ringtoneType));
+    if (ringtoneUri == "") {
+        MEDIA_LOGI("The ringtone uri for ringtoneType %{public}d is empty. Return default uri.", ringtoneType);
+        ringtoneUri = defaultRingtoneUriMap_[ringtoneType];
+    }
+    return ringtoneUri;
 }
 
 std::shared_ptr<RingtonePlayer> SystemSoundManagerImpl::GetRingtonePlayer(const shared_ptr<Context> &context,
@@ -376,11 +357,12 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "invalid system tone type");
-    MEDIA_LOGI("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
+    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), MSERR_INVALID_VAL, "Invalid system tone type");
 
-    systemToneUriMap_[systemToneType] = uri;
-    WriteUriToDatabase(GetKeyForDatabase(SYSTEM_TONE, systemToneType), uri);
+    MEDIA_LOGI("SetSystemToneUri: systemToneType %{public}d, uri %{public}s", systemToneType, uri.c_str());
+    int32_t result = WriteUriToDatabase(GetKeyForDatabase(SYSTEM_TONE, systemToneType), uri);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_OPERATION,
+        "Failed to write system tone uri to database: result %{public}d", result);
     return MSERR_OK;
 }
 
@@ -388,10 +370,14 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     SystemToneType systemToneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), "", "invalid system tone type");
-    MEDIA_LOGI("GetSystemToneUri: for systemToneType %{public}d", systemToneType);
+    CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), "", "Invalid system tone type");
 
-    return systemToneUriMap_[systemToneType];
+    std::string systemToneUri = GetUriFromDatabase(GetKeyForDatabase(SYSTEM_TONE, systemToneType));
+    if (systemToneUri == "") {
+        MEDIA_LOGI("The system tone uri for systemToneType %{public}d is empty. Return default uri.", systemToneType);
+        systemToneUri = defaultSystemToneUriMap_[systemToneType];
+    }
+    return systemToneUri;
 }
 
 int32_t SystemSoundManagerImpl::SetRingerMode(const AudioStandard::AudioRingerMode &ringerMode)
