@@ -35,7 +35,6 @@ const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 t
 const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
-const int32_t MS_TO_US = 1000; // the unit of seek time transfer from ms to us
 }
 
 namespace OHOS {
@@ -385,79 +384,6 @@ int32_t HiPlayerImpl::Reset()
     return ret;
 }
 
-Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
-{
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(true);
-    }
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    }
-    int64_t realSeekTime = seekPos;
-    if (videoDecoder_ != nullptr) {
-        videoDecoder_->SetSeekTime(realSeekTime * MS_TO_US);
-    }
-    if (audioDecoder_ != nullptr) {
-        audioDecoder_->SetSeekTime(realSeekTime * MS_TO_US);
-    }
-    auto seekMode = Transform2SeekMode(mode);
-    PrepareForSeek();
-    MEDIA_LOG_I("Do seek ...");
-    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-    if (rtv == Status::OK) {
-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        pipeline_->Resume();
-        if (audioSink_ != nullptr) {
-            audioSink_->Resume();
-        }
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
-        pipeline_->Resume();
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
-        OnStateChanged(PlayerStateId::PAUSE);
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
-    }
-    return rtv;
-}
-
-Status HiPlayerImpl::PrepareForSeek()
-{
-    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        if (audioSink_ != nullptr) {
-            audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-        }
-        pipeline_->Pause();
-        if (audioDecoder_ != nullptr) {
-            audioDecoder_->Flush();
-            audioDecoder_->Start();
-        }
-        if (audioSink_ != nullptr) {
-            audioSink_->Pause();
-            audioSink_->Flush();
-        }
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        pipeline_->Pause();
-        if (audioSink_ != nullptr) {
-            audioSink_->Pause();
-            audioSink_->Flush();
-        }
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-        if (audioDecoder_ != nullptr) {
-            audioDecoder_->Flush();
-        }
-        if (audioSink_ != nullptr) {
-            audioSink_->Flush();
-        }
-    }
-    return Status::OK;
-}
-
 int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("SeekToCurrentTime entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
@@ -503,11 +429,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 rtv = Status::ERROR_WRONG_STATE;
                 break;
         }
-    }
-    // if it has no next key frames, seek previous.
-    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-        rtv = SeekInner(seekPos, mode);
     }
     isSeek_ = false;
     NotifySeek(rtv, notifySeekDone, seekPos);
@@ -569,10 +490,6 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     auto rtv = doSeek(seekPos, mode);
     if (isStreaming_) {
         pipeline_->Resume();
-    } else {
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
-        OnStateChanged(PlayerStateId::PAUSE);
     }
     return rtv;
 }
@@ -587,6 +504,12 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
     auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+
+    // if it has no next key frames, seek previous.
+    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
+        seekMode = Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC;);
+        rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    }
     if (rtv == Status::OK) {
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
     }

@@ -122,8 +122,6 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
-    Status PrepareForSeek();
-    Status SeekInner(int64_t seekPos, PlayerSeekMode mode);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);

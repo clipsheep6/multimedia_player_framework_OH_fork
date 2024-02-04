@@ -916,6 +916,7 @@ void PlayerServer::HandleEos()
 {
     if (config_.looping.load()) {
         auto seekTask = std::make_shared<TaskHandler<void>>([this]() {
+            disableNextSeekDone_ = true;
             MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
@@ -927,7 +928,6 @@ void PlayerServer::HandleEos()
             disableNextSeekDone_ = false;
         });
 
-        disableNextSeekDone_ = true;
         int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "eos seek", SEEK_PREVIOUS_SYNC, 0);
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
     }
