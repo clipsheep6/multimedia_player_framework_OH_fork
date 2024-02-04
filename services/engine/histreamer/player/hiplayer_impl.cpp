@@ -507,7 +507,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 
     // if it has no next key frames, seek previous.
     if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
-        seekMode = Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC;);
+        seekMode = Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC);
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
     }
     if (rtv == Status::OK) {
