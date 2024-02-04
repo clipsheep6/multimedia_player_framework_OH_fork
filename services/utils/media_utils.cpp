@@ -65,12 +65,12 @@ const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
 
 bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName, const int32_t& uid)
 {
-    char useHistreamer[10] = {0}; // 10 for system parameter usage
+    char useHistreamer[10] = {0};
     auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
     bool enableHiStreamerBySwitch = (res == 1 && useHistreamer[0] == '1');
     bool enableHiStreamerByBundleList = (HST_ENABLE_BUNDLE_LIST.count(clientBundleName) > 0);
 
-    char useGstreamerForBundle[10] = {0}; // 10 for system parameter usage
+    char useGstreamerForBundle[10] = {0};
     auto result = GetParameter("debug.media_service.gstreamer_bundle", "0", useGstreamerForBundle,
         sizeof(useGstreamerForBundle));
     bool enableGstreamerForBundle = (result == 1 && useGstreamerForBundle[0] == '1');
