@@ -20,6 +20,10 @@
 #include "media_log.h"
 #include "soundpool.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolManager"};
+}
+
 namespace OHOS {
 namespace Media {
 class SoundPool;

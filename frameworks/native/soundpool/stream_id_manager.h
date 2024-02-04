@@ -23,6 +23,10 @@
 #include "sound_parser.h"
 #include "thread_pool.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolStreamIDManager"};
+}
+
 namespace OHOS {
 namespace Media {
 class StreamIDManager : public std::enable_shared_from_this<StreamIDManager> {
@@ -46,12 +50,12 @@ private:
         explicit CacheBufferCallBack(const std::weak_ptr<StreamIDManager> streamIDManager)
             : streamIDManagerInner_(streamIDManager)
         {
-            MEDIA_INFO_LOG("Construction StreamIDManager::SoundPoolCallBack");
+            MEDIA_LOGI("Construction StreamIDManager::SoundPoolCallBack");
         }
         virtual ~CacheBufferCallBack() = default;
         void OnLoadCompleted(int32_t soundID)
         {
-            MEDIA_INFO_LOG("StreamIDManager::SoundPoolCallBack OnLoadCompleted");
+            MEDIA_LOGI("StreamIDManager::SoundPoolCallBack OnLoadCompleted");
         }
         void OnPlayFinished()
         {
@@ -61,7 +65,7 @@ private:
         }
         void OnError(int32_t errorCode)
         {
-            MEDIA_INFO_LOG("StreamIDManager::SoundPoolCallBack OnError");
+            MEDIA_LOGI("StreamIDManager::SoundPoolCallBack OnError");
         }
 
     private:
