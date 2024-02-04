@@ -212,7 +212,7 @@ int32_t HiPlayerImpl::Prepare()
     return TransStatus(ret);
 }
 
-int HiPlayerImpl::PrepareAsync()
+int32_t HiPlayerImpl::PrepareAsync()
 {
     MEDIA_LOG_I("PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
