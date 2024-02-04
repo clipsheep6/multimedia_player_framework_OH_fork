@@ -16,7 +16,6 @@
 #define HST_LOG_TAG "HiPlayerImpl"
 
 #include "hiplayer_impl.h"
-
 #include "audio_info.h"
 #include "common/log.h"
 #include "common/media_source.h"
@@ -387,9 +386,6 @@ int32_t HiPlayerImpl::Reset()
 
 Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
 {
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(true);
-    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     }
@@ -419,9 +415,6 @@ Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();
         OnStateChanged(PlayerStateId::PAUSE);
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
     }
     return rtv;
 }
@@ -469,16 +462,15 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(true);
+    }
     int32_t durationMs = 0;
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
-    if (mSeconds >= durationMs) { // if exceeds change to duration
-        mSeconds = durationMs;
-    }
-    mSeconds = mSeconds < 0 ? 0 : mSeconds;
-    int64_t seekPos = mSeconds;
+    int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs)));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
@@ -504,13 +496,15 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 break;
         }
     }
-    // if it has no next key frames, seek previous.
-    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
+    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) { // if it has no next key frames, seek previous.
         mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
         rtv = SeekInner(seekPos, mode);
     }
     isSeek_ = false;
     NotifySeek(rtv, notifySeekDone, seekPos);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
+    }
     return rtv;
 }
 
