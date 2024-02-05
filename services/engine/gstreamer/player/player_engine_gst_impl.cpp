@@ -503,7 +503,7 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("Audio first frame event in");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Audio first frame event in", FAKE_POINTER(this));
     uint64_t value = std::any_cast<uint64_t>(msg.extra);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {

@@ -407,6 +407,7 @@ napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
     setRet = CommonNapi::AddArrayInt(env, sampleRates,
         std::vector<int32_t>(value_.inputDeviceInfo.audioStreamInfo.samplingRate.begin(),
         value_.inputDeviceInfo.audioStreamInfo.samplingRate.end()));
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     napi_set_named_property(env, element, "sampleRates", sampleRates);
 
     napi_value channelCounts;

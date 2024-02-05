@@ -124,7 +124,8 @@ int32_t PlayerServerTaskMgr::EnqueueSeekTask(const std::shared_ptr<ITaskHandler>
     currTwoPhaseTaskName_ = taskName;
     currentSeekMode_ = seekMode;
     currentSeekTime_ = seekTime;
-    MEDIA_LOGI("seek task[%{public}s] start", currTwoPhaseTaskName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " seek task[%{public}s] start",
+        FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
     return MSERR_OK;
 }
 

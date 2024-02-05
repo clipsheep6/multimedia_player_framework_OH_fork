@@ -1000,7 +1000,8 @@ bool PlayerServer::IsPlaying()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR");
+        MEDIA_LOGE("0x%{public}06" PRIXPTR " Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR",
+            FAKE_POINTER(this));
         return false;
     }
 
