@@ -703,7 +703,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
-        MEDIA_LOGI("Seek Task");
+        MEDIA_LOGD("Seek Task");
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->Seek(time, static_cast<PlayerSeekMode>(mode));
         }
@@ -1795,7 +1795,8 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_int32(env, currentTime, &value);
     std::string curState = jsPlayer->GetCurrentState();
-    MEDIA_LOGI("JsGetCurrenTime Out, state %{public}s, time: %{public}d", curState.c_str(), currentTime);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsGetCurrenTime Out, state %{public}s, time: %{public}d",
+        FAKE_POINTER(jsPlayer), curState.c_str(), currentTime);
     return value;
 }
 
@@ -2154,7 +2155,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
@@ -2163,7 +2164,8 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->SaveCallbackReference(callbackName, autoRef);
 
-    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnCallback callbackName: %{public}s success",
+        FAKE_POINTER(jsPlayer), callbackName.c_str());
     return result;
 }
 
@@ -2172,7 +2174,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     MediaTrace trace("AVPlayerNapi::off");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsClearOnCallback In");
+    MEDIA_LOGD("JsClearOnCallback In");
 
     napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
     size_t argCount = 2; // args[0]:type, args[1]:callback
@@ -2191,10 +2193,10 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     jsPlayer->ClearCallbackReference(callbackName);
-    MEDIA_LOGI("JsClearOnCallback Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(jsPlayer));
     return result;
 }
 

@@ -294,7 +294,7 @@ void PlayerSinkProvider::EosCb(GstMemSink *memSink, gpointer userData)
 GstFlowReturn PlayerSinkProvider::NewPrerollCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData)
 {
     (void)userData;
-    MEDIA_LOGI("NewPrerollCb in");
+    MEDIA_LOGD("NewPrerollCb in");
     MediaTrace trace("PlayerSinkProvider::NewPrerollCb");
     CHECK_AND_RETURN_RET(gst_mem_sink_app_preroll_render(memSink, sample) == GST_FLOW_OK, GST_FLOW_ERROR);
     return GST_FLOW_OK;

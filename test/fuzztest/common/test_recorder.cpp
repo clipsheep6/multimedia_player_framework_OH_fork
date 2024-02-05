@@ -20,11 +20,17 @@
 #include "aw_common.h"
 #include "securec.h"
 #include "test_recorder.h"
+#include "media_log.h"
 
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::Media;
 using namespace OHOS::Media::RecorderTestParam;
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderFuzzTest"};
+}
+
 constexpr uint32_t STUB_STREAM_SIZE = 602;
 constexpr uint32_t FRAME_RATE = 30000;
 constexpr uint32_t CODEC_BUFFER_WIDTH = 1024;
@@ -352,9 +358,7 @@ void TestRecorder::HDICreateESBuffer()
 {
     const uint32_t *frameLenArray = HIGH_VIDEO_FRAME_SIZE;
     while (nowFrame < STUB_STREAM_SIZE) {
-        if (isExit_.load()) {
-            break;
-        }
+        CHECK_AND_BREAK(!isExit_.load());
         usleep(FRAME_RATE);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
@@ -362,10 +366,7 @@ void TestRecorder::HDICreateESBuffer()
         if (retValue == OHOS::SURFACE_ERROR_NO_BUFFER) {
             continue;
         }
-        if ((retValue != SURFACE_ERROR_OK) || (buffer == nullptr)) {
-            break;
-        }
-
+        CHECK_AND_BREAK((retValue == SURFACE_ERROR_OK) && (buffer != nullptr));
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
         syncFence->Wait(100); // 100ms
 

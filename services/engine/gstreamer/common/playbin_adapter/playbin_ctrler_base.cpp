@@ -905,7 +905,7 @@ void PlayBinCtrlerBase::QueryDuration()
 
     gint64 duration = -1;
     gboolean ret = gst_element_query_duration(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &duration);
-    CHECK_AND_RETURN_LOG(ret, "query duration failed");
+    CHECK_AND_RETURN_LOG(ret, "0x%{public}06" PRIXPTR " query duration failed", FAKE_POINTER(this));
 
     if (duration >= 0) {
         duration_ = duration / NANO_SEC_PER_USEC;

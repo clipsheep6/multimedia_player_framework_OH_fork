@@ -764,7 +764,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PlaybackCompletedState::ProcessStateChange");
+    MEDIA_LOGD("PlaybackCompletedState::ProcessStateChange");
     if (msg.detail2 == GST_STATE_PLAYING) {
         if (ctrler_.isUserSetPlay_) {
             ctrler_.isUserSetPlay_ = false;
