@@ -40,6 +40,7 @@ const std::string STATE_ERROR = "error";
 
 namespace AVRecordergOpt {
 const std::string PREPARE = "Prepare";
+const std::string SET_ORIENTATION_HINT = "SetOrientationHint";
 const std::string GETINPUTSURFACE = "GetInputSurface";
 const std::string START = "Start";
 const std::string PAUSE = "Pause";
@@ -73,6 +74,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_ENCODER_INFO
     }},
     {AVRecorderState::STATE_PREPARED, {
+        AVRecordergOpt::SET_ORIENTATION_HINT,
         AVRecordergOpt::GETINPUTSURFACE,
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
@@ -184,6 +186,11 @@ private:
      */
     static napi_value JsPrepare(napi_env env, napi_callback_info info);
     /**
+     * setOrientationHint(config: AVRecorderConfig, callback: AsyncCallback<void>): void;
+     * setOrientationHint(config: AVRecorderConfig): Promise<void>;
+     */
+    static napi_value JsSetOrientationHint(napi_env env, napi_callback_info info);
+    /**
      * getInputSurface(callback: AsyncCallback<string>): void
      * getInputSurface(): Promise<string>
      */
@@ -269,6 +276,8 @@ private:
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
+        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderProfileTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
@@ -323,6 +332,7 @@ private:
     int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
