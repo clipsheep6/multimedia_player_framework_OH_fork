@@ -163,6 +163,7 @@ private:
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
+    std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     int32_t videoWidth_{0};
     int32_t videoHeight_{0};
 

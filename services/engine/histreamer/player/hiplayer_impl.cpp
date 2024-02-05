@@ -158,43 +158,33 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
-    auto ret = Init();
-    if (ret == Status::OK) {
-        url_ = uri;
-        if (IsFileUrl(uri)) {
-            std::string realUriPath;
-            int32_t result = GetRealPath(uri, realUriPath);
-            if (result != MSERR_OK) {
-                return result;
-            }
-            url_ = "file://" + realUriPath;
+    url_ = uri;
+    if (IsFileUrl(uri)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(uri, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("SetSource error: GetRealPath error");
+            return result;
         }
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        url_ = "file://" + realUriPath;
     }
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
-    } else {
-        if (url_.find("http") == 0 || url_.find("https") == 0) {
-            isNetWorkPlay_ = true;
-        }
-        OnStateChanged(PlayerStateId::INIT);
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
     }
-    return TransStatus(ret);
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
-    auto ret = Init();
-    if (ret == Status::OK) {
-        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc));
+    if (dataSrc == nullptr) {
+        MEDIA_LOG_E("SetSource error: dataSrc is null");
+        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
-    } else {
-        OnStateChanged(PlayerStateId::INIT);
-    }
-    return TransStatus(ret);
+    dataSrc_ = dataSrc;
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::Prepare()
@@ -221,24 +211,33 @@ int32_t HiPlayerImpl::Prepare()
     return TransStatus(ret);
 }
 
-int HiPlayerImpl::PrepareAsync()
+int32_t HiPlayerImpl::PrepareAsync()
 {
     MEDIA_LOG_I("PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
-    if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
-        int32_t ret = SetSource(url_);
-        if (ret != MSERR_OK) {
-            OnStateChanged(PlayerStateId::ERROR);
-            return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        }
+    auto ret = Init();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("PrepareAsync init error.");
+        OnStateChanged(PlayerStateId::ERROR);
+        return TransStatus(Status::ERROR_UNKNOWN);
     }
+    if (dataSrc_ != nullptr) {
+        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
+    } else {
+        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+    }
+    if (ret != MSERR_OK) {
+        OnStateChanged(PlayerStateId::ERROR);
+        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+    }
+
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
         StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
-    auto ret = pipeline_->Prepare();
+    ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
