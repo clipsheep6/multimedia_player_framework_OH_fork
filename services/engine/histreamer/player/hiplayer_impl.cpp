@@ -200,7 +200,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     auto ret = Init();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: init error");
-        OnEvent("engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT);
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
     if (dataSrc_ != nullptr) {
@@ -208,9 +208,9 @@ int32_t HiPlayerImpl::PrepareAsync()
     } else {
         ret = DoSetSource(std::make_shared<MediaSource>(url_));
     }
-    if (ret != MSERR_OK) {
+    if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
-        OnEvent("engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT);
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
 
@@ -1114,7 +1114,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     // Report position firstly to make sure that client can get real position when seek done in playing state.
     if (curState_ == PlayerStateId::PLAYING) {
         std::unique_lock<std::mutex> lock(seekMutex_);
-        bool notTimeout = syncManager_->seekCond_.wat_for(
+        bool notTimeout = syncManager_->seekCond_.wait_for(
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
