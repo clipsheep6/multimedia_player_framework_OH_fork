@@ -609,6 +609,9 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
                 muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
             }
+            if (muxerFilter_) {
+                muxerFilter_->SetParameter(muxerFormat_);
+            }
             break;
         }
         case RecorderPublicParamType::GEO_LOCATION: {

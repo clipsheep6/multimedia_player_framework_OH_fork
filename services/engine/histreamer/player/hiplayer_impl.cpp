@@ -969,7 +969,6 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
             return;
         }
     }
-    bool isSingleLoop = singleLoop_.load();
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
     isStreaming_ = false;
     Format format;
@@ -981,7 +980,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         MEDIA_LOG_I("OnComplete durationMs - currentPositionMs: " PUBLIC_LOG_D32, durationMs - currentPositionMs);
         OHOS::Media::SleepInJob(durationMs - currentPositionMs);
     }
-    if (!isSingleLoop) {
+    if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
         callbackLooper_.StopReportMediaProgress();
     }

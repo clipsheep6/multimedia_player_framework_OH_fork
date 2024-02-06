@@ -65,6 +65,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
+        DECLARE_NAPI_FUNCTION("SetOrientationHint", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("getInputSurface", JsGetInputSurface),
         DECLARE_NAPI_FUNCTION("start", JsStart),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
@@ -269,6 +270,58 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVRecorderNapi::JsSetOrientationHint(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsSetOrientationHint");
+    const std::string &opt = AVRecordergOpt::SET_ORIENTATION_HINT;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 2; // config + callbackRef
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetRotation(asyncCtx, env, args[0]) == MSERR_OK) {
+            asyncCtx->task_ = AVRecorderNapi::GetSetOrientationHintTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
@@ -290,6 +343,25 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique
         napi->StateCallback(AVRecorderState::STATE_PREPARED);
         napi->getVideoInputSurface_ = false;
         napi->withVideo_ = config->withVideo;
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetSetOrientationHintTask(
+    std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
+        const std::string &option = AVRecordergOpt::SET_ORIENTATION_HINT;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        napi->recorder_->SetOrientationHint(config->rotation);
+        
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -1363,6 +1435,32 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
     config->location.latitude = static_cast<float>(tempLatitude);
     config->location.longitude = static_cast<float>(tempLongitude);
+
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetConfig", "AVRecorderConfig");
+        return MSERR_INVALID_VAL;
+    }
+
+    asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
+    CHECK_AND_RETURN_RET(asyncCtx->config_,
+        (asyncCtx->AVRecorderSignError(MSERR_NO_MEMORY, "AVRecorderConfig", "AVRecorderConfig"), MSERR_NO_MEMORY));
+
+    std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
+
+    bool getValue = false;
+    int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "getrotation", "rotation"), ret));
+    MEDIA_LOGI("rotation %{public}d!", config->rotation);
+    CHECK_AND_RETURN_RET((config->rotation == VIDEO_ROTATION_0 || config->rotation == VIDEO_ROTATION_90 ||
+        config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
+        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
 
     return MSERR_OK;
 }
