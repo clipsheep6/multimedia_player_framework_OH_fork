@@ -969,7 +969,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
             return;
         }
     }
-    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
+    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
     int32_t durationMs;
@@ -985,7 +985,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         callbackLooper_.StopReportMediaProgress();
     }
     callbackLooper_.DoReportCompletedTime();
-    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
+    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
