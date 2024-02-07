@@ -341,15 +341,9 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
     CHECK_AND_RETURN_RET_LOG(isSystemToneTypeValid(systemToneType), nullptr, "invalid system tone type");
     MEDIA_LOGI("GetSystemTonePlayer: for systemToneType %{public}d", systemToneType);
 
-    if (systemTonePlayerMap_[systemToneType] != nullptr) {
-        (void)systemTonePlayerMap_[systemToneType]->Release();
-        systemTonePlayerMap_[systemToneType] = nullptr;
-    }
-
     systemTonePlayerMap_[systemToneType] = make_shared<SystemTonePlayerImpl>(context, *this, systemToneType);
     CHECK_AND_RETURN_RET_LOG(systemTonePlayerMap_[systemToneType] != nullptr, nullptr,
         "Failed to create system tone player object");
-
     return systemTonePlayerMap_[systemToneType];
 }
 
