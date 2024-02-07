@@ -464,7 +464,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
-    MEDIA_LOG_D("Seek durationMs : " PUBLIC_LOG_D32, durationMs);
     isSeek_ = true;
     if (mSeconds >= durationMs) { // if exceeds change to duration
         mSeconds = durationMs;
@@ -473,7 +472,28 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     int64_t seekPos = mSeconds;
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        rtv = SeekInner(seekPos, mode);
+        switch (pipelineStates_) {
+            case PlayerStates::PLAYER_STARTED: {
+                rtv = doStartedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PAUSED: {
+                rtv = doPausedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
+                rtv = doCompletedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PREPARED: {
+                rtv = doPreparedSeek(seekPos, mode);
+                break;
+            }
+            default:
+                MEDIA_LOG_I("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
+                rtv = Status::ERROR_WRONG_STATE;
+                break;
+        }
     }
     // if it has no next key frames, seek previous.
     if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
@@ -481,20 +501,87 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         rtv = SeekInner(seekPos, mode);
     }
     isSeek_ = false;
+    NotifySeek(rtv, notifySeekDone, seekPos);
+    return rtv;
+}
+
+void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
+{
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-    }  else if (notifySeekDone) {
+    }  else if (flag) {
         // only notify seekDone for external call.
         NotifySeekDone(seekPos);
     }
-    return rtv;
 }
 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     return TransStatus(Seek(mSeconds, mode, true));
+}
+
+Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doPreparedSeek.");
+    pipeline_ -> Flush();
+    auto rtv = doSeek(seekPos, mode);
+    return rtv;
+}
+
+Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doStartedSeek.");
+    // audio fade in and out
+    if (audioSink_ != nullptr) {
+        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
+    }
+    pipeline_ -> Pause();
+    pipeline_ -> Flush();
+    auto rtv = doSeek(seekPos, mode);
+    pipeline_ -> Resume();
+    return rtv;
+}
+
+Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doPausedSeek.");
+    pipeline_ -> Pause();
+    pipeline_ -> Flush();
+    auto rtv = doSeek(seekPos, mode);
+    return rtv;
+}
+
+Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doCompletedSeek.");
+    pipeline_ -> Flush();
+    auto rtv = doSeek(seekPos, mode);
+    if (isStreaming_) {
+        pipeline_->Resume();
+    } else {
+        callbackLooper_.StopReportMediaProgress();
+        callbackLooper_.ManualReportMediaProgressOnce();
+        OnStateChanged(PlayerStateId::PAUSE);
+    }
+    return rtv;
+}
+
+Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
+{
+    MEDIA_LOG_I("doSeek.");
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+        MEDIA_LOG_I("doSeek change state SEEK_PREVIOUS_SYNC.");
+        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    }
+    int64_t realSeekTime = seekPos;
+    auto seekMode = Transform2SeekMode(mode);
+    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    if (rtv == Status::OK) {
+        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+    }
+    return rtv;
 }
 
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
