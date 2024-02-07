@@ -291,7 +291,11 @@ int32_t HiPlayerImpl::Play()
         }
     }
     if (ret == MSERR_OK) {
-        OnStateChanged(PlayerStateId::PLAYING);
+        if (!isInitialPlay_) {
+            OnStateChanged(PlayerStateId::PLAYING);
+        } else {
+            MEDIA_LOG_I("InitialPlay, pending to change state of playing.");
+        }
     }
     return ret;
 }
@@ -830,7 +834,7 @@ int32_t HiPlayerImpl::GetVideoHeight()
 
 int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType)
 {
-    MEDIA_LOG_I("SetVideoScaleType entered.");
+    MEDIA_LOG_I("SetVideoScaleType entered. VIDEO_SCALE_TYPE: " PUBLIC_LOG_D32, videoScaleType);
 #ifdef SUPPORT_VIDEO
     auto meta = std::make_shared<Meta>();
     meta->Set<Tag::VIDEO_SCALE_TYPE>(static_cast<int32_t>(videoScaleType));
@@ -895,7 +899,9 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_AUDIO_FIRST_FRAME: {
+            MEDIA_LOG_I("audio first frame reneder received");
             NotifyAudioFirstFrame(event);
+            HandleInitialPlayingStateChange(event.type);
             break;
         }
         case EventType::EVENT_DRM_INFO_UPDATED: {
@@ -903,8 +909,10 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
+            MEDIA_LOG_I("video first frame reneder received");
             Format format;
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            HandleInitialPlayingStateChange(event.type);
             break;
         }
         case EventType::EVENT_AUDIO_DEVICE_CHANGE : {
@@ -918,6 +926,25 @@ void HiPlayerImpl::OnEvent(const Event &event)
         default:
             break;
     }
+}
+
+void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
+{
+    for (std::pair<EventType, bool>& item : initialAVStates_) {
+        if (item.first == eventType) {
+            item.second = true;
+        }
+    }
+    for (auto item : initialAVStates_) {
+        if (item.second == false) {
+            return;
+        }
+    }
+
+    MEDIA_LOG_I("av first frame reneder all received");
+
+    isInitialPlay_ = false;
+    OnStateChanged(PlayerStateId::PLAYING);
 }
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
@@ -1287,6 +1314,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         audioSink_->SetSyncCenter(syncManager_);
     }
     completeState_.emplace_back(std::make_pair("AudioSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_AUDIO_FIRST_FRAME, false));
     return pipeline_->LinkFilters(preFilter, {audioSink_}, type);
 }
 
@@ -1322,6 +1350,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         }
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
+    initialAVStates_.emplace_back(std::make_pair(EventType::EVENT_VIDEO_RENDERING_START, false));
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif
