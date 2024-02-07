@@ -97,6 +97,7 @@ private:
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
     void HandleCompleteEvent(const Event& event);
+    void HandleInitialPlayingStateChange(const EventType& eventType);
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
@@ -169,6 +170,9 @@ private:
     bool stopWaitingDrmConfig_ = false;
     sptr<DrmStandard::IMediaKeySessionService> keySessionServiceProxy_{nullptr};
     int32_t svpMode_ = HiplayerSvpMode::SVP_CLEAR;
+
+    bool isInitialPlay_ = true;
+    std::vector<std::pair<EventType, bool>> initialAVStates_;
     std::vector<std::pair<std::string, bool>> completeState_;
 
     int32_t rotation90 = 90;
