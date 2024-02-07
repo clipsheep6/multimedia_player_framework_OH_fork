@@ -50,15 +50,12 @@ SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
 
 SystemTonePlayerImpl::~SystemTonePlayerImpl()
 {
-    if (player_ != nullptr) {
-        player_->Release();
-        player_ = nullptr;
-        callback_ = nullptr;
-    }
-
     if (fileDes_ != -1) {
         (void)close(fileDes_);
     }
+
+    player_ = nullptr;
+    callback_ = nullptr;
 }
 
 void SystemTonePlayerImpl::InitPlayer()
@@ -251,8 +248,6 @@ int32_t SystemTonePlayerImpl::Release()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-
-    (void)player_->Release();
     player_ = nullptr;
     callback_ = nullptr;
 
