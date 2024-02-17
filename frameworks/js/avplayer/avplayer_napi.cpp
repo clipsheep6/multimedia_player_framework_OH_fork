@@ -1015,8 +1015,14 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
             return;
         }
         if (player_ != nullptr) {
-            if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
-                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+            auto ret = player_->SetSource(fd, 0, -1);
+            if (ret != MSERR_OK) {
+                if(ret == MSERR_UNSUPPORT_CONTAINER_TYPE){
+                    OnErrorCb(MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupport Format!");
+                }
+                else{
+                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
+                }
                 return;
             }
             stopWait_ = false;
