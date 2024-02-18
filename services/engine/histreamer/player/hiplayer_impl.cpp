@@ -35,6 +35,7 @@ const float MIN_MEDIA_VOLUME = 0.0f; // standard interface volume is between 0 t
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FADE_OUT_LATENCY = 40; // fade out latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
+const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
 }
 
 namespace OHOS {
@@ -158,87 +159,67 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
-    auto ret = Init();
-    if (ret == Status::OK) {
-        url_ = uri;
-        if (IsFileUrl(uri)) {
-            std::string realUriPath;
-            int32_t result = GetRealPath(uri, realUriPath);
-            if (result != MSERR_OK) {
-                return result;
-            }
-            url_ = "file://" + realUriPath;
+    url_ = uri;
+    if (IsFileUrl(uri)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(uri, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("SetSource error: GetRealPath error");
+            return result;
         }
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        url_ = "file://" + realUriPath;
     }
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
-    } else {
-        if (url_.find("http") == 0 || url_.find("https") == 0) {
-            isNetWorkPlay_ = true;
-        }
-        OnStateChanged(PlayerStateId::INIT);
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
     }
-    return TransStatus(ret);
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
-    auto ret = Init();
-    if (ret == Status::OK) {
-        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc));
+    if (dataSrc == nullptr) {
+        MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
-    if (ret != Status::OK) {
-        MEDIA_LOG_E("SetSource error: " PUBLIC_LOG_D32, ret);
-    } else {
-        OnStateChanged(PlayerStateId::INIT);
-    }
-    return TransStatus(ret);
+    dataSrc_ = dataSrc;
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::Prepare()
 {
-    MEDIA_LOG_I("Prepare start");
-    Status ret = pipeline_->Prepare();
-    if (ret != Status::OK) {
-        MEDIA_LOG_I("Prepare pipeline prepare ret " PUBLIC_LOG_D32, ret);
-        return TransStatus(ret);
-    }
-    AutoLock lock(stateMutex_);
-    if (curState_ == PlayerStateId::PREPARING) { // Wait state change to ready
-        cond_.Wait(lock, [this] { return curState_ != PlayerStateId::READY; });
-    }
-    if (curState_ == PlayerStateId::READY) {
-        ret = Status::OK;
-        Format format;
-        callbackLooper_.OnInfo(INFO_TYPE_STATE_CHANGE, PlayerStates::PLAYER_PREPARED, format);
-    } else {
-        MEDIA_LOG_I("Prepare not ready");
-        ret = Status::ERROR_UNKNOWN;
-    }
-    MEDIA_LOG_I("Prepare End");
-    return TransStatus(ret);
+    return TransStatus(Status::OK);
 }
 
-int HiPlayerImpl::PrepareAsync()
+int32_t HiPlayerImpl::PrepareAsync()
 {
     MEDIA_LOG_I("PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
-    if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
-        int32_t ret = SetSource(url_);
-        if (ret != MSERR_OK) {
-            OnStateChanged(PlayerStateId::ERROR);
-            return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        }
+    auto ret = Init();
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("PrepareAsync error: init error");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
+        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
+    if (dataSrc_ != nullptr) {
+        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
+    } else {
+        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+    }
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
+        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+    }
+
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
         StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
-    auto ret = pipeline_->Prepare();
+    ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
@@ -395,67 +376,6 @@ int32_t HiPlayerImpl::Reset()
     return ret;
 }
 
-Status HiPlayerImpl::SeekInner(int64_t seekPos, PlayerSeekMode mode)
-{
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(true);
-    }
-    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    }
-    int64_t realSeekTime = seekPos;
-    auto seekMode = Transform2SeekMode(mode);
-    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        if (audioSink_ != nullptr) {
-            audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-        }
-        pipeline_->Pause();
-        if (audioDecoder_ != nullptr) {
-            audioDecoder_->Flush();
-            audioDecoder_->Start();
-        }
-        if (audioSink_ != nullptr) {
-            audioSink_->Pause();
-            audioSink_->Flush();
-        }
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        pipeline_->Pause();
-        if (audioSink_ != nullptr) {
-            audioSink_->Pause();
-            audioSink_->Flush();
-        }
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-        if (audioDecoder_ != nullptr) {
-            audioDecoder_->Flush();
-        }
-        if (audioSink_ != nullptr) {
-            audioSink_->Flush();
-        }
-    }
-    MEDIA_LOG_I("Do seek ...");
-    auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
-    if (rtv == Status::OK) {
-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_STARTED) {
-        pipeline_->Resume();
-        if (audioSink_ != nullptr) {
-            audioSink_->Resume();
-        }
-    }
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && isStreaming_) {
-        pipeline_->Resume();
-    } else if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE && !isStreaming_) {
-        callbackLooper_.StopReportMediaProgress();
-        callbackLooper_.ManualReportMediaProgressOnce();
-        OnStateChanged(PlayerStateId::PAUSE);
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
-    }
-    return rtv;
-}
-
 int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("SeekToCurrentTime entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
@@ -467,16 +387,15 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
 {
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D32 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(true);
+    }
     int32_t durationMs = 0;
     GetDuration(durationMs);
     FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
-    if (mSeconds >= durationMs) { // if exceeds change to duration
-        mSeconds = durationMs;
-    }
-    mSeconds = mSeconds < 0 ? 0 : mSeconds;
-    int64_t seekPos = mSeconds;
+    int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs)));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
@@ -502,13 +421,11 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 break;
         }
     }
-    // if it has no next key frames, seek previous.
-    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-        rtv = SeekInner(seekPos, mode);
-    }
     isSeek_ = false;
     NotifySeek(rtv, notifySeekDone, seekPos);
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
+    }
     return rtv;
 }
 
@@ -585,6 +502,11 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
     auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    // if it has no next key frames, seek previous.
+    if (rtv != Status::OK && mode == PlayerSeekMode::SEEK_NEXT_SYNC) {
+        seekMode = Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC);
+        rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+    }
     if (rtv == Status::OK) {
         syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
     }
@@ -1082,8 +1004,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
             return;
         }
     }
-    bool isSingleLoop = singleLoop_.load();
-    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", isSingleLoop);
+    MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
     int32_t durationMs;
@@ -1094,13 +1015,13 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
         MEDIA_LOG_I("OnComplete durationMs - currentPositionMs: " PUBLIC_LOG_D32, durationMs - currentPositionMs);
         OHOS::Media::SleepInJob(durationMs - currentPositionMs);
     }
-    if (!isSingleLoop) {
+    if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
         callbackLooper_.StopReportMediaProgress();
     }
     callbackLooper_.DoReportCompletedTime();
     PauseInner();
-    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(isSingleLoop), format);
+    callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
@@ -1225,8 +1146,23 @@ void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t pa
 void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 {
     Format format;
+    // Report position firstly to make sure that client can get real position when seek done in playing state.
+    if (curState_ == PlayerStateId::PLAYING) {
+        std::unique_lock<std::mutex> lock(seekMutex_);
+        bool notTimeout = syncManager_->seekCond_.wait_for(
+            lock,
+            std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
+            [this]() {
+                return !syncManager_->InSeeking();
+            });
+        if (notTimeout) {
+            NotifyPositionUpdate();
+        } else {
+            // If it waits for a new frame timeout, report seek-time as position.
+            callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
+        }
+    }
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
-    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
 }
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
