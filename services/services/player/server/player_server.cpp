@@ -177,13 +177,11 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     int32_t ret;
     if (uriHelper_ != nullptr) {
         ret = InitPlayEngine(uriHelper_->FormattedUri());
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
         ret = InitPlayEngine(uriHelper->FormattedUri());
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
     }
     config_.url = "file descriptor source";
@@ -220,7 +218,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     } else {
         ret = playerEngine_->SetSource(dataSrc_);
     }
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource Failed!");
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
