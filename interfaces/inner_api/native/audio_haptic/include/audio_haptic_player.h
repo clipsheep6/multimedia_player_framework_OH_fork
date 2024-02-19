@@ -50,6 +50,8 @@ public:
 
     virtual bool IsMuted(const AudioHapticType &audioHapticType) const = 0;
 
+    virtual int32_t Prepare() = 0;
+
     virtual int32_t Start() = 0;
 
     virtual int32_t Stop() = 0;
