@@ -131,7 +131,6 @@ private:
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
-    int32_t PauseInner();
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
