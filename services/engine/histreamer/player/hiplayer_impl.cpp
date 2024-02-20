@@ -649,14 +649,9 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
-    auto tmpMeta = demuxer_->GetGlobalMetaInfo();
-    if (tmpMeta == nullptr) {
-        MEDIA_LOG_E("GetDuration failed, Meta is null.");
-    }
-    sourceMeta_ = tmpMeta;
     int64_t duration = 0;
     bool found = false;
-    if (tmpMeta->GetData(Tag::MEDIA_DURATION, duration)) {
+    if (demuxer_->GetDuration(duration)) {
         found = true;
     } else {
         MEDIA_LOG_W("Get media duration failed.");
