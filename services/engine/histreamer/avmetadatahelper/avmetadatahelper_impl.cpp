@@ -172,6 +172,10 @@ static void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t 
         }
     }
 
+    uint8_t *maxDstAddr = dstNV12 + width * height + width * height / 2;
+    uint8_t *originSrcAddr = srcP010;
+    uint16_t *maxSrcAddr = reinterpret_cast<uint16_t *>(originSrcAddr) + surfaceBuffer->GetSize();
+    
     srcP010 = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + strideWidth * strideHeight;
     dstNV12 = dstNV12 + width * height;
 
@@ -179,7 +183,7 @@ static void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t 
     for (int32_t i = 0; i < height / 2; i++) {
         uint16_t *srcUV = (uint16_t *)(srcP010 + strideWidth * i);
         uint8_t *dstUV = dstNV12 + width * i;
-        for (int32_t j = 0; j < width; j++) {
+        for (int32_t j = 0; j < width && srcUV < maxSrcAddr && dstUV < maxDstAddr; j++) {
             *dstUV = (uint8_t)(*srcUV >> SHIFT_BITS_P010_2_NV12);
             *(dstUV + 1) = (uint8_t)(*(srcUV + 1) >> SHIFT_BITS_P010_2_NV12);
             srcUV += 2; // srcUV move by 2 to process U and V component
@@ -204,7 +208,7 @@ std::unique_ptr<PixelMap> AVMetadataHelperImpl::GetYuvDataAlignStride(const sptr
     }
 #endif
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, outputWidth:%{public}d, outputHeight:%{public}d",
-        stride, outputWidth, outputHeight);
+        stride, stride, outputHeight);
 
     InitializationOptions initOpts;
     initOpts.size = {width, height};
@@ -271,19 +275,19 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMapEx(0, decodeOpts, errorCode);
     CHECK_AND_RETURN_RET_LOG(errorCode == 0, false, "CreatePixelMapEx failed:%{public}d", errorCode);
 
-    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + pixelMap->GetRowStride() *
+    auto fetchedFrameAtTime = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + pixelMap->GetRowStride() *
         pixelMap->GetHeight(), AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
-    
-    int32_t ret = fetchedFrameAtTime_->Init();
+    int32_t ret = fetchedFrameAtTime->Init();
     CHECK_AND_RETURN_RET_LOG(ret == static_cast<int32_t>(Status::OK), false,
         "Create AVSharedmemory failed, ret:%{public}d", ret);
-    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
+    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime->GetBase());
     frame->width_ = pixelMap->GetWidth();
     frame->height_ = pixelMap->GetHeight();
     frame->stride_ = pixelMap->GetRowStride();
     frame->bytesPerPixel_ = pixelMap->GetPixelBytes();
     frame->size_ = pixelMap->GetRowStride() * pixelMap->GetHeight();
-    fetchedFrameAtTime_->Write(pixelMap->GetPixels(), frame->size_, sizeof(OutputFrame));
+    fetchedFrameAtTime->Write(pixelMap->GetPixels(), frame->size_, sizeof(OutputFrame));
+    fetchedFrameAtTime_ = fetchedFrameAtTime;
     return true;
 }
 
@@ -427,13 +431,13 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
         trackInfo_ = GetTargetTrackInfo();
     }
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
-    CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
 
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
     mediaDemuxer_->SeekTo(timeUs, static_cast<Plugins::SeekMode>(option), realSeekTime);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " FetchFrameAtTime realSeekTime:%{public}" PRId64"",
         FAKE_POINTER(this), realSeekTime);
+    CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     {
         std::unique_lock<std::mutex> lock(mutex_);
 
@@ -442,6 +446,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                 FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
             videoDecoder_->Flush();
+            mediaDemuxer_->Flush();
         } else {
             hasFetchedFrame_ = true;
             MEDIA_LOGI("Fetch frame timeout srcUri_:%{private}s, width:%{public}d, height:%{public}d",
