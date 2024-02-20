@@ -162,8 +162,7 @@ declare namespace media {
    * if the operation is successful; returns null otherwise.
    * @throws { BusinessError } 5400101 - No memory. Returned by promise.
    * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-   * @systemapi
-   * @since 11
+   * @since 12
    */
   function createAVImageGenerator(): Promise<AVImageGenerator>;
 
@@ -173,8 +172,7 @@ declare namespace media {
    * if the operation is successful; returns null otherwise.
    * @throws { BusinessError } 5400101 - No memory. Returned by callback.
    * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-   * @systemapi
-   * @since 11
+   * @since 12
    */
   function createAVImageGenerator(callback: AsyncCallback<AVImageGenerator>): void;
 
@@ -504,16 +502,14 @@ declare namespace media {
    * Enumerates options about the relationship between the given timeUs and a key frame.
    * @enum { number }
    * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-   * @systemapi
-   * @since 11
+   * @since 12
    */
   enum AVImageQueryOptions {
     /**
      * This option is used to fetch a key frame from the given media
      * resource that is located right after or at the given time.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     AV_IMAGE_QUERY_NEXT_SYNC,
 
@@ -521,8 +517,7 @@ declare namespace media {
      * This option is used to fetch a key frame from the given media
      * resource that is located right before or at the given time.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     AV_IMAGE_QUERY_PREVIOUS_SYNC,
 
@@ -530,27 +525,16 @@ declare namespace media {
      * This option is used to fetch a key frame from the given media
      * resource that is located closest to or at the given time.
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     AV_IMAGE_QUERY_CLOSEST_SYNC,
-
-    /**
-     * This option is used to fetch a frame (maybe not keyframe) from
-     * the given media resource that is located closest to or at the given time.
-     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
-     */
-    AV_IMAGE_QUERY_CLOSEST,
   }
 
   /**
    * Expected pixel map format for the fetched image from video resource.
    * @typedef PixelMapParams
    * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-   * @systemapi
-   * @since 11
+   * @since 12
    */
   interface PixelMapParams {
     /**
@@ -558,8 +542,7 @@ declare namespace media {
      * original dimensions of the given video resource.
      * @type { ?number }
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     width?: number;
 
@@ -568,19 +551,9 @@ declare namespace media {
      * original dimensions of the given video resource.
      * @type { ?number }
      * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
+     * @since 12
      */
     height?: number;
-
-    /**
-     * Expected pixelmap's color format, see {@link PixelFormat}.
-     * @type { ?PixelFormat }
-     * @syscap SystemCapability.Multimedia.Media.AVImageGenerator
-     * @systemapi
-     * @since 11
-     */
-    colorFormat?: PixelFormat;
   }
 
   /**
