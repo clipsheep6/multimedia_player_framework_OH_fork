@@ -97,7 +97,7 @@ int32_t HdiCodec::Init()
 void HdiCodec::DeinitInner()
 {
     if (handle_) {
-        MEDIA_LOGI("FreeHandle");
+        MEDIA_LOGD("FreeHandle");
         MediaTrace trace("HdiCodec::Deinit");
         (void)HdiInit::GetInstance().FreeHandle(handle_, id_);
     }

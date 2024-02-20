@@ -216,7 +216,7 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
     }
 
     if (!isFind) {
-        MEDIA_LOGW("Not find memRecallPair, maybe already deregister");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " Not find memRecallPair, maybe already deregister", FAKE_POINTER(this));
         return MSERR_INVALID_OPERATION;
     }
 

@@ -277,7 +277,7 @@ private:
         size_t &argCount, napi_value *args);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
-        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderProfileTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);

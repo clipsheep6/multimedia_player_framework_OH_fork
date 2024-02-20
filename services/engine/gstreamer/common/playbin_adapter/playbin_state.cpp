@@ -264,7 +264,7 @@ void PlayBinCtrlerBase::BaseState::HandleBufferingTime(const InnerMessage &msg)
 void PlayBinCtrlerBase::BaseState::HandleUsedMqNum(const InnerMessage &msg)
 {
     uint32_t usedMqNum = static_cast<uint32_t>(msg.detail1);
-    MEDIA_LOGI("HandleUsedMqNum usedMqNum %{public}u", usedMqNum);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " HandleUsedMqNum usedMqNum %{public}u", FAKE_POINTER(this), usedMqNum);
     PlayBinMessage playBinMsg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_USED_MQ_NUM, 0, usedMqNum };
     ctrler_.ReportMessage(playBinMsg);
 }
@@ -383,7 +383,7 @@ void PlayBinCtrlerBase::PreparingState::ProcessStateChange(const InnerMessage &m
         ctrler_.ChangeState(ctrler_.preparedState_);
         ctrler_.preparingCond_.notify_one(); // awake the prepaingCond_'s waiter in Prepare()
         ctrler_.preparedCond_.notify_one(); // awake the preparedCond_'s waiter in Prepare()
-        MEDIA_LOGI("preparingCond_.notify_one, preparing->prepard");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " preparingCond_.notify_one, preparing->prepard", FAKE_POINTER(this));
     }
 }
 
@@ -497,7 +497,7 @@ int32_t PlayBinCtrlerBase::PlayingState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlayingState::HandleAsyncDone(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PlayingState::HandleAsyncDone");
+    MEDIA_LOGD("PlayingState::HandleAsyncDone");
     BaseState::HandleAsyncDone(msg);
 }
 
@@ -614,13 +614,13 @@ int32_t PlayBinCtrlerBase::PausedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PausedState::HandleAsyncDone(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PausedState::HandleAsyncDone");
+    MEDIA_LOGD("PausedState::HandleAsyncDone");
     BaseState::HandleAsyncDone(msg);
 }
 
 void PlayBinCtrlerBase::PausedState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PausedState::ProcessStateChange");
+    MEDIA_LOGD("PausedState::ProcessStateChange");
     if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
         ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
@@ -652,7 +652,7 @@ int32_t PlayBinCtrlerBase::StoppingState::Stop()
 
 void PlayBinCtrlerBase::StoppingState::ProcessStateChange(const InnerMessage &msg)
 {
-    MEDIA_LOGI("StoppingState::ProcessStateChange");
+    MEDIA_LOGD("StoppingState::ProcessStateChange");
     if (msg.detail2 == GST_STATE_READY) {
         std::unique_lock<std::mutex> lock(ctrler_.mutex_);
         ctrler_.ChangeState(ctrler_.stoppedState_);

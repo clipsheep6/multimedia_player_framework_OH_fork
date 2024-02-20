@@ -50,6 +50,7 @@ protected:
         std::vector<int32_t> valueVec;
         OHOS::AudioStandard::InterruptEvent interruptEvent;
     };
+    virtual void OnStateChangeCb(PlayerStates state);
     void OnJsCallBack(PlayerJsCallback *jsCb) const;
     void OnJsCallBackError(PlayerJsCallback *jsCb) const;
     void OnJsCallBackInt(PlayerJsCallback *jsCb) const;
@@ -61,7 +62,6 @@ protected:
 private:
     void OnSeekDoneCb(int32_t currentPositon) const;
     void OnEosCb(int32_t isLooping) const;
-    void OnStateChangeCb(PlayerStates state);
     void OnPositionUpdateCb(int32_t position) const;
     void OnMessageCb(int32_t type) const;
     void OnVolumeChangeCb();

@@ -120,7 +120,7 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     MEDIA_LOGD("FreeBuffers");
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
-    MEDIA_LOGI("availableBuffers_.size() == mPortDef_.nBufferCountActual %{public}d, bufferReleased_ %{public}d",
+    MEDIA_LOGD("availableBuffers_.size() == mPortDef_.nBufferCountActual %{public}d, bufferReleased_ %{public}d",
                availableBuffers_.size() == mPortDef_.nBufferCountActual, bufferReleased_ == true);
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
         [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferReleased_; });
@@ -175,7 +175,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
 void HdiOutBufferMgr::ClearmBuffers()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " unref mBuffers %{public}zu", FAKE_POINTER(this), mBuffers.size());
     while (!mBuffers.empty()) {
         GstBufferWrap bufferWarp = mBuffers.front();
         mBuffers.pop_front();

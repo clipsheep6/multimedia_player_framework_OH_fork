@@ -33,7 +33,7 @@ public:
     virtual int32_t Stop();
 
 protected:
-    int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) final;
+    int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     virtual void HandleStateChange(int32_t newState)
     {
         (void)newState;

@@ -90,7 +90,7 @@ bool PlayerSinkProvider::EnableOptRenderDelay() const
     std::string enable;
     int32_t res = OHOS::system::GetStringParameter("sys.media.kpi.opt.renderdelay.enable", enable, "");
     if (res != 0 || enable.empty()) {
-        MEDIA_LOGW("KPI-TRACE: get value fail, default enable");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: get value fail, default enable", FAKE_POINTER(this));
         return true;
     }
 
@@ -104,7 +104,7 @@ bool PlayerSinkProvider::EnableOptRenderDelay() const
 GstElement *PlayerSinkProvider::DoCreateAudioSink(const GstCaps *caps, const gpointer userData)
 {
     (void)caps;
-    MEDIA_LOGI("CreateAudioSink in.");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " CreateAudioSink in.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 
     auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("audioserversink", nullptr)));
@@ -158,7 +158,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
     }
 
     if (audioSink_ != nullptr) {
-        MEDIA_LOGI("KPI-TRACE: set audio sink to video sink");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " KPI-TRACE: set audio sink to video sink", FAKE_POINTER(this));
         gboolean enable = static_cast<gboolean>(EnableKpiAVSyncLog());
         g_object_set(G_OBJECT(videoSink_), "audio-sink", audioSink_, "enable-kpi-avsync-log", enable, nullptr);
     }
@@ -171,7 +171,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
 
 GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpointer userData)
 {
-    MEDIA_LOGI("CreateVideoSink in.");
+    MEDIA_LOGD("CreateVideoSink in.");
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "input caps is nullptr..");
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);

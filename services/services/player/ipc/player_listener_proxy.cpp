@@ -72,7 +72,8 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     data.WriteInt32(extra);
     MediaParcel::Marshalling(data, infoBody);
     int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "0x%{public}06" PRIXPTR " on info failed, error: %{public}d",
+        FAKE_POINTER(this), error);
 }
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)

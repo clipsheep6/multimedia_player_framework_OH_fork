@@ -57,7 +57,7 @@ PixelFormat HdiCodecUtil::FormatGstToHdi(GstVideoFormat format)
     if (FORMAT_GST_HDI.find(format) != FORMAT_GST_HDI.end()) {
         ret = FORMAT_GST_HDI.at(format);
     }
-    MEDIA_LOGI("GstFormat %{public}d", format);
+    MEDIA_LOGD("GstFormat %{public}d", format);
     return ret;
 }
 

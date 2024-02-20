@@ -141,7 +141,7 @@ int32_t PlayerServer::SetSource(const std::string &url)
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
 
-    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(url)");
+    MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
@@ -1296,7 +1296,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             playerCb_->OnInfo(type, extra, infoBody);
         }
     } else {
-        MEDIA_LOGW("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " playerCb_ != nullptr %{public}d, ret %{public}d",
+            FAKE_POINTER(this), playerCb_ != nullptr, ret);
     }
 }
 

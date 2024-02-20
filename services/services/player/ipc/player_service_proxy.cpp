@@ -567,7 +567,7 @@ int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "object is nullptr");
 
     std::string format = surface->GetUserData("SURFACE_FORMAT");
-    MEDIA_LOGI("surfaceFormat is %{public}s!", format.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " surfaceFormat is %{public}s!", FAKE_POINTER(this), format.c_str());
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");

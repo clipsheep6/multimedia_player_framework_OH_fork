@@ -132,7 +132,7 @@ void MonitorClient::MediaServerDied()
 void MonitorClient::ClickThread()
 {
     pthread_setname_np(pthread_self(), "OS_MonitorClick");
-    MEDIA_LOGI("ClickThread start");
+    MEDIA_LOGD("ClickThread start");
     static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
 
     CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
@@ -148,7 +148,7 @@ void MonitorClient::ClickThread()
             CHECK_AND_RETURN_LOG(!clientDestroy_, "clientDestroy, Normal exit")
 
             if (objSet_.empty()) {
-                MEDIA_LOGI("objSet empty.");
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " objSet empty.", FAKE_POINTER(this));
                 break;
             }
             if (!isVaildProxy_) {
@@ -163,7 +163,7 @@ void MonitorClient::ClickThread()
 
     CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
     CHECK_AND_RETURN_LOG(monitorProxy_->DisableMonitor() == MSERR_OK, "failed to DisableMonitor");
-    MEDIA_LOGI("ClickThread End");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " ClickThread End", FAKE_POINTER(this));
 }
 
 void MonitorClient::ClickThreadCtrl()

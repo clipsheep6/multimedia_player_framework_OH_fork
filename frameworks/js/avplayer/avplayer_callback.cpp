@@ -551,7 +551,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_DEVICE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find audio AudioDeviceChange callback!");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find audio AudioDeviceChange callback!", FAKE_POINTER(this));
         return;
     }
 
@@ -624,7 +624,8 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
     if (onInfoFuncs_.count(type) > 0) {
         (this->*onInfoFuncs_[type])(extra, infoBody);
     } else {
-        MEDIA_LOGI("OnInfo: no member func supporting, %{public}d", type);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " OnInfo: no member func supporting, %{public}d",
+            FAKE_POINTER(this), type);
     }
 }
 
@@ -711,7 +712,7 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
         FAKE_POINTER(this), currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
-        MEDIA_LOGW("can not find seekdone callback!");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
         return;
     }
 
@@ -794,7 +795,8 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("OnDurationUpdateCb is called, duration: %{public}d", duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
+        FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
@@ -903,7 +905,8 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &i
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
-    MEDIA_LOGI("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d",
+        FAKE_POINTER(this), width, height);
 
     if (listener_ != nullptr) {
         listener_->NotifyVideoSize(width, height);

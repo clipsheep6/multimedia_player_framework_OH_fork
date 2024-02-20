@@ -183,7 +183,7 @@ int32_t HdiVdecOutBufferMgr::OnNewBuffer(GstBuffer *buffer)
 
 void HdiVdecOutBufferMgr::SetOutputPool(GstBufferPool *pool)
 {
-    MEDIA_LOGI("SetOutputPool");
+    MEDIA_LOGD("SetOutputPool");
     pool_ = pool;
     HdiVdecOutBufferMgrWrapper *wrapper = new(std::nothrow) HdiVdecOutBufferMgrWrapper(shared_from_this());
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
