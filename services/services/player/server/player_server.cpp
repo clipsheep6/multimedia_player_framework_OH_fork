@@ -173,12 +173,16 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource fd");
-    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd)");
+    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
+        ", size: %{public}" PRId64, fd, offset, size);
     int32_t ret;
     if (uriHelper_ != nullptr) {
-        ret = InitPlayEngine(uriHelper_->FormattedUri());
+        std::string uri = uriHelper_->FormattedUri();
+        MEDIA_LOGI("UriHelper already existed, uri: %{public}s", uri.c_str());
+        ret = InitPlayEngine(uri);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
+        MEDIA_LOGI("UriHelper is nullptr, create a new instance.");
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
