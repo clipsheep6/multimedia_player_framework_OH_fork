@@ -389,6 +389,10 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs)));
+    if (notifySeekDone) {
+        // only notify seekDone for external call.
+        NotifySeekDone(seekPos);
+    }
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
@@ -415,23 +419,15 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         }
     }
     isSeek_ = false;
-    NotifySeek(rtv, notifySeekDone, seekPos);
-    if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false);
-    }
-    return rtv;
-}
-
-void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
-{
     if (rtv != Status::OK) {
         MEDIA_LOG_E("Seek done, seek error.");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-    }  else if (flag) {
-        // only notify seekDone for external call.
-        NotifySeekDone(seekPos);
     }
+    if (audioSink_ != nullptr) {
+        audioSink_->SetIsTransitent(false);
+    }
+    return rtv;
 }
 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
