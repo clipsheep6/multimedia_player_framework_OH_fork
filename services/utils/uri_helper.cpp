@@ -187,6 +187,10 @@ bool UriHelper::CorrectFdParam()
         "can not get file state");
 
     int64_t fdSize = static_cast<int64_t>(st.st_size);
+    int64_t stIno = static_cast<int64_t>(st.st_ino);
+    int64_t stSec = static_cast<int64_t>(st.st_atim.tv_sec);
+    MEDIA_LOGI("CorrectFdParam fd: %{public}d, fdSize: %{public}" PRId64 ", stIno: %{public}" PRId64
+        ", stSec: %{public}" PRId64, fd_, fdSize, stIno, stSec);
     if (offset_ < 0 || offset_ > fdSize) {
         offset_ = 0;
     }
@@ -198,6 +202,7 @@ bool UriHelper::CorrectFdParam()
     fd_ = ::dup(fd_);
     formattedUri_ = std::string("fd://") + std::to_string(fd_) + "?offset=" +
         std::to_string(offset_) + "&size=" + std::to_string(size_);
+    MEDIA_LOGI("CorrectFdParam formattedUri: %{public}s", formattedUri_.c_str());
     return true;
 }
 

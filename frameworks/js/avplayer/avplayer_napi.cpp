@@ -1058,6 +1058,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     // get url from js
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGI("JsSetUrl url: %{public}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("JsSetUrl Out");
@@ -1217,6 +1218,8 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
         MEDIA_LOGI("SetAVFileDescriptor Task");
         if (jsPlayer->player_ != nullptr) {
             auto playerFd = jsPlayer->fileDescriptor_;
+            MEDIA_LOGI("JsSetAVFileDescriptor fd: %{public}d, offset: %{public}"
+                PRId64 ", size: %{public}" PRId64, playerFd.fd, playerFd.offset, playerFd.length);
             if (jsPlayer->player_->SetSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource FileDescriptor failed");
             }

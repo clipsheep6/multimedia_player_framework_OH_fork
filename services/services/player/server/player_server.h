@@ -146,7 +146,7 @@ protected:
     std::vector<std::shared_ptr<UriHelper>> subUriHelpers_;
     std::mutex mutex_;
     std::mutex mutexCb_;
-    PlayerStates lastOpStatus_ = PLAYER_IDLE;
+    std::atomic<PlayerStates> lastOpStatus_ = PLAYER_IDLE;
     PlayerServerTaskMgr taskMgr_;
     bool isLiveStream_ = false;
     virtual int32_t Init();
