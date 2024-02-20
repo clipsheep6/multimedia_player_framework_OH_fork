@@ -146,7 +146,6 @@ private:
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
     std::shared_ptr<FilterCallback> playerFilterCallback_;
-    std::weak_ptr<Meta> sourceMeta_{};
     std::vector<std::weak_ptr<Meta>> streamMeta_{};
     std::atomic<PlayerStates> pipelineStates_ {PlayerStates::PLAYER_IDLE}; // only update in UpdateStateNoLock()
     std::queue<PlayerStates> pendingStates_ {};
