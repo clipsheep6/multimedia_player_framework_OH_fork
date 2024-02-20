@@ -130,7 +130,6 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
-    int32_t PauseInner();
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
