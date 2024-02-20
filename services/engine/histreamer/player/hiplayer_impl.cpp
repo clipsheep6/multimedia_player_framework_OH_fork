@@ -85,7 +85,12 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 
 HiPlayerImpl::~HiPlayerImpl()
 {
-    MEDIA_LOG_I("dtor called.");
+    MEDIA_LOG_I("~HiPlayerImpl dtor called.");
+    ReleaseInner();
+}
+
+void HiPlayerImpl::ReleaseInner()
+{
     pipeline_->Stop();
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
@@ -158,6 +163,7 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
+    ResetIfSourceExisted();
     url_ = uri;
     if (IsFileUrl(uri)) {
         std::string realUriPath;
@@ -178,12 +184,30 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
+    ResetIfSourceExisted();
     if (dataSrc == nullptr) {
         MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
     dataSrc_ = dataSrc;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::ResetIfSourceExisted()
+{
+    FALSE_RETURN_MSG(demuxer_ != nullptr, "Source not exist, no need reset.");
+    MEDIA_LOG_I("Source is existed, reset the relatived objects.");
+    ReleaseInner();
+    if (pipeline_ != nullptr) {
+        pipeline_.reset();
+    }
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_.reset();
+    }
+
+    pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
+    syncManager_ = std::make_shared<MediaSyncManager>();
+    MEDIA_LOG_I("Reset the relatived objects end.");
 }
 
 int32_t HiPlayerImpl::Prepare()

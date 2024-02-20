@@ -130,6 +130,8 @@ private:
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doCompletedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
+    void ResetIfSourceExisted();
+    void ReleaseInner();
     int32_t PauseInner();
 
     bool isNetWorkPlay_ = false;
