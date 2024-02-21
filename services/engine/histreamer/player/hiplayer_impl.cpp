@@ -64,9 +64,9 @@ public:
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
     {
-        hiPlayerImpl_->OnCallback(filter, cmd, outType);
+        return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
