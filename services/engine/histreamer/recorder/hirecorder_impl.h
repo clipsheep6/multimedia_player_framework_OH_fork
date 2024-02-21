@@ -68,7 +68,7 @@ public:
     int32_t Reset();
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam);
     void OnEvent(const Event &event);
-    void OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
     void OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);

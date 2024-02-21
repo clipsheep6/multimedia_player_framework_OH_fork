@@ -42,10 +42,10 @@ public:
         hiRecorderImpl_ = hiRecorderImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType)
     {
-        hiRecorderImpl_->OnCallback(filter, cmd, outType);
+        return hiRecorderImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
@@ -377,7 +377,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
     }
 }
 
-void HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
+Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I(PUBLIC_LOG_S "OnCallback enter.", avRecorderTag_.c_str());

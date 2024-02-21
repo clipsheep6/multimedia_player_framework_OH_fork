@@ -48,7 +48,7 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
 
     void OnEvent(const Event &event);
-    void OnCallback(std::shared_ptr<OHOS::Media::Pipeline::Filter> filter,
+    Status OnCallback(std::shared_ptr<OHOS::Media::Pipeline::Filter> filter,
         const OHOS::Media::Pipeline::FilterCallBackCommand cmd, OHOS::Media::Pipeline::StreamType outType);
     void OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode);
     void OnOutputFormatChanged(const MediaAVCodec::Format &format);
