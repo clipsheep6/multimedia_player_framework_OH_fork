@@ -37,7 +37,7 @@ constexpr double APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME = 120.0;
 std::shared_ptr<IPlayerService> PlayerServerMem::Create()
 {
-    MEDIA_LOGI("Create new PlayerServerMem");
+    MEDIA_LOGD("Create new PlayerServerMem");
     std::shared_ptr<PlayerServerMem> playerServerMem = std::make_shared<PlayerServerMem>();
     CHECK_AND_RETURN_RET_LOG(playerServerMem != nullptr, nullptr, "failed to new PlayerServerMem");
 

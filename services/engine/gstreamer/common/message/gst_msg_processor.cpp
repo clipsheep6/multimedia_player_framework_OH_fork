@@ -191,7 +191,7 @@ void GstMsgProcessor::AddMsgFilter(const std::string &filter)
         }
     }
 
-    MEDIA_LOGI("add msg filter: %{public}s", filter.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " add msg filter: %{public}s", FAKE_POINTER(this), filter.c_str());
     filters_.push_back(filter);
 }
 

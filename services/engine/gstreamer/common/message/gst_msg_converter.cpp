@@ -214,7 +214,7 @@ static int32_t ConvertUsedMqNumMessage(GstMessage &gstMsg, InnerMessage &innerMs
 {
     guint usedMqNum;
     gst_message_parse_mq_num_use_buffering(&gstMsg, &usedMqNum);
-    MEDIA_LOGI("used multiqueue num for buffering is %{public}u", usedMqNum);
+    MEDIA_LOGD("used multiqueue num for buffering is %{public}u", usedMqNum);
 
     innerMsg.type = INNER_MSG_BUFFERING_USED_MQ_NUM;
     innerMsg.detail1 = static_cast<int32_t>(usedMqNum);

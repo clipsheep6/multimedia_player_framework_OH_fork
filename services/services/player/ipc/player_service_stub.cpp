@@ -729,7 +729,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
 
     std::string format = data.ReadString();
-    MEDIA_LOGI("surfaceFormat is %{public}s!", format.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " surfaceFormat is %{public}s!", FAKE_POINTER(this), format.c_str());
     (void)surface->SetUserData("SURFACE_FORMAT", format);
     reply.WriteInt32(SetVideoSurface(surface));
     return MSERR_OK;

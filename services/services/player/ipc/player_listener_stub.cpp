@@ -130,7 +130,7 @@ void PlayerListenerStub::SetPlayerCallback(const std::weak_ptr<PlayerCallback> &
 
 void PlayerListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)
 {
-    MEDIA_LOGI("SetMonitor");
+    MEDIA_LOGD("SetMonitor");
     monitor_ = monitor;
 }
 } // namespace Media

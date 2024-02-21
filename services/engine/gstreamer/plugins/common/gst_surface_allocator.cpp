@@ -213,7 +213,7 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, Gs
 
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
     if (!gst_surface_request_buffer(allocator, param, buffer) || buffer == nullptr) {
-        GST_ERROR("failed to request surface buffer");
+        GST_ERROR_OBJECT(allocator, "0x%06" PRIXPTR " failed to request surface buffer", FAKE_POINTER(allocator));
         return nullptr;
     }
 

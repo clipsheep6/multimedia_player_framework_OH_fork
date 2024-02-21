@@ -126,13 +126,13 @@ void AEncCallbackTest::OnNewOutputData(uint32_t index, std::shared_ptr<AVMemoryM
     acodecSignal_->outCondEnc_.notify_all();
 }
 
-void ACodecMock::clearIntQueue (std::queue<uint32_t>& q)
+void ACodecMock::clearIntQueue(std::queue<uint32_t>& q)
 {
     std::queue<uint32_t> empty;
     swap(empty, q);
 }
 
-void ACodecMock::clearBufferQueue (std::queue<std::shared_ptr<AVMemoryMock>>& q)
+void ACodecMock::clearBufferQueue(std::queue<std::shared_ptr<AVMemoryMock>>& q)
 {
     std::queue<std::shared_ptr<AVMemoryMock>> empty;
     swap(empty, q);

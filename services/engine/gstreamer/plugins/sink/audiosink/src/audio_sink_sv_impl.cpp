@@ -269,7 +269,7 @@ bool AudioSinkSvImpl::DisableAudioEffectBySysParam() const
 int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
     MediaTrace trace("AudioSink::Prepare");
-    MEDIA_LOGI("audioRenderer Prepare In");
+    MEDIA_LOGD("audioRenderer Prepare In");
     AudioStandard::AppInfo appInfo = {};
     appInfo.appUid = appUid;
     appInfo.appPid = appPid;
@@ -286,7 +286,7 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
         OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE :
         OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     audioRenderer_->SetAudioEffectMode(effectMode);
-    MEDIA_LOGI("audioRenderer Prepare Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer Prepare Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -307,10 +307,10 @@ int32_t AudioSinkSvImpl::Start()
 int32_t AudioSinkSvImpl::Stop()
 {
     MediaTrace trace("AudioSink::Stop");
-    MEDIA_LOGI("audioRenderer Stop In");
+    MEDIA_LOGD("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     LISTENER((void)audioRenderer_->Stop(), "AudioRenderer::Stop", PlayerXCollie::timerTimeout)
-    MEDIA_LOGI("audioRenderer Stop Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer Stop Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -381,10 +381,10 @@ int32_t AudioSinkSvImpl::Flush()
 int32_t AudioSinkSvImpl::Release()
 {
     MediaTrace trace("AudioSink::Release");
-    MEDIA_LOGI("audioRenderer Release In");
+    MEDIA_LOGD("audioRenderer Release In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     LISTENER((void)audioRenderer_->Release(), "AudioRenderer::Release", PlayerXCollie::timerTimeout)
-    MEDIA_LOGI("audioRenderer Release Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer Release Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -433,7 +433,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     int32_t ret = -1;
     LISTENER(ret = audioRenderer_->SetParams(params), "AudioRenderer::SetParams", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
-    MEDIA_LOGI("audioRenderer SetParams Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer SetParams Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -607,7 +607,8 @@ void AudioSinkSvImpl::SetAudioDumpBySysParam()
     enableDump_ = false;
     int32_t res = OHOS::system::GetStringParameter("sys.media.dump.audiowrite.enable", dump_enable, "");
     if (res != 0 || dump_enable.empty()) {
-        MEDIA_LOGI("sys.media.dump.audiowrite.enable is not set, dump audio is not required");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " sys.media.dump.audiowrite.enable is not set, dump audio is not required",
+            FAKE_POINTER(this));
         return;
     }
     MEDIA_LOGI("sys.media.dump.audiowrite.enable=%s", dump_enable.c_str());

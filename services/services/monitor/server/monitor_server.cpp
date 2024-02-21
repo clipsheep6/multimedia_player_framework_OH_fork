@@ -154,7 +154,7 @@ int32_t MonitorServer::RegisterObj(int32_t pid, wptr<MonitorServerObject> obj)
 
     auto objListIt = objListMap_.find(pid);
     if (objListIt != objListMap_.end()) {
-        MEDIA_LOGI("The pid has already been registered");
+        MEDIA_LOGI("The pid %{public}d has already been registered", pid);
         auto objIt = std::find(objListIt->second.begin(), objListIt->second.end(), obj);
         CHECK_AND_RETURN_RET_LOG(objIt == objListIt->second.end(), MSERR_OK, "The obj has already been registered");
 

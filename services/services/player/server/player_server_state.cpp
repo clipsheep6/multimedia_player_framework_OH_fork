@@ -118,7 +118,7 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
     }
 
     if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
-        MEDIA_LOGI("Callback State change disable StoppedCb");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change disable StoppedCb", FAKE_POINTER(this));
         server_.disableStoppedCb_ = false;
         return MSERR_UNSUPPORT;
     }

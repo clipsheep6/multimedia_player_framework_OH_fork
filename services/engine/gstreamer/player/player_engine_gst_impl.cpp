@@ -210,7 +210,8 @@ void PlayerEngineGstImpl::HandleErrorMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleInfoMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("info msg type:%{public}d, value:%{public}d", msg.type, msg.code);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " info msg type:%{public}d, value:%{public}d",
+        FAKE_POINTER(this), msg.type, msg.code);
 
     int32_t status = msg.code;
     Format format;
@@ -515,7 +516,7 @@ void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg
 
 void PlayerEngineGstImpl::HandleDeviceChangeMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("Audio deviceChange event in");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Audio deviceChange event in", FAKE_POINTER(this));
     std::pair<void*, const int32_t> value = std::any_cast<std::pair<void*, const int32_t>>(msg.extra);
     std::unique_ptr<AudioStandard::DeviceInfo> deviceInfo(static_cast<AudioStandard::DeviceInfo*> (value.first));
     const int32_t reason = value.second;
@@ -693,7 +694,7 @@ int32_t PlayerEngineGstImpl::Play()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
-    MEDIA_LOGI("Play in");
+    MEDIA_LOGD("Play in");
     playBinCtrler_->Play();
     return MSERR_OK;
 }
@@ -703,7 +704,7 @@ int32_t PlayerEngineGstImpl::Pause()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
-    MEDIA_LOGI("Pause in");
+    MEDIA_LOGD("Pause in");
     (void)playBinCtrler_->Pause();
     return MSERR_OK;
 }
@@ -876,7 +877,7 @@ int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
-    MEDIA_LOGI("Seek in %{public}dms", mSeconds);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Seek in %{public}dms", FAKE_POINTER(this), mSeconds);
 
     if (playBinCtrler_->QueryPosition() == mSeconds) {
         MEDIA_LOGW("current time same to seek time, invalid seek");
@@ -932,10 +933,10 @@ int32_t PlayerEngineGstImpl::SetAudioRendererInfo(const int32_t contentType,
     contentType_ = contentType;
     streamUsage_ = streamUsage;
     rendererFlag_ = rendererFlag;
-    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
-        contentType, streamUsage, rendererFlag);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
+        FAKE_POINTER(this), contentType, streamUsage, rendererFlag);
     if (playBinCtrler_ != nullptr) {
-        MEDIA_LOGI("SetAudioRendererInfo in");
+        MEDIA_LOGD("SetAudioRendererInfo in");
         uint32_t rendererInfo(0);
         rendererInfo |= (contentType | (static_cast<uint32_t>(streamUsage) <<
             AudioStandard::RENDERER_STREAM_USAGE_SHIFT));

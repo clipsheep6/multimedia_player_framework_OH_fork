@@ -318,7 +318,8 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
             audioTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), trackInnerIndex);
             if (trackInnerIndex == innerIndex) {
                 audioTracks_[i].GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
-                MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " instance inner:0x%{public}d Type:0x%{public}d index:0x%{public}d",
+                    FAKE_POINTER(this), innerIndex, trackType, index);
                 return MSERR_OK;
             }
         }
@@ -328,7 +329,8 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
             videoTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), trackInnerIndex);
             if (trackInnerIndex == innerIndex) {
                 videoTracks_[i].GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
-                MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " instance inner:0x%{public}d Type:0x%{public}d index:0x%{public}d",
+                    FAKE_POINTER(this), innerIndex, trackType, index);
                 return MSERR_OK;
             }
         }

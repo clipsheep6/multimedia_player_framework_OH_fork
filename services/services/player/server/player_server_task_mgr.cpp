@@ -210,8 +210,8 @@ void PlayerServerTaskMgr::ClearAllTask()
     currTwoPhaseType_ = PlayerServerTaskType::BUTT;
     pendingTwoPhaseTasks_.clear();
 
-    auto dummyTask = std::make_shared<TaskHandler<void>>([]() {
-        MEDIA_LOGI("execute dummy task...");
+    auto dummyTask = std::make_shared<TaskHandler<void>>([this]() {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " execute dummy task...", FAKE_POINTER(this));
     });
     (void)taskThread_->EnqueueTask(dummyTask, true, 0);
     MEDIA_LOGD("exit");

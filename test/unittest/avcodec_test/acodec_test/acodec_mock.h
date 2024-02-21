@@ -117,8 +117,8 @@ public:
     void SetOutPath(const std::string &path);
 
 private:
-    void clearIntQueue (std::queue<uint32_t>& q);
-    void clearBufferQueue (std::queue<std::shared_ptr<AVMemoryMock>>& q);
+    void clearIntQueue(std::queue<uint32_t>& q);
+    void clearBufferQueue(std::queue<std::shared_ptr<AVMemoryMock>>& q);
     std::shared_ptr<AudioDecMock> audioDec_;
     std::shared_ptr<ACodecSignal> acodecSignal_;
     void InputFuncDec();

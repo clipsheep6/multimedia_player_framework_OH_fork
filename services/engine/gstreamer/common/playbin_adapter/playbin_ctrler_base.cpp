@@ -1262,7 +1262,7 @@ void PlayBinCtrlerBase::OnSourceSetup(const GstElement *playbin, GstElement *src
         (void)playbinCtrl->appsrcWrap_->SetAppsrc(src);
     } else if (strstr(eleTypeName, "GstCurlHttpSrc") != nullptr) {
         g_object_set(src, "ssl-ca-file", "/etc/ssl/certs/cacert.pem", nullptr);
-        MEDIA_LOGI("setup curl_http ca_file done");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " setup curl_http ca_file done", FAKE_POINTER(this));
     }
 }
 
@@ -1623,13 +1623,13 @@ void PlayBinCtrlerBase::OnAudioChanged()
 {
     CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
     if (!trackParse_->FindTrackInfo()) {
-        MEDIA_LOGI("The plugin has been cleared, no need to report it");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " The plugin has been cleared, no need to report it", FAKE_POINTER(this));
         return;
     }
 
     int32_t audioIndex = -1;
     g_object_get(playbin_, "current-audio", &audioIndex, nullptr);
-    MEDIA_LOGI("AudioChanged, current-audio %{public}d", audioIndex);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " AudioChanged, current-audio %{public}d", FAKE_POINTER(this), audioIndex);
     if (audioIndex == audioIndex_) {
         MEDIA_LOGI("Audio Not Changed");
         return;
@@ -1645,7 +1645,8 @@ void PlayBinCtrlerBase::OnAudioChanged()
     CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
 
     if (GetCurrState() == preparingState_) {
-        MEDIA_LOGI("defaule audio index %{public}d, inner index %{public}d", index, audioIndex);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " defaule audio index %{public}d, inner index %{public}d",
+            FAKE_POINTER(this), index, audioIndex);
         Format format;
         (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
         (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), MediaType::MEDIA_TYPE_AUD);
