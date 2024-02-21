@@ -600,14 +600,29 @@ napi_value AudioHapticManagerNapi::CreatePlayer(napi_env env, napi_callback_info
 void AudioHapticManagerNapi::AsyncCreatePlayer(napi_env env, void *data)
 {
     AudioHapticManagerAsyncContext *context = static_cast<AudioHapticManagerAsyncContext *>(data);
-    std::shared_ptr<AudioHapticPlayer> audioHapticPlayer = context->objectInfo->audioHapticMgrClient_->
-        CreatePlayer(context->sourceID, context->playerOptions);
+    std::shared_ptr<AudioHapticPlayer> audioHapticPlayer =
+        context->objectInfo->audioHapticMgrClient_->CreatePlayer(context->sourceID, context->playerOptions);
     if (audioHapticPlayer != nullptr) {
-        context->audioHapticPlayer = audioHapticPlayer;
-        context->status = SUCCESS;
+        int32_t result = audioHapticPlayer->Prepare();
+        if (result == MSERR_OK) {
+            context->audioHapticPlayer = audioHapticPlayer;
+            context->status = SUCCESS;
+            return;
+        }
+        // Fail to prepare the audio haptic player. Throw err.
+        if (result == MSERR_OPEN_FILE_FAILED) {
+            context->errCode = NAPI_ERR_IO_ERROR;
+        } else if (result == MSERR_UNSUPPORT_FILE) {
+            context->errCode = NAPI_ERR_UNSUPPORTED_FORMAT;
+        } else {
+            context->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
+        }
     } else {
-        context->status = ERROR;
+        context->errCode = NAPI_ERR_OPERATE_NOT_ALLOWED;
     }
+    context->audioHapticPlayer = nullptr;
+    context->status = ERROR;
+    context->errMessage = AudioHapticCommonNapi::GetMessageByCode(context->errCode);
 }
 
 void AudioHapticManagerNapi::CreatePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data)
@@ -625,20 +640,22 @@ void AudioHapticManagerNapi::CreatePlayerAsyncCallbackComp(napi_env env, napi_st
             napi_create_error(env, nullptr, message, &result[PARAM0]);
             napi_get_undefined(env, &result[PARAM1]);
         } else {
-            napi_get_undefined(env, &result[0]);
+            napi_get_undefined(env, &result[PARAM0]);
             result[PARAM1] = playerResult;
         }
     } else {
         MEDIA_LOGE("CreatePlayer: Failed to create audio haptic player!");
         napi_value message = nullptr;
-        napi_create_string_utf8(env, "CreatePlayer Error: Operation is not supported or failed",
-            NAPI_AUTO_LENGTH, &message);
+        napi_value code = nullptr;
+        napi_create_string_utf8(env, context->errMessage.c_str(), NAPI_AUTO_LENGTH, &message);
         napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_create_int32(env, context->errCode, &code);
+        napi_set_named_property(env, result[PARAM0], "code", code);
         napi_get_undefined(env, &result[PARAM1]);
     }
 
     if (context->deferred) {
-        if (!context->status) {
+        if (context->status == SUCCESS) {
             napi_resolve_deferred(env, context->deferred, result[PARAM1]);
         } else {
             napi_reject_deferred(env, context->deferred, result[PARAM0]);
