@@ -66,8 +66,8 @@ const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
 bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName, const int32_t& uid)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
-        MEDIA_LOG_I("bootanimation enforce gstreamer");
-        return false;
+        MEDIA_LOG_I("bootanimation enforce histreamer");
+        return true;
     }
     char useHistreamer[10] = {0}; // 10 for system parameter usage
     auto res = GetParameter("debug.media_service.histreamer", "1", useHistreamer, sizeof(useHistreamer));
