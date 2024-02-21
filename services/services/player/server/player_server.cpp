@@ -180,12 +180,14 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         std::string uri = uriHelper_->FormattedUri();
         MEDIA_LOGI("UriHelper already existed, uri: %{public}s", uri.c_str());
         ret = InitPlayEngine(uri);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
         MEDIA_LOGI("UriHelper is nullptr, create a new instance.");
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
         ret = InitPlayEngine(uriHelper->FormattedUri());
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
     }
     config_.url = "file descriptor source";
@@ -222,7 +224,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     } else {
         ret = playerEngine_->SetSource(dataSrc_);
     }
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource Failed!");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
@@ -1270,7 +1272,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         return;
     }
 
-    if (type == INFO_TYPE_ERROR_MSG) {
+    if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
         auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
@@ -1294,7 +1296,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             playerCb_->OnInfo(type, extra, infoBody);
         }
     } else {
-        MEDIA_LOGI("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
+        MEDIA_LOGW("playerCb_ != nullptr %{public}d, ret %{public}d", playerCb_ != nullptr, ret);
     }
 }
 

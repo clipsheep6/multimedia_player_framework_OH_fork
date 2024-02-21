@@ -253,7 +253,11 @@ void CacheBuffer::OnFirstFrameWriting(uint64_t latency)
 
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
-    std::lock_guard lock(cacheBufferLock_);
+    while (!cacheBufferLock_.try_lock()) {
+        if (!isRunning_.load()) {
+            return MSERR_OK;
+        }
+    }
     if (streamID == streamID_) {
         if (audioRenderer_ != nullptr && isRunning_.load()) {
             isRunning_.store(false);
@@ -268,8 +272,10 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
             if (callback_ != nullptr) callback_->OnPlayFinished();
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnPlayFinished();
         }
+        cacheBufferLock_.unlock();
         return MSERR_OK;
     }
+    cacheBufferLock_.unlock();
     return MSERR_INVALID_VAL;
 }
 

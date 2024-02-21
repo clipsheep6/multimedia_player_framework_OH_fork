@@ -104,9 +104,9 @@ int32_t GstMsgProcessor::DoInit()
     CHECK_AND_RETURN_RET_LOG(ret > 0, MSERR_INVALID_OPERATION, "add bus source failed");
 
     auto mainLoopRun = std::make_shared<TaskHandler<void>>([this] {
-        MEDIA_LOGI("start msg main loop...");
+        MEDIA_LOGI("start msg main loop..., instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
         g_main_loop_run(mainLoop_);
-        MEDIA_LOGI("stop msg main loop...");
+        MEDIA_LOGI("stop msg main loop..., instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
         DoReset();
     });
 

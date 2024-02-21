@@ -39,9 +39,11 @@ PlayerXCollie::~PlayerXCollie()
 {
     MEDIA_LOGI("~PlayerXCollie()");
     std::lock_guard<std::mutex> lock(mutex_);
+#ifdef HICOLLIE_ENABLE
     for (const auto &iter : dfxDumper_) {
         HiviewDFX::XCollie::GetInstance().CancelTimer(iter.first);
     }
+#endif
     dfxDumper_.clear();
 }
 

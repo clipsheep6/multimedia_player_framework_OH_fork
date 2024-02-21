@@ -48,6 +48,9 @@ ohos_shared_library("media_service_utils") {
 
   defines = [ "MEDIA_OHOS" ]
   defines += player_framework_defines
+  if (is_emulator) {
+    defines += [ "EMULATOR_ENABLED" ]
+  }
 
   cflags = [
     "-std=c++17",

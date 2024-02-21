@@ -321,11 +321,8 @@ static GstBufferPool *gst_video_capture_create_pool(GstMemSrc *memsrc)
     g_return_val_if_fail(memsrc != nullptr, nullptr);
     GstBufferPool *bufferpool = gst_video_capture_pool_new();
     if (bufferpool != nullptr) {
-        GstVideoCaptureSrc *capturesrc = GST_VIDEO_CAPTURE_SRC(memsrc);
         g_object_set(bufferpool, "suspend", TRUE, nullptr);
-        if (capturesrc->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
-            g_object_set(bufferpool, "cached-data", TRUE, nullptr);
-        }
+        g_object_set(bufferpool, "cached-data", FALSE, nullptr);
     }
     return bufferpool;
 }
@@ -431,9 +428,6 @@ static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
     g_return_if_fail(surfacesrc->pool != nullptr);
 
-    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
-        g_object_set(surfacesrc->pool, "cached-data", FALSE, nullptr);
-    }
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
     g_object_set(surfacesrc->pool, "src", static_cast<gpointer>(src), nullptr);
     g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
@@ -447,9 +441,6 @@ static void gst_video_capture_src_pause(GstVideoCaptureSrc *src)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
     g_return_if_fail(surfacesrc->pool != nullptr);
 
-    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
-        g_object_set(surfacesrc->pool, "cached-data", TRUE, nullptr);
-    }
     g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
     g_object_set(surfacesrc->pool, "pause-data", TRUE, nullptr);
     g_object_set(surfacesrc->pool, "input-detection", FALSE, nullptr);
@@ -474,9 +465,6 @@ static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
 
     src->cur_state = RECORDER_RESUME;
 
-    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
-        g_object_set(surfacesrc->pool, "cached-data", FALSE, nullptr);
-    }
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
     g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
     g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);

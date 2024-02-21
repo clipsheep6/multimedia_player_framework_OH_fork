@@ -78,9 +78,10 @@ void SoundPoolUnitTest::create(int maxStreams)
     audioRenderInfo.contentType = CONTENT_TYPE_MUSIC;
     audioRenderInfo.streamUsage = STREAM_USAGE_MUSIC;
     audioRenderInfo.rendererFlags = 0;
-    EXPECT_TRUE(soundPool_->CreateSoundPool(maxStreams, audioRenderInfo));
     if (soundPool_ == nullptr) {
         cout << "create soundpool failed" << endl;
+    } else {
+        EXPECT_TRUE(soundPool_->CreateSoundPool(maxStreams, audioRenderInfo));
     }
 }
 

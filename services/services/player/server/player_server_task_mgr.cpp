@@ -59,7 +59,8 @@ int32_t PlayerServerTaskMgr::EnqueueTask(const std::shared_ptr<ITaskHandler> &ta
     currTwoPhaseTask_ = task;
     currTwoPhaseType_ = type;
     currTwoPhaseTaskName_ = taskName;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] start", FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] start",
+        FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
     return MSERR_OK;
 }
 

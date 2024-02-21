@@ -1827,7 +1827,7 @@ void PlayBinCtrlerBase::CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wr
 {
     if (id == 0) {
         delete wrapper;
-        MEDIA_LOGW("add signal failed");
+        MEDIA_LOGW("add signal failed, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     } else {
         AddSignalIds(elem, id);
     }

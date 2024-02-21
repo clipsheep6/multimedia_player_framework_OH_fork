@@ -237,7 +237,8 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
         formattedDateTime = FormatDateTimeByTimeZone(creationTime);
     }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
-    avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT, formattedDateTime);
+    avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT,
+        formattedDateTime.compare(date) != 0 ? formattedDateTime : FormatDataTimeByString(date));
 }
 
 std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso8601Str)
@@ -282,6 +283,42 @@ std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso
     std::ostringstream oss;
     oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
     return oss.str();
+}
+
+std::string AVMetaDataCollector::FormatDataTimeByString(const std::string &dataTime)
+{
+    if (dataTime.compare("") == 0) {
+        return dataTime;
+    }
+    std::string::size_type position = dataTime.find(" ");
+    std::string data = "";
+    std::string time = "";
+    if (position == dataTime.npos) {
+        data = dataTime;
+        if (data.find("-") == data.npos) {
+            data += "-01-01";
+        } else if (data.find_first_of("-") == data.find_last_of("-")) {
+            data += "-01";
+        }
+        time += " 00:00:00";
+    } else {
+        data = dataTime.substr(0, position);
+        time = dataTime.substr(position);
+        if (data.find("-") == data.npos) {
+            data += "-01-01";
+        } else if (data.find_first_of("-") == data.find_last_of("-")) {
+            data += "-01";
+        }
+        if (time.find(":") == data.npos) {
+            time += ":00:00";
+        } else if (time.find_first_of(":") == time.find_last_of(":")) {
+            time += ":00";
+        } else {
+            time = time.substr(0, time.find("."));
+        }
+    }
+    MEDIA_LOGD("AV_KEY_DATE_TIME_FORMAT is: %{public}s%{public}s", data.c_str(), time.c_str());
+    return data + time;
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const

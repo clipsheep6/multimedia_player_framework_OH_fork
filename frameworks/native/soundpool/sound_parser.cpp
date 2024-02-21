@@ -62,6 +62,7 @@ int32_t SoundParser::DoParser()
 {
     MEDIA_LOGE("SoundParser do parser.");
     std::unique_lock<std::mutex> lock(soundParserLock_);
+    isParsing_.store(true);
     DoDemuxer(&trackFormat_);
     DoDecode(trackFormat_);
     return MSERR_OK;
@@ -167,6 +168,8 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 int32_t SoundParser::Release()
 {
     MEDIA_LOGI("SoundParser Release.");
+    std::unique_lock<std::mutex> lock(soundParserLock_);
+    isParsing_.store(false);
     int32_t ret = MSERR_OK;
     if (soundParserListener_ != nullptr) soundParserListener_.reset();
     if (audioDecCb_ != nullptr) {

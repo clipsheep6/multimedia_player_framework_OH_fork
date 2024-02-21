@@ -116,18 +116,12 @@ bool SoundPoolCreateFuzzer::FuzzSoundPoolCreateFlags(uint8_t *data, size_t size)
 bool FuzzTestSoundPoolCreate(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolCreateFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolCreate(data, size);
 }
 
 bool FuzzTestSoundPoolCreateFlags(uint8_t *data, size_t size)
 {
     auto soundPool_ = std::make_unique<SoundPoolCreateFuzzer>();
-    if (soundPool_ == nullptr) {
-        return true;
-    }
     return soundPool_->FuzzSoundPoolCreateFlags(data, size);
 }
 } // namespace OHOS

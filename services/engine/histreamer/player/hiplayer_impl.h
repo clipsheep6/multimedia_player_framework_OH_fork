@@ -124,7 +124,7 @@ private:
     bool IsVideoMime(const std::string& mime);
 #endif
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
-
+    
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doStartedSeek(int64_t seekPos, PlayerSeekMode mode);
     Status doPausedSeek(int64_t seekPos, PlayerSeekMode mode);

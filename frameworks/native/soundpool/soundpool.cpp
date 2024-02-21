@@ -23,7 +23,6 @@ namespace Media {
 std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo)
 {
-    pthread_setname_np(pthread_self(), "OS_SoundPool");
     std::shared_ptr<SoundPool> impl;
     if (!SoundPool::CheckInitParam(maxStreams, audioRenderInfo)) {
         return nullptr;
@@ -46,7 +45,7 @@ SoundPool::SoundPool()
 SoundPool::~SoundPool()
 {
     MEDIA_LOGI("Destruction SoundPool.");
-    Release();
+    ReleaseInner();
 }
 
 int32_t SoundPool::Init(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo)
@@ -176,6 +175,11 @@ int32_t SoundPool::Unload(int32_t soundID)
 }
 
 int32_t SoundPool::Release()
+{
+    return ReleaseInner();
+}
+
+int32_t SoundPool::ReleaseInner()
 {
     std::lock_guard lock(soundPoolLock_);
     MEDIA_LOGI("Release SoundPool.");
