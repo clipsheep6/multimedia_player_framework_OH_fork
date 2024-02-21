@@ -112,6 +112,7 @@ void AVMetadataHelperImpl::OnEvent(const Event &event)
 Status AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
     const Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
 {
+    return Status::OK;
 }
 
 void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)

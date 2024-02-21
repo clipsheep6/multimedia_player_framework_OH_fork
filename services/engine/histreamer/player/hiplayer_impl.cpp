@@ -1267,8 +1267,7 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case StreamType::STREAMTYPE_RAW_AUDIO:
-                LinkAudioSinkFilter(filter, outType);
-                break;
+                return LinkAudioSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
                 return LinkAudioDecoderFilter(filter, outType);
 #ifdef SUPPORT_VIDEO
@@ -1281,6 +1280,7 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
                 break;
         }
     }
+    return Status::OK;
 }
 
 Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
