@@ -436,11 +436,11 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
                 break;
         }
     }
-    isSeek_ = false;
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(false);
     }
+    isSeek_ = false;
     return rtv;
 }
 
@@ -1158,19 +1158,14 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
     // Report position firstly to make sure that client can get real position when seek done in playing state.
     if (curState_ == PlayerStateId::PLAYING) {
         std::unique_lock<std::mutex> lock(seekMutex_);
-        bool notTimeout = syncManager_->seekCond_.wait_for(
+        syncManager_->seekCond_.wait_for(
             lock,
             std::chrono::milliseconds(PLAYING_SEEK_WAIT_TIME),
             [this]() {
                 return !syncManager_->InSeeking();
             });
-        if (notTimeout) {
-            NotifyPositionUpdate();
-        } else {
-            // If it waits for a new frame timeout, report seek-time as position.
-            callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
-        }
     }
+    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
 
