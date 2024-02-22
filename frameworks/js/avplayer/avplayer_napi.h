@@ -345,6 +345,7 @@ private:
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable stateChangeCond_;
     std::atomic<bool> stopWait_;
+    bool avplayerExit_ = false;
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t position_ = -1;
