@@ -132,7 +132,7 @@ private:
     Status doSeek(int64_t seekPos, PlayerSeekMode mode);
     void ResetIfSourceExisted();
     void ReleaseInner();
-    int32_t PauseInner();
+    void NotifySeek(Status rtv, bool flag, int64_t seekPos);
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
