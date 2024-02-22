@@ -43,7 +43,7 @@ config("media_engine_histreamer_factory_config") {
     "$MEDIA_PLAYER_HISTREAMER/src",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
     "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/",
-    "$MEDIA_PLAYER_GRAPHIC/interfaces/inner_api/",
+    "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/interfaces/inner_api/",
   ]
   defines = [
     "HST_ANY_WITH_NO_RTTI",
