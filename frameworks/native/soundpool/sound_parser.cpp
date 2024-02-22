@@ -63,8 +63,15 @@ int32_t SoundParser::DoParser()
     MEDIA_LOGE("SoundParser do parser.");
     std::unique_lock<std::mutex> lock(soundParserLock_);
     isParsing_.store(true);
-    DoDemuxer(&trackFormat_);
-    DoDecode(trackFormat_);
+    int32_t result = MSERR_OK;
+    result = DoDemuxer(&trackFormat_);
+    if (result != MSERR_OK && callback_ != nullptr) {
+        callback_->OnError(MSERR_UNSUPPORT_FILE);
+    }
+    result = DoDecode(trackFormat_);
+    if (result != MSERR_OK && callback_ != nullptr) {
+        callback_->OnError(MSERR_UNSUPPORT_FILE);
+    }
     return MSERR_OK;
 }
 

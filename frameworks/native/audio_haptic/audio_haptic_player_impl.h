@@ -37,8 +37,9 @@ public:
     AudioHapticPlayerImpl();
     ~AudioHapticPlayerImpl();
 
-    //  // AudioHapticPlayer override
+    // AudioHapticPlayer override
     bool IsMuted(const AudioHapticType &audioHapticType) const override;
+    int32_t Prepare() override;
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Release() override;
@@ -47,16 +48,17 @@ public:
     int32_t SetAudioHapticPlayerCallback(const std::shared_ptr<AudioHapticPlayerCallback> &playerCallback) override;
     int32_t GetAudioCurrentTime() override;
 
-    void NotifySoundPoolSourceLoadCompleted();
+    void NotifyPreparedEvent();
     void NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent);
     void NotifyEndOfStreamEvent();
+    void NotifyUnsupportedFileEvent();
     void SetPlayerOptions(const bool &muteAudio, const bool &muteHaptic);
     int32_t SetPlayerType(const AudioHapticPlayerType &audioHapticPlayerType);
     int32_t SetPlayerStreamUsage(const AudioStandard::StreamUsage &streamUsage);
     int32_t SetPlayerSource(const std::string audioUri, const std::string hapticUri);
 
-    // func for vibrate
-    int32_t LoadVibratorSource();
+    // func for vibration
+    int32_t LoadVibrator();
     int32_t StartVibrate();
     void StopVibrate();
     void ResetVibrateState();
@@ -71,16 +73,20 @@ public:
 
 private:
     // func for soundpool
-    int32_t PrepareSoundPoolSource();
+    int32_t PrepareSoundPool();
     int32_t StartSoundPoolPlayer();
     int32_t StopSoundPoolPlayer();
     int32_t ReleaseSoundPoolPlayer();
 
-    //func for avplayer
-    int32_t PrepareAVPlayer(bool isReInitNeeded = false);
+    // func for avplayer
+    int32_t PrepareAVPlayer();
+    int32_t ResetAVPlayer();
     int32_t StartAVPlayer();
     int32_t StopAVPlayer();
     int32_t ReleaseAVPlayer();
+
+    // func for vibration
+    int32_t PrepareVibrator();
 
     // var for all
     AudioHapticPlayerType playerType_;
@@ -93,6 +99,11 @@ private:
     float volume_ = 1.0f;
     bool loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
+    bool isPrepared_ = false;
+    bool isReleased_ = false;
+    bool isUnsupportedFile_ = false;
+    std::mutex prepareMutex_;
+    std::condition_variable prepareCond_;
 
     // var for callback
     std::shared_ptr<PlayerCallback> avPlayerCallback_ = nullptr;
@@ -115,13 +126,9 @@ private:
     int32_t soundID_ = -1;
     int32_t streamID_ = -1;
     int32_t fileDes_ = -1;
-    bool loadCompleted_ = false;
-    std::mutex loadUriMutex_;
-    std::condition_variable condLoadUri_;
 
     // var for avplayer
     std::shared_ptr<Media::Player> avPlayer_ = nullptr;
-    bool isStartQueued_ = false;
 };
 
 class AudioHapticPlayerNativeCallback : public ISoundPoolCallback, public PlayerCallback {

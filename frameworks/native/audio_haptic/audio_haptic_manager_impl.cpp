@@ -186,8 +186,8 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
         audioHapticPlayer->LoadSoundPoolPlayer();
     }
     // load vibrator
-    audioHapticPlayer->LoadVibratorSource();
-    
+    audioHapticPlayer->LoadVibrator();
+
     audioHapticPlayerInfo->audioHapticPlayer_ = audioHapticPlayer;
     return audioHapticPlayer;
 }

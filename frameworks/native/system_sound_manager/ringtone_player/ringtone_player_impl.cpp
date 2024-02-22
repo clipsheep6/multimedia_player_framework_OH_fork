@@ -84,6 +84,8 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
     }
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
+    int32_t result = player_->Prepare();
+    CHECK_AND_RETURN_LOG(result == MSERR_OK, "Failed to load source for audio haptic manager");
     configuredUri_ = audioUri;
 
     if (callback_ == nullptr) {

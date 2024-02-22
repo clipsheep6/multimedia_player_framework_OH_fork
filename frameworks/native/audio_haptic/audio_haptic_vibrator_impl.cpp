@@ -56,6 +56,7 @@ std::unique_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibra
 int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri)
 {
 #ifdef SUPPORT_VIBRATOR
+    MEDIA_LOGI("PreLoad vibration source. hapticUri [%{public}s]", hapticUri.c_str());
     int32_t fd = open(hapticUri.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
@@ -76,6 +77,7 @@ int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri)
     int32_t result = Sensors::PreProcess(*vibratorFD_, *vibratorPkg_);
     if (result != 0) {
         MEDIA_LOGE("PreProcess: %{public}d", result);
+        return MSERR_UNSUPPORT_FILE;
     }
 #endif
     return MSERR_OK;
