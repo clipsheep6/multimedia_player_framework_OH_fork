@@ -224,7 +224,6 @@ int32_t HiPlayerImpl::PrepareAsync()
     auto ret = Init();
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: init error");
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
     if (dataSrc_ != nullptr) {
@@ -234,7 +233,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_EXT_API9_UNSUPPORT_FORMAT});
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
 
