@@ -91,6 +91,8 @@ struct AudioHapticManagerAsyncContext {
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer;
     int32_t sourceID;
     AudioHapticPlayerOptions playerOptions {false, false};
+    std::string errMessage;
+    int32_t errCode;
 };
 } // namespace Media
 } // namespace OHOS
