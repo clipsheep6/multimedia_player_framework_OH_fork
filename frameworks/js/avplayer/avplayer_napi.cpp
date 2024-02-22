@@ -213,7 +213,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
 
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -291,7 +291,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -367,7 +367,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -435,7 +435,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -513,7 +513,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 stopWait_ = false;
-                stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+                stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             }
         }
         MEDIA_LOGI("Reset Task Out");
@@ -572,7 +572,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 void AVPlayerNapi::WaitTaskQueStop()
 {
     MEDIA_LOGI("WaitTaskQueStop In");
-    std::unique_lock<std::mutex> lock(taskMutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
     MEDIA_LOGI("WaitTaskQueStop Out");
 }
@@ -580,6 +580,11 @@ void AVPlayerNapi::WaitTaskQueStop()
 void AVPlayerNapi::StopTaskQue()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StopTaskQue In", FAKE_POINTER(this));
+    {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        avplayerExit_ = true;
+    }
+    stateChangeCond_.notify_all();
     taskQue_->Stop();
     std::unique_lock<std::mutex> lock(mutex_);
     taskQueStoped_ = true;
@@ -998,7 +1003,7 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
                 return;
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Set source network out", FAKE_POINTER(this));
         }
     });
@@ -1020,7 +1025,7 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
                 return;
             }
             stopWait_ = false;
-            stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); });
+            stateChangeCond_.wait(lock, [this]() { return stopWait_.load() || avplayerExit_; });
             MEDIA_LOGI("Set source fd out");
         }
     });
