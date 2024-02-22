@@ -1303,12 +1303,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
             FilterType::FILTERTYPE_ASINK);
         FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
         audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
-        if (audioRenderInfo_ != nullptr) {
-            audioSink_->SetParameter(audioRenderInfo_);
-        }
-        if (audioInterruptMode_ != nullptr) {
-            audioSink_->SetParameter(audioInterruptMode_);
-        }
         std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
         if (demuxer_ != nullptr) {
             globalMeta = demuxer_->GetGlobalMetaInfo();
@@ -1321,7 +1315,11 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
                     globalMeta->SetData(iter->first, iter->second);
                 }
             }
-
+            if (audioInterruptMode_ != nullptr) {
+                for (MapIt iter = audioInterruptMode_->begin(); iter != audioInterruptMode_->end(); iter++) {
+                    globalMeta->SetData(iter->first, iter->second);
+                }
+            }
             audioSink_->SetParameter(globalMeta);
         }
         audioSink_->SetSyncCenter(syncManager_);
