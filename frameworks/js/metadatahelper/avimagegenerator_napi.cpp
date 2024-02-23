@@ -272,11 +272,7 @@ bool AVImageGeneratorNapi::CheckSystemApp(napi_env env)
 
 napi_value AVImageGeneratorNapi::JsFetchFrameAtTime(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGI("JsFetchFrameAtTime in");
-    if (!CheckSystemApp(env)) {
-        MEDIA_LOGE("SystemApi JsFetchFrameAtTime is called!");
-        return nullptr;
-    }
+    MEDIA_LOGI("JsFetchFrameAtTime  in");
     const int32_t maxParam = 4; // config + callbackRef
     const int32_t callbackParam = 3; // callback
     size_t argCount = maxParam;
