@@ -54,6 +54,7 @@ public:
     void Pause();
     void Release();
 
+    std::atomic<uint32_t> seekNum_ = 0;
 private:
     void OnStartRenderFrameCb() const;
     void OnStateChangeCb(const int32_t extra, const Format &infoBody);
