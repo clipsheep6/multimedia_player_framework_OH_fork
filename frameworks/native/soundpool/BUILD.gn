@@ -65,6 +65,7 @@ ohos_shared_library("soundpool_client") {
   defines += [ "SOUNDPOOL_SUPPORT_LOW_LATENCY" ]
   defines += player_framework_defines
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }
