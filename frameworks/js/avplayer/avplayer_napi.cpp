@@ -519,7 +519,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         MEDIA_LOGI("Reset Task Out");
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
-
+    playerCb->seekNum_ = 0;
     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     return task;
 }
@@ -615,6 +615,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         });
 
         isReleased_.store(true);
+        playerCb->seekNum_ = 0;
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
     }
     return task;
@@ -664,7 +665,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::seek");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
     napi_value args[2] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
@@ -700,19 +700,19 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             return result;
         }
     }
-
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
-
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
         MEDIA_LOGD("Seek Task");
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->Seek(time, static_cast<PlayerSeekMode>(mode));
         }
     });
+    jsplayer->playerCb->seekNum_++;
+    MEDIA_LOGI("seekNum: %{public}d, seektime: %{public}d", jsplayer->playerCb->seekNum_.load(), time);
     (void)jsPlayer->taskQue_->EnqueueTask(task);
     return result;
 }
