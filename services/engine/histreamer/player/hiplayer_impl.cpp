@@ -629,6 +629,10 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
+    if (demuxer_ == nullptr) {
+        MEDIA_LOG_E("Get media duration failed, demuxer is not ready.");
+        return TransStatus(Status::ERROR_WRONG_STATE);
+    }
     int64_t duration = 0;
     bool found = false;
     if (demuxer_->GetDuration(duration)) {
