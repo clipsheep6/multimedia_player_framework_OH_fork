@@ -123,11 +123,12 @@ Status HiPlayerImpl::Init()
 
 void HiPlayerImpl::SetDefaultAudioRenderInfo()
 {
+    MEDIA_LOG_I("SetDefaultAudioRenderInfo");
     Plugins::AudioRenderInfo audioRenderInfo {AudioStandard::CONTENT_TYPE_MUSIC, AudioStandard::STREAM_USAGE_MEDIA, 0};
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
+        audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
     }
-    audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
 }
 
 int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
@@ -652,6 +653,10 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 {
+    if (demuxer_ == nullptr) {
+        MEDIA_LOG_W("Get media duration failed, demuxer is not ready.");
+        return TransStatus(Status::ERROR_WRONG_STATE);
+    }
     int64_t duration = 0;
     bool found = false;
     if (demuxer_->GetDuration(duration)) {
