@@ -68,7 +68,7 @@ const std::unordered_set<std::string> HST_ENABLE_BUNDLE_LIST = {
 bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName, const int32_t& uid)
 {
     char useHistreamer[10] = {0}; // 10 for system parameter usage
-    auto res = GetParameter("debug.media_service.histreamer", "1", useHistreamer, sizeof(useHistreamer));
+    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
     bool enableHiStreamerBySwitch = (res == 1 && useHistreamer[0] == '1');
     bool enableHiStreamerByBundleList = (HST_ENABLE_BUNDLE_LIST.count(clientBundleName) > 0);
 
@@ -76,6 +76,18 @@ bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string
     auto result = GetParameter("debug.media_service.gstreamer_bundle", "0", useGstreamerForBundle,
         sizeof(useGstreamerForBundle));
     bool enableGstreamerForBundle = (result == 1 && useGstreamerForBundle[0] == '1');
+
+    // Bootanimation should use HiStreamer engine.
+    if (uid == 1003) { // 1003 is bootanimation uid
+        MEDIA_LOG_I("bootanimation enforce histreamer");
+        enableHiStreamerByBundleList = true;
+    }
+
+    // XTS case should use HiStreamer engine.
+    if (clientBundleName.find("ohos.acts.multimedia") != std::string::npos) {
+        MEDIA_LOG_I("XTS case enforce histreamer");
+        enableHiStreamerByBundleList = true;
+    }
 
     MEDIA_LOG_I("IsEnableHiStreamer enableHiStreamerBySwitch = %{public}d, enableHiStreamerByBundleList = %{public}d, "
 	    "enableGstreamerForBundle = %{public}d", enableHiStreamerBySwitch,
