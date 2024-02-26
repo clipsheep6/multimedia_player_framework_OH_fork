@@ -193,6 +193,7 @@ ohos_shared_library("media_service") {
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "image_framework:image_native",
     "init:libbegetutil",

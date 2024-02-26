@@ -66,6 +66,7 @@ private:
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
     void RemoteDieAgainRegisterActiveApps();
+    void WritePurgeableEvent(int32_t level, int32_t useTime);
 
     bool isParsed_ = false;
     std::recursive_mutex recMutex_;

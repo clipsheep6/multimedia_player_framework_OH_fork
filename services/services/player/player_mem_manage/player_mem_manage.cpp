@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "mem_mgr_client.h"
+#include "hisysevent.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerMemManage"};
@@ -28,6 +29,12 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
+
+// HiSysEvent
+const std::string PURGEABLE_EVENT_NAME = "MEMORY_PURGEABLE_INFO";
+const std::string PURGEABLE_TYPE_NAME = "PlayerMemManage";
+constexpr int32_t LEVEL_REBUILD = 10;
+
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
@@ -273,6 +280,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter OnTrim level:%{public}d", level);
 
+    auto startTime = std::chrono::steady_clock::now();
     switch (level) {
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:  // remain 800MB trigger
             HandleOnTrimLevelLow();
@@ -289,6 +297,10 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
         default:
             break;
     }
+
+    auto endTime = std::chrono::steady_clock::now();
+    int32_t useTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+    WritePurgeableEvent(int32_t(level), useTime);
 
     return MSERR_OK;
 }
@@ -309,6 +321,10 @@ void PlayerMemManage::SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t sta
         if (state == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
             appPlayerInfo.appEnterFrontTime = std::chrono::steady_clock::now();
             AwakeFrontGroundAppMedia(appPlayerInfo);
+            auto endTime = std::chrono::steady_clock::now();
+            int32_t useTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime -
+                appPlayerInfo.appEnterFrontTime).count();
+            WritePurgeableEvent(LEVEL_REBUILD, useTime);
         } else if (state == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
             appPlayerInfo.appEnterBackTime = std::chrono::steady_clock::now();
         }
@@ -377,6 +393,17 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
             appPlayerInfo.appState = static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND);
             appPlayerInfo.appEnterFrontTime = std::chrono::steady_clock::now();
         }
+    }
+}
+
+void PlayerMemManage::WritePurgeableEvent(int32_t level, int32_t useTime)
+{
+    MEDIA_LOGD("WritePurgeableEvent: level = %{public}d, useTime = %{public}d", level, useTime);
+    int32_t res = HiSysEventWrite(HiviewDFX::HiSysEvent::Domain::MEMMGR, PURGEABLE_EVENT_NAME.c_str(),
+        HiviewDFX::HiSysEvent::EventType::STATISTIC, "TYPE", PURGEABLE_TYPE_NAME.c_str(),
+        "LEVEL", level, "USETIME", useTime);
+    if (res != 0) {
+        MEDIA_LOGE("write hiSysEvent error, res:%{public}d", res);
     }
 }
 }
