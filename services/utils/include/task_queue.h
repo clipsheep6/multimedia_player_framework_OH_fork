@@ -221,6 +221,7 @@ public:
     int32_t Stop() noexcept;
     void SetQos(const OHOS::QOS::QosLevel level);
     void ResetQos();
+    bool IsTaskExecuting();
 
     // delayUs cannot be gt 10000000ULL.
     __attribute__((no_sanitize("cfi"))) int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
@@ -241,6 +242,7 @@ private:
     std::condition_variable cond_;
     std::string name_;
     pid_t tid_ = -1;
+    bool isTaskExecuting_ = false;
 };
 } // namespace Media
 } // namespace OHOS

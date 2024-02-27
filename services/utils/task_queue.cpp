@@ -167,14 +167,21 @@ __attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
             (void)cond_.wait_for(lock, std::chrono::nanoseconds(diff));
             continue;
         }
+        isTaskExecuting_ = true;
         lock.unlock();
 
         if (item.task_ == nullptr || item.task_->IsCanceled()) {
             MEDIA_LOGD("task is nullptr or task canceled. [%{public}s]", name_.c_str());
+            lock.lock();
+            isTaskExecuting_ = false;
+            lock.unlock();
             continue;
         }
 
         item.task_->Execute();
+        lock.lock();
+        isTaskExecuting_ = false;
+        lock.unlock();
         if (item.task_->GetAttribute().periodicTimeUs_ == UINT64_MAX) {
             continue;
         }
@@ -185,6 +192,12 @@ __attribute__((no_sanitize("cfi"))) void TaskQueue::TaskProcessor()
     }
     (void)mallopt(M_FLUSH_THREAD_CACHE, 0);
     MEDIA_LOGI("Leave TaskProcessor [%{public}s]", name_.c_str());
+}
+
+bool TaskQueue::IsTaskExecuting()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return isTaskExecuting_;
 }
 } // namespace Media
 } // namespace OHOS

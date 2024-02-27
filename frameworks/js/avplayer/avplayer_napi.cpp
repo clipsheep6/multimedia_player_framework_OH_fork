@@ -571,10 +571,10 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::WaitTaskQueStop()
 {
-    MEDIA_LOGI("WaitTaskQueStop In");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "WaitTaskQueStop In", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
-    MEDIA_LOGI("WaitTaskQueStop Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "WaitTaskQueStop Out", FAKE_POINTER(this));
 }
 
 void AVPlayerNapi::StopTaskQue()
@@ -617,6 +617,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         isReleased_.store(true);
         playerCb_->seekNum_ = 0;
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+        if (taskQue_->IsTaskExecuting()) {
+            MEDIA_LOGW("0x%{public}06" PRIXPTR " Cancel Executing Task, ReleaseTask Report Error", FAKE_POINTER(this));
+            NotifyState(PlayerStates::PLAYER_STATE_ERROR);
+        }
     }
     return task;
 }
