@@ -108,11 +108,13 @@ std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelpe
 #ifdef SUPPORT_CODEC
 std::unique_ptr<IAVCodecEngine> HstEngineFactory::CreateAVCodecEngine()
 {
+    MEDIA_LOG_E("Hst engine unsupport avcodec.");
     return nullptr;
 }
 
 std::unique_ptr<IAVCodecListEngine> HstEngineFactory::CreateAVCodecListEngine()
 {
+    MEDIA_LOG_E("Hst engine unsupport avcodec.");
     return nullptr;
 }
 #endif
