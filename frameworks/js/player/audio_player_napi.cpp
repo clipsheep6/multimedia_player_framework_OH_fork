@@ -246,7 +246,6 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     }
 
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("input url error!");
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetSource");
         return undefinedResult;
     }
@@ -257,7 +256,6 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    MEDIA_LOGD("SetSrc success");
     return undefinedResult;
 }
 

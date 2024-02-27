@@ -68,11 +68,13 @@ public:
     void QueueAsyncWork(VideoPlayerAsyncContext *context);
     void ClearAsyncWork(bool error, const std::string &msg);
 
+protected:
+    void OnStateChangeCb(PlayerStates state) override;
+
 private:
     void OnStartRenderFrameCb() const;
     void OnPlaybackCompleteCb() const;
     void OnVideoSizeChangedCb(const Format &infoBody);
-    void OnStateChangeCb(PlayerStates state);
     void OnSeekDoneCb(int32_t position);
     void OnSpeedDoneCb(int32_t speedMode);
     void OnVolumeDoneCb();

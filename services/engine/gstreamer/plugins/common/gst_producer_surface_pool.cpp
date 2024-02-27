@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_producer_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_producer_surface_pool_debug_category
 
 static void gst_producer_surface_pool_finalize(GObject *obj);
-static const gchar **gst_producer_surface_pool_get_options (GstBufferPool *pool);
+static const gchar **gst_producer_surface_pool_get_options(GstBufferPool *pool);
 static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStructure *config);
 static gboolean gst_producer_surface_pool_start(GstBufferPool *pool);
 static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool);

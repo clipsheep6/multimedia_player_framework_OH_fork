@@ -684,8 +684,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     int32_t time = -1;
     napi_status status = napi_get_value_int32(env, args[0], &time);
     if (status != napi_ok || time < 0) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the input seek time");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input seek time");
         return result;
     }
 
