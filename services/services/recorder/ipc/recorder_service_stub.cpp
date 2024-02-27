@@ -705,9 +705,9 @@ int32_t RecorderServiceStub::CheckPermission()
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.RECORD_VOICE_CALL");
         case AUDIO_MIC:
+        case AUDIO_SOURCE_DEFAULT:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.MICROPHONE");
-        case AUDIO_SOURCE_DEFAULT:
         case AUDIO_INNER:
             MEDIA_LOGE("not supported audio source. Permission denied");
             return Security::AccessToken::PERMISSION_DENIED;
