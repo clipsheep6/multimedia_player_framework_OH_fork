@@ -146,7 +146,11 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
-    (void)LoadGstreamerEngine();
+    std::string bundleName = GetClientBundleName(appUid);
+    bool isEnableHistreamer = IsEnableHiStreamer(bundleName, appUid);
+    if (!isEnableHistreamer) {
+        (void)LoadGstreamerEngine();
+    }
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
