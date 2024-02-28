@@ -818,17 +818,29 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 int32_t HiPlayerImpl::GetVideoWidth()
 {
 #ifdef SUPPORT_VIDEO
-    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    for (const auto& trackInfo : metaInfo) {
-        std::string mime;
-        if (!trackInfo->GetData(Tag::MIME_TYPE, mime)) {
-            MEDIA_LOG_W("Get MIME fail");
+    std::vector<Format> videoTrackInfo;
+    GetVideoTrackInfo(videoTrackInfo);
+    if (videoTrackInfo.size() == 0) {
+        return videoWidth_;
+    }
+    for (auto& videoTrack : videoTrackInfo) {
+        int32_t height;
+        videoTrack.GetIntValue("height", height);
+        int32_t width;
+        videoTrack.GetIntValue("width", width);
+        if (height <= 0 && width <= 0) {
+            continue;
         }
-        if (IsVideoMime(mime)) {
-            uint32_t width;
-            trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+        int32_t rotation = 0;
+        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+            && (rotation == rotation90 || rotation == rotation270);
+        MEDIA_LOG_D("rotation %{public}d", rotation);
+        if (!needSwapWH) {
             videoWidth_ = width;
+        } else {
+            videoWidth_ = height;
         }
+        break;
     }
     MEDIA_LOG_I("GetVideoWidth entered. video width: " PUBLIC_LOG_D32, videoWidth_);
 #endif
@@ -838,17 +850,29 @@ int32_t HiPlayerImpl::GetVideoWidth()
 int32_t HiPlayerImpl::GetVideoHeight()
 {
 #ifdef SUPPORT_VIDEO
-    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
-    for (const auto& trackInfo : metaInfo) {
-        std::string mime;
-        if (!trackInfo->GetData(Tag::MIME_TYPE, mime)) {
-            MEDIA_LOG_W("Get MIME fail");
+    std::vector<Format> videoTrackInfo;
+    GetVideoTrackInfo(videoTrackInfo);
+    if (videoTrackInfo.size() == 0) {
+        return videoHeight_;
+    }
+    for (auto& videoTrack : videoTrackInfo) {
+        int32_t height;
+        videoTrack.GetIntValue("height", height);
+        int32_t width;
+        videoTrack.GetIntValue("width", width);
+        if (height <= 0 && width <= 0) {
+            continue;
         }
-        if (IsVideoMime(mime)) {
-            uint32_t height;
-            trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
+        int32_t rotation = 0;
+        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+            && (rotation == rotation90 || rotation == rotation270);
+        MEDIA_LOG_D("rotation %{public}d", rotation);
+        if (!needSwapWH) {
             videoHeight_ = height;
+        } else {
+            videoHeight_ = width;
         }
+        break;
     }
     MEDIA_LOG_I("GetVideoHeight entered. video height: " PUBLIC_LOG_D32, videoHeight_);
 #endif
