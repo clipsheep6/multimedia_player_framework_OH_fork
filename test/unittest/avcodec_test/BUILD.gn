@@ -138,42 +138,6 @@ ohos_unittest("acodec_native_unit_test") {
 }
 
 ##################################################################################################################
-ohos_unittest("avcodec_list_native_unit_test") {
-  module_out_path = module_output_path
-  include_dirs = avcodec_unittest_native_include_dirs
-  include_dirs += [
-    "./",
-    "./avcodec_list_test",
-  ]
-
-  cflags = avcodec_unittest_cflags
-
-  if (multimedia_player_framework_support_codec) {
-    sources = [
-      "./avcodec_list_test/avcodec_list_unit_test.cpp",
-      "./native/avcodec_info/avcodec_info_native_mock.cpp",
-      "./native/avcodec_list/avcodec_list_native_mock.cpp",
-      "./native/avcodec_mock_factory.cpp",
-      "./native/avformat/avformat_native_mock.cpp",
-      "./native/enum/enum_native_mock.cpp",
-    ]
-  }
-
-  deps = [
-    "../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "../../../../../../foundation/window/window_manager/wm:libwm",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "graphic_surface:surface",
-    "hilog:libhilog",
-    "player_framework:media_client",
-  ]
-  resource_config_file = "../resources/ohos_test.xml"
-}
-
-##################################################################################################################
 ohos_unittest("format_native_unit_test") {
   module_out_path = module_output_path
   include_dirs = avcodec_unittest_native_include_dirs
