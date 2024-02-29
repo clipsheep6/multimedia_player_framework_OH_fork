@@ -248,14 +248,13 @@ int32_t HiPlayerImpl::PrepareAsync()
         return TransStatus(ret);
     }
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
-    int32_t durationMs = 0;
-    GetDuration(durationMs);
-    NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs);
+    InitDuration();
+    NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
     OnStateChanged(PlayerStateId::READY);
-    MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs);
+    MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
 }
 
@@ -406,12 +405,10 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
     }
-    int32_t durationMs = 0;
-    GetDuration(durationMs);
-    FALSE_RETURN_V_MSG_E(durationMs > 0, Status::ERROR_INVALID_PARAMETER,
+    FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
-    int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs)));
+    int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
         switch (pipelineStates_) {
@@ -634,7 +631,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
     if (curState_ == PlayerStateId::EOS) {
-        GetDuration(currentPositionMs);
+        currentPositionMs = durationMs_.load();
         return TransStatus(Status::OK);
     }
     if (isSeek_.load()) {
@@ -645,13 +642,20 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
     }
-    if (duration_ > 0 && currentPositionMs > duration_) {
-        currentPositionMs = duration_;
+    if (durationMs_.load() > 0 && currentPositionMs > durationMs_.load()) {
+        currentPositionMs = durationMs_.load();
     }
     return TransStatus(Status::OK);
 }
 
 int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
+{
+    durationMs = durationMs_.load();
+    MEDIA_LOG_I("Get media duration in GetDuration: " PUBLIC_LOG_D32, durationMs);
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::InitDuration()
 {
     if (demuxer_ == nullptr) {
         MEDIA_LOG_W("Get media duration failed, demuxer is not ready.");
@@ -664,12 +668,11 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
     } else {
         MEDIA_LOG_W("Get media duration failed.");
     }
-    if (found && duration > 0 && duration != duration_) {
-        duration_ = Plugins::HstTime2Us(duration);
+    if (found && duration > 0 && duration != durationMs_.load()) {
+        durationMs_ = Plugins::HstTime2Us(duration);
     }
-    int64_t tmp = 0;
-    durationMs = std::max(duration_, tmp);
-    MEDIA_LOG_W("Get media duration " PUBLIC_LOG_D32, durationMs);
+    durationMs_ = std::max(durationMs_.load(), 0);
+    MEDIA_LOG_I("Get media duration in InitDuration: " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(Status::OK);
 }
 
@@ -1046,13 +1049,11 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
-    int32_t durationMs;
-    int32_t currentPositionMs;
-    GetDuration(durationMs);
-    GetCurrentTime(currentPositionMs);
-    if (durationMs > currentPositionMs && abs(durationMs - currentPositionMs) < AUDIO_SINK_MAX_LATENCY) {
-        MEDIA_LOG_I("OnComplete durationMs - currentPositionMs: " PUBLIC_LOG_D32, durationMs - currentPositionMs);
-        OHOS::Media::SleepInJob(durationMs - currentPositionMs);
+    int32_t curPosMs;
+    GetCurrentTime(curPosMs);
+    if (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY) {
+        MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
+        OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
@@ -1170,15 +1171,15 @@ void HiPlayerImpl::NotifyBufferingUpdate(const std::string_view& type, int32_t p
 {
     Format format;
     format.PutIntValue(std::string(type), param);
-    callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, duration_, format);
+    callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, durationMs_.load(), format);
 }
 
 void HiPlayerImpl::NotifyDurationUpdate(const std::string_view& type, int32_t param)
 {
     Format format;
     format.PutIntValue(std::string(type), param);
-    MEDIA_LOG_I("NotifyDurationUpdate duration_ " PUBLIC_LOG_D64 " param " PUBLIC_LOG_D32, duration_, param);
-    callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, duration_, format);
+    MEDIA_LOG_I("NotifyDurationUpdate durationMs_ " PUBLIC_LOG_D64 " param " PUBLIC_LOG_D32, durationMs_.load(), param);
+    callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, durationMs_.load(), format);
 }
 
 void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
