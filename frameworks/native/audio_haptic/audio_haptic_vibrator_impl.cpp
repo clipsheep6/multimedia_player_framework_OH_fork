@@ -45,11 +45,11 @@ AudioHapticVibratorImpl::~AudioHapticVibratorImpl() {}
 
 std::mutex AudioHapticVibrator::createVibratorMutex_;
 
-std::unique_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibrator(
+std::shared_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibrator(
     AudioHapticPlayer &audioHapticPlayer)
 {
     std::lock_guard<std::mutex> lock(createVibratorMutex_);
-    auto audioHapticVibrator = std::make_unique<AudioHapticVibratorImpl>(audioHapticPlayer);
+    auto audioHapticVibrator = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayer);
     return audioHapticVibrator;
 }
 

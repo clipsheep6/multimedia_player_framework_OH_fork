@@ -19,7 +19,7 @@
 #include <mutex>
 #include <string>
 
-#include "audio_haptic_manager.h"
+#include "audio_haptic_player.h"
 
 namespace OHOS {
 namespace Media {
@@ -27,7 +27,7 @@ class AudioHapticVibrator {
 public:
     virtual ~AudioHapticVibrator() = default;
 
-    static std::unique_ptr<AudioHapticVibrator> CreateAudioHapticVibrator(AudioHapticPlayer &audioHapticPlayer);
+    static std::shared_ptr<AudioHapticVibrator> CreateAudioHapticVibrator(AudioHapticPlayer &audioHapticPlayer);
 
     virtual int32_t PreLoad(const std::string &hapticUri) = 0;
     virtual int32_t Release() = 0;

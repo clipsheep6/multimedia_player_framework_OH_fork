@@ -171,23 +171,15 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
     }
 
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
-    std::shared_ptr<AudioHapticPlayerImpl> audioHapticPlayer = std::make_shared<AudioHapticPlayerImpl>();
-    audioHapticPlayer->SetPlayerOptions(audioHapticPlayerOptions.muteAudio, audioHapticPlayerOptions.muteHaptics);
-    audioHapticPlayer->SetPlayerSource(audioHapticPlayerInfo->audioUri_, audioHapticPlayerInfo->hapticUri_);
-    audioHapticPlayer->SetPlayerStreamUsage(audioHapticPlayerInfo->streamUsage_);
+    AudioHapticPlayerParam param = AudioHapticPlayerParam(audioHapticPlayerOptions,
+        audioHapticPlayerInfo->audioUri_, audioHapticPlayerInfo->hapticUri_,
+        audioHapticPlayerInfo->latencyMode_, audioHapticPlayerInfo->streamUsage_);
+    std::shared_ptr<AudioHapticPlayer> audioHapticPlayer = AudioHapticPlayerFactory::CreateAudioHapticPlayer(param);
 
-    // load audio player
-    AudioLatencyMode latencyMode = audioHapticPlayerInfo->latencyMode_;
-    if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
-        audioHapticPlayer->SetPlayerType(AUDIO_HAPTIC_TYPE_NORMAL);
-        audioHapticPlayer->LoadAVPlayer();
-    } else if (latencyMode == AUDIO_LATENCY_MODE_FAST) {
-        audioHapticPlayer->SetPlayerType(AUDIO_HAPTIC_TYPE_FAST);
-        audioHapticPlayer->LoadSoundPoolPlayer();
+    if (audioHapticPlayer == nullptr) {
+        MEDIA_LOGE("CreatePlayer failed for sourceID: %{public}d", sourceID);
+        return nullptr;
     }
-    // load vibrator
-    audioHapticPlayer->LoadVibrator();
-
     audioHapticPlayerInfo->audioHapticPlayer_ = audioHapticPlayer;
     return audioHapticPlayer;
 }

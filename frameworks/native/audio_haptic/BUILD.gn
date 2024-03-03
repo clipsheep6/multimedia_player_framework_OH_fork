@@ -31,6 +31,8 @@ ohos_shared_library("audio_haptic") {
   sources = [
     "audio_haptic_manager_impl.cpp",
     "audio_haptic_player_impl.cpp",
+    "audio_haptic_sound_low_latency_impl.cpp",
+    "audio_haptic_sound_normal_impl.cpp",
     "audio_haptic_vibrator_impl.cpp",
   ]
 

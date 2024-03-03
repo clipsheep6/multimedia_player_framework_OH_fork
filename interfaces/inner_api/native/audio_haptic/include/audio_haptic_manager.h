@@ -25,16 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-enum AudioLatencyMode {
-    AUDIO_LATENCY_MODE_NORMAL = 0,
-    AUDIO_LATENCY_MODE_FAST = 1
-};
-
-struct AudioHapticPlayerOptions {
-    bool muteAudio;
-    bool muteHaptics;
-};
-
 class AudioHapticManager {
 public:
     virtual ~AudioHapticManager() = default;

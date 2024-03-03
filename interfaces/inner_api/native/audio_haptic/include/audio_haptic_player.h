@@ -16,6 +16,8 @@
 #ifndef AUDIO_HAPTIC_PLAYER_H
 #define AUDIO_HAPTIC_PLAYER_H
 
+#include<mutex>
+
 #include "audio_info.h"
 
 namespace OHOS {
@@ -40,6 +42,34 @@ enum class AudioHapticPlayerState {
     STATE_RELEASED,
     /** Paused state */
     STATE_PAUSED
+};
+
+enum AudioLatencyMode {
+    AUDIO_LATENCY_MODE_NORMAL = 0,
+    AUDIO_LATENCY_MODE_FAST = 1
+};
+
+struct AudioHapticPlayerOptions {
+    bool muteAudio;
+    bool muteHaptics;
+};
+
+struct AudioHapticPlayerParam {
+    AudioHapticPlayerOptions options;
+    std::string audioUri;
+    std::string hapticUri;
+    AudioLatencyMode latencyMode;
+    AudioStandard::StreamUsage streamUsage;
+
+    AudioHapticPlayerParam() {};
+    AudioHapticPlayerParam(const AudioHapticPlayerOptions &options,
+        const std::string &audioUri, const std::string &hapticUri,
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
+        : options(options),
+          audioUri(audioUri),
+          hapticUri(hapticUri),
+          latencyMode(latencyMode),
+          streamUsage(streamUsage) {};
 };
 
 class AudioHapticPlayerCallback;
@@ -84,6 +114,16 @@ public:
      * Called when reaching the end of stream.
      */
     virtual void OnEndOfStream(void) = 0;
+};
+
+class __attribute__((visibility("default"))) AudioHapticPlayerFactory {
+public:
+    static std::shared_ptr<AudioHapticPlayer> CreateAudioHapticPlayer(const AudioHapticPlayerParam &param);
+
+private:
+    static std::mutex createPlayerMutex_;
+    AudioHapticPlayerFactory() = default;
+    ~AudioHapticPlayerFactory() = default;
 };
 } // Media
 } // OHOS
