@@ -250,6 +250,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     InitDuration();
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
+    InitVideoWidthAndHeight();
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
@@ -676,6 +677,37 @@ int32_t HiPlayerImpl::InitDuration()
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::InitVideoWidthAndHeight()
+{
+#ifdef SUPPORT_VIDEO
+    std::vector<Format> videoTrackInfo;
+    GetVideoTrackInfo(videoTrackInfo);
+    if (videoTrackInfo.size() == 0) {
+        MEDIA_LOG_E("InitVideoWidthAndHeight failed, as videoTrackInfo is empty!");
+        return TransStatus(Status::ERROR_INVALID_OPERATION);
+    }
+    for (auto& videoTrack : videoTrackInfo) {
+        int32_t height;
+        videoTrack.GetIntValue("height", height);
+        int32_t width;
+        videoTrack.GetIntValue("width", width);
+        if (height <= 0 && width <= 0) {
+            continue;
+        }
+        int32_t rotation = 0;
+        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+            && (rotation == rotation90 || rotation == rotation270);
+        MEDIA_LOG_I("rotation %{public}d", rotation);
+        videoWidth_ = !needSwapWH ? width : height;
+        videoHeight_ = !needSwapWH ? height : width;
+        MEDIA_LOG_I("InitVideoWidthAndHeight, width = %{public}d, height = %{public}d",
+            videoWidth_.load(), videoHeight_.load());
+        break;
+    }
+#endif
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::SetAudioEffectMode(int32_t effectMode)
 {
     MEDIA_LOG_I("SetAudioEffectMode entered.");
@@ -821,65 +853,17 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 int32_t HiPlayerImpl::GetVideoWidth()
 {
 #ifdef SUPPORT_VIDEO
-    std::vector<Format> videoTrackInfo;
-    GetVideoTrackInfo(videoTrackInfo);
-    if (videoTrackInfo.size() == 0) {
-        return videoWidth_;
-    }
-    for (auto& videoTrack : videoTrackInfo) {
-        int32_t height;
-        videoTrack.GetIntValue("height", height);
-        int32_t width;
-        videoTrack.GetIntValue("width", width);
-        if (height <= 0 && width <= 0) {
-            continue;
-        }
-        int32_t rotation = 0;
-        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
-            && (rotation == rotation90 || rotation == rotation270);
-        MEDIA_LOG_D("rotation %{public}d", rotation);
-        if (!needSwapWH) {
-            videoWidth_ = width;
-        } else {
-            videoWidth_ = height;
-        }
-        break;
-    }
-    MEDIA_LOG_I("GetVideoWidth entered. video width: " PUBLIC_LOG_D32, videoWidth_);
+    MEDIA_LOG_I("GetVideoWidth entered. video width: " PUBLIC_LOG_D32, videoWidth_.load());
 #endif
-    return videoWidth_;
+    return videoWidth_.load();
 }
 
 int32_t HiPlayerImpl::GetVideoHeight()
 {
 #ifdef SUPPORT_VIDEO
-    std::vector<Format> videoTrackInfo;
-    GetVideoTrackInfo(videoTrackInfo);
-    if (videoTrackInfo.size() == 0) {
-        return videoHeight_;
-    }
-    for (auto& videoTrack : videoTrackInfo) {
-        int32_t height;
-        videoTrack.GetIntValue("height", height);
-        int32_t width;
-        videoTrack.GetIntValue("width", width);
-        if (height <= 0 && width <= 0) {
-            continue;
-        }
-        int32_t rotation = 0;
-        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
-            && (rotation == rotation90 || rotation == rotation270);
-        MEDIA_LOG_D("rotation %{public}d", rotation);
-        if (!needSwapWH) {
-            videoHeight_ = height;
-        } else {
-            videoHeight_ = width;
-        }
-        break;
-    }
-    MEDIA_LOG_I("GetVideoHeight entered. video height: " PUBLIC_LOG_D32, videoHeight_);
+    MEDIA_LOG_I("GetVideoHeight entered. video height: " PUBLIC_LOG_D32, videoHeight_.load());
 #endif
-    return videoHeight_;
+    return videoHeight_.load();
 }
 
 int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleType)
@@ -1243,30 +1227,15 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 
 void HiPlayerImpl::NotifyResolutionChange()
 {
-    std::vector<Format> videoTrackInfo;
-    GetVideoTrackInfo(videoTrackInfo);
-    if (videoTrackInfo.size() == 0) {
-        return;
-    }
-    for (auto& videoTrack : videoTrackInfo) {
-        int32_t height;
-        videoTrack.GetIntValue("height", height);
-        int32_t width;
-        videoTrack.GetIntValue("width", width);
-        if (height <= 0 && width <= 0) {
-            continue;
-        }
-        int32_t rotation = 0;
-        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
-            && (rotation == rotation90 || rotation == rotation270);
-        MEDIA_LOG_D("rotation %{public}d", rotation);
-        Format format;
-        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), !needSwapWH ? width : height);
-        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), !needSwapWH ? height : width);
-        MEDIA_LOG_I("video size changed, width = %{public}d, height = %{public}d", width, height);
-        callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
-        break;
-    }
+#ifdef SUPPORT_VIDEO
+    Format format;
+    int32_t width = videoWidth_.load();
+    int32_t height = videoHeight_.load();
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
+    MEDIA_LOG_I("video size changed, width = %{public}d, height = %{public}d", width, height);
+    callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
+#endif
 }
 
 void HiPlayerImpl::NotifyPositionUpdate()

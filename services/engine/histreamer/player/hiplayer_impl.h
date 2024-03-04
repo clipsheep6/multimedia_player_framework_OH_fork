@@ -134,6 +134,7 @@ private:
     void ReleaseInner();
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
+    int32_t InitVideoWidthAndHeight();
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
@@ -165,8 +166,8 @@ private:
     std::string url_;
     std::atomic<int32_t> durationMs_{-1};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
-    int32_t videoWidth_{0};
-    int32_t videoHeight_{0};
+    std::atomic<int32_t> videoWidth_{0};
+    std::atomic<int32_t> videoHeight_{0};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
