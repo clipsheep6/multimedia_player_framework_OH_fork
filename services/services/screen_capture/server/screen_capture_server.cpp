@@ -83,8 +83,8 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
             break;
         }
     }
-    MEDIA_LOGI("zhangqiang ScreenCaptureServer::Create newSessionId: %{public}d", newSessionId);
-    MEDIA_LOGI("zhangqiang ScreenCaptureServer::Create serverMap size : %{public}s",
+    MEDIA_LOGI("ScreenCaptureServer::Create newSessionId: %{public}d", newSessionId);
+    MEDIA_LOGI("ScreenCaptureServer::Create serverMap size : %{public}s",
         std::to_string(serverMap.size()).c_str());
     serverTemp->SetSessionId(newSessionId);
     std::shared_ptr<IScreenCaptureService> server =
