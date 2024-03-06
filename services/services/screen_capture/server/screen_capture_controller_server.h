@@ -27,9 +27,7 @@
 
 namespace OHOS {
 namespace Media {
-
 class ScreenCaptureControllerServer : public IScreenCaptureController, public NoCopyable {
-
 public:
     static std::shared_ptr<IScreenCaptureController> Create();
     ScreenCaptureControllerServer();

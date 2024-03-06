@@ -168,11 +168,11 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_screen_capture) {
     sources += [
+      "screen_capture/ipc/screen_capture_controller_stub.cpp",
       "screen_capture/ipc/screen_capture_listener_proxy.cpp",
       "screen_capture/ipc/screen_capture_service_stub.cpp",
-      "screen_capture/ipc/screen_capture_controller_stub.cpp",
-      "screen_capture/server/screen_capture_server.cpp",
       "screen_capture/server/screen_capture_controller_server.cpp",
+      "screen_capture/server/screen_capture_server.cpp",
       "screen_capture/server/ui_extension_ability_connection.cpp",
     ]
   }
