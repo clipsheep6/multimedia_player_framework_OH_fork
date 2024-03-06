@@ -14,6 +14,11 @@
  */
 
 #include "screen_capture_server.h"
+#include "ui_extension_ability_connection.h"
+#include "extension_manager_client.h"
+#include "image_source.h"
+#include "image_type.h"
+#include "pixel_map.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "uri_helper.h"
@@ -21,16 +26,96 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
+static std::map<int32_t, std::shared_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
+std::atomic<int32_t> activeSessionId(-1);
+
+static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
+
+void NotificationSubscriber::OnConnected()
+{
+    MEDIA_LOGI("NotificationSubscriber OnConnected");
+}
+
+void NotificationSubscriber::OnDisconnected()
+{
+    MEDIA_LOGI("NotificationSubscriber OnDisconnected");
+}
+
+void NotificationSubscriber::OnResponse(int32_t notificationId, OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption)
+{
+    MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d ", notificationId);
+    MEDIA_LOGI("NotificationSubscriber OnResponse ButtonName : %{public}s ", (buttonOption->GetButtonName()).c_str());
+    if (buttonNameStop_.compare(buttonOption->GetButtonName()) == 0) {
+        std::shared_ptr<OHOS::Media::ScreenCaptureServer> server = serverMap.at(notificationId);
+        server->StopScreenCapture();
+    }
+}
+
+void NotificationSubscriber::OnDied()
+{
+    MEDIA_LOGI("NotificationSubscriber OnDied");
+}
+
 }
 
 namespace OHOS {
 namespace Media {
 const int32_t ROOT_UID = 0;
+static const std::string USER_CHOICE_TRUE = "true";
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 {
-    std::shared_ptr<IScreenCaptureService> server = std::make_shared<ScreenCaptureServer>();
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to new ScreenCaptureServer");
+    std::shared_ptr<ScreenCaptureServer> serverTemp = std::make_shared<ScreenCaptureServer>();
+    CHECK_AND_RETURN_RET_LOG(serverTemp != nullptr, nullptr, "Failed to new ScreenCaptureServer");
+    
+    int32_t newSessionId = 0;
+    for (int32_t i = 0; i < 256; i++) {
+        bool checkFlag = true;
+        for (const auto& pair : serverMap) {
+            if (pair.first == newSessionId) {
+                newSessionId++;
+                checkFlag = false;
+                break;
+            }
+        }
+        if (checkFlag) {
+            serverMap.insert(std::make_pair(newSessionId, serverTemp));
+            break;
+        }
+    }
+    MEDIA_LOGI("zhangqiang ScreenCaptureServer::Create newSessionId: %{public}d", newSessionId);
+    MEDIA_LOGI("zhangqiang ScreenCaptureServer::Create serverMap size : %{public}s",
+        std::to_string(serverMap.size()).c_str());
+    serverTemp->SetSessionId(newSessionId);
+    std::shared_ptr<IScreenCaptureService> server = 
+        std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
     return server;
+}
+
+int32_t ScreenCaptureServer::StartInnerScreenCapture(int32_t sessionId, std::string choice)
+{
+    MEDIA_LOGI("ScreenCaptureServer::StartInnerScreenCapture user sessionId is : %{public}d", sessionId);
+    MEDIA_LOGI("ScreenCaptureServer::StartInnerScreenCapture user choice is : %{public}s", choice.c_str());
+    std::shared_ptr<ScreenCaptureServer> server;
+    auto it = serverMap.find(sessionId);
+    if (it != serverMap.end()) {
+        server = it->second;
+    } else {
+        MEDIA_LOGI("ScreenCaptureServer::StartInnerScreenCapture Failed to get report ScreenCaptureServer");
+        return MSERR_UNKNOWN;
+    }
+
+    if (USER_CHOICE_TRUE.compare(choice) == 0) {
+        if (activeSessionId.load() >= 0) {
+            std::shared_ptr<ScreenCaptureServer> currentServer = serverMap.at(activeSessionId.load());
+            currentServer->StopScreenCapture();
+        }
+        server->StartScreenCaptureInner();
+        activeSessionId.store(sessionId);
+        MEDIA_LOGI("ScreenCaptureServer::StartInnerScreenCapture user choice is true");
+        return MSERR_OK;
+    }
+    MEDIA_LOGI("ScreenCaptureServer::StartInnerScreenCapture user choice is false");
+    return MSERR_OK;
 }
 
 ScreenCaptureServer::ScreenCaptureServer()
@@ -46,6 +131,11 @@ ScreenCaptureServer::~ScreenCaptureServer()
 
     ReleaseAudioCapture();
     ReleaseVideoCapture();
+}
+
+void ScreenCaptureServer::SetSessionId(int32_t sessionId)
+{
+    sessionId_ = sessionId;
 }
 
 int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
@@ -186,15 +276,6 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
 
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     clientTokenId = tokenCaller;
-    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
-        "ohos.permission.CAPTURE_SCREEN");
-    if (result == Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("user have the right to access capture screen!");
-    } else {
-        MEDIA_LOGE("user do not have the right to access capture screen!");
-        return false;
-    }
-
     return true;
 }
 
@@ -440,6 +521,29 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
+
+    std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
+    comStr += std::to_string(sessionId_).c_str();
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    comStr += "\",\"callerUid\":\"";
+    comStr += std::to_string(callerUid).c_str();
+    comStr += "\"}";
+    
+    AAFwk::Want want;
+    want.SetElementName(bundleName_, abilityName_);
+    auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+    auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,\
+        nullptr, -1);
+    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServer::StartScreenCaptureInner()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
+    MEDIA_LOGI("ScreenCaptureServer::StartScreenCaptureInner start");
+
     isAudioStart_ = true;
     if (audioMicCapturer_ != nullptr) {
         if (!audioMicCapturer_->Start()) {
@@ -469,10 +573,95 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         }
     }
     int32_t ret = StartVideoCapture();
+    currentActive_ = true;
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
+    ret = StartNotification();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "StartNotification failed");
     return ret;
+}
+
+int32_t ScreenCaptureServer::StartNotification()
+{
+    int32_t result = NotificationHelper::SubscribeLocalLiveViewNotification(NOTIFICATION_SUBSCRIBER);
+
+    NotificationRequest request;
+    std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent = GetLocalLiveViewContent();
+
+    std::shared_ptr<NotificationContent> content =
+        std::make_shared<NotificationContent>(localLiveViewContent);
+
+    auto uid = getuid();
+    request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
+    notificationId_ = sessionId_;
+    request.SetNotificationId(notificationId_);
+    request.SetContent(content);
+    request.SetCreatorUid(uid);
+    request.SetUnremovable(true);
+    request.SetInProgress(true);
+
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_SCREENCAPTURE);
+    request.SetLittleIcon(pixelMapTotalSpr);
+    request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
+
+    result = NotificationHelper::PublishNotification(request);
+    MEDIA_LOGI("Screencapture service PublishNotification uid %{public}d, result %{public}d", uid, result);
+    return MSERR_OK;
+}
+
+std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalLiveViewContent()
+{
+    std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent =
+        std::make_shared<NotificationLocalLiveViewContent>();
+    localLiveViewContent->SetType(1);
+    localLiveViewContent->SetTitle("系统录屏");
+    localLiveViewContent->SetText("录屏中...");
+
+    auto capsule = NotificationCapsule();
+    std::string backgroundColor = "#64BB5C";
+    capsule.SetBackgroundColor(backgroundColor);
+    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    capsule.SetIcon(pixelMapCapSpr);
+
+    localLiveViewContent->SetCapsule(capsule);
+    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
+
+    auto testTime = NotificationTime();
+    testTime.SetInitialTime(1);
+    testTime.SetIsCountDown(false);
+    testTime.SetIsPaused(false);
+    testTime.SetIsInTitle(true);
+
+    localLiveViewContent->SetTime(testTime);
+    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
+
+    auto testButton = NotificationLocalLiveViewButton();
+    testButton.addSingleButtonName(buttonNameMic_);
+    std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMap(ICON_PATH_MIC);
+    testButton.addSingleButtonIcon(pixelMapSpr);
+
+    testButton.addSingleButtonName(buttonNameStop_);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
+    testButton.addSingleButtonIcon(pixelMapStopSpr);
+
+    localLiveViewContent->SetButton(testButton);
+    localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
+
+    return localLiveViewContent;
+}
+
+std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
+{
+    uint32_t errorCode = 0;
+    SourceOptions opts;
+    opts.formatHint = "image/png";
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource(path, opts, errorCode);
+    DecodeOptions decodeOpts;
+    std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
+    return pixelMapSpr;
 }
 
 int32_t ScreenCaptureServer::StartVideoCapture()
@@ -864,7 +1053,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 {
     int32_t stopRecorderSuccess = MSERR_OK;
-    if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
+    if ((screenId_ < 0) || (consumer_ == nullptr) || recorder_ == nullptr) {
         MEDIA_LOGI("video start failed, stop");
         stopRecorderSuccess = MSERR_INVALID_OPERATION;
         return stopRecorderSuccess;
@@ -894,9 +1083,13 @@ int32_t ScreenCaptureServer::StopScreenCapture()
         int32_t retVideo = StopVideoCapture();
         stopFlagSuccess = retAudio == MSERR_OK && retVideo == MSERR_OK ? MSERR_OK : MSERR_STOP_FAILED;
     }
+    currentActive_ = false;
+    activeSessionId.store(-1);
     if (stopFlagSuccess == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("stop", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
+    int32_t result = NotificationHelper::CancelNotification(notificationId_);
+    MEDIA_LOGI("NotificationSubscriber CancelNotification result : %{public}d ", result);
     MEDIA_LOGI("ScreenCaptureServer stop result :%{public}d", stopFlagSuccess);
     return stopFlagSuccess;
 }
@@ -981,6 +1174,7 @@ void ScreenCaptureServer::Release()
     screenCaptureCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
+    serverMap.erase(sessionId_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
