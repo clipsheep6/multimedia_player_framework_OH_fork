@@ -79,11 +79,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
-    "//foundation/ability/ability_runtime/interfaces/inner_api/extension_manager/include",
-    "//base/notification/distributed_notification_service/interfaces/inner_api",
-    "//foundation/window/window_manager/utils/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    "//foundation/distributeddatamgr/relational_store/interfaces/inner_api/rdb/include",
   ]
 
   if (multimedia_player_framework_support_avsession_background) {

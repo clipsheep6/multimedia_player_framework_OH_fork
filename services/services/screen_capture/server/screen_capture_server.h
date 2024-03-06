@@ -48,7 +48,6 @@
 #include "notification_constant.h"
 #include "notification_slot.h"
 
-namespace {
 class NotificationSubscriber : public OHOS::Notification::NotificationLocalLiveViewSubscriber {
 public:
     void OnConnected();
@@ -57,7 +56,6 @@ public:
     void OnDied();
     std::string buttonNameStop_ = "stop";
 };
-}
 
 namespace OHOS {
 namespace Media {
@@ -242,7 +240,6 @@ private:
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;
     std::string bundleName_ = "com.ohos.sceneboard";
     std::string abilityName_ = "com.ohos.sceneboard.systemdialog";
-
 };
 } // namespace Media
 } // namespace OHOS

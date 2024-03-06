@@ -28,6 +28,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
 static std::map<int32_t, std::shared_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 std::atomic<int32_t> activeSessionId(-1);
+}
 
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 
@@ -41,7 +42,8 @@ void NotificationSubscriber::OnDisconnected()
     MEDIA_LOGI("NotificationSubscriber OnDisconnected");
 }
 
-void NotificationSubscriber::OnResponse(int32_t notificationId, OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption)
+void NotificationSubscriber::OnResponse(int32_t notificationId,
+                                        OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption)
 {
     MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d ", notificationId);
     MEDIA_LOGI("NotificationSubscriber OnResponse ButtonName : %{public}s ", (buttonOption->GetButtonName()).c_str());
@@ -56,19 +58,18 @@ void NotificationSubscriber::OnDied()
     MEDIA_LOGI("NotificationSubscriber OnDied");
 }
 
-}
-
 namespace OHOS {
 namespace Media {
 const int32_t ROOT_UID = 0;
 static const std::string USER_CHOICE_TRUE = "true";
+static const int32_t MaxSessionId = 256;
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 {
     std::shared_ptr<ScreenCaptureServer> serverTemp = std::make_shared<ScreenCaptureServer>();
     CHECK_AND_RETURN_RET_LOG(serverTemp != nullptr, nullptr, "Failed to new ScreenCaptureServer");
     
     int32_t newSessionId = 0;
-    for (int32_t i = 0; i < 256; i++) {
+    for (int32_t i = 0; i < MaxSessionId; i++) {
         bool checkFlag = true;
         for (const auto& pair : serverMap) {
             if (pair.first == newSessionId) {
@@ -86,7 +87,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     MEDIA_LOGI("zhangqiang ScreenCaptureServer::Create serverMap size : %{public}s",
         std::to_string(serverMap.size()).c_str());
     serverTemp->SetSessionId(newSessionId);
-    std::shared_ptr<IScreenCaptureService> server = 
+    std::shared_ptr<IScreenCaptureService> server =
         std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
     return server;
 }

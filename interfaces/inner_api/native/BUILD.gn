@@ -163,9 +163,9 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_controller_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_controller_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
-      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_controller_proxy.cpp",
     ]
   }
 

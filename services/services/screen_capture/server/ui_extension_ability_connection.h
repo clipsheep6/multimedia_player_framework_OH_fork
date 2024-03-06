@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef UI_EXTENSION_ABILITY_CONNECTION_H
+#define UI_EXTENSION_ABILITY_CONNECTION_H
+
 #include "ability_connection.h"
 #include "ability_connect_callback_interface.h"
 #include "ability_connect_callback_stub.h"
@@ -25,7 +28,7 @@ namespace OHOS {
 namespace Media {
 class UIExtensionAbilityConnection : public AAFwk::AbilityConnectionStub {
 public:
-    UIExtensionAbilityConnection(const std::string commandStr)
+    explicit UIExtensionAbilityConnection(const std::string commandStr)
     {
         commandStr_ = commandStr;
     }
@@ -41,3 +44,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
+#endif // UI_EXTENSION_ABILITY_CONNECTION_H

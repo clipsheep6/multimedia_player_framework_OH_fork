@@ -30,11 +30,11 @@ namespace Media {
 std::shared_ptr<IScreenCaptureController> ScreenCaptureControllerServer::Create()
 {
     MEDIA_LOGI("ScreenCaptureControllerServer::Create() start");
-    std::shared_ptr<ScreenCaptureControllerServer> controllerServerTemp = 
+    std::shared_ptr<ScreenCaptureControllerServer> controllerServerTemp =
         std::make_shared<ScreenCaptureControllerServer>();
     CHECK_AND_RETURN_RET_LOG(controllerServerTemp != nullptr, nullptr, "Failed to new ScreenCaptureControllerServer");
 
-    std::shared_ptr<IScreenCaptureController> controllerServer = 
+    std::shared_ptr<IScreenCaptureController> controllerServer =
         std::static_pointer_cast<OHOS::Media::IScreenCaptureController>(controllerServerTemp);
     return controllerServer;
 }

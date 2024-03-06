@@ -40,7 +40,8 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<IScreenCaptureController> screenCaptureControllerServer_ = nullptr;
-    using screenCaptureControllerStubFuncs = int32_t(ScreenCaptureControllerStub::*)(MessageParcel &data, MessageParcel &reply);
+    using screenCaptureControllerStubFuncs =
+        int32_t(ScreenCaptureControllerStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureControllerStubFuncs> screenCaptureControllerStubFuncs_;
 };
 } // namespace Media

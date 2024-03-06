@@ -26,7 +26,6 @@ public:
     void ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) override;
     ScreenCaptureControllerImpl();
     ~ScreenCaptureControllerImpl();
-
 };
 } // namespace Media
 } // namespace OHOS

@@ -36,7 +36,6 @@ public:
     ~ScreenCaptureControllerServer();
 
     int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice) override;
-
 };
 
 } // namespace Media

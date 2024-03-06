@@ -42,7 +42,6 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  start ");
     remoteObject->SendRequest(IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
     MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  end ");
-
 }
 
 void UIExtensionAbilityConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element,

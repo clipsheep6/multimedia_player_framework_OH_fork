@@ -54,7 +54,7 @@ int32_t ScreenCaptureControllerStub::Init()
     screenCaptureControllerServer_ = ScreenCaptureControllerServer::Create();
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create screenCaptureControllerServer Service");
-    screenCaptureControllerStubFuncs_[REPORT_USER_CHOICE] = 
+    screenCaptureControllerStubFuncs_[REPORT_USER_CHOICE] =
         &ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice;
     screenCaptureControllerStubFuncs_[DESTROY] = &ScreenCaptureControllerStub::DestroyStub;
 
