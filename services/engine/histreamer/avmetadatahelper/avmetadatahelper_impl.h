@@ -67,6 +67,7 @@ private:
     std::shared_ptr<Meta> GetTargetTrackInfo();
     std::unique_ptr<PixelMap> GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     bool ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer);
+    std::unique_ptr<PixelMap> ConvertPixelMap(PixelFormat format, std::unique_ptr<PixelMap> pixelMap);
 
     std::unordered_map<int32_t, std::string> collectedMeta_;
     bool hasCollectMeta_{false};

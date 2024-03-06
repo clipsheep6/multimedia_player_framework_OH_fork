@@ -15,6 +15,7 @@
 
 #include "avmetadatahelper_impl.h"
 
+#include "avmetadata_frame_converter.h"
 #include "buffer/avbuffer_common.h"
 #include "common/media_source.h"
 #include "ibuffer_consumer_listener.h"
@@ -271,10 +272,11 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
         outputConfig_.dstWidth > 0 ? outputConfig_.dstWidth : width,
         outputConfig_.dstHeight > 0 ? outputConfig_.dstHeight : height
     };
-    decodeOpts.desiredPixelFormat = outputConfig_.colorFormat;
+    decodeOpts.desiredPixelFormat = PixelFormat::RGBA_8888;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMapEx(0, decodeOpts, errorCode);
     CHECK_AND_RETURN_RET_LOG(errorCode == 0, false, "CreatePixelMapEx failed:%{public}d", errorCode);
-
+    pixelMap = ConvertPixelMap(outputConfig_.colorFormat, std::move(pixelMap));
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, false, "PixelMap convert failed!");
     auto fetchedFrameAtTime = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + pixelMap->GetRowStride() *
         pixelMap->GetHeight(), AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
     int32_t ret = fetchedFrameAtTime->Init();
@@ -289,6 +291,21 @@ bool AVMetadataHelperImpl::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
     fetchedFrameAtTime->Write(pixelMap->GetPixels(), frame->size_, sizeof(OutputFrame));
     fetchedFrameAtTime_ = fetchedFrameAtTime;
     return true;
+}
+
+std::unique_ptr<PixelMap> AVMetadataHelperImpl::ConvertPixelMap(PixelFormat format, std::unique_ptr<PixelMap> pixelMap)
+{
+    switch (format) {
+        case PixelFormat::RGB_565:
+            pixelMap = AVMetadataFrameConverter::RGBxToRGB565(std::move(pixelMap));
+            break;
+        case PixelFormat::RGB_888:
+            pixelMap = AVMetadataFrameConverter::RGBxToRGB888(std::move(pixelMap));
+            break;
+        default:
+            break;
+    }
+    return pixelMap;
 }
 
 AVMetadataHelperImpl::AVMetadataHelperImpl()
