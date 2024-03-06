@@ -55,6 +55,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/media",
     "//foundation/multimedia/player_framework/frameworks/js/common",
+    "//foundation/multimedia/player_framework/frameworks/js/avscreen_capture",
     "//foundation/multimedia/player_framework/services/utils/include",
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
     "${multimedia_player_framework_path}/frameworks/js/metadatahelper",
@@ -105,6 +106,13 @@ ohos_shared_library("media") {
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadataextractor_napi.cpp",
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadatahelper_callback.cpp",
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/helper_data_source_callback.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "//foundation/multimedia/player_framework/frameworks/js/avscreen_capture/avscreen_capture_callback.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avscreen_capture/avscreen_capture_napi.cpp",
     ]
   }
 

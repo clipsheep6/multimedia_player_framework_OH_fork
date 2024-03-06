@@ -28,5 +28,6 @@
 #include "soundpool_napi.h"
 #include "avmetadataextractor_napi.h"
 #include "avimagegenerator_napi.h"
+#include "avscreen_capture_napi.h"
 
 #endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */

@@ -26,6 +26,7 @@
 #include "recorder_profiles.h"
 #include "av_common.h"
 #include "mime_type.h"
+#include "screen_capture.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
@@ -67,6 +68,7 @@ static const std::vector<struct JsEnumInt> g_AVErrorCode = {
     { "AVERR_TIMEOUT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_TIMEOUT },
     { "AVERR_SERVICE_DIED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_SERVICE_DIED },
     { "AVERR_UNSUPPORT_FORMAT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_FORMAT },
+    { "AVERR_AUDIO_INTERRUPTED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_AUDIO_INTERRUPTED},
 };
 
 static const std::vector<struct JsEnumInt> g_avDataSourceError = {
@@ -318,6 +320,24 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_LANGUAGE", "language" },
 };
 
+static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
+    { "SCREEN_RECORD_PRESET_NORMAL", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_NORMAL },
+    { "SCREEN_RECORD_PRESET_HIGH_EFFICIENT", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_HIGH_EFFICIENT }
+};
+
+static const std::vector<struct JsEnumInt> g_screenCaptureStateCode = {
+    { "SCREENCAPTURE_STATE_STARTED", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_STARTED },
+    { "SCREENCAPTURE_STATE_CANCELED", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_CANCELED },
+    { "SCREENCAPTURE_STATE_STOPPED_BY_USER", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_STOPPED_BY_USER },
+    { "SCREENCAPTURE_STATE_STOPPED_BY_INTERRUPT", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_STOPPED_BY_INTERRUPT },
+    { "SCREENCAPTURE_STATE_STOPPED_BY_INCALL", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_STOPPED_BY_INCALL },
+    { "SCREENCAPTURE_STATE_MIC_UNAVAILABLE", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_MIC_UNAVAILABLE },
+    { "SCREENCAPTURE_STATE_MIC_MUTED_BY_USER", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_MIC_MUTED_BY_USER },
+    { "SCREENCAPTURE_STATE_MIC_UNMUTED_BY_USER", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_MIC_UNMUTED_BY_USER },
+    { "SCREENCAPTURE_STATE_ENTER_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_ENTER_PRIVATE_SCENE },
+    { "SCREENCAPTURE_STATE_EXIT_PRIVATE_SCENE", AVScreenCaptureStateCode::SCREENCAPTURE_STATE_EXIT_PRIVATE_SCENE },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -346,6 +366,8 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "VP8Profile", g_VP8Profile },
     { "VideoScaleType", g_VideoScaleType},
     { "StateChangeReason", g_stateChangeReason},
+    { "AVScreenCaptureRecordPreset", g_screenCaptureRecordPreset},
+    { "AVScreenCaptureStateCode", g_screenCaptureStateCode},
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {
