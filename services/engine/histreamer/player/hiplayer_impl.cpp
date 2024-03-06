@@ -964,6 +964,9 @@ void HiPlayerImpl::OnEvent(const Event &event)
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 {
+    if (!isInitialPlay_) {
+        return;
+    }
     for (std::pair<EventType, bool>& item : initialAVStates_) {
         if (item.first == eventType) {
             item.second = true;
