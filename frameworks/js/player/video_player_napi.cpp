@@ -476,9 +476,7 @@ int32_t VideoPlayerNapi::ProcessWork(napi_env env, void *data)
     int32_t ret = MSERR_OK;
     auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
     if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESET) {
-        cb->ClearAsyncWork(false, "the requests was aborted because user called reset");
-        cb->QueueAsyncWork(asyncContext);
-        ret = asyncContext->jsPlayer->nativePlayer_->Reset();
+        return ret;
     } else {
         cb->QueueAsyncWork(asyncContext);
         auto player = asyncContext->jsPlayer->nativePlayer_;
@@ -535,6 +533,15 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     }
 
     asyncContext->env_ = env;
+    auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
+    if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESET) {
+        cb->ClearAsyncWork(false, "the requests was aborted because user called reset");
+        cb->QueueAsyncWork(asyncContext);
+        int32_t ret = asyncContext->jsPlayer->nativePlayer_->Reset();
+        if (ret != MSERR_OK) {
+            cb->ClearAsyncWork(true, "the request was aborted because videoplayer ProcessWork error");
+        }
+    }
 }
 
 napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
