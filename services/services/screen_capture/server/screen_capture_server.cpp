@@ -546,8 +546,9 @@ int32_t ScreenCaptureServer::StartScreenCapture()
         auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,\
             nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
+    #else
+        StartScreenCaptureInner();
     #endif
-    StartScreenCaptureInner();
     return MSERR_OK;
 }
 
