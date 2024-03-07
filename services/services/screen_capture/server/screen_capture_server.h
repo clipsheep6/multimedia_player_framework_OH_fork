@@ -220,7 +220,7 @@ private:
     const int32_t audioBitrateMin_ = 8000;
     const int32_t audioBitrateMax_ = 384000;
     const int32_t videoBitrateMin_ = 1;
-    const int32_t videoBitrateMax_ = 3000000;
+    const int32_t videoBitrateMax_ = 30000000;
     const int32_t videoFrameRateMin_ = 1;
     const int32_t videoFrameRateMax_ = 30;
     const std::string MP4 = "mp4";

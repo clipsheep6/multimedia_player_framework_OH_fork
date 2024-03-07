@@ -277,6 +277,15 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
 
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     clientTokenId = tokenCaller;
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
+        "ohos.permission.CAPTURE_SCREEN");
+    if (result == Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGI("user have the right to access capture screen!");
+    } else {
+        MEDIA_LOGE("user do not have the right to access capture screen!");
+        return false;
+    }
+
     return true;
 }
 
@@ -523,25 +532,30 @@ int32_t ScreenCaptureServer::StartScreenCapture()
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCapture start");
 
-    std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
-    comStr += std::to_string(sessionId_).c_str();
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    comStr += "\",\"callerUid\":\"";
-    comStr += std::to_string(callerUid).c_str();
-    comStr += "\"}";
-    
-    AAFwk::Want want;
-    want.SetElementName(bundleName_, abilityName_);
-    auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-    auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,\
-        nullptr, -1);
-    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
+    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+        std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
+        comStr += std::to_string(sessionId_).c_str();
+        auto callerUid = IPCSkeleton::GetCallingUid();
+        comStr += "\",\"callerUid\":\"";
+        comStr += std::to_string(callerUid).c_str();
+        comStr += "\"}";
+        
+        AAFwk::Want want;
+        want.SetElementName(bundleName_, abilityName_);
+        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,\
+            nullptr, -1);
+        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
+    #endif
+    StartScreenCaptureInner();
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::StartScreenCaptureInner()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+       std::lock_guard<std::mutex> lock(mutex_);
+    #endif
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer::StartScreenCaptureInner start");
 
@@ -578,8 +592,10 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner()
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
-    ret = StartNotification();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "StartNotification failed");
+    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+        ret = StartNotification();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "StartNotification failed");
+    #endif
     return ret;
 }
 
@@ -1054,7 +1070,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 {
     int32_t stopRecorderSuccess = MSERR_OK;
-    if ((screenId_ < 0) || (consumer_ == nullptr) || recorder_ == nullptr) {
+    if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
         MEDIA_LOGI("video start failed, stop");
         stopRecorderSuccess = MSERR_INVALID_OPERATION;
         return stopRecorderSuccess;
@@ -1089,8 +1105,10 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     if (stopFlagSuccess == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("stop", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
     }
-    int32_t result = NotificationHelper::CancelNotification(notificationId_);
-    MEDIA_LOGI("NotificationSubscriber CancelNotification result : %{public}d ", result);
+    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+        int32_t result = NotificationHelper::CancelNotification(notificationId_);
+        MEDIA_LOGI("NotificationSubscriber CancelNotification result : %{public}d ", result);
+    #endif
     MEDIA_LOGI("ScreenCaptureServer stop result :%{public}d", stopFlagSuccess);
     return stopFlagSuccess;
 }
