@@ -43,16 +43,11 @@
 │   │   ├── factory                      # 引擎工厂
 │   │   ├── engine_intf                  # 引擎API
 │   ├── engine                           # 引擎实现
-│   │   ├── gstreamer                    # gstreamer引擎
+│   │   ├── histreamer                   # histreamer引擎
+│   │   │   ├── avmetadatahelper         # 元数据&封面帧引擎
 │   │   │   ├── player                   # 播放引擎
 │   │   │   ├── recorder                 # 录制引擎
-│   │   │   ├── avcodec                  # 编解码引擎
-│   │   │   ├── avcodeclist              # 编解码器能力查询
-│   │   │   ├── avmetadatahelper         # 元信息缩略图引擎
-│   │   │   ├── plugins                  # 引擎自研插件
-│   │   │   ├── common                   # 引擎通用资源
-│   │   │   ├── factory                  # 引擎工厂实现
-│   │   │   ├── loader                   # 引擎资源加载
+│   │   │   ├── factory                  # 引擎工厂
 │   ├── utils                            # 子系统基础资源
 ├── test                                 # 测试代码
 ├── BUILD.gn                             # 编译入口
