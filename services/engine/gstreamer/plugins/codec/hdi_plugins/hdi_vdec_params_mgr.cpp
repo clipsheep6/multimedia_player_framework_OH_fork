@@ -80,7 +80,7 @@ int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
     param.nSize = sizeof(OMX_PARAM_U32TYPE);
     param.nU32 = static_cast<uint32_t>(base->seek_frame_rate);
     param.nPortIndex = inPortDef_.nPortIndex;
-        MEDIA_LOGI("SetFrameRate frame rate %{public}u", param.nU32);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetFrameRate frame rate %{public}u", FAKE_POINTER(this), param.nU32);
     param.nU32 = param.nU32 << HDI_FRAME_RATE_MOVE;
     auto ret = HdiSetConfig(handle_, OMX_IndexCodecExtConfigOperatingRate, param);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");

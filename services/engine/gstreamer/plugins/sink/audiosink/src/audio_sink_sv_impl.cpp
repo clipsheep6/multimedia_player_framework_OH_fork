@@ -300,7 +300,7 @@ int32_t AudioSinkSvImpl::Start()
         ret = audioRenderer_->Start(),
         "AudioRenderer::Start",
         PlayerXCollie::timerTimeout)
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer Start Out", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " audioRenderer Start Out", FAKE_POINTER(this));
     return ret ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
 
@@ -348,7 +348,7 @@ int32_t AudioSinkSvImpl::PauseTransitent()
             "AudioRenderer::PauseTransitent",
             PlayerXCollie::timerTimeout)
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance audioRenderer PauseTransitent Out", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instance audioRenderer PauseTransitent Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 

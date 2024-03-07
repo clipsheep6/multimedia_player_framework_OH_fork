@@ -1296,7 +1296,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             playerCb_->OnInfo(type, extra, infoBody);
         }
     } else {
-        MEDIA_LOGW("0x%{public}06" PRIXPTR " playerCb_ != nullptr %{public}d, ret %{public}d",
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " playerCb_ != nullptr %{public}d, ret %{public}d",
             FAKE_POINTER(this), playerCb_ != nullptr, ret);
     }
 }

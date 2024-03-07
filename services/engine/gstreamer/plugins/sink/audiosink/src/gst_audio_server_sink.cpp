@@ -675,7 +675,7 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
 
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-            MEDIA_LOGI("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
+            MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
             g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
             if (sink->audio_sink->Start() == MSERR_OK) {
                 sink->start_first_render = TRUE;

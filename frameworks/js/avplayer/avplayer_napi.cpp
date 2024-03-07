@@ -279,7 +279,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        MEDIA_LOGI("Play Task In");
+        MEDIA_LOGD("Play Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PREPARED ||
@@ -299,7 +299,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 "current state is not prepared/paused/completed, unsupport play operation");
         }
 
-        MEDIA_LOGI("Play Task Out");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Play Task Out", FAKE_POINTER(this));
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task);
@@ -529,7 +529,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::reset");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsReset In");
+    MEDIA_LOGD("JsReset In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -565,7 +565,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
-    MEDIA_LOGI("JsReset Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsReset Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 
@@ -1040,7 +1040,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::set url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetUrl In");
+    MEDIA_LOGD("JsSetUrl In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // url: string
@@ -1064,7 +1064,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     MEDIA_LOGI("JsSetUrl url: %{public}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
-    MEDIA_LOGI("JsSetUrl Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 
@@ -1174,7 +1174,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetUrl In");
+    MEDIA_LOGD("JsGetUrl In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -1356,7 +1356,7 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([this, surface]() {
-        MEDIA_LOGI("SetSurface Task");
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " SetSurface Task", FAKE_POINTER(this));
         if (player_ != nullptr) {
             (void)player_->SetVideoSurface(surface);
         }
@@ -1376,7 +1376,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::set surface");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetSurfaceID In");
+    MEDIA_LOGD("JsSetSurfaceID In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // surfaceId?: string
@@ -1398,7 +1398,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     // get url from js
     jsPlayer->surface_ = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->SetSurface(jsPlayer->surface_);
-    MEDIA_LOGI("JsSetSurfaceID Out");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetSurfaceID Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 
@@ -2253,7 +2253,7 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
     std::lock_guard<std::mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
-        MEDIA_LOGI("notify %{public}s", GetCurrentState().c_str());
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " notify %{public}s", FAKE_POINTER(this), GetCurrentState().c_str());
         stopWait_ = true;
         stateChangeCond_.notify_all();
     }

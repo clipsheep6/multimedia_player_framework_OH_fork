@@ -718,7 +718,8 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
 
 int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
 {
-    MEDIA_LOGI("execute seek, time: %{public}" PRIi64 ", option: %{public}d", timeUs, seekOption);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " execute seek, time: %{public}" PRIi64 ", option: %{public}d",
+        FAKE_POINTER(this), timeUs, seekOption);
 
     int32_t seekFlags = SEEK_OPTION_TO_GST_SEEK_FLAGS.at(seekOption);
     timeUs = timeUs > duration_ ? duration_ : timeUs;
@@ -918,7 +919,7 @@ int64_t PlayBinCtrlerBase::QueryPosition()
     gint64 position = 0;
     gboolean ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
     if (!ret) {
-        MEDIA_LOGW("instance: 0x%{public}06" PRIXPTR " query position failed", FAKE_POINTER(this));
+        MEDIA_LOGD("instance: 0x%{public}06" PRIXPTR " query position failed", FAKE_POINTER(this));
         return lastTime_ / USEC_PER_MSEC;
     }
 
@@ -1186,7 +1187,8 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 return;
             }
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-            MEDIA_LOGI("percent is %{public}d, begin set to playing", percent);
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " percent is %{public}d, begin set to playing",
+                FAKE_POINTER(this), percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");

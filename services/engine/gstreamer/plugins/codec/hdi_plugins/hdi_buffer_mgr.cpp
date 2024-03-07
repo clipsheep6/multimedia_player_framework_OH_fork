@@ -181,7 +181,7 @@ int32_t HdiBufferMgr::Flush(bool enable)
 
 void HdiBufferMgr::WaitFlushed()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Enter WaitFlushed", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances Enter WaitFlushed", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_; });
 }

@@ -111,10 +111,12 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
     MEDIA_LOGD("BaseState::HandleStateChange");
     if (msg.extend.has_value() && std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
         GstState targetState = static_cast<GstState>(msg.detail2);
-        MEDIA_LOGI("state changed from %{public}s to %{public}s, Instances 0x%{public}06" PRIXPTR,
+        if (msg.detail1 != msg.detail2) {
+            MEDIA_LOGI("state changed from %{public}s to %{public}s, Instances 0x%{public}06" PRIXPTR,
             gst_element_state_get_name(static_cast<GstState>(msg.detail1)),
             gst_element_state_get_name(targetState),
             FAKE_POINTER(this));
+        }
         if (targetState == GST_STATE_PLAYING) {
             int32_t tickType = INNER_MSG_POSITION_UPDATE;
             uint32_t interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
@@ -477,7 +479,7 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
 
 int32_t PlayBinCtrlerBase::PlayingState::Seek(int64_t timeUs, int32_t option)
 {
-    MEDIA_LOGI("playing->seek start");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " playing->seek start", FAKE_POINTER(this));
     return ctrler_.SeekInternal(timeUs, option);
 }
 

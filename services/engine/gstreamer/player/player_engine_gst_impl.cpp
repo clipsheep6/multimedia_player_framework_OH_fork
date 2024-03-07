@@ -223,7 +223,7 @@ void PlayerEngineGstImpl::HandleInfoMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSeekDoneMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("seek done, seek position = %{public}dms", msg.code);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " seek done, seek position = %{public}dms", FAKE_POINTER(this), msg.code);
 
     codecCtrl_.EnhanceSeekPerformance(false);
 

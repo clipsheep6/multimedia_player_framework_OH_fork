@@ -1070,9 +1070,9 @@ void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t isLooping = extra;
-    MEDIA_LOGI("OnEndOfStream is called, isloop: %{public}d", isLooping);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnEndOfStream is called, isloop: %{public}d", FAKE_POINTER(this), isLooping);
     if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
-        MEDIA_LOGW("can not find EndOfStream callback!");
+        MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find EndOfStream callback!", FAKE_POINTER(this));
         return;
     }
 

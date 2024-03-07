@@ -288,7 +288,7 @@ void PlayerSinkProvider::EosCb(GstMemSink *memSink, gpointer userData)
 {
     (void)memSink;
     (void)userData;
-    MEDIA_LOGI("EOS in");
+    MEDIA_LOGD("EOS in");
 }
 
 GstFlowReturn PlayerSinkProvider::NewPrerollCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData)

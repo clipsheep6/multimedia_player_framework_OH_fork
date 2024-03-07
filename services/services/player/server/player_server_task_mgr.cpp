@@ -194,7 +194,7 @@ int32_t PlayerServerTaskMgr::MarkTaskDone(const std::string &taskName)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "execute the stack top task failed, type: %{public}hhu", item.type);
 
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] start",
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] start",
             FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
     }
     return MSERR_OK;
