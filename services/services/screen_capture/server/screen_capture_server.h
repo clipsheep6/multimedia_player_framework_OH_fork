@@ -222,7 +222,7 @@ private:
     const int32_t videoBitrateMin_ = 1;
     const int32_t videoBitrateMax_ = 30000000;
     const int32_t videoFrameRateMin_ = 1;
-    const int32_t videoFrameRateMax_ = 30;
+    const int32_t videoFrameRateMax_ = 60;
     const std::string MP4 = "mp4";
     const std::string M4A = "m4a";
     OHOS::AudioStandard::AppInfo appinfo_;
