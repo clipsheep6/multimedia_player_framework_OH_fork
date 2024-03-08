@@ -34,9 +34,9 @@ void UIExtensionAbilityConnection::OnAbilityConnectDone(const AppExecFwk::Elemen
     MessageOption option;
     data.WriteInt32(SIGNAL_NUM);
     data.WriteString16(u"bundleName");
-    data.WriteString16(u"com.test.uiextensionprovider");
+    data.WriteString16(u"com.huawei.ohos.screenrecorder");
     data.WriteString16(u"abilityName");
-    data.WriteString16(u"UIExtensionProvider");
+    data.WriteString16(u"com.huawei.ohos.screenrecorder.DialogAbility");
     data.WriteString16(u"parameters");
     data.WriteString16(Str8ToStr16(commandStr_));
     MEDIA_LOGE("UIExtensionAbilityConnection::OnAbilityConnectDone  start ");
