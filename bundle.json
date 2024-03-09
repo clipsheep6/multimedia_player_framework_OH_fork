@@ -85,7 +85,9 @@
       },
       "build": {
         "group_type": {
-          "base_group": [],
+          "base_group": [
+            "//foundation/multimedia/player_framework/resources:player_resources"
+          ],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
