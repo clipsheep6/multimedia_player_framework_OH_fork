@@ -608,8 +608,9 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
 {
     RecorderInfo &recorderConfig = asyncCtx->config_.recorderInfo;
     recorderConfig.fileFormat = AVSCREENCAPTURE_DEFAULT_FILE_FORMAT;
-
-    recorderConfig.url = CommonNapi::GetPropertyString(env, args, "url");
+    int32_t fd = -1;
+    (void)CommonNapi::GetPropertyInt32(env, args, "fd", fd);
+    recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "", (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
     return MSERR_OK;
@@ -617,12 +618,12 @@ int32_t AVScreenCaptureNapi::GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyn
 
 VideoCodecFormat AVScreenCaptureNapi::GetVideoCodecFormat(const int32_t &preset)
 {
-    const std::map<int32_t, VideoCodecFormat> presetToCodecFormat = {
-        { AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_NORMAL, VideoCodecFormat::H264 },
-        { AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_HIGH_EFFICIENT, VideoCodecFormat::H265 }
+    const std::map<AVScreenCaptureRecorderPreset, VideoCodecFormat> presetToCodecFormat = {
+        { AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4, VideoCodecFormat::H264 },
+        { AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H265_AAC_MP4, VideoCodecFormat::H265 }
     };
     VideoCodecFormat codecFormat = VideoCodecFormat::H264;
-    auto iter = presetToCodecFormat.find(preset);
+    auto iter = presetToCodecFormat.find(static_cast<AVScreenCaptureRecorderPreset>(preset));
     if (iter != presetToCodecFormat.end()) {
         codecFormat = iter->second;
     }

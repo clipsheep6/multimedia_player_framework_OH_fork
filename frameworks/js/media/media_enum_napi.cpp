@@ -321,8 +321,8 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
-    { "SCREEN_RECORD_PRESET_NORMAL", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_NORMAL },
-    { "SCREEN_RECORD_PRESET_HIGH_EFFICIENT", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_HIGH_EFFICIENT }
+    { "SCREEN_RECORD_PRESET_H264_AAC_MP4", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4 },
+    { "SCREEN_RECORD_PRESET_H265_AAC_MP4", AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H265_AAC_MP4 }
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureStateCode = {
