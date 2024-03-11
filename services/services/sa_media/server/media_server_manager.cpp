@@ -34,6 +34,7 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "screen_capture_service_stub.h"
+#include "screen_capture_controller_stub.h"
 #endif
 #include "monitor_service_stub.h"
 #include "media_log.h"
@@ -167,6 +168,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 #ifdef SUPPORT_SCREEN_CAPTURE
         case SCREEN_CAPTURE:
             return CreateScreenCaptureStubObject();
+        case SCREEN_CAPTURE_CONTROLLER:
+            return CreateScreenCaptureControllerStubObject();
 #endif
         case MONITOR:
             return GetMonitorStubObject();
@@ -364,6 +367,27 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
     MEDIA_LOGD("The number of screen capture services(%{public}zu).", screenCaptureStubMap_.size());
     return object;
 }
+
+sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureControllerStubObject()
+{
+    MEDIA_LOGI("MediaServerManager::CreateScreenCaptureControllerStubObject() start");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerStubMap_.size() < SERVER_MAX_NUMBER,
+        nullptr, "The number of screen capture controller services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", screenCaptureControllerStubMap_.size());
+
+    sptr<ScreenCaptureControllerStub> screenCaptureControllerStub = ScreenCaptureControllerStub::Create();
+    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerStub != nullptr, nullptr,
+        "failed to create ScreenCaptureControllerStub");
+
+    sptr<IRemoteObject> object = screenCaptureControllerStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create screenCaptureControllerStub");
+
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    screenCaptureControllerStubMap_[object] = pid;
+    MEDIA_LOGD("The number of screen capture services(%{public}zu).", screenCaptureControllerStubMap_.size());
+    MEDIA_LOGI("MediaServerManager::CreateScreenCaptureControllerStubObject() end");
+    return object;
+}
 #endif
 
 sptr<IRemoteObject> MediaServerManager::GetMonitorStubObject()
@@ -499,6 +523,19 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
                 }
             }
             MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+            break;
+        }
+        case SCREEN_CAPTURE_CONTROLLER: {
+            for (auto it = screenCaptureControllerStubMap_.begin();
+                it != screenCaptureControllerStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture controller stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureControllerStubMap_.size(), pid);
+                    (void)screenCaptureControllerStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture controller object failed, pid(%{public}d).", pid);
             break;
         }
         default: {

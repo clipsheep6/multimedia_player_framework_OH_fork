@@ -266,6 +266,36 @@ int32_t MediaClient::DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureS
     screenCaptureClientList_.remove(screenCapture);
     return MSERR_OK;
 }
+
+std::shared_ptr<IScreenCaptureController> MediaClient::CreateScreenCaptureControllerClient()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("MediaClient::CreateScreenCaptureControllerClient() start");
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_CONTROLLER, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture controller proxy object is nullptr.");
+
+    sptr<IStandardScreenCaptureController> controllerProxy = iface_cast<IStandardScreenCaptureController>(object);
+    CHECK_AND_RETURN_RET_LOG(controllerProxy != nullptr, nullptr, "controllerProxy is nullptr.");
+
+    std::shared_ptr<ScreenCaptureControllerClient> controller = ScreenCaptureControllerClient::Create(controllerProxy);
+    CHECK_AND_RETURN_RET_LOG(controller != nullptr, nullptr, "failed to create screenCapture controller.");
+
+    screenCaptureControllerList_.push_back(controller);
+    MEDIA_LOGI("MediaClient::CreateScreenCaptureControllerClient() end");
+    return controller;
+}
+
+int32_t MediaClient::DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(controller != nullptr, MSERR_NO_MEMORY,
+        "input screenCapture controller is nullptr.");
+    screenCaptureControllerList_.remove(controller);
+    return MSERR_OK;
+}
 #endif
 
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
