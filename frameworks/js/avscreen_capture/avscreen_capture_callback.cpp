@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
- #include "avscreen_capture_callback.h"
+#include "avscreen_capture_callback.h"
 #include <uv.h>
 #include "scope_guard.h"
 #include "media_log.h"
