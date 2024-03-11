@@ -115,6 +115,12 @@ int32_t ScreenCaptureNativeMock::SetMicrophoneEnabled(bool isMicrophone)
     return screenCapture_->SetMicrophoneEnabled(isMicrophone);
 }
 
+int32_t ScreenCaptureNativeMock::SetScreenCanvasRotation(bool canvasRotation)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return screenCapture_->SetScreenCanvasRotation(canvasRotation);
+}
+
 int32_t ScreenCaptureNativeMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {

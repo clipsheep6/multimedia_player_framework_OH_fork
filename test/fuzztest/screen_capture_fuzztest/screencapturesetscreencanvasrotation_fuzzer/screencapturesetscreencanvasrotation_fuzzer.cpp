@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screen_capture.h"
-#include "screencapturevideoframeheight_fuzzer.h"
+#include "screencapturesetscreencanvasrotation_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -28,11 +28,11 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureVideoFrameHeightFuzzer::ScreenCaptureVideoFrameHeightFuzzer()
+ScreenCaptureSetScreenCanvasRotationFuzzer::ScreenCaptureSetScreenCanvasRotationFuzzer()
 {
 }
 
-ScreenCaptureVideoFrameHeightFuzzer::~ScreenCaptureVideoFrameHeightFuzzer()
+ScreenCaptureSetScreenCanvasRotationFuzzer::~ScreenCaptureSetScreenCanvasRotationFuzzer()
 {
 }
 
@@ -66,9 +66,9 @@ void SetConfig(AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint8_t *data, size_t size)
+bool ScreenCaptureSetScreenCanvasRotationFuzzer::FuzzScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(bool)) {
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
@@ -77,12 +77,10 @@ bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
-    config.videoInfo.videoCapInfo.videoFrameHeight = *reinterpret_cast<int32_t *>(data);
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
-    TestScreenCapture::SetMicrophoneEnabled(true);
-    TestScreenCapture::SetScreenCanvasRotation(true);
+    TestScreenCapture::SetScreenCanvasRotation(*reinterpret_cast<bool *>(data));
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
@@ -93,17 +91,17 @@ bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint
 }
 } // namespace Media
 
-bool FuzzTestScreenCaptureVideoFrameHeight(uint8_t *data, size_t size)
+bool FuzzTestScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
     }
 
-    if (size < sizeof(int32_t)) {
+    if (size < sizeof(bool)) {
         return true;
     }
-    ScreenCaptureVideoFrameHeightFuzzer testScreenCapture;
-    return testScreenCapture.FuzzScreenCaptureVideoFrameHeight(data, size);
+    ScreenCaptureSetScreenCanvasRotationFuzzer testScreenCapture;
+    return testScreenCapture.FuzzScreenCaptureSetScreenCanvasRotation(data, size);
 }
 } // namespace OHOS
 
@@ -111,6 +109,6 @@ bool FuzzTestScreenCaptureVideoFrameHeight(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestScreenCaptureVideoFrameHeight(data, size);
+    OHOS::FuzzTestScreenCaptureSetScreenCanvasRotation(data, size);
     return 0;
 }

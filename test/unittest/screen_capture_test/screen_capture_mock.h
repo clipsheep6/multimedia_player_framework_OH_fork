@@ -53,6 +53,7 @@ public:
     virtual int32_t StopScreenRecording() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
+    virtual int32_t SetScreenCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;

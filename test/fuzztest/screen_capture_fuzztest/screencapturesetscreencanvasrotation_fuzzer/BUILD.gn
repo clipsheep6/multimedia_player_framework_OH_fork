@@ -1,0 +1,74 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
+##############################fuzztest##########################################
+ohos_fuzztest("ScreenCaptureSetScreenCanvasRotationFuzzTest") {
+  module_out_path = "$MODULE_OUTPUT_PATH/screen_capture"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturesetscreencanvasrotation_fuzzer"
+  resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
+
+  include_dirs = [
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/services/utils/include",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common/",
+    "$MEDIA_PLAYER_GRAPHIC/utils/sync_fence/export",
+  ]
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Wunused-parameter",
+  ]
+  if (multimedia_player_framework_support_screen_capture) {
+    sources = [
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",
+      "screencapturesetscreencanvasrotation_fuzzer.cpp",
+    ]
+  }
+  deps = [
+    "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+  ]
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "graphic_2d:sync_fence",
+    "graphic_surface:surface",
+    "hilog:libhilog",
+    "player_framework:media_client",
+  ]
+}

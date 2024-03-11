@@ -165,6 +165,7 @@ public:
     virtual ~ScreenCapture() = default;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
+    virtual int32_t SetScreenCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t StartScreenRecording() = 0;

@@ -131,6 +131,7 @@ public:
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
+    int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     void Release() override;
 
 private:

@@ -19,6 +19,7 @@
 #include "uri_helper.h"
 #include "media_dfx.h"
 
+using OHOS::Rosen::DMError;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
 }
@@ -41,9 +42,7 @@ ScreenCaptureServer::ScreenCaptureServer()
 ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-
     std::lock_guard<std::mutex> lock(mutex_);
-
     ReleaseAudioCapture();
     ReleaseVideoCapture();
 }
@@ -809,6 +808,16 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation, canvasRotation:%{public}d", canvasRotation);
+    auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
+                             "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     isRunning_.store(false);
@@ -981,7 +990,7 @@ void ScreenCaptureServer::Release()
     screenCaptureCb_ = nullptr;
     ReleaseAudioCapture();
     ReleaseVideoCapture();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances Release", FAKE_POINTER(this));
 }
 
 void AudioCapturerCallbackImpl::OnInterrupt(const InterruptEvent &interruptEvent)

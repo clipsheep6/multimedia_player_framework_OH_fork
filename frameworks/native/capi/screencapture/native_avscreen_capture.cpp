@@ -350,3 +350,19 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AV
 
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
+    bool canvasRotation)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    int32_t ret = screenCaptureObj->screenCapture_->SetScreenCanvasRotation(canvasRotation);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
+                             "SetScreenCanvasRotation failed!");
+
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}

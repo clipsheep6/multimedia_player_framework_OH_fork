@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,13 +14,12 @@
  */
 
 #include <cmath>
-#include <cstdlib>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-#include "screencaptureaudiosourcetype_ndk_fuzzer.h"
+#include "screencapturesetscreencanvasrotation_ndk_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -28,11 +27,11 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureAudioSourceTypeNdkFuzzer::ScreenCaptureAudioSourceTypeNdkFuzzer()
+ScreenCaptureSetScreenCanvasRotationNdkFuzzer::ScreenCaptureSetScreenCanvasRotationNdkFuzzer()
 {
 }
 
-ScreenCaptureAudioSourceTypeNdkFuzzer::~ScreenCaptureAudioSourceTypeNdkFuzzer()
+ScreenCaptureSetScreenCanvasRotationNdkFuzzer::~ScreenCaptureSetScreenCanvasRotationNdkFuzzer()
 {
 }
 
@@ -66,29 +65,19 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureAudioSourceTypeNdkFuzzer::FuzzScreenCaptureAudioSourceTypeNdk(uint8_t *data, size_t size)
+bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCanvasRotationNdk(
+    uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(OH_AudioCaptureSourceType)) {
+    if (data == nullptr || size < sizeof(bool)) {
         return false;
     }
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr int32_t audioSourceTypesList = 5;
     constexpr uint32_t recorderTime = 3;
-    const  OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
-        OH_SOURCE_INVALID,
-        OH_SOURCE_DEFAULT,
-        OH_MIC,
-        OH_ALL_PLAYBACK,
-        OH_APP_PLAYBACK,
-    };
-    int32_t asourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
-    config.audioInfo.micCapInfo.audioSource = audioSourceType[asourcesubscript];
 
-    OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
-    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, true);
+    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, *reinterpret_cast<bool *>(data));
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -103,17 +92,17 @@ bool ScreenCaptureAudioSourceTypeNdkFuzzer::FuzzScreenCaptureAudioSourceTypeNdk(
 }
 } // namespace Media
 
-bool FuzzTestScreenCaptureAudioSourceTypeNdk(uint8_t *data, size_t size)
+bool FuzzTestScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
     }
 
-    if (size < sizeof(OH_AudioCaptureSourceType)) {
+    if (size < sizeof(bool)) {
         return true;
     }
-    ScreenCaptureAudioSourceTypeNdkFuzzer testScreenCapture;
-    return testScreenCapture.FuzzScreenCaptureAudioSourceTypeNdk(data, size);
+    ScreenCaptureSetScreenCanvasRotationNdkFuzzer testScreenCapture;
+    return testScreenCapture.FuzzScreenCaptureSetScreenCanvasRotationNdk(data, size);
 }
 } // namespace OHOS
 
@@ -121,6 +110,6 @@ bool FuzzTestScreenCaptureAudioSourceTypeNdk(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestScreenCaptureAudioSourceTypeNdk(data, size);
+    OHOS::FuzzTestScreenCaptureSetScreenCanvasRotationNdk(data, size);
     return 0;
 }

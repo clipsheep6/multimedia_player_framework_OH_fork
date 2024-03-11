@@ -121,6 +121,7 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetMicrophoneEnabled(true);
+    TestScreenCapture::SetScreenCanvasRotation(true);
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();

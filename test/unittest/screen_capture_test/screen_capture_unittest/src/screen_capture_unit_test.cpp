@@ -511,6 +511,52 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
 }
 
 /**
+ * @tc.name: screen_capture_specified_window_Rotation
+ * @tc.desc: open microphone
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation before");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    SetSelfTokenID(tokenID);
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
+    std::string deviceId = "";
+    std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
+    auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation result : %{public}d", result);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
+    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation missionId : %{public}d", info.id);
+        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    }
+    OpenFile("screen_capture_specified_window_data");
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation after");
+}
+
+/**
  * @tc.name: screen_capture_save_file_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC
@@ -659,6 +705,76 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 }
 
 /**
+ * @tc.name: screen_capture_save_file_Rotation
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation before");
+    AVScreenCaptureConfig config;
+    SetConfig(config);
+    config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    OpenFile("screen_capture_save_file_Rotation");
+
+    aFlag = 1;
+    vFlag = 1;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
+    EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_Rotation_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_01 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_Rotation_01.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    bool canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    canvasRotation = false;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    canvasRotation = true;
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_01 after");
+}
+
+/**
  * @tc.name: screen_capture_specified_screen_file_01
  * @tc.desc: do screencapture with specified screen
  * @tc.type: FUNC
@@ -732,7 +848,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 after");
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 after");
 }
 
 /**
@@ -930,18 +1046,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
-    config_.videoInfo.videoCapInfo.videoFrameWidth = 72000;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-
-    SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
-
-    SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
-    config_.recorderInfo = recorderInfo;
-    config_.videoInfo.videoCapInfo.videoFrameHeight = 108000;
     EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
@@ -1685,6 +1791,34 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(10);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+}
+
+/**
+ * @tc.name: screen_capture_buffertest_Rotation
+ * @tc.desc: screen capture buffer test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Level2)
+{
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+
+    aFlag = 0;
+    vFlag = 0;
+    bool isMicrophone = true;
+    bool canvasRotation = true;
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());

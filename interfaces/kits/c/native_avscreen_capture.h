@@ -184,6 +184,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AVScreenCapture *capture,
     bool isMicrophone);
 
+/**
+ * @brief Controls the Rotation of the Screen, which is no rotate by default
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param canvasRotation Rotate The screen or not
+ * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
+ * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
+ * @since 12
+ * @version 1.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
+    bool canvasRotation);
 #ifdef __cplusplus
 }
 #endif

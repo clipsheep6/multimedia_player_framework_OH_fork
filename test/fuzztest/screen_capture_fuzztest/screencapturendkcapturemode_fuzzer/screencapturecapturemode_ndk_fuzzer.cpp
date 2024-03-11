@@ -87,6 +87,7 @@ bool ScreenCaptureCaptureModeNdkFuzzer::FuzzScreenCaptureCaptureModeNdk(uint8_t 
     config.captureMode = captureMode_[capturemodesubscript];
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
+    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;

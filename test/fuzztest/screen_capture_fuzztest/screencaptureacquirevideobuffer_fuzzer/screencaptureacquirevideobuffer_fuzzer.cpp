@@ -107,6 +107,7 @@ bool ScreenCaptureAcquireVideoBufferFuzzer::FuzzScreenCaptureAcquireVideoBuffer(
     OHOS::Rect damage = GetData<OHOS::Rect>();
 
     TestScreenCapture::SetMicrophoneEnabled(true);
+    TestScreenCapture::SetScreenCanvasRotation(true);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::AcquireVideoBuffer(fence, timestamp, damage);

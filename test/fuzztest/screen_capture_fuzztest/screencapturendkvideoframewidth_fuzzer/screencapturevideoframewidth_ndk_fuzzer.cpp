@@ -78,6 +78,7 @@ bool ScreenCaptureVideoFrameWidthNdkFuzzer::FuzzScreenCaptureVideoFrameWidthNdk(
     config.videoInfo.videoCapInfo.videoFrameWidth = *reinterpret_cast<int32_t *>(data);
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
+    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;

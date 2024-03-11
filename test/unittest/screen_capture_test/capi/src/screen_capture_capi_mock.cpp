@@ -188,6 +188,12 @@ int32_t ScreenCaptureCapiMock::SetMicrophoneEnabled(bool isMicrophone)
     return OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture_, isMicrophone);
 }
 
+int32_t ScreenCaptureCapiMock::SetScreenCanvasRotation(bool canvasRotation)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    return OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture_, canvasRotation);
+}
+
 int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
     AudioCaptureSourceType type)
 {

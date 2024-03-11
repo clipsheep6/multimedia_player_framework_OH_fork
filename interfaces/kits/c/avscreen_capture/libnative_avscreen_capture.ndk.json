@@ -11,5 +11,6 @@
     { "name": "OH_AVScreenCapture_ReleaseVideoBuffer" },
     { "name": "OH_AVScreenCapture_SetCallback" },
     { "name": "OH_AVScreenCapture_Release" },
-    { "name": "OH_AVScreenCapture_SetMicrophoneEnabled" }
+    { "name": "OH_AVScreenCapture_SetMicrophoneEnabled" },
+    { "name": "OH_AVScreenCapture_SetScreenCanvasRotation" }
 ]
