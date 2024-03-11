@@ -202,11 +202,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         return MSERR_INVALID_OPERATION;
     }
 
-    std::unordered_map<std::string, std::string> payload;
-    pid_t pid = getpid();
-    payload["pid"] = std::to_string(pid);
-    MEDIA_LOGI("PlayerServer qos auth, pid = %{public}d", pid);
-    OHOS::ConcurrentTask::ConcurrentTaskClient::GetInstance().RequestAuth(payload);
+    // only remove OHOS::ConcurrentTask::ConcurrentTaskClient::GetInstance().RequestAuth on master branch
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
