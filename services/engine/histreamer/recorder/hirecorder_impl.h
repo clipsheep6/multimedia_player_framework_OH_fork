@@ -122,6 +122,7 @@ private:
     int64_t maxSize_ = 0;
 
     bool videoSourceIsYuv_ = false;
+    bool videoSourceIsRGBA_ = false;
 
     Mutex stateMutex_ {};
     ConditionVariable cond_ {};

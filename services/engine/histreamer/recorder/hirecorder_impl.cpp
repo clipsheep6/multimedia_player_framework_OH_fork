@@ -110,9 +110,15 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         }
         videoEncoderFilter_->SetLogTag(avRecorderTag_);
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
+        if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
+            videoSourceIsRGBA_ = true;
+        } else {
+            videoSourceIsRGBA_ = false;
+        }
         MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource VIDEO_SOURCE_SURFACE_YUV.", avRecorderTag_.c_str());
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
         videoSourceIsYuv_ = false;
+        videoSourceIsRGBA_ = false;
         videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
             ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
         videoCaptureFilter_->SetLogTag(avRecorderTag_);
@@ -246,6 +252,10 @@ int32_t HiRecorderImpl::Prepare()
         audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
     }
     if (videoEncoderFilter_) {
+        if (videoSourceIsRGBA_) {
+            videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
+            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
+        }
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
