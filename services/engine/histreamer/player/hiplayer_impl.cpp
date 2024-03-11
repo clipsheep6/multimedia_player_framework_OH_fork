@@ -40,7 +40,8 @@ const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame a
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
-
+const std::string BUNDLE_NAME_FIRST = "com.hua";
+const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
 public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl)
@@ -81,6 +82,7 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this);
+    bundleName_ = GetClientBundleName(appUid);
 }
 
 HiPlayerImpl::~HiPlayerImpl()
@@ -330,8 +332,14 @@ int32_t HiPlayerImpl::Pause()
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
-    auto ret = pipeline_->Pause();
-    syncManager_->Pause();
+    Status ret = Status::OK;
+    if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
+        syncManager_->Pause();
+        ret = pipeline_->Pause();
+    } else {
+        ret = pipeline_->Pause();
+        syncManager_->Pause();
+    }
     if (audioSink_ != nullptr) {
         audioSink_->Pause();
     }
@@ -677,6 +685,16 @@ int32_t HiPlayerImpl::InitDuration()
     return TransStatus(Status::OK);
 }
 
+void HiPlayerImpl::SetBundleName(std::string bundleName)
+{
+    if (!bundleName.empty()) {
+        MEDIA_LOG_I("SetBundleName bundleName: " PUBLIC_LOG_S, bundleName.c_str());
+        demuxer_->SetBundleName(bundleName);
+    } else {
+        MEDIA_LOG_I("SetBundleName failed.");
+    }
+}
+
 int32_t HiPlayerImpl::InitVideoWidthAndHeight()
 {
 #ifdef SUPPORT_VIDEO
@@ -949,12 +967,31 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
+        default:
+            break;
+    }
+    OnEventSub(event);
+}
+
+void HiPlayerImpl::OnEventSub(const Event &event)
+{
+    switch (event.type) {
         case EventType::EVENT_AUDIO_DEVICE_CHANGE : {
             NotifyAudioDeviceChange(event);
             break;
         }
         case EventType::EVENT_AUDIO_SERVICE_DIED : {
             NotifyAudioServiceDied();
+            break;
+        }
+        case EventType::BUFFERING_END : {
+            MEDIA_LOG_I("HiPlayerImpl::BUFFERING_END PLAYING");
+            NotifyBufferingEnd(AnyCast<int32_t>(event.param));
+            break;
+        }
+        case EventType::BUFFERING_START : {
+            MEDIA_LOG_I("HiPlayerImpl::BUFFERING_START PAUSE");
+            NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
         default:
@@ -991,13 +1028,20 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     auto ret = demuxer_->SetDataSource(source);
     pipeline_->AddHeadFilters({demuxer_});
+    SetBundleName(bundleName_);
     return ret;
 }
 
 Status HiPlayerImpl::Resume()
 {
-    syncManager_->Resume();
-    auto ret = pipeline_->Resume();
+    Status ret = Status::OK;
+    if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
+        ret = pipeline_->Resume();
+        syncManager_->Resume();
+    } else {
+        syncManager_->Resume();
+        ret = pipeline_->Resume();
+    }
     if (audioSink_ != nullptr) {
         audioSink_->Resume();
     }
@@ -1017,6 +1061,20 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 {
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, errorCode, format);
+}
+
+void HiPlayerImpl::NotifyBufferingStart(int32_t param)
+{
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
+    callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
+}
+
+void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
+{
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
+    callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
 }
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)

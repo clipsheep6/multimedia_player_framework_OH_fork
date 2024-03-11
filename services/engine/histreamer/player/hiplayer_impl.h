@@ -83,6 +83,7 @@ public:
 
     // internal interfaces
     void OnEvent(const Event &event);
+    void OnEventSub(const Event &event);
     void OnStateChanged(PlayerStateId state);
     void OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
@@ -101,6 +102,8 @@ private:
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
+    void NotifyBufferingStart(int32_t param);
+    void NotifyBufferingEnd(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
@@ -135,6 +138,7 @@ private:
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
+    void SetBundleName(std::string bundleName);
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
@@ -186,6 +190,7 @@ private:
     std::vector<std::pair<EventType, bool>> initialAVStates_;
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
+    std::string bundleName_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
