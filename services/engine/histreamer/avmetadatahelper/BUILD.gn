@@ -50,7 +50,6 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
   }
   sources = [
     "avmetadata_collector.cpp",
-    "avmetadata_frame_converter.cpp",
     "avmetadatahelper_impl.cpp",
   ]
 
@@ -75,6 +74,7 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "image_framework:image_native",
+    "init:libbegetutil",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",

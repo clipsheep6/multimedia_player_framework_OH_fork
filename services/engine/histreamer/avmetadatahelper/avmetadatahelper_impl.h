@@ -33,8 +33,9 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperImpl : public IAVMetadataHelperEngine, public std::enable_shared_from_this<AVMetadataHelperImpl>,
-    public NoCopyable {
+class AVMetadataHelperImpl : public IAVMetadataHelperEngine,
+                             public std::enable_shared_from_this<AVMetadataHelperImpl>,
+                             public NoCopyable {
 public:
     AVMetadataHelperImpl();
     ~AVMetadataHelperImpl();
@@ -64,10 +65,14 @@ private:
     void Destroy();
     Status InitDecoder();
 
+    bool dumpFile_{false};
+    void SetThumbDumpBySysParam();
+    void DumpSurfaceBufferToFile(const sptr<SurfaceBuffer> &surfaceBuffer);
+    void DumpPixelMapToFile(const uint8_t *pixelMap, size_t size, int32_t height, int32_t width);
+
     std::shared_ptr<Meta> GetTargetTrackInfo();
     std::unique_ptr<PixelMap> GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     bool ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer);
-    std::unique_ptr<PixelMap> ConvertPixelMap(PixelFormat format, std::unique_ptr<PixelMap> pixelMap);
 
     std::unordered_map<int32_t, std::string> collectedMeta_;
     bool hasCollectMeta_{false};
@@ -100,6 +105,6 @@ private:
     sptr<Surface> producerSurface_{nullptr};
     sptr<Surface> consumerSurface_{nullptr};
 };
-} // namespace Media
-} // namespace OHOS
-#endif // AVMETADATAHELPER_HST_IMPL_H
+}  // namespace Media
+}  // namespace OHOS
+#endif  // AVMETADATAHELPER_HST_IMPL_H
