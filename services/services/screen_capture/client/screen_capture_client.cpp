@@ -170,6 +170,14 @@ int32_t ScreenCaptureClient::StartScreenCapture()
     return screenCaptureProxy_->StartScreenCapture();
 }
 
+int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->StartScreenCaptureWithSurface(surface);
+}
+
+
 int32_t ScreenCaptureClient::StopScreenCapture()
 {
     std::lock_guard<std::mutex> lock(mutex_);

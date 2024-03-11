@@ -467,6 +467,54 @@ int32_t ScreenCaptureServer::StartScreenCapture()
             readInnerAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioInnerCapture, this);
         }
     }
+    isSurfaceMode_ = false;
+    int32_t ret = StartVideoCapture();
+    if (ret == MSERR_OK) {
+        BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
+    }
+    return ret;
+}
+
+int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("ScreenCaptureServer::StartScreenCaptureWithSurface");
+    MEDIA_LOGI("ScreenCaptureServer::StartScreenCaptureWithSurface start");
+    isAudioStart_ = true;
+    if (audioMicCapturer_ != nullptr) {
+        if (!audioMicCapturer_->Start()) {
+            MEDIA_LOGE("Start mic audio stream failed");
+            audioMicCapturer_->Release();
+            audioMicCapturer_ = nullptr;
+            isAudioStart_ = false;
+        }
+        if (isAudioStart_) {
+            MEDIA_LOGE("Capturing started");
+            isRunning_.store(true);
+            readAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioCapture, this);
+        }
+    }
+    isAudioInnerStart_ = true;
+    if (audioInnerCapturer_ != nullptr) {
+        if (!audioInnerCapturer_->Start()) {
+            MEDIA_LOGE("Start inner audio stream failed");
+            audioInnerCapturer_->Release();
+            audioInnerCapturer_ = nullptr;
+            isAudioInnerStart_ = false;
+        }
+        if (isAudioInnerStart_) {
+            MEDIA_LOGE("Capturing started");
+            isInnerRunning_.store(true);
+            readInnerAudioLoop_ = std::make_unique<std::thread>(&ScreenCaptureServer::StartAudioInnerCapture, this);
+        }
+    }
+
+    if (surface == nullptr) {
+        MEDIA_LOGE("surface is nullptr");
+        return MSERR_INVALID_OPERATION;
+    }
+    surface_ = surface;
+    isSurfaceMode_ = true;
     int32_t ret = StartVideoCapture();
     if (ret == MSERR_OK) {
         BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appinfo_.appUid, appinfo_.appPid);
@@ -506,8 +554,13 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(psurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
 
     std::string virtualScreenName = "screen_capture";
-    int32_t ret = CreateVirtualScreen(virtualScreenName, psurface);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
+    if (isSurfaceMode_ == false) {
+        int32_t ret = CreateVirtualScreen(virtualScreenName, psurface);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen failed");
+    } else {
+        int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen with surface failed");
+    }
 
     return MSERR_OK;
 }

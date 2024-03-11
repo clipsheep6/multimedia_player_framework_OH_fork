@@ -65,6 +65,8 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[INIT_VIDEO_ENC_INFO] = &ScreenCaptureServiceStub::InitVideoEncInfo;
     screenCaptureStubFuncs_[INIT_VIDEO_CAP] = &ScreenCaptureServiceStub::InitVideoCap;
     screenCaptureStubFuncs_[START_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StartScreenCapture;
+    screenCaptureStubFuncs_[START_SCREEN_CAPTURE_WITH_SURFACE] =
+        &ScreenCaptureServiceStub::StartScreenCaptureWithSurface;
     screenCaptureStubFuncs_[STOP_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StopScreenCapture;
     screenCaptureStubFuncs_[ACQUIRE_AUDIO_BUF] = &ScreenCaptureServiceStub::AcquireAudioBuffer;
     screenCaptureStubFuncs_[ACQUIRE_VIDEO_BUF] = &ScreenCaptureServiceStub::AcquireVideoBuffer;
@@ -170,6 +172,14 @@ int32_t ScreenCaptureServiceStub::StartScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
     return screenCaptureServer_->StartScreenCapture();
+}
+
+int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+
+    return screenCaptureServer_->StartScreenCaptureWithSurface(surface);
 }
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture()
@@ -374,6 +384,26 @@ int32_t ScreenCaptureServiceStub::StartScreenCapture(MessageParcel &data, Messag
         "screen capture server is nullptr");
     (void)data;
     int32_t ret = StartScreenCapture();
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY,
+        "ScreenCaptureServiceProxy StartScreenCaptureWithSurface object is nullptr");
+    
+    sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "failed to convert object to producer");
+
+    sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
+
+    int32_t ret = StartScreenCaptureWithSurface(surface);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

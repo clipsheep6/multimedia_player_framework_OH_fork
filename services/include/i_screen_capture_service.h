@@ -38,6 +38,7 @@ public:
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
     virtual int32_t StartScreenCapture() = 0;
+    virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
     virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,

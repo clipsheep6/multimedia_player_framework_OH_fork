@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include "native_avscreen_capture_errors.h"
 #include "native_avscreen_capture_base.h"
+#include "external_window.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +61,19 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *c
  * @version 1.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVScreenCapture *capture);
+
+/**
+ * @brief Start the av screen capture
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param window Pointer to an OHNativeWindow instance
+ * @return Returns AVSCREEN_CAPTURE_ERR_OK if the execution is successful,
+ * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
+ * @since 12
+ * @version 1.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(struct OH_AVScreenCapture *capture,
+    OHNativeWindow* window);
 
 /**
  * @brief Stop the av screen capture

@@ -209,6 +209,20 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
     }
 }
 
+int32_t ScreenCaptureImpl::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
+        "screen capture service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_UNKNOWN, "surface is nullptr");
+    if (dataType_ == ORIGINAL_STREAM) {
+        return screenCaptureService_->StartScreenCaptureWithSurface(surface);
+    } else {
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
+        return MSERR_INVALID_VAL;
+    }
+}
+
 int32_t ScreenCaptureImpl::StopScreenCapture()
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StopScreenCapture in", FAKE_POINTER(this));

@@ -263,6 +263,34 @@ int32_t ScreenCaptureServiceProxy::StartScreenCapture()
     return reply.ReadInt32();
 }
 
+int32_t ScreenCaptureServiceProxy::StartScreenCaptureWithSurface(sptr<Surface> surface)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "surface is nullptr");
+    sptr<IBufferProducer> producer = surface->GetProducer();
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "producer is nullptr");
+
+    sptr<IRemoteObject> object = producer->AsObject();
+    if (data.WriteRemoteObject(object)) {
+        MEDIA_LOGI("ScreenCaptureServiceProxy StartScreenCaptureWithSurface WriteRemoteObject successfully");
+    } else {
+        MEDIA_LOGI("ScreenCaptureServiceProxy StartScreenCaptureWithSurface WriteRemoteObject failed");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    int error = Remote()->SendRequest(START_SCREEN_CAPTURE_WITH_SURFACE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "StartScreenCapture failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t ScreenCaptureServiceProxy::StopScreenCapture()
 {
     MessageParcel data;

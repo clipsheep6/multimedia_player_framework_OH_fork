@@ -19,11 +19,14 @@
 #include "native_player_magic.h"
 #include "surface_buffer_impl.h"
 #include "native_avscreen_capture.h"
+#include "native_window.h"
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeScreenCapture"};
 }
+
+typedef struct NativeWindow OHNativeWindow;
 
 using namespace OHOS::Media;
 class NativeScreenCaptureCallback;
@@ -168,6 +171,24 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
     int32_t ret = screenCaptureObj->screenCapture_->StartScreenCapture();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
+
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(struct OH_AVScreenCapture *capture,
+    OHNativeWindow* window)
+{
+    CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(window != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(window->surface != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "Input window surface is nullptr!");
+
+    struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
+        AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
+
+    int32_t ret = screenCaptureObj->screenCapture_->StartScreenCaptureWithSurface(window->surface);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT, "StartScreenCapture failed!");
 
     return AV_SCREEN_CAPTURE_ERR_OK;

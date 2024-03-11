@@ -289,6 +289,104 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
 }
 
 /**
+ * @tc.name: screen_capture_with_surface_01
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_01 before");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    SetSelfTokenID(tokenID);
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 1920;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_01 CreateRecorder");
+    std::shared_ptr<Recorder> recorder = nullptr;
+    recorder = RecorderFactory::CreateRecorder();
+    int32_t videoSourceId = 0;
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H265));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_with_surface_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    ASSERT_TRUE(outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd));
+    EXPECT_EQ(MSERR_OK, recorder->Prepare());
+    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
+    EXPECT_EQ(MSERR_OK, recorder->Start());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_01 recorder Start");
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder->Stop(true));
+    EXPECT_EQ(MSERR_OK, recorder->Reset());
+    EXPECT_EQ(MSERR_OK, recorder->Release());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_with_surface_02
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_02 before");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    SetSelfTokenID(tokenID);
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 640;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 480;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_02 CreateRecorder");
+    std::shared_ptr<Recorder> recorder = nullptr;
+    recorder = RecorderFactory::CreateRecorder();
+    int32_t videoSourceId = 0;
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H265));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 480, 640));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_with_surface_02.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    ASSERT_TRUE(outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd));
+    EXPECT_EQ(MSERR_OK, recorder->Prepare());
+    sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
+    EXPECT_EQ(MSERR_OK, recorder->Start());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_02 recorder Start");
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder->Stop(true));
+    EXPECT_EQ(MSERR_OK, recorder->Reset());
+    EXPECT_EQ(MSERR_OK, recorder->Release());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_02 after");
+}
+
+/**
  * @tc.name: screen_capture_specified_window_file_01
  * @tc.desc: do screencapture
  * @tc.type: FUNC

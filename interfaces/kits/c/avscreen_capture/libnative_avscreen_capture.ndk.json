@@ -2,6 +2,7 @@
     { "name": "OH_AVScreenCapture_Create" },
     { "name": "OH_AVScreenCapture_Init" },
     { "name": "OH_AVScreenCapture_StartScreenCapture" },
+    { "name": "OH_AVScreenCapture_StartScreenCaptureWithSurface" },
     { "name": "OH_AVScreenCapture_StopScreenCapture" },
     { "name": "OH_AVScreenCapture_StartScreenRecording" },
     { "name": "OH_AVScreenCapture_StopScreenRecording" },

@@ -28,6 +28,7 @@
 #include "media_errors.h"
 #include "display_manager.h"
 #include "screen_manager.h"
+#include "external_window.h"
 
 namespace OHOS {
 namespace Media {
@@ -48,6 +49,7 @@ public:
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback) = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
+    virtual int32_t StartScreenCaptureWithSurface(const std::any& value) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t StartScreenRecording() = 0;
     virtual int32_t StopScreenRecording() = 0;
