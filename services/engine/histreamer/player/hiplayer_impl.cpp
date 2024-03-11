@@ -566,10 +566,12 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
 #ifdef SUPPORT_VIDEO
     FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
                          "Set video surface failed, surface == nullptr");
-    if (videoDecoder_ != nullptr) {
+    surface_ = surface;
+    if (videoDecoder_ != nullptr &&
+        pipelineStates_ != PlayerStates::PLAYER_STOPPED &&
+        pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR) {
         return TransStatus(videoDecoder_->SetVideoSurface(surface));
     }
-    surface_ = surface;
 #endif
     return TransStatus(Status::OK);
 }

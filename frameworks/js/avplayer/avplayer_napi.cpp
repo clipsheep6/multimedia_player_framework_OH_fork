@@ -1389,7 +1389,25 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
         return result;
     }
 
-    if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
+    std::string curState = jsPlayer->GetCurrentState();
+    bool setSurfaceFirst = curState == AVPlayerState::STATE_INITIALIZED;
+    bool switchSurface = curState == AVPlayerState::STATE_PREPARED ||
+        curState == AVPlayerState::STATE_PLAYING ||
+        curState == AVPlayerState::STATE_PAUSED ||
+        curState == AVPlayerState::STATE_STOPPED ||
+        curState == AVPlayerState::STATE_COMPLETED;
+
+    if (setSurfaceFirst) {
+        MEDIA_LOGI("JsSetSurfaceID set surface first in %{public}s state", curState.c_str());
+    } else if (switchSurface) {
+        MEDIA_LOGI("JsSetSurfaceID switch surface in %{public}s state", curState.c_str());
+        std::string oldSurface = jsPlayer->surface_;
+        if (oldSurface.empty()) {
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "switch surface with no old surface");
+            return result;
+        }
+    } else {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "the attribute(SurfaceID) can only be set in the initialized state");
         return result;

@@ -965,12 +965,32 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, "video player is no more than 13");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
 
-    if (lastOpStatus_ != PLAYER_INITIALIZED) {
+    bool setSurfaceFirst = lastOpStatus_ == PLAYER_INITIALIZED;
+    bool switchSurface = lastOpStatus_ == PLAYER_PREPARED ||
+        lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PAUSED ||
+        lastOpStatus_ == PLAYER_STOPPED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+    
+    if (setSurfaceFirst) {
+        MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
+    } else if (switchSurface) {
+        MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
+        if (surface_ == nullptr) {
+            MEDIA_LOGE("old surface is required before switching surface");
+            return MSERR_INVALID_OPERATION;
+        }
+    } else {
         MEDIA_LOGE("current state: %{public}s, can not SetVideoSurface", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetVideoSurface in");
     surface_ = surface;
+    if (switchSurface && playerEngine_ != nullptr) {
+        int32_t res = playerEngine_->SetVideoSurface(surface_);
+        CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+            static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine switch surface failed!");
+    }
     return MSERR_OK;
 }
 #endif
