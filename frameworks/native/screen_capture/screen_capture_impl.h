@@ -42,13 +42,17 @@ public:
     int32_t ReleaseVideoBuffer() override;
     int32_t Release() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
+    int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t SetPrivacyAuthorityEnabled() override;
 
 private:
-    bool NeedStartInnerAudio(AudioCaptureSourceType type);
+    bool IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo);
+    bool IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapInfo);
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
     DataType dataType_;
+    bool isPrivacyAuthorityEnabled_;
 };
 } // namespace Media
 } // namespace OHOS

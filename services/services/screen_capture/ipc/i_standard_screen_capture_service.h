@@ -40,8 +40,8 @@ public:
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
-    virtual int32_t StartScreenCapture() = 0;
-    virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) = 0;
+    virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
+    virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetScreenCanvasRotation(bool canvasRotation) = 0;
@@ -51,31 +51,33 @@ public:
                                        int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
+    virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
 
     /**
      * IPC code ID
      */
     enum ScreenCaptureServiceMsg {
-        SET_LISTENER_OBJ,
-        RELEASE,
-        DESTROY,
-        SET_CAPTURE_MODE,
-        SET_DATA_TYPE,
-        SET_RECORDER_INFO,
-        SET_OUTPUT_FILE,
-        INIT_AUDIO_ENC_INFO,
-        INIT_AUDIO_CAP,
-        INIT_VIDEO_ENC_INFO,
-        INIT_VIDEO_CAP,
-        ACQUIRE_AUDIO_BUF,
-        ACQUIRE_VIDEO_BUF,
-        RELEASE_AUDIO_BUF,
-        RELEASE_VIDEO_BUF,
-        SET_MIC_ENABLE,
-        START_SCREEN_CAPTURE,
-        START_SCREEN_CAPTURE_WITH_SURFACE,
-        STOP_SCREEN_CAPTURE,
-        SET_SCREEN_ROTATION,
+        SET_LISTENER_OBJ = 0,
+        RELEASE = 1,
+        DESTROY = 2,
+        SET_CAPTURE_MODE = 3,
+        SET_DATA_TYPE = 4,
+        SET_RECORDER_INFO = 5,
+        SET_OUTPUT_FILE = 6,
+        INIT_AUDIO_ENC_INFO = 7,
+        INIT_AUDIO_CAP = 8,
+        INIT_VIDEO_ENC_INFO = 9,
+        INIT_VIDEO_CAP = 10,
+        ACQUIRE_AUDIO_BUF = 11,
+        ACQUIRE_VIDEO_BUF = 12,
+        RELEASE_AUDIO_BUF = 13,
+        RELEASE_VIDEO_BUF = 14,
+        SET_MIC_ENABLE = 15,
+        START_SCREEN_CAPTURE = 16,
+        START_SCREEN_CAPTURE_WITH_SURFACE = 17,
+        STOP_SCREEN_CAPTURE = 18,
+        SET_SCREEN_ROTATION = 19,
+        EXCLUDE_CONTENT = 20,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

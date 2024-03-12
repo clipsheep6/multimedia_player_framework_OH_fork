@@ -26,9 +26,10 @@ public:
     ScreenCaptureListenerStub();
     virtual ~ScreenCaptureListenerStub();
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
 
     void SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
 
