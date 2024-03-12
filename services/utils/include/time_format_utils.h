@@ -13,21 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef AVMETADATA_FRAME_CONVERTER_H
-#define AVMETADATA_FRAME_CONVERTER_H
+#ifndef TIME_FORMAT_UTILS
+#define TIME_FORMAT_UTILS
 
-#include "pixel_map.h"
+#include <string>
 
 namespace OHOS {
 namespace Media {
-class AVMetadataFrameConverter {
+class TimeFormatUtils {
 public:
-    AVMetadataFrameConverter();
-    ~AVMetadataFrameConverter();
+    TimeFormatUtils();
+    ~TimeFormatUtils();
 
-    static std::unique_ptr<PixelMap> RGBxToRGB565(const std::unique_ptr<PixelMap> &srcPixelMap);
-    static std::unique_ptr<PixelMap> RGBxToRGB888(const std::unique_ptr<PixelMap> &srcPixelMap);
+    static constexpr int maxDateTimeSize = 20;
+    static constexpr size_t standardDateStrSize = 10;
+    static constexpr size_t standardTimeStrSize = 8;
+
+    static std::string FormatDateTimeByTimeZone(const std::string &iso8601Str);
+    static std::string FormatDataTimeByString(const std::string &dataTime);
+    static std::string ConvertTimestampToDatetime(const std::string &timestamp);
 };
-} // namespace Media
-} // namespace OHOS
-#endif // AVMETADATA_FRAME_CONVERTER_H
+}  // namespace Media
+}  // namespace OHOS
+#endif  // TIME_FORMAT_UTILS

@@ -24,13 +24,9 @@ namespace Media {
 struct OutputFrame {
 public:
     OutputFrame(int32_t width, int32_t height, int32_t stride, int32_t bytesPerPixel)
-        : width_(width),
-          height_(height),
-          stride_(stride),
-          bytesPerPixel_(bytesPerPixel),
-          size_(stride_ * height) // interleaved layout
-    {
-    }
+        : width_(width), height_(height), stride_(stride), bytesPerPixel_(bytesPerPixel),
+          size_(stride_ * height)  // interleaved layout
+    {}
 
     int32_t GetFlattenedSize() const
     {
@@ -44,7 +40,7 @@ public:
 
     int32_t width_;
     int32_t height_;
-    int32_t stride_; // interleaved layout
+    int32_t stride_;  // interleaved layout
     int32_t bytesPerPixel_;
     int32_t size_;
 };
@@ -53,6 +49,11 @@ struct OutputConfiguration {
     int32_t dstWidth = -1;
     int32_t dstHeight = -1;
     PixelFormat colorFormat = PixelFormat::RGB_565;
+
+    bool operator==(const OutputConfiguration &other) const
+    {
+        return dstWidth == other.dstWidth && dstHeight == other.dstHeight && colorFormat == other.colorFormat;
+    }
 };
 
 class IAVMetadataHelperService {
@@ -148,7 +149,7 @@ public:
      */
     virtual void Release() = 0;
 };
-} // namespace Media
-} // namespace OHOS
+}  // namespace Media
+}  // namespace OHOS
 
 #endif
