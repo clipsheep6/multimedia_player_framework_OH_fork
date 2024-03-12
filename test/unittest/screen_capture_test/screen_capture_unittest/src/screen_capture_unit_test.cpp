@@ -643,10 +643,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSi
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     bool canvasRotation = true;
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
@@ -823,7 +824,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Leve
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     bool canvasRotation = true;
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -856,11 +857,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
     config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool canvasRotation = true;
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
-    bool canvasRotation = true;
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     canvasRotation = false;
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(RECORDER_TIME);
@@ -870,6 +872,72 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_01 after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_Rotation_02
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_02, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_02 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_Rotation_02.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool canvasRotation = true;
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_02 after");
+}
+
+/**
+ * @tc.name: screen_capture_save_file_Rotation_03
+ * @tc.desc: do screencapture
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_03, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_03 before");
+    AVScreenCaptureConfig config_;
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_get_screen_capture_Rotation_03.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
+    config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    bool canvasRotation = false;
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_03 after");
 }
 
 /**
@@ -1916,10 +1984,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Lev
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_, aFile, vFile, aFlag, vFlag);
     ASSERT_NE(nullptr, screenCaptureCb_);
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
-    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
+    EXPECT_NE(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCanvasRotation(canvasRotation));
     sleep(10);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
