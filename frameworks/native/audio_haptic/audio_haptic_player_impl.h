@@ -96,6 +96,7 @@ private:
     std::string audioUri_;
     std::string hapticUri_;
     std::string configuredAudioUri_;
+    int32_t fileDes_ = -1;
     float volume_ = 1.0f;
     bool loop_ = false;
     AudioHapticPlayerState playerState_ = AudioHapticPlayerState::STATE_INVALID;
@@ -125,7 +126,6 @@ private:
     std::shared_ptr<Media::ISoundPool> soundPoolPlayer_ = nullptr;
     int32_t soundID_ = -1;
     int32_t streamID_ = -1;
-    int32_t fileDes_ = -1;
 
     // var for avplayer
     std::shared_ptr<Media::Player> avPlayer_ = nullptr;
