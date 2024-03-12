@@ -1040,8 +1040,8 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
     auto ret = demuxer_->SetDataSource(source);
-    pipeline_->AddHeadFilters({demuxer_});
     SetBundleName(bundleName_);
+    pipeline_->AddHeadFilters({demuxer_});
     return ret;
 }
 
