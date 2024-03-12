@@ -42,12 +42,28 @@
 #include "screen_manager.h"
 #include "i_recorder_service.h"
 #include "recorder_server.h"
+#include "notification_content.h"
+#include "notification_helper.h"
+#include "notification_request.h"
+#include "notification_constant.h"
+#include "notification_slot.h"
 
 namespace OHOS {
 namespace Media {
 using namespace Rosen;
 using namespace AudioStandard;
+using namespace OHOS::Notification;
 using OHOS::Security::AccessToken::PrivacyKit;
+
+class NotificationSubscriber : public OHOS::Notification::NotificationLocalLiveViewSubscriber {
+public:
+    void OnConnected() override;
+    void OnDisconnected() override;
+    void OnResponse(int32_t notificationId,
+        OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption) override;
+    void OnDied() override;
+    std::string buttonNameStop_ = "stop";
+};
 
 struct SurfaceBufferEntry {
     SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
@@ -111,6 +127,7 @@ public:
 class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
+    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -134,6 +151,8 @@ public:
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     void Release() override;
+    int32_t StartScreenCaptureInner();
+    void SetSessionId(int32_t sessionId);
 
 private:
     bool CheckAudioCaptureMicPermission();
@@ -146,9 +165,7 @@ private:
     int32_t StartAudioCapture();
     int32_t StartAudioInnerCapture();
     int32_t StartVideoCapture();
-    int32_t StartVideoCaptureWithSurface(sptr<Surface> surface);
     int32_t StartHomeVideoCapture();
-    int32_t StartHomeVideoCaptureWithSurface(sptr<Surface> surface);
     int32_t StartHomeVideoCaptureFile();
     int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
@@ -158,6 +175,10 @@ private:
     int32_t StopScreenCaptureRecorder();
     void ReleaseAudioCapture();
     void ReleaseVideoCapture();
+    int32_t StartPrivacyWindow();
+    int32_t StartNotification();
+    std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
+    std::shared_ptr<PixelMap> GetPixelMap(std::string path);
 
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     std::mutex mutex_;
@@ -203,17 +224,27 @@ private:
     const int32_t audioBitrateMin_ = 8000;
     const int32_t audioBitrateMax_ = 384000;
     const int32_t videoBitrateMin_ = 1;
-    const int32_t videoBitrateMax_ = 3000000;
+    const int32_t videoBitrateMax_ = 30000000;
     const int32_t videoFrameRateMin_ = 1;
-    const int32_t videoFrameRateMax_ = 30;
+    const int32_t videoFrameRateMax_ = 60;
     const std::string MP4 = "mp4";
     const std::string M4A = "m4a";
     OHOS::AudioStandard::AppInfo appinfo_;
     sptr<OHOS::Surface> surface_ = nullptr;
     bool isSurfaceMode_ = false;
+    int32_t sessionId_;
+    int32_t notificationId_;
+    std::string buttonNameMic_ = "mic";
+    std::string buttonNameStop_ = "stop";
 
+    std::string ICON_PATH_CAPSULE = "/etc/window/resources/capsule.png";
+    std::string ICON_PATH_MIC = "/etc/window/resources/mic.png";
+    std::string ICON_PATH_STOP = "/etc/window/resources/stop.png";
+    std::string ICON_PATH_SCREENCAPTURE = "/etc/window/resources/screencapture.png";
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;
+    std::string bundleName_ = "com.ohos.systemui";
+    std::string abilityName_ = "com.ohos.systemui.dialog";
 };
 } // namespace Media
 } // namespace OHOS

@@ -38,6 +38,7 @@ public:
         RECORDER_PROFILES = 6,
         MEDIA_MONITOR = 7,
         MEDIA_SCREEN_CAPTURE = 8,
+        MEDIA_SCREEN_CAPTURE_CONTROLLER = 9,
     };
 
     /**
