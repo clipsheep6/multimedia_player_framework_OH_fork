@@ -190,6 +190,11 @@ enum AVMetadataCode : int32_t {
      * orientation.
      */
     AV_KEY_VIDEO_ORIENTATION = 38,
+    /**
+     * The metadata key to retrieve the information about the video
+     * is HDR or not.
+     */
+    AV_KEY_VIDEO_IS_HDR_VIVID = 39,
 };
 
 /**
