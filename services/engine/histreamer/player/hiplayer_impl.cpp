@@ -25,6 +25,7 @@
 #include "osal/task/jobutils.h"
 #include "osal/utils/dump_buffer.h"
 #include "common/plugin_time.h"
+#include "media_dfx.h"
 #include "media_utils.h"
 #include "meta/media_types.h"
 
@@ -108,6 +109,7 @@ void HiPlayerImpl::ReleaseInner()
 
 Status HiPlayerImpl::Init()
 {
+    MediaTrace trace("HiPlayerImpl::Init");
     MEDIA_LOG_I("Init entered.");
     std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this);
     playerEventReceiver_ = playerEventReceiver;
@@ -165,6 +167,7 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
+    MediaTrace trace("HiPlayerImpl::SetSource uri");
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
     ResetIfSourceExisted();
     url_ = uri;
@@ -186,6 +189,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
+    MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
     MEDIA_LOG_I("SetSource entered source stream");
     ResetIfSourceExisted();
     if (dataSrc == nullptr) {
@@ -220,6 +224,7 @@ int32_t HiPlayerImpl::Prepare()
 
 int32_t HiPlayerImpl::PrepareAsync()
 {
+    MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOG_I("PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
@@ -301,6 +306,7 @@ void HiPlayerImpl::DoInitializeForHttp()
 
 int32_t HiPlayerImpl::Play()
 {
+    MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOG_I("Play entered.");
     int32_t ret = MSERR_INVALID_VAL;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
@@ -328,6 +334,7 @@ int32_t HiPlayerImpl::Play()
 
 int32_t HiPlayerImpl::Pause()
 {
+    MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOG_I("Pause entered.");
     if (audioSink_ != nullptr) {
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
@@ -354,6 +361,7 @@ int32_t HiPlayerImpl::Pause()
 
 int32_t HiPlayerImpl::Stop()
 {
+    MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
     callbackLooper_.StopReportMediaProgress();
     if (audioSink_ != nullptr) {
@@ -390,6 +398,7 @@ int32_t HiPlayerImpl::Stop()
 
 int32_t HiPlayerImpl::Reset()
 {
+    MediaTrace trace("HiPlayerImpl::Reset");
     if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         return TransStatus(Status::OK);
     }
@@ -409,6 +418,7 @@ int32_t HiPlayerImpl::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
 
 Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone)
 {
+    MediaTrace trace("HiPlayerImpl::Seek");
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
     if (audioSink_ != nullptr) {
@@ -607,6 +617,7 @@ int32_t HiPlayerImpl::SetLooping(bool loop)
 
 int32_t HiPlayerImpl::SetParameter(const Format& params)
 {
+    MediaTrace trace("HiPlayerImpl::SetParameter");
     MEDIA_LOG_I("SetParameter entered.");
 #ifdef SUPPORT_VIDEO
     if (params.ContainKey(PlayerKeys::VIDEO_SCALE_TYPE)) {
@@ -1036,6 +1047,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 
 Status HiPlayerImpl::Resume()
 {
+    MediaTrace trace("HiPlayerImpl::Resume");
     Status ret = Status::OK;
     if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
         ret = pipeline_->Resume();
@@ -1349,6 +1361,7 @@ void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBa
 
 Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
+    MediaTrace trace("HiPlayerImpl::LinkAudioDecoderFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioDecoderFilter");
     if (audioDecoder_ == nullptr) {
         audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
@@ -1361,6 +1374,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
 
 Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
+    MediaTrace trace("HiPlayerImpl::LinkAudioSinkFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
     if (audioSink_ == nullptr) {
         audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
@@ -1396,6 +1410,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
 #ifdef SUPPORT_VIDEO
 Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
+    MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkVideoDecoderFilter");
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
