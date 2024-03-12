@@ -85,6 +85,10 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     }
 
     MEDIA_LOGI("Set audio source to soundpool. audioUri [%{public}s]", audioUri_.c_str());
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
     fileDes_ = open(audioUri_.c_str(), O_RDONLY);
     if (fileDes_ == -1) {
         MEDIA_LOGE("Prepare: Failed to open the audio uri for sound pool.");

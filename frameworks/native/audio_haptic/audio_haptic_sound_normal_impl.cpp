@@ -15,6 +15,8 @@
 
 #include "audio_haptic_sound_normal_impl.h"
 
+#include <fcntl.h>
+
 #include "media_log.h"
 #include "media_errors.h"
 #include "player.h"
@@ -76,7 +78,16 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     MEDIA_LOGI("ResetAVPlayer");
     (void)avPlayer_->Reset();
     MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s]", audioUri_.c_str());
-    int32_t ret = avPlayer_->SetSource(audioUri_);
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
+    fileDes_ = open(audioUri_.c_str(), O_RDONLY);
+    if (fileDes_ == -1) {
+        MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
+        return MSERR_OPEN_FILE_FAILED;
+    }
+    int32_t ret = avPlayer_->SetSource(fileDes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OPEN_FILE_FAILED, "Set source failed %{public}d", ret);
 
     Format format;
@@ -165,6 +176,10 @@ int32_t AudioHapticSoundNormalImpl::ReleaseSound()
         avPlayer_ = nullptr;
     }
     avPlayerCallback_ = nullptr;
+    if (fileDes_ != -1) {
+        (void)close(fileDes_);
+        fileDes_ = -1;
+    }
 
     playerState_ = AudioHapticPlayerState::STATE_RELEASED;
     return MSERR_OK;
