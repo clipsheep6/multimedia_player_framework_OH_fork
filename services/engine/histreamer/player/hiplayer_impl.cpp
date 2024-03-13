@@ -310,7 +310,7 @@ int32_t HiPlayerImpl::Play()
     MEDIA_LOG_I("Play entered.");
     int32_t ret = MSERR_INVALID_VAL;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
         ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
@@ -375,9 +375,16 @@ int32_t HiPlayerImpl::Stop()
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
     }
+    syncManager_->Stop();
     if (audioDecoder_ != nullptr) {
         audioDecoder_->Flush();
     }
+    #ifdef SUPPORT_VIDEO
+        if (videoDecoder_) {
+            videoDecoder_->Stop();
+            videoDecoder_->Flush();
+        }
+    #endif
     if (audioSink_ != nullptr) {
         audioSink_->Flush();
     }
