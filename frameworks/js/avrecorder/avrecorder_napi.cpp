@@ -66,6 +66,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_FUNCTION("SetOrientationHint", JsSetOrientationHint),
+        DECLARE_NAPI_FUNCTION("updateRecordRotation", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("getInputSurface", JsGetInputSurface),
         DECLARE_NAPI_FUNCTION("start", JsStart),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
@@ -1452,6 +1453,11 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
         (asyncCtx->AVRecorderSignError(MSERR_NO_MEMORY, "AVRecorderConfig", "AVRecorderConfig"), MSERR_NO_MEMORY));
 
     std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
+
+    if (napi_get_value_int32(env, args, &(config->rotation)) == napi_ok) {
+        MEDIA_LOGI("GetRecordRotation success %{public}d", config->rotation);
+        return MSERR_OK;
+    }
 
     bool getValue = false;
     int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);
