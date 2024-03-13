@@ -47,4 +47,3 @@ ohos_prebuilt_etc("screen_capture_stop_image") {
   relative_install_dir = "screencapture"
   part_name = "player_framework"
 }
-
