@@ -29,14 +29,14 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
 static std::map<int32_t, std::shared_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 std::atomic<int32_t> activeSessionId(-1);
-std::mutex mutex_global;
+std::mutex mutexGlobal;
 }
 
 namespace OHOS {
 namespace Media {
 const int32_t ROOT_UID = 0;
 static const std::string USER_CHOICE_TRUE = "true";
-static const int32_t MaxSessionId = 256;
+static const int32_t MAX_SESSION_ID = 256;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
 
 void NotificationSubscriber::OnConnected()
@@ -71,7 +71,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     CHECK_AND_RETURN_RET_LOG(serverTemp != nullptr, nullptr, "Failed to new ScreenCaptureServer");
     
     int32_t newSessionId = 0;
-    for (int32_t i = 0; i < MaxSessionId; i++) {
+    for (int32_t i = 0; i < MAX_SESSION_ID; i++) {
         auto it = serverMap.find(newSessionId);
         if (it != serverMap.end()) {
             newSessionId++;
@@ -91,7 +91,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice)
 {
-    std::lock_guard<std::mutex> lock(mutex_global);
+    std::lock_guard<std::mutex> lock(mutexGlobal);
     MEDIA_LOGI("ScreenCaptureServer::ReportAVScreenCaptureUserChoice user sessionId is : %{public}d", sessionId);
     MEDIA_LOGI("ScreenCaptureServer::ReportAVScreenCaptureUserChoice user choice is : %{public}s", choice.c_str());
     std::shared_ptr<ScreenCaptureServer> server;
@@ -621,7 +621,7 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_SCREENCAPTURE);
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
