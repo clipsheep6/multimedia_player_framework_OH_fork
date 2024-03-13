@@ -247,7 +247,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::StartScreenCapture()
+int32_t ScreenCaptureServiceProxy::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -256,6 +256,9 @@ int32_t ScreenCaptureServiceProxy::StartScreenCapture()
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
+    token = data.WriteBool(isPrivacyAuthorityEnabled);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write isPrivacyAuthorityEnabled!");
+
     int error = Remote()->SendRequest(START_SCREEN_CAPTURE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "StartScreenCapture failed, error: %{public}d", error);
@@ -263,7 +266,7 @@ int32_t ScreenCaptureServiceProxy::StartScreenCapture()
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::StartScreenCaptureWithSurface(sptr<Surface> surface)
+int32_t ScreenCaptureServiceProxy::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -283,6 +286,9 @@ int32_t ScreenCaptureServiceProxy::StartScreenCaptureWithSurface(sptr<Surface> s
         MEDIA_LOGI("ScreenCaptureServiceProxy StartScreenCaptureWithSurface WriteRemoteObject failed");
         return MSERR_INVALID_OPERATION;
     }
+
+    token = data.WriteBool(isPrivacyAuthorityEnabled);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write isPrivacyAuthorityEnabled!");
 
     int error = Remote()->SendRequest(START_SCREEN_CAPTURE_WITH_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
@@ -404,6 +410,30 @@ int32_t ScreenCaptureServiceProxy::ReleaseVideoBuffer()
     int error = Remote()->SendRequest(RELEASE_VIDEO_BUF, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
                              "ReleaseVideoBuffer failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    token = data.WriteInt32(static_cast<int32_t>(contentFilter.filteredAudioContents.size()));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents size!");
+
+    // The filteredAudioContents size is limited, no big data risk.
+    for (const auto &element : contentFilter.filteredAudioContents) {
+        token = data.WriteInt32(static_cast<int32_t>(element));
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents");
+    }
+
+    int error = Remote()->SendRequest(SET_MIC_ENABLE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "ExcludeContent failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

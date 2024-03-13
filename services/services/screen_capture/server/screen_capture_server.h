@@ -24,7 +24,8 @@
 #include <atomic>
 #include <queue>
 #include <vector>
-#include "securec.h"
+
+#include "audio_capturer_wrapper.h"
 #include "i_screen_capture_service.h"
 #include "nocopyable.h"
 #include "uri_helper.h"
@@ -65,11 +66,21 @@ public:
     std::string buttonNameStop_ = "stop";
 };
 
+enum VideoPermissionState : int32_t {
+    START_VIDEO = 0,
+    STOP_VIDEO = 1
+};
+
+enum AVScreenCaptureState : int32_t {
+    CREATED = 0,
+    STARTING = 1,
+    STARTED = 2,
+    STOPPED = 3
+};
+
 struct SurfaceBufferEntry {
     SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
-        : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage)
-    {
-    }
+        : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
     ~SurfaceBufferEntry() noexcept = default;
 
     sptr<OHOS::SurfaceBuffer> buffer;
@@ -78,50 +89,47 @@ struct SurfaceBufferEntry {
     OHOS::Rect damageRect = {0, 0, 0, 0};
 };
 
-enum VideoPermissionState : int32_t {
-    START_VIDEO = 0,
-    STOP_VIDEO = 1
-};
-
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
 public:
-    ScreenCapBufferConsumerListener(sptr<Surface> consumer,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb) : consumer_(consumer),
-        screenCaptureCb_(screenCaptureCb)
-    {
-    }
+    ScreenCapBufferConsumerListener(
+        sptr<Surface> consumer, const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
+        : consumer_(consumer), screenCaptureCb_(screenCaptureCb) {}
     ~ScreenCapBufferConsumerListener()
     {
-        std::unique_lock<std::mutex> vlock(vmutex_);
-        while (!availableVideoBuffers_.empty()) {
-            if (consumer_ != nullptr) {
-                consumer_->ReleaseBuffer(availableVideoBuffers_.front()->buffer,
-                    availableVideoBuffers_.front()->flushFence);
-            }
-            availableVideoBuffers_.pop();
-        }
+        std::unique_lock<std::mutex> lock(bufferMutex_);
+        ReleaseBuffer();
     }
 
     void OnBufferAvailable() override;
-    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                               int64_t &timestamp, OHOS::Rect &damage);
+    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
+        OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
     int32_t Release();
-    static constexpr uint32_t MAX_BUFFER_SIZE = 3;
 
 private:
-    sptr<OHOS::Surface> consumer_ = nullptr;
-    std::mutex cbMutex_;
-    std::mutex vmutex_;
-    std::condition_variable bufferCond_;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    std::queue<std::unique_ptr<SurfaceBufferEntry>> availableVideoBuffers_;
-};
+    int32_t ReleaseBuffer()
+    {
+        while (!availBuffers_.empty()) {
+            if (consumer_ != nullptr) {
+                consumer_->ReleaseBuffer(availBuffers_.front()->buffer,
+                    availBuffers_.front()->flushFence);
+            }
+            availBuffers_.pop();
+        }
+        return MSERR_OK;
+    }
 
-class AudioCapturerCallbackImpl : public AudioCapturerCallback {
-public:
-    void OnInterrupt(const InterruptEvent &interruptEvent) override;
-    void OnStateChange(const CapturerState state) override;
+private:
+    std::mutex mutex_;
+    sptr<OHOS::Surface> consumer_ = nullptr;
+    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+
+    std::mutex bufferMutex_;
+    std::condition_variable bufferCond_;
+    std::queue<std::unique_ptr<SurfaceBufferEntry>> availBuffers_;
+
+    static constexpr uint32_t MAX_BUFFER_SIZE = 3;
+    static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
 class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
@@ -139,111 +147,122 @@ public:
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
-    int32_t StartScreenCapture() override;
-    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) override;
+    int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
+    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                               int64_t &timestamp, OHOS::Rect &damage) override;
+        int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     void Release() override;
-    int32_t StartScreenCaptureInner();
     void SetSessionId(int32_t sessionId);
+    int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
+    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
+
+    int32_t StopVideoCaptureByEvent(AVScreenCaptureStateCode stateCode);
 
 private:
-    bool CheckAudioCaptureMicPermission();
-    bool CheckScreenCapturePermission();
-    bool GetUsingPermissionFromPrivacy(VideoPermissionState state);
-    int32_t CheckVideoParam(VideoCaptureInfo videoInfo);
-    int32_t CheckAudioParam(AudioCaptureInfo audioInfo);
-    std::shared_ptr<AudioCapturer> CreateAudioCapture(AudioCaptureInfo audioInfo);
+    int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
+    int32_t OnStartScreenCapture();
     int32_t InitRecorder();
+    int32_t StartScreenCaptureFile();
+    int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
-    int32_t StartAudioInnerCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
-    int32_t StartHomeVideoCaptureFile();
-    int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
-    VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
-    int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
+    int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
     int32_t StopScreenCaptureRecorder();
-    void ReleaseAudioCapture();
-    void ReleaseVideoCapture();
+    int32_t CheckAllParams();
+    int32_t CheckCaptureStreamParams();
+    int32_t CheckCaptureFileParams();
+    void InitAppInfo();
+    void CloseFd();
+ 
+    VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
+    int32_t MakeVirtualScreenMirror();
+    int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    void DestroyVirtualScreen();
+
+    bool CheckScreenCapturePermission();
+    bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
+    int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
     int32_t StartNotification();
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
 
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+private:
     std::mutex mutex_;
-    std::mutex audioMutex_;
-    std::mutex audioInnerMutex_;
     std::mutex cbMutex_;
-    std::condition_variable bufferCond_;
-    std::condition_variable bufferInnerCond_;
-    /* use Mic AudioCaptureHandler */
-    std::shared_ptr<AudioCapturer> audioMicCapturer_ = nullptr;
-    std::shared_ptr<AudioCapturerCallbackImpl> cb1_ = nullptr;
-    std::atomic<bool> isRunning_ = false;
-    std::unique_ptr<std::thread> readAudioLoop_ = nullptr;
-    std::queue<std::shared_ptr<AudioBuffer>> availableAudioBuffers_;
-    bool isMicrophoneOn = true;
-    /* use Inner AudioCaptureHandler */
-    std::shared_ptr<AudioCapturer> audioInnerCapturer_ = nullptr;
-    std::atomic<bool> isInnerRunning_ = false;
-    std::unique_ptr<std::thread> readInnerAudioLoop_ = nullptr;
-    std::queue<std::shared_ptr<AudioBuffer>> availableInnerAudioBuffers_;
-    /* use VideoCapture */
-    sptr<OHOS::Surface> consumer_ = nullptr;
-    ScreenCapBufferConsumerListener* surfaceCb_ = nullptr;
-    ScreenId screenId_ = SCREEN_ID_INVALID;
-    bool isConsumerStart_ = false;
-    bool isAudioStart_ = false;
-    bool isAudioInnerStart_ = false;
-    AudioCaptureSourceType audioCurrentInnerType_;
-    VideoCaptureInfo videoInfo_;
-    Security::AccessToken::AccessTokenID clientTokenId = 0;
-    CaptureMode captureMode_ = CAPTURE_HOME_SCREEN;
-    int32_t outputFd_ = -1;
-    std::shared_ptr<IRecorderService> recorder_ = nullptr;
-    int32_t audioSourceId_;
-    int32_t videoSourceId_;
-    AudioCaptureInfo audioInfo_;
-    DataType dataType_ = ORIGINAL_STREAM;
-    std::string url_;
-    OutputFormatType fileFormat_;
-    AudioEncInfo audioEncInfo_;
-    VideoEncInfo videoEncInfo_;
-    std::vector<uint64_t> missionIds_;
-    const int32_t audioBitrateMin_ = 8000;
-    const int32_t audioBitrateMax_ = 384000;
-    const int32_t videoBitrateMin_ = 1;
-    const int32_t videoBitrateMax_ = 30000000;
-    const int32_t videoFrameRateMin_ = 1;
-    const int32_t videoFrameRateMax_ = 60;
-    const std::string MP4 = "mp4";
-    const std::string M4A = "m4a";
-    OHOS::AudioStandard::AppInfo appinfo_;
-    sptr<OHOS::Surface> surface_ = nullptr;
-    bool isSurfaceMode_ = false;
+    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool isMicrophoneOn_ = true;
+    bool isPrivacyAuthorityEnabled_ = false;
+
     int32_t sessionId_;
     int32_t notificationId_;
     std::string buttonNameMic_ = "mic";
     std::string buttonNameStop_ = "stop";
-
     std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.png";
     std::string ICON_PATH_MIC = "/etc/screencapture/mic.png";
     std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
-    static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
-    static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;
     std::string bundleName_ = "com.ohos.systemui";
     std::string abilityName_ = "com.ohos.systemui.dialog";
+
+    /* used for both CAPTURE STREAM and CAPTURE FILE */
+    OHOS::AudioStandard::AppInfo appInfo_;
+    AVScreenCaptureConfig captureConfig_;
+    sptr<OHOS::Surface> consumer_ = nullptr;
+    bool isConsumerStart_ = false;
+    ScreenId screenId_ = SCREEN_ID_INVALID;
+    std::vector<uint64_t> missionIds_;
+    ScreenCaptureContentFilter contentFilter_;
+    AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
+
+    /* used for CAPTURE STREAM */
+    sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
+    sptr<OHOS::Surface> surface_ = nullptr;
+    bool isSurfaceMode_ = false;
+    std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
+    std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
+
+    /* used for CAPTURE FILE */
+    std::shared_ptr<IRecorderService> recorder_ = nullptr;
+    std::string url_;
+    OutputFormatType fileFormat_;
+    int32_t outputFd_ = -1;
+    int32_t audioSourceId_;
+    int32_t videoSourceId_;
+
+private:
+    static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
+    static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
+    static int32_t CheckAudioEncParam(const AudioEncInfo &audioEncInfo);
+    static int32_t CheckVideoEncParam(const VideoEncInfo &videoEncInfo);
+    static int32_t CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo);
+    static int32_t CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo);
+    static int32_t CheckAudioEncInfo(AudioEncInfo &audioEncInfo);
+    static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
+    static int32_t CheckCaptureMode(CaptureMode captureMode);
+    static int32_t CheckDataType(DataType dataType);
+
+private:
+    static constexpr int32_t ROOT_UID = 0;
+    static constexpr int32_t AUDIO_BITRATE_MIN = 8000;
+    static constexpr int32_t AUDIO_BITRATE_MAX = 384000;
+    static constexpr int32_t VIDEO_BITRATE_MIN = 1;
+    static constexpr int32_t VIDEO_BITRATE_MAX = 30000000;
+    static constexpr int32_t VIDEO_FRAME_RATE_MIN = 1;
+    static constexpr int32_t VIDEO_FRAME_RATE_MAX = 60;
+    static constexpr int32_t VIDEO_FRAME_WIDTH_MAX = 10240;
+    static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
+    static constexpr int32_t SESSION_ID_INVALID = -1;
 };
 } // namespace Media
 } // namespace OHOS

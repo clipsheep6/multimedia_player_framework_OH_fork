@@ -27,16 +27,18 @@ namespace Media {
 class IStandardScreenCaptureListener : public IRemoteBroker {
 public:
     virtual ~IStandardScreenCaptureListener() = default;
-    virtual void OnError(int32_t errorType, int32_t errorCode) = 0;
+    virtual void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) = 0;
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
+    virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
     /**
      * IPC code ID
      */
     enum ScreenCaptureListenerMsg {
         ON_ERROR = 0,
         ON_AUDIO_AVAILABLE = 1,
-        ON_VIDEO_AVAILABLE = 2
+        ON_VIDEO_AVAILABLE = 2,
+        ON_STAGE_CHANGE = 3
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureListener");
