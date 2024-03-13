@@ -34,7 +34,7 @@ ScreenCaptureListenerProxy::~ScreenCaptureListenerProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void ScreenCaptureListenerProxy::OnError(int32_t errorType, int32_t errorCode)
+void ScreenCaptureListenerProxy::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -78,6 +78,21 @@ void ScreenCaptureListenerProxy::OnVideoBufferAvailable(bool isReady)
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnVideoBufferAvailable failed, error: %{public}d", error);
 }
 
+void ScreenCaptureListenerProxy::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
+    data.WriteInt32(stateCode);
+    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_STAGE_CHANGE, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnStateChange failed, error: %{public}d, stateCode: %{public}d",
+        error, stateCode);
+}
+
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
     : listener_(listener)
 {
@@ -91,6 +106,9 @@ ScreenCaptureListenerCallback::~ScreenCaptureListenerCallback()
 
 void ScreenCaptureListenerCallback::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, errorType:%{public}d, errorCode:%{public}d",
+        FAKE_POINTER(this), isStopped_.load(), errorType, errorCode);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnError(errorType, errorCode);
     }
@@ -98,6 +116,9 @@ void ScreenCaptureListenerCallback::OnError(ScreenCaptureErrorType errorType, in
 
 void ScreenCaptureListenerCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, isReady:%{public}d, type:%{public}d",
+        FAKE_POINTER(this), isStopped_.load(), isReady, type);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnAudioBufferAvailable(isReady, type);
     }
@@ -105,8 +126,21 @@ void ScreenCaptureListenerCallback::OnAudioBufferAvailable(bool isReady, AudioCa
 
 void ScreenCaptureListenerCallback::OnVideoBufferAvailable(bool isReady)
 {
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, isReady:%{public}d",
+        FAKE_POINTER(this), isStopped_.load(), isReady);
+    CHECK_AND_RETURN(isStopped_ == false);
     if (listener_ != nullptr) {
         listener_->OnVideoBufferAvailable(isReady);
+    }
+}
+
+void ScreenCaptureListenerCallback::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances isStopped:%{public}d, stateCode:%{public}d",
+        FAKE_POINTER(this), isStopped_.load(), stateCode);
+    CHECK_AND_RETURN(isStopped_ == false);
+    if (listener_ != nullptr) {
+        listener_->OnStateChange(stateCode);
     }
 }
 } // namespace Media
