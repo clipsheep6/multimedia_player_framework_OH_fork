@@ -72,6 +72,12 @@ enum CaptureMode : int32_t {
     CAPTURE_INVAILD = -1
 };
 
+enum AVScreenCaptureRecorderPreset : int32_t {
+    /* normal type H264*/
+    SCREEN_RECORD_PRESET_H264_AAC_MP4 = 0,
+    /* high efficient type H265*/
+    SCREEN_RECORD_PRESET_H265_AAC_MP4 = 1,
+};
 struct AudioCaptureInfo {
     int32_t audioSampleRate;
     int32_t audioChannels;
