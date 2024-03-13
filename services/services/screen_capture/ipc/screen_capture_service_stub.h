@@ -37,8 +37,8 @@ public:
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
-    int32_t StartScreenCapture() override;
-    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface) override;
+    int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
+    int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
@@ -49,6 +49,7 @@ public:
     int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
 
 private:
     ScreenCaptureServiceStub();
@@ -71,6 +72,7 @@ private:
     int32_t ReleaseVideoBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t SetMicrophoneEnabled(MessageParcel &data, MessageParcel &reply);
     int32_t SetScreenCanvasRotation(MessageParcel &data, MessageParcel &reply);
+    int32_t ExcludeContent(MessageParcel &data, MessageParcel &reply);
 
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

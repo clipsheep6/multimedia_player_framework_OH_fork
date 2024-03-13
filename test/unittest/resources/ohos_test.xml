@@ -108,6 +108,7 @@
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_04.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_05.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_06.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_check_param_07.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_02.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
@@ -133,6 +134,7 @@
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_04.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_05.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_06.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_check_param_07.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_02.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>

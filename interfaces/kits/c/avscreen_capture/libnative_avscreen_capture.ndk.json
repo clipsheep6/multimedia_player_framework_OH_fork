@@ -13,5 +13,12 @@
     { "name": "OH_AVScreenCapture_SetCallback" },
     { "name": "OH_AVScreenCapture_Release" },
     { "name": "OH_AVScreenCapture_SetMicrophoneEnabled" },
-    { "name": "OH_AVScreenCapture_SetScreenCanvasRotation" }
+    { "name": "OH_AVScreenCapture_SetScreenCanvasRotation" },
+    { "name": "OH_AVScreenCapture_SetStateCallback" },
+    { "name": "OH_AVScreenCapture_SetDataCallback" },
+    { "name": "OH_AVScreenCapture_SetErrorCallback" },
+    { "name": "OH_AVScreenCapture_CreateContentFilter" },
+    { "name": "OH_AVScreenCapture_ReleaseContentFilter" },
+    { "name": "OH_AVScreenCapture_ContentFilter_AddAudioContent" },
+    { "name": "OH_AVScreenCapture_ExcludeContent" }
 ]

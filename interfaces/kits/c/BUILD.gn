@@ -32,6 +32,7 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
     "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
+    "$MEDIA_PLAYER_HISTREAMER/interfaces/kits/c/",
   ]
 
   cflags = [
@@ -80,6 +81,8 @@ ohos_shared_library("native_avscreen_capture") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "media_foundation:capi_packages",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
     "window_manager:libdm",
   ]

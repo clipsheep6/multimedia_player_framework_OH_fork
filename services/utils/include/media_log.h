@@ -123,6 +123,14 @@ namespace OHOS {
         }                                              \
     } else void (0)
 
+#define CHECK_AND_CONTINUE_LOG(cond, fmt, ...)                  \
+    if (1) {                                                    \
+        if (!(cond)) {                                          \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__);                     \
+            continue;                                           \
+        }                                                       \
+    } else void (0)
+
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 } // namespace OHOS

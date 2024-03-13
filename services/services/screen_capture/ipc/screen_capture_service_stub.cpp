@@ -73,6 +73,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[RELEASE_AUDIO_BUF] = &ScreenCaptureServiceStub::ReleaseAudioBuffer;
     screenCaptureStubFuncs_[RELEASE_VIDEO_BUF] = &ScreenCaptureServiceStub::ReleaseVideoBuffer;
     screenCaptureStubFuncs_[DESTROY] = &ScreenCaptureServiceStub::DestroyStub;
+    screenCaptureStubFuncs_[EXCLUDE_CONTENT] = &ScreenCaptureServiceStub::ExcludeContent;
 
     return MSERR_OK;
 }
@@ -167,19 +168,19 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(VideoCaptureInfo videoInfo)
     return screenCaptureServer_->InitVideoCap(videoInfo);
 }
 
-int32_t ScreenCaptureServiceStub::StartScreenCapture()
+int32_t ScreenCaptureServiceStub::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
-    return screenCaptureServer_->StartScreenCapture();
+    return screenCaptureServer_->StartScreenCapture(isPrivacyAuthorityEnabled);
 }
 
-int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> surface)
+int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
 
-    return screenCaptureServer_->StartScreenCaptureWithSurface(surface);
+    return screenCaptureServer_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
 }
 
 int32_t ScreenCaptureServiceStub::StopScreenCapture()
@@ -202,6 +203,13 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &o
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     (void)screenCaptureServer_->SetScreenCaptureCallback(callback);
     return MSERR_OK;
+}
+
+int32_t ScreenCaptureServiceStub::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
+        "screen capture server is nullptr");
+    return screenCaptureServer_->ExcludeContent(contentFilter);
 }
 
 int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
@@ -246,6 +254,21 @@ int32_t ScreenCaptureServiceStub::ReleaseVideoBuffer()
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
     return screenCaptureServer_->ReleaseVideoBuffer();
+}
+
+int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessageParcel &reply)
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
+        "screen capture server is nullptr");
+    ScreenCaptureContentFilter contentFilter;
+    int32_t size = data.ReadInt32();
+    for (int32_t i = 0; i < size; i++) {
+        contentFilter.filteredAudioContents.insert(
+            static_cast<AVScreenCaptureFilterableAudioContent>(data.ReadInt32()));
+    }
+    int32_t ret = ExcludeContent(contentFilter);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(MessageParcel &data, MessageParcel &reply)
@@ -382,8 +405,8 @@ int32_t ScreenCaptureServiceStub::StartScreenCapture(MessageParcel &data, Messag
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
-    (void)data;
-    int32_t ret = StartScreenCapture();
+    bool isPrivacyAuthorityEnabled = data.ReadBool();
+    int32_t ret = StartScreenCapture(isPrivacyAuthorityEnabled);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
@@ -403,7 +426,8 @@ int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(MessageParcel &d
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "failed to create surface");
 
-    int32_t ret = StartScreenCaptureWithSurface(surface);
+    bool isPrivacyAuthorityEnabled = data.ReadBool();
+    int32_t ret = StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
