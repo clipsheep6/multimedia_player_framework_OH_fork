@@ -1,0 +1,110 @@
+# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+MEDIA_ROOT_DIR = "../../../../../.."
+
+config("gst_subtitle_sink_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Wunused-parameter",
+    "-DOHOS_EXT_FUNC",
+  ]
+
+  include_dirs = [
+    "../../common",
+    "../subtitle_sink",
+    "$MEDIA_ROOT_DIR/services/utils/include",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "//third_party/gstreamer/gstreamer",
+    "//third_party/gstreamer/gstreamer/libs",
+    "//third_party/gstreamer/gstplugins_base",
+    "//third_party/gstreamer/gstplugins_base/gst-libs",
+    "//third_party/glib",
+    "//third_party/glib/glib",
+    "//third_party/glib/gmodule",
+  ]
+}
+
+ohos_shared_library("gst_subtitle_sink") {
+  install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../../../../cfi_blocklist.txt"
+  }
+
+  sources = [
+    "gst_subtitle_display_sink.cpp",
+    "gst_subtitle_sink_plugins.cpp",
+  ]
+
+  configs = [ ":gst_subtitle_sink_config" ]
+
+  deps = [
+    "../../common:gst_media_common",
+    "//third_party/glib:glib",
+    "//third_party/glib:gmodule",
+    "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
+    "//third_party/gstreamer/gstreamer:gstbase",
+    "//third_party/gstreamer/gstreamer:gstreamer",
+  ]
+
+  external_deps = [
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
+  ]
+
+  relative_install_dir = "media/plugins"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_static_library("gst_subtitle_sink_base") {
+  sources = [ "gst_subtitle_sink.cpp" ]
+  configs = [ ":gst_subtitle_sink_config" ]
+  deps = [
+    "../../../../../utils:media_service_utils",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
+  ]
+
+  external_deps = [
+    "media_foundation:media_foundation",
+    "qos_manager:qos",
+  ]
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}

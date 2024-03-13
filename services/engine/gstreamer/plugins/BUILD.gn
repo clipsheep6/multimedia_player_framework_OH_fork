@@ -1,0 +1,40 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+declare_args() {
+  multimedia_player_framework_use_codec_plugins = true
+}
+
+group("media_engine_gst_plugins") {
+  deps = [
+    "bin/codecbin:gst_codec_bin",
+    "codec:codec_plugins",
+    "sink/audiosink:gst_audio_server_sink",
+    "sink/memsink:gst_mem_sink",
+    "sink/subtitlesink:gst_subtitle_sink",
+    "source/audiocapture:gst_audio_capture_src",
+    "source/memsource:gst_mem_src",
+    "subtitle:gst_subtitle_parse_plugin",
+  ]
+
+  if (!multimedia_player_framework_use_codec_plugins) {
+    deps -= [ "codec:codec_plugins" ]
+  }
+}
+
+group("media_engine_gst_plugins_common") {
+  deps = [ "common:gst_media_common" ]
+}

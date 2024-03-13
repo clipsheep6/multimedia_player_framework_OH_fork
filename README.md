@@ -41,12 +41,17 @@ The structure of the repository directory is as follows:
 │   │   ├── sa_media                     # Media master process C/S framework
 │   │   ├── factory                      # Engine factory
 │   │   ├── engine_intf                  # Engine factory API
-│   ├── engine                           # 
-│   │   ├── histreamer                   # Engine implementation
-│   │   │   ├── avmetadatahelper         # Metadata & frame engine 
+│   ├── engine                           # Engine implementation
+│   │   ├── gstreamer                    # Gstreamer engine
 │   │   │   ├── player                   # Player engine
 │   │   │   ├── recorder                 # Recorder engine
+│   │   │   ├── avcodec                  # Codec engine
+│   │   │   ├── avcodeclist              # Codec capability engine
+│   │   │   ├── avmetadatahelper         # Metadata engine
+│   │   │   ├── plugins                  # Engine self-developed plugins
+│   │   │   ├── common                   # Engine General Resources
 │   │   │   ├── factory                  # Engine factory implementation
+│   │   │   ├── loader                   # Engine resources loading
 │   ├── utils                            # Basic resources of the subsystem
 ├── test                                 # test code
 ├── BUILD.gn                             # compile entry

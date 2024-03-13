@@ -1,1 +1,2 @@
+src:*services/engine/gstreamer/*
 src:*frameworks/native/capi/*

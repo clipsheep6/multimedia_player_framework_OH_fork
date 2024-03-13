@@ -56,8 +56,11 @@ int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::s
     (void)uri;
 
     std::string bundleName = GetClientBundleName(appUid);
-    (void) bundleName;
-    return MAX_SCORE;
+    bool isEnableHst = IsEnableHiStreamer(bundleName, appUid);
+    MEDIA_LOG_I("Score histreamer engine factory, appUid = %{public}d, bundleName = %{public}s,"
+        "isEnableHiStreamer = %{public}d", appUid, bundleName.c_str(), isEnableHst);
+
+    return isEnableHst ? MAX_SCORE : MIN_SCORE;
 }
 
 #ifdef SUPPORT_RECORDER

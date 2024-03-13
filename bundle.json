@@ -76,6 +76,9 @@
           "memmgr"
         ],
         "third_party": [
+          "glib",
+          "gstreamer",
+          "libffi",
           "ffmpeg",
           "libxml2",
           "bounds_checking_function"
