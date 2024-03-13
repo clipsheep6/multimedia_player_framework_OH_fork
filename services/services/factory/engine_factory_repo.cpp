@@ -29,7 +29,6 @@ namespace {
 #else
     static const std::string MEDIA_ENGINE_LIB_PATH = "/system/lib/media";
 #endif
-    static const std::string MEDIA_ENGINE_LIB_NAME_GSTREAMER = "libmedia_engine_gst.z.so";
     static const std::string MEDIA_ENGINE_LIB_NAME_HISTREAMER = "libmedia_engine_histreamer.z.so";
     static const std::string MEDIA_ENGINE_ENTRY_SYMBOL = "CreateEngineFactory";
 }
@@ -89,29 +88,6 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
     return MSERR_OK;
 }
 
-int32_t EngineFactoryRepo::LoadGstreamerEngine()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (isLoadGstreamer_) {
-        return MSERR_OK;
-    }
-
-    std::vector<std::string> allFiles;
-    GetDirFiles(MEDIA_ENGINE_LIB_PATH, allFiles);
-    for (auto &file : allFiles) {
-        std::string::size_type namePos = file.find(MEDIA_ENGINE_LIB_NAME_GSTREAMER);
-        if (namePos == std::string::npos) {
-            continue;
-        } else {
-            CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
-            isLoadGstreamer_ = true;
-            break;
-        }
-    }
-
-    return MSERR_OK;
-}
-
 int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -121,22 +97,19 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
     }
 
     std::string bundleName = GetClientBundleName(appUid);
-    bool isEnableHistreamer = IsEnableHiStreamer(bundleName, appUid);
-    MEDIA_LOGI("try to LoadHistreamerEngine, appUid = %{public}d, bundleName = %{public}s,"
-        "isEnableHistreamer = %{public}d", appUid, bundleName.c_str(), isEnableHistreamer);
-    if (isEnableHistreamer) {
-        MEDIA_LOGI("LoadHistreamerEngine succeed!");
-        std::vector<std::string> allFiles;
-        GetDirFiles(MEDIA_ENGINE_LIB_PATH, allFiles);
-        for (auto &file : allFiles) {
-            std::string::size_type namePos = file.find(MEDIA_ENGINE_LIB_NAME_HISTREAMER);
-            if (namePos == std::string::npos) {
-                continue;
-            } else {
-                CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
-                isLoadHistreamer_ = true;
-                break;
-            }
+    (void) bundleName;
+
+    MEDIA_LOGI("LoadHistreamerEngine succeed!");
+    std::vector<std::string> allFiles;
+    GetDirFiles(MEDIA_ENGINE_LIB_PATH, allFiles);
+    for (auto &file : allFiles) {
+        std::string::size_type namePos = file.find(MEDIA_ENGINE_LIB_NAME_HISTREAMER);
+        if (namePos == std::string::npos) {
+            continue;
+        } else {
+            CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
+            isLoadHistreamer_ = true;
+            break;
         }
     }
 
@@ -147,14 +120,9 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
     std::string bundleName = GetClientBundleName(appUid);
-    bool isEnableHistreamer = IsEnableHiStreamer(bundleName, appUid);
-    if (!isEnableHistreamer) {
-        (void)LoadGstreamerEngine();
-    }
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
-        isLoadGstreamer_ = false;
         isLoadHistreamer_ = false;
         MEDIA_LOGE("Failed to load media engine library");
         return nullptr;
