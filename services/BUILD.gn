@@ -20,6 +20,10 @@ group("media_services_package") {
     ":recorder_configs",
     "engine:media_engine_package",
     "etc:media_service.cfg",
+    "etc:screen_capture_capsule_image",
+    "etc:screen_capture_mic_image",
+    "etc:screen_capture_screencapture_image",
+    "etc:screen_capture_stop_image",
     "services:media_service",
   ]
   if (multimedia_player_framework_support_seccomp) {

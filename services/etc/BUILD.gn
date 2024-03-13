@@ -20,16 +20,31 @@ ohos_prebuilt_etc("media_service.cfg") {
   subsystem_name = "multimedia"
 }
 
-ohos_prebuilt_etc("screen_capture_image") {
-  source = [
-    "image/capsule.png",
-    "image/mic.png",
-    "image/screencapture.png",
-    "image/stop.png",
-  ]
-
+ohos_prebuilt_etc("screen_capture_capsule_image") {
+  source = "image/capsule.png"
   subsystem_name = "multimedia"
-  module_install_dir = "etc/screencapture"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}
+
+ohos_prebuilt_etc("screen_capture_mic_image") {
+  source = "image/mic.png"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}
+
+ohos_prebuilt_etc("screen_capture_screencapture_image") {
+  source = "image/screencapture.png"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}
+
+ohos_prebuilt_etc("screen_capture_stop_image") {
+  source = "image/stop.png"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
   part_name = "player_framework"
 }
 
