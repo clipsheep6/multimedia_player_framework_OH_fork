@@ -237,10 +237,9 @@ private:
     std::string buttonNameMic_ = "mic";
     std::string buttonNameStop_ = "stop";
 
-    std::string ICON_PATH_CAPSULE = "/etc/window/resources/capsule.png";
-    std::string ICON_PATH_MIC = "/etc/window/resources/mic.png";
-    std::string ICON_PATH_STOP = "/etc/window/resources/stop.png";
-    std::string ICON_PATH_SCREENCAPTURE = "/etc/window/resources/screencapture.png";
+    std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.png";
+    std::string ICON_PATH_MIC = "/etc/screencapture/mic.png";
+    std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint64_t SEC_TO_NANOSECOND = 1000000000;
     std::string bundleName_ = "com.ohos.systemui";

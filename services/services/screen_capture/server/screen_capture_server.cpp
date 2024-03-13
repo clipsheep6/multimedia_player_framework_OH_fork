@@ -621,7 +621,7 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_SCREENCAPTURE);
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
