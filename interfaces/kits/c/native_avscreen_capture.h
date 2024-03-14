@@ -54,7 +54,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *c
  * @brief Start the av screen capture
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param capture Pointer to an OH_AVScreenCapture instance
- * @param type Information describing the data type of the capture
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
  * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
  * @since 10
@@ -177,7 +176,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
  * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
  * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
  * @deprecated since 12
- * @useinstead {@link OH_AVScreenCapture_SetErrorCallback} {@link OH_AVScreenCapture_SetBufferCallback}
+ * @useinstead {@link OH_AVScreenCapture_SetErrorCallback} {@link OH_AVScreenCapture_SetDataCallback}
  * @since 10
  * @version 1.0
  */
