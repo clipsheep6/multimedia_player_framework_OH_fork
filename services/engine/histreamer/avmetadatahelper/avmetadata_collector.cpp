@@ -14,39 +14,24 @@
  */
 
 #include "avmetadata_collector.h"
-
-#include <string>
-
-#include "avmetadatahelper.h"
-#include "buffer/avsharedmemorybase.h"
+#include "string"
+#include "iostream"
+#include "sstream"
+#include "regex"
+#include "iomanip"
+#include "ctime"
+#include "chrono"
 #include "media_log.h"
 #include "meta/video_types.h"
+#include "buffer/avsharedmemorybase.h"
 #include "meta/any.h"
-#include "time_format_utils.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetaDataCollector" };
-}  // namespace
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaDataCollector"};
+}
 
 namespace OHOS {
 namespace Media {
-static constexpr int PICTURE_MAX_SIZE = 1024 * 1024;
-static constexpr int SECOND_DEVIDE_MS = 1000;
-
-static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
-    { Plugins::FileType::UNKNOW, "uknown" },
-    { Plugins::FileType::MP4, "mp4" },
-    { Plugins::FileType::MPEGTS, "mpeg" },
-    { Plugins::FileType::MKV, "mkv" },
-    { Plugins::FileType::AMR, "amr" },
-    { Plugins::FileType::AAC, "aac-adts" },
-    { Plugins::FileType::MP3, "mpeg" },
-    { Plugins::FileType::FLAC, "flac" },
-    { Plugins::FileType::OGG, "ogg" },
-    { Plugins::FileType::M4A, "mp4" },
-    { Plugins::FileType::WAV, "wav" }
-};
-
 static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_ALBUM, Tag::MEDIA_ALBUM },
     { AV_KEY_ALBUM_ARTIST, Tag::MEDIA_ALBUM_ARTIST },
@@ -68,7 +53,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_ORIENTATION, Tag::VIDEO_ROTATION },
 };
 
-AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)
+AVMetaDataCollector::AVMetaDataCollector()
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
@@ -78,35 +63,11 @@ AVMetaDataCollector::~AVMetaDataCollector()
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
-std::unordered_map<int32_t, std::string> AVMetaDataCollector::ExtractMetadata()
+std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(const std::shared_ptr<Meta> &globalInfo,
+    const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
-    if (collectedMeta_.size() != 0) {
-        return collectedMeta_;
-    }
-    const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
-    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
-    collectedMeta_ = GetMetadata(globalInfo, trackInfos);
-    return collectedMeta_;
-}
-
-std::string AVMetaDataCollector::ExtractMetadata(int32_t key)
-{
-    auto metadata = ExtractMetadata();
-    CHECK_AND_RETURN_RET_LOG(metadata.size() != 0, "", "Failed to call ExtractMetadata");
-
-    auto it = metadata.find(key);
-    if (it == metadata.end() || it->second.empty()) {
-        MEDIA_LOGE("The specified metadata %{public}d cannot be obtained from the specified stream.", key);
-        return "";
-    }
-    return metadata[key];
-}
-
-std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
-    const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos)
-{
-    CHECK_AND_RETURN_RET_LOG(
-        globalInfo != nullptr && trackInfos.size() != 0, {}, "globalInfo or trackInfos are invalid.");
+    CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr && trackInfos.size() != 0,
+        {}, "globalInfo or trackInfos are invalid.");
 
     Metadata metadata;
     ConvertToAVMeta(globalInfo, metadata);
@@ -120,7 +81,6 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             return metadata.tbl_;
         }
 
-        // skip the image track
         std::string mime;
         meta->Get<Tag::MIME_TYPE>(mime);
         int32_t imageTypeLength = 5;
@@ -135,6 +95,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
             MEDIA_LOGE("mediaType not found, index: %zu", index);
             return metadata.tbl_;
         }
+
         ConvertToAVMeta(meta, metadata);
     }
     FormatAVMeta(metadata, imageTrackCount, globalInfo);
@@ -147,14 +108,9 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     return metadata.tbl_;
 }
 
-std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
+std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
     MEDIA_LOGI("GetArtPicture In");
-
-    if (collectedArtPicture_ != nullptr) {
-        return collectedArtPicture_;
-    }
-    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     for (size_t index = 0; index < trackCount; index++) {
         std::shared_ptr<Meta> meta = trackInfos[index];
@@ -171,21 +127,22 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
         if (Any::IsSameTypeWith<std::vector<uint8_t>>(mapIt->second)) {
             coverAddr = AnyCast<std::vector<uint8_t>>(mapIt->second);
         }
-        if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > PICTURE_MAX_SIZE) {
+        if (coverAddr.size() == 0 || static_cast<int>(coverAddr.size()) > artPictureMaxSize) {
             MEDIA_LOGE("InvalidArtPictureSize %d", coverAddr.size());
             return nullptr;
         }
         uint8_t *addr = coverAddr.data();
         size_t size = coverAddr.size();
-        auto artPicMem =
-            AVSharedMemoryBase::CreateFromLocal(static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
+        auto artPicMem = AVSharedMemoryBase::CreateFromLocal(
+            static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
         errno_t rc = memcpy_s(artPicMem->GetBase(), static_cast<size_t>(artPicMem->GetSize()), addr, size);
         if (rc != EOK) {
             MEDIA_LOGE("memcpy_s failed, trackCount no %{public}d", index);
             return nullptr;
         }
-        collectedArtPicture_ = artPicMem;
-        return collectedArtPicture_;
+        
+        MEDIA_LOGI("GetArtPicture Out");
+        return artPicMem;
     }
     MEDIA_LOGE("GetArtPicture Failed");
     return nullptr;
@@ -197,8 +154,9 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
         if (innerKey.compare("") == 0) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal) && !strVal.empty()) {
-                avmeta.SetMeta(avKey, TimeFormatUtils::ConvertTimestampToDatetime(strVal));
+                avmeta.SetMeta(avKey, ConvertTimestampToDatetime(strVal));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         }
 
         Any type = OHOS::Media::GetDefaultAnyValue(innerKey);
@@ -207,36 +165,39 @@ void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta
             if (innerMeta->GetData(innerKey, intVal) && intVal != 0) {
                 avmeta.SetMeta(avKey, std::to_string(intVal));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<std::string>(type)) {
             std::string strVal;
             if (innerMeta->GetData(innerKey, strVal)) {
                 avmeta.SetMeta(avKey, strVal);
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
             Plugins::VideoRotation rotation;
             if (innerMeta->GetData(innerKey, rotation)) {
                 avmeta.SetMeta(avKey, std::to_string(rotation));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<int64_t>(type)) {
             int64_t duration;
             if (innerMeta->GetData(innerKey, duration)) {
-                avmeta.SetMeta(avKey, std::to_string(duration / SECOND_DEVIDE_MS));
+                avmeta.SetMeta(avKey, std::to_string(duration / secondDividMs));
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else if (Any::IsSameTypeWith<bool>(type)) {
             bool isTrue;
             if (innerMeta->GetData(innerKey, isTrue)) {
                 avmeta.SetMeta(avKey, isTrue ? "yes" : "");
             }
+            SetEmptyStringIfNoData(avmeta, avKey);
         } else {
             MEDIA_LOGE("not found type matched with innerKey: %{public}s", innerKey.c_str());
-            break;
         }
-        SetEmptyStringIfNoData(avmeta, avKey);
     }
 }
 
-void AVMetaDataCollector::FormatAVMeta(
-    Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo)
+void AVMetaDataCollector::FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount,
+    const std::shared_ptr<Meta> &globalInfo)
 {
     std::string str = avmeta.GetMeta(AV_KEY_NUM_TRACKS);
     if (!str.empty()) {
@@ -271,13 +232,93 @@ void AVMetaDataCollector::FormatDateTime(Metadata &avmeta, const std::shared_ptr
     globalInfo->GetData(Tag::MEDIA_CREATION_TIME, creationTime);
     std::string formattedDateTime;
     if (!date.empty()) {
-        formattedDateTime = TimeFormatUtils::FormatDateTimeByTimeZone(date);
+        formattedDateTime = FormatDateTimeByTimeZone(date);
     } else if (!creationTime.empty()) {
-        formattedDateTime = TimeFormatUtils::FormatDateTimeByTimeZone(creationTime);
+        formattedDateTime = FormatDateTimeByTimeZone(creationTime);
     }
     avmeta.SetMeta(AV_KEY_DATE_TIME, formattedDateTime);
     avmeta.SetMeta(AV_KEY_DATE_TIME_FORMAT,
-        formattedDateTime.compare(date) != 0 ? formattedDateTime : TimeFormatUtils::FormatDataTimeByString(date));
+        formattedDateTime.compare(date) != 0 ? formattedDateTime : FormatDataTimeByString(date));
+}
+
+std::string AVMetaDataCollector::FormatDateTimeByTimeZone(const std::string &iso8601Str)
+{
+    std::regex pattern(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(.\d{1,6})?((\+|-\d{4})?)Z?)");
+    std::smatch match;
+    if (!std::regex_match(iso8601Str, match, pattern)) {
+        return iso8601Str; // not standard ISO8601 type string
+    }
+
+    std::istringstream iss(iso8601Str);
+    std::tm tm;
+    if (!(iss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S"))) {
+        return iso8601Str;  // cant prase time
+    }
+
+    // time zone
+    time_t tt = mktime(&tm);
+    if (tt == -1) {
+        return iso8601Str;
+    }
+    uint32_t length = iso8601Str.length();
+    long diffTime = 0;
+    if (iso8601Str.substr(length - 1, length).compare("Z") != 0) {
+        int mins = std::stoi(iso8601Str.substr(length - 2, 2));
+        int hours = std::stoi(iso8601Str.substr(length - 4, 2));
+        char symbol = iso8601Str.at(length - 5);
+        long seconds = (hours * 60  + mins) * 60;
+        diffTime = symbol == '+' ? seconds : -seconds;
+    }
+
+    // convert time to localtime
+    long timezone = 0;
+    std::tm timeWithOffset = *localtime(&tt);
+    if (timeWithOffset.tm_gmtoff != 0) {
+        timezone = timeWithOffset.tm_gmtoff;
+    }
+    auto localTime = std::chrono::system_clock::from_time_t(std::mktime(&tm))
+        + std::chrono::seconds(timezone - diffTime);
+    std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
+    std::tm localTm = *std::localtime(&localTimeT);
+    std::ostringstream oss;
+    oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
+    return oss.str();
+}
+
+std::string AVMetaDataCollector::FormatDataTimeByString(const std::string &dataTime)
+{
+    if (dataTime.compare("") == 0) {
+        return dataTime;
+    }
+    std::string::size_type position = dataTime.find(" ");
+    std::string data = "";
+    std::string time = "";
+    if (position == dataTime.npos) {
+        data = dataTime;
+        if (data.find("-") == data.npos) {
+            data += "-01-01";
+        } else if (data.find_first_of("-") == data.find_last_of("-")) {
+            data += "-01";
+        }
+        time += " 00:00:00";
+    } else {
+        data = dataTime.substr(0, position);
+        time = dataTime.substr(position);
+        if (data.find("-") == data.npos) {
+            data += "-01-01";
+        } else if (data.find_first_of("-") == data.find_last_of("-")) {
+            data += "-01";
+        }
+        if (time.find(":") == data.npos) {
+            time += ":00:00";
+        } else if (time.find_first_of(":") == time.find_last_of(":")) {
+            time += ":00";
+        } else {
+            time = time.substr(0, time.find("."));
+        }
+    }
+    MEDIA_LOGD("AV_KEY_DATE_TIME_FORMAT is: %{public}s%{public}s", data.c_str(), time.c_str());
+    return data + time;
 }
 
 void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const
@@ -287,16 +328,26 @@ void AVMetaDataCollector::SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey
     }
 }
 
-void AVMetaDataCollector::Reset()
+std::string AVMetaDataCollector::ConvertTimestampToDatetime(const std::string &timestamp) const
 {
-    mediaDemuxer_->Reset();
-    collectedMeta_.clear();
-    collectedArtPicture_ = nullptr;
-}
+    if (timestamp.empty()) {
+        MEDIA_LOGE("datetime is empty, format failed");
+        return "";
+    }
 
-void AVMetaDataCollector::Destroy()
-{
-    mediaDemuxer_ = nullptr;
+    time_t ts = stoi(timestamp);
+    tm *pTime;
+    char date[maxDateTimeSize];
+    char time[maxDateTimeSize];
+    pTime = localtime(&ts);
+    size_t sizeDateStr = strftime(date, maxDateTimeSize, "%Y-%m-%d", pTime);
+    size_t sizeTimeStr = strftime(time, maxDateTimeSize, "%H:%M:%S", pTime);
+    if (sizeDateStr != standardDateStrSize || sizeTimeStr != standardTimeStrSize) {
+        MEDIA_LOGE("datetime is invalid, format failed");
+        return "";
+    }
+
+    return std::string(date) + " " + std::string(time);
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

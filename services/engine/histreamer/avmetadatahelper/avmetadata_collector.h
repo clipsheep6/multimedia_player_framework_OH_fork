@@ -16,15 +16,16 @@
 #ifndef AVMETA_DATA_COLLECTOR_H
 #define AVMETA_DATA_COLLECTOR_H
 
+#include <unordered_map>
+#include <set>
 #include <condition_variable>
 #include <mutex>
 #include <nocopyable.h>
-#include <set>
-#include <unordered_map>
-
-#include "media_demuxer.h"
+#include "media_errors.h"
+#include "meta/media_types.h"
 #include "meta/meta.h"
 #include "meta/meta_key.h"
+#include "avmetadatahelper.h"
 
 namespace OHOS {
 namespace Media {
@@ -65,28 +66,44 @@ struct Metadata {
 
 class AVMetaDataCollector : public NoCopyable {
 public:
-    explicit AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
+    AVMetaDataCollector();
     ~AVMetaDataCollector();
 
-    std::unordered_map<int32_t, std::string> ExtractMetadata();
-    std::string ExtractMetadata(int32_t key);
-    std::shared_ptr<AVSharedMemory> GetArtPicture();
-    void Reset();
-    void Destroy();
+    const int artPictureMaxSize = 1024 * 1024;
+
+    std::unordered_map<int32_t, std::string> GetMetadata(const std::shared_ptr<Meta> &globalInfo,
+        const std::vector<std::shared_ptr<Meta>> &trackInfos);
+    std::shared_ptr<AVSharedMemory> GetArtPicture(const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
 private:
-    std::shared_ptr<MediaDemuxer> mediaDemuxer_;
-    std::unordered_map<int32_t, std::string> collectedMeta_ = {};
-    std::shared_ptr<AVSharedMemory> collectedArtPicture_;
+    const int maxDateTimeSize = 20;
+    const size_t standardDateStrSize = 10;
+    const size_t standardTimeStrSize = 8;
+    const int secondDividMs = 1000;
 
-    std::unordered_map<int32_t, std::string> GetMetadata(
-        const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
     void ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const;
+    std::string ConvertTimestampToDatetime(const std::string &timestamp) const;
+    void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
     void FormatAVMeta(Metadata &avmeta, int32_t imageTrackCount, const std::shared_ptr<Meta> &globalInfo);
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
-    void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
+    std::string FormatDateTimeByTimeZone(const std::string &iso8601Str);
+    std::string FormatDataTimeByString(const std::string &dataTime);
+
+    const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
+        {Plugins::FileType::UNKNOW, "uknown"},
+        {Plugins::FileType::MP4, "mp4"},
+        {Plugins::FileType::MPEGTS, "mpeg"},
+        {Plugins::FileType::MKV, "mkv"},
+        {Plugins::FileType::AMR, "amr"},
+        {Plugins::FileType::AAC, "aac-adts"},
+        {Plugins::FileType::MP3, "mpeg"},
+        {Plugins::FileType::FLAC, "flac"},
+        {Plugins::FileType::OGG, "ogg"},
+        {Plugins::FileType::M4A, "mp4"},
+        {Plugins::FileType::WAV, "wav"}
+    };
 };
-}  // namespace Media
-}  // namespace OHOS
-#endif  // AVMETA_DATA_COLLECTOR_H
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_DATA_COLLECTOR_H

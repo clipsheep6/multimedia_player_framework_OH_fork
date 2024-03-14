@@ -34,7 +34,6 @@ ohos_shared_library("media_service_utils") {
     "media_utils.cpp",
     "player_xcollie.cpp",
     "task_queue.cpp",
-    "time_format_utils.cpp",
     "uri_helper.cpp",
     "watchdog.cpp",
     "xml_parse.cpp",
