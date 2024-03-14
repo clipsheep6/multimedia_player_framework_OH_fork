@@ -72,6 +72,29 @@ enum CaptureMode : int32_t {
     CAPTURE_INVAILD = -1
 };
 
+enum AVScreenCaptureStateCode {
+    /* Screen capture started by user */
+    SCREEN_CAPTURE_STATE_STARTED = 0,
+    /* Screen capture canceled by user */
+    SCREEN_CAPTURE_STATE_CANCELED = 1,
+    /* ScreenCapture stopped by user */
+    SCREEN_CAPTURE_STATE_STOPPED_BY_USER = 2,
+    /* ScreenCapture interrupted by other screen capture */
+    SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT = 3,
+    /* ScreenCapture stopped by SIM call */
+    SCREEN_CAPTURE_STATE_STOPPED_BY_INCALL = 4,
+    /* Microphone is temporarily unavailable */
+    SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE = 5,
+    /* Microphone is muted by user */
+    SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER = 6,
+    /* Microphone is unmuted by user */
+    SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER = 7,
+    /* Current captured screen has private window */
+    SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
+    /* Private window disappeared on current captured screen*/
+    SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+};
+
 struct AudioCaptureInfo {
     int32_t audioSampleRate;
     int32_t audioChannels;
@@ -158,6 +181,12 @@ public:
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
 
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
+
+    virtual void OnStateChange(AVScreenCaptureStateCode stateCode)
+    {
+        (void)stateCode;
+        return;
+    }
 };
 
 class ScreenCapture {
