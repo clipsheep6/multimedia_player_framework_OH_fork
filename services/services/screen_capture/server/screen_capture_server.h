@@ -159,11 +159,11 @@ public:
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetScreenCanvasRotation(bool canvasRotation) override;
     void Release() override;
-    void SetSessionId(int32_t sessionId);
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
-    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
 
-    int32_t StopVideoCaptureByEvent(AVScreenCaptureStateCode stateCode);
+    void SetSessionId(int32_t sessionId);
+    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
+    int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
