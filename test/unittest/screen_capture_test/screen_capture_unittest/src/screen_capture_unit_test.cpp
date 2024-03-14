@@ -736,7 +736,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_02, TestSize.Level2)
 
     AudioCaptureInfo micCapInfoIgnored = {
         .audioSampleRate = 0,
-        .audioChannels = 2,
+        .audioChannels = 0,
         .audioSource = AudioCaptureSourceType::MIC
     };
     SetRecorderInfo("screen_capture_get_screen_capture_02.mp4", recorderInfo);
