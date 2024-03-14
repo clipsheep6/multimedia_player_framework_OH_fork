@@ -234,6 +234,7 @@ private:
     bool isSurfaceMode_ = false;
     int32_t sessionId_;
     int32_t notificationId_;
+    std::string callingLabel_;
     std::string buttonNameMic_ = "mic";
     std::string buttonNameStop_ = "stop";
 
