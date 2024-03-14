@@ -89,6 +89,12 @@ std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::str
     std::pair<std::string_view, std::string_view> result;
     std::string_view noSpaceStr;
 
+    if (start == std::string_view::npos && end == std::string_view::npos) {
+        result.first = "";
+        result.second = "";
+        return result;
+    }
+
     if (end == std::string_view::npos) {
         noSpaceStr = str.substr(start);
     } else {
@@ -239,9 +245,11 @@ bool UriHelper::ParseFdUri(std::string_view uri)
     } else if (delim1 != std::string_view::npos && delim2 != std::string_view::npos) {
         std::string_view fdstr = uri.substr(0, delim1);
         int32_t fd = -1;
-        CHECK_AND_RETURN_RET_LOG(StrToInt(fdstr, fd), false, "Invalid fd url");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(fdstr, fd) && delim1 + delim1Len < uri.size()
+            && delim2 - delim1 - delim1Len > 0, false, "Invalid fd url");
         std::string_view offsetStr = uri.substr(delim1 + delim1Len, delim2 - delim1 - delim1Len);
-        CHECK_AND_RETURN_RET_LOG(StrToInt(offsetStr, offset_), false, "Invalid fd url");
+        CHECK_AND_RETURN_RET_LOG(StrToInt(offsetStr, offset_) && delim2 + delim2Len < uri.size(), false,
+            "Invalid fd url");
         std::string_view sizeStr = uri.substr(delim2 + delim2Len);
         CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size_), false, "Invalid fd url");
         fd_ = fd;
