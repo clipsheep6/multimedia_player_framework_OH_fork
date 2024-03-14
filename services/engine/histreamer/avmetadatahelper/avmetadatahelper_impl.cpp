@@ -96,10 +96,10 @@ public:
     {
     }
 
-    void OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
+    Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType)
     {
-        helperImpl_->OnCallback(filter, cmd, outType);
+        return helperImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
@@ -110,9 +110,10 @@ void AVMetadataHelperImpl::OnEvent(const Event &event)
 {
 }
 
-void AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
+Status AVMetadataHelperImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter,
     const Pipeline::FilterCallBackCommand cmd, Pipeline::StreamType outType)
 {
+    return Status::OK;
 }
 
 void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int32_t errorCode)
