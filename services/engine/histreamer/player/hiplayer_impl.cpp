@@ -169,7 +169,6 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MediaTrace trace("HiPlayerImpl::SetSource uri");
     MEDIA_LOG_I("SetSource entered source uri: " PUBLIC_LOG_S, uri.c_str());
-    ResetIfSourceExisted();
     url_ = uri;
     if (IsFileUrl(uri)) {
         std::string realUriPath;
@@ -191,7 +190,6 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
 {
     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
     MEDIA_LOG_I("SetSource entered source stream");
-    ResetIfSourceExisted();
     if (dataSrc == nullptr) {
         MEDIA_LOG_E("SetSource error: dataSrc is null");
     }
@@ -1043,6 +1041,7 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
+    ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
