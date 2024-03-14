@@ -17,6 +17,7 @@
 #define NATIVE_AVSCREEN_CAPTURE_BASE_H
 
 #include <stdint.h>
+#include "native_avbuffer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,6 +40,15 @@ typedef struct OH_NativeBuffer OH_NativeBuffer;
  * @version 1.0
  */
 typedef struct OH_AVScreenCapture OH_AVScreenCapture;
+
+/**
+ * @brief Initialization of OH_AVScreenCapture_ContentFilter
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_AVScreenCapture_ContentFilter OH_AVScreenCapture_ContentFilter;
 
 /**
  * @brief Enumerates screen capture mode.
@@ -303,6 +313,8 @@ typedef struct OH_AVScreenCaptureConfig {
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @param errorCode specific error code
  *
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnError}
  * @since 10
  * @version 1.0
  */
@@ -316,6 +328,8 @@ typedef void (*OH_AVScreenCaptureOnError)(OH_AVScreenCapture *capture, int32_t e
  * @param isReady Information describing whether audio buffer is available
  * @param type Information describing the audio source type
  *
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
  */
@@ -329,6 +343,8 @@ typedef void (*OH_AVScreenCaptureOnAudioBufferAvailable)(OH_AVScreenCapture *cap
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @param isReady Information describing whether video buffer is available
  *
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
  */
@@ -343,12 +359,26 @@ typedef void (*OH_AVScreenCaptureOnVideoBufferAvailable)(OH_AVScreenCapture *cap
  * @param onAudioBufferAvailable Monitor audio buffer, refer to {@link OH_AVScreenCaptureOnAudioBufferAvailable}
  * @param onVideoBufferAvailable Monitor video buffer, refer to {@link OH_AVScreenCaptureOnVideoBufferAvailable}
  *
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnError} {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
  */
 typedef struct OH_AVScreenCaptureCallback {
+    /**
+     * @deprecated since 12
+     * @useinstead {@link OH_AVScreenCapture_OnError}
+     */
     OH_AVScreenCaptureOnError onError;
+    /**
+     * @deprecated since 12
+     * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
+     */
     OH_AVScreenCaptureOnAudioBufferAvailable onAudioBufferAvailable;
+    /**
+     * @deprecated since 12
+     * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
+     */
     OH_AVScreenCaptureOnVideoBufferAvailable onVideoBufferAvailable;
 } OH_AVScreenCaptureCallback;
 
@@ -388,6 +418,104 @@ typedef struct OH_AudioBuffer {
     /* Audio capture source type */
     OH_AudioCaptureSourceType type;
 } OH_AudioBuffer;
+
+/**
+ * @brief Enumerates screen capture state code.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum OH_AVScreenCaptureStateCode {
+    /* Screen capture started by user */
+    OH_SCREEN_CAPTURE_STATE_STARTED = 0,
+    /* Screen capture canceled by user */
+    OH_SCREEN_CAPTURE_STATE_CANCELED = 1,
+    /* ScreenCapture stopped by user */
+    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_USER = 2,
+    /* ScreenCapture interrupted by other screen capture */
+    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT = 3,
+    /* ScreenCapture stopped by SIM call */
+    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_INCALL = 4,
+    /* Microphone is temporarily unavailable */
+    OH_SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE = 5,
+    /* Microphone is muted by user */
+    OH_SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER = 6,
+    /* Microphone is unmuted by user */
+    OH_SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_BSER = 7,
+    /* Current captured screen has private window */
+    OH_SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
+    /* Private window disappeared on current captured screen*/
+    OH_SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE = 9,
+} OH_AVScreenCaptureStateCode;
+
+/**
+ * @brief Enumerates screen capture buffer type.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum OH_AVScreenCaptureBufferType {
+    /* Buffer of video data from screen */
+    OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO = 0,
+    /* Buffer of audio data from inner capture */
+    OH_SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER = 1,
+    /* Buffer of audio data from microphone */
+    OH_SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC = 2,
+} OH_AVScreenCaptureBufferType;
+
+/**
+ * @brief Enumerates screen capture filterable audio content.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum OH_AVScreenCaptureFilterableAudioContent {
+    /* Audio content of notification sound */
+    OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO = 0,
+} OH_AVScreenCaptureFilterableAudioContent;
+
+/**
+ * @brief When state of OH_AVScreenCapture is changed, the function pointer will be called.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param stateCode Information describing current state, see {@link OH_AVScreenCaptureStateCode}
+ * @param userData Pointer to user specific data
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef void (*OH_AVScreenCapture_OnStateChange)(struct OH_AVScreenCapture *capture,
+    OH_AVScreenCaptureStateCode stateCode, void *userData);
+
+/**
+ * @brief When an error occurs in the running of the OH_AVScreenCapture instance, the function pointer will be called
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param errorCode specific error code
+ * @param userData Pointer to user specific data
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef void (*OH_AVScreenCapture_OnError)(OH_AVScreenCapture *capture, int32_t errorCode, void *userData);
+
+/**
+ * @brief When data is ready from the OH_AVScreenCapture instance, the function pointer will be called
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param capture Pointer to an OH_AVScreenCapture instance
+ * @param buffer Pointer to a buffer containing media data
+ * @param bufferType Data type of the buffer, see {@link OH_AVScreenCaptureBufferType}
+ * @param timestamp Timestamp of the buffer
+ * @param userData Pointer to user specific data
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef void (*OH_AVScreenCapture_OnBufferAvailable)(OH_AVScreenCapture *capture, OH_AVBuffer *buffer,
+    OH_AVScreenCaptureBufferType bufferType, int64_t timestamp, void *userData);
 
 #ifdef __cplusplus
 }
