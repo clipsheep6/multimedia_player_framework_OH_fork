@@ -39,6 +39,17 @@ MonitorServer::MonitorServer()
 MonitorServer::~MonitorServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    threadRunning_ = false;
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
+    if (thread_ != nullptr) {
+        if (thread_->joinable()) {
+            cond_.notify_all();
+            thread_->join();
+        }
+        thread_.reset();
+        thread_ = nullptr;
+    }
+    MEDIA_LOGI("Instances destroy end");
 }
 
 MonitorServer &MonitorServer::GetInstance()
@@ -272,8 +283,13 @@ void MonitorServer::MonitorThread()
 
             timeStart = GetTimeMS();
             cond_.wait_for(lock, std::chrono::milliseconds(GetWaitTime()), [this] {
-                return timesMap_.empty() || waitingAgain_;
+                return timesMap_.empty() || waitingAgain_ || !threadRunning_;
             });
+            
+            if (!threadRunning_) {
+                MEDIA_LOGI("Stop running and exit loop.");
+                break;
+            }
 
             if (timesMap_.empty()) {
                 MEDIA_LOGI("TimesMap empty. MonitorThread Stop.");
