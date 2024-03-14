@@ -106,7 +106,7 @@ enum AVScreenCaptureStateCode {
     /* Microphone is muted by user */
     SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER = 6,
     /* Microphone is unmuted by user */
-    SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_BSER = 7,
+    SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER = 7,
     /* Current captured screen has private window */
     SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
     /* Private window disappeared on current captured screen*/
