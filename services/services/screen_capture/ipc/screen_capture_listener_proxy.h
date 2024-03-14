@@ -31,9 +31,15 @@ public:
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void Stop()
+    {
+        isStopped_ = true;
+    }
 
 private:
     sptr<IStandardScreenCaptureListener> listener_ = nullptr;
+    std::atomic<bool> isStopped_ = false;
 };
 
 class ScreenCaptureListenerProxy : public IRemoteProxy<IStandardScreenCaptureListener>, public NoCopyable {
@@ -41,9 +47,10 @@ public:
     explicit ScreenCaptureListenerProxy(const sptr<IRemoteObject> &impl);
     virtual ~ScreenCaptureListenerProxy();
 
-    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
 
 private:
     static inline BrokerDelegator<ScreenCaptureListenerProxy> delegator_;
