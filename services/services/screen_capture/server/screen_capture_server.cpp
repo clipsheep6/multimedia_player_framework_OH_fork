@@ -69,7 +69,7 @@ void NotificationSubscriber::OnResponse(int32_t notificationId,
     MEDIA_LOGI("NotificationSubscriber OnResponse ButtonName : %{public}s ", (buttonOption->GetButtonName()).c_str());
     if (BUTTON_NAME_STOP.compare(buttonOption->GetButtonName()) == 0) {
         std::shared_ptr<OHOS::Media::ScreenCaptureServer> server = serverMap.at(notificationId);
-        server->StopVideoCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+        server->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
     }
 }
 
@@ -119,7 +119,8 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         if (activeSessionId.load() >= 0) {
             std::shared_ptr<ScreenCaptureServer> currentServer = serverMap.at(activeSessionId.load());
-            currentServer->StopVideoCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT);
+            currentServer->StopScreenCaptureByEvent(
+                AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT);
         }
         activeSessionId.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
@@ -144,6 +145,7 @@ ScreenCaptureServer::ScreenCaptureServer()
 ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 
@@ -1352,6 +1354,8 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture", FAKE_POINTER(this));
+
+    std::lock_guard<std::mutex> lock(mutex_);
     return StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 
@@ -1369,6 +1373,8 @@ void ScreenCaptureServer::Release()
         std::lock_guard<std::mutex> lock(mutexGlobal);
         serverMap.erase(sessionId);
     }
+
+    std::lock_guard<std::mutex> lock(mutex_);
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
 }
 
