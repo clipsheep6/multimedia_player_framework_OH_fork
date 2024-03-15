@@ -54,7 +54,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("init", JsInit),
         DECLARE_NAPI_FUNCTION("startRecording", JsStartRecording),
         DECLARE_NAPI_FUNCTION("stopRecording", JsStopRecording),
-        DECLARE_NAPI_FUNCTION("setMicrophoneEnabled", JsSetMicrophoneEnabled),
+        DECLARE_NAPI_FUNCTION("setMicEnabled", JsSetMicrophoneEnabled),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),

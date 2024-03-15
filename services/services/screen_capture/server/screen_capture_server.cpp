@@ -120,7 +120,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         if (activeSessionId.load() >= 0) {
             std::shared_ptr<ScreenCaptureServer> currentServer = serverMap.at(activeSessionId.load());
             currentServer->StopScreenCaptureByEvent(
-                AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT);
+                AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
         }
         activeSessionId.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);

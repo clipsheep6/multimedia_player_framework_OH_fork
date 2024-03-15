@@ -98,9 +98,9 @@ enum AVScreenCaptureStateCode {
     /* ScreenCapture stopped by user */
     SCREEN_CAPTURE_STATE_STOPPED_BY_USER = 2,
     /* ScreenCapture interrupted by other screen capture */
-    SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT = 3,
+    SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER = 3,
     /* ScreenCapture stopped by SIM call */
-    SCREEN_CAPTURE_STATE_STOPPED_BY_INCALL = 4,
+    SCREEN_CAPTURE_STATE_STOPPED_BY_CALL = 4,
     /* Microphone is temporarily unavailable */
     SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE = 5,
     /* Microphone is muted by user */
