@@ -23,8 +23,7 @@
 #include "media_errors.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
-#include "bundle_mgr_interface.h"
-#include "common_func.h"
+#include "media_utils.h"
 
 using OHOS::Rosen::DMError;
 namespace {
@@ -589,36 +588,14 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner()
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
     auto callerUid = IPCSkeleton::GetCallingUid();
-    AppExecFwk::BundleResourceInfo resourceInfo;
-    std::string bundleName;
-
-    auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        MEDIA_LOGE("Get bundle manager failed");
-        return MSERR_INVALID_OPERATION;
-    }
-    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
-    if (bundleResourceProxy == nullptr) {
-        MEDIA_LOGE("Get bundle resource proxy failed");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    int32_t bundleRet = iBundleMgr->GetNameForUid(callerUid, bundleName);
-    CHECK_AND_RETURN_RET_LOG(bundleRet == MSERR_OK, MSERR_INVALID_OPERATION, "GetNameForUid failed");
-    bundleRet = bundleResourceProxy->GetBundleResourceInfo(bundleName,
-        static_cast<uint32_t>(AppExecFwk::ResourceFlag::GET_RESOURCE_INFO_ALL), resourceInfo);
-    if (bundleRet != MSERR_OK) {
-        callingLabel_ = bundleName;
-        MEDIA_LOGE("Get bundle resource failed, use bundleName instead");
-    } else {
-        callingLabel_ = resourceInfo.label;
-    }
+    auto bundleName = GetClientBundleName(callerUid);
+    callingLabel_ = GetBundleResourceLabel(bundleName);
 
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
     comStr += std::to_string(sessionId_).c_str();
     comStr += "\",\"callerUid\":\"";
     comStr += std::to_string(callerUid).c_str();
-    comStr += "\",\"callingLabel\":\"";
+    comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_.c_str();
     comStr += "\"}";
     

@@ -79,7 +79,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
   ]
 
   if (multimedia_player_framework_support_avsession_background) {
@@ -227,9 +226,6 @@ ohos_shared_library("media_service") {
       "access_token:libtoken_setproc",
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
-      "bundle_framework:appexecfwk_base",
-      "bundle_framework:appexecfwk_core",
-      "bundle_framework:bundle_napi_common",
       "distributed_notification_service:ans_innerkits",
       "relational_store:native_rdb",
       "window_manager:libdm",
