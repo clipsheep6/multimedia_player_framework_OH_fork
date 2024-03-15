@@ -18,9 +18,9 @@ import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScreenCaptureNdkSetScreenCanvasRotationFuzzTest") {
+ohos_fuzztest("ScreenCaptureNdkSetCanvasRotationFuzzTest") {
   module_out_path = "$MODULE_OUTPUT_PATH/screen_capture"
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturendksetscreencanvasrotation_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturendksetcanvasrotation_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
@@ -56,7 +56,7 @@ ohos_fuzztest("ScreenCaptureNdkSetScreenCanvasRotationFuzzTest") {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/test_ndk_screen_capture.cpp",
-      "screencapturesetscreencanvasrotation_ndk_fuzzer.cpp",
+      "screencapturesetcanvasrotation_ndk_fuzzer.cpp",
     ]
   }
   deps = [

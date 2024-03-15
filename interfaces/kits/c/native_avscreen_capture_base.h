@@ -434,15 +434,15 @@ typedef enum OH_AVScreenCaptureStateCode {
     /* ScreenCapture stopped by user */
     OH_SCREEN_CAPTURE_STATE_STOPPED_BY_USER = 2,
     /* ScreenCapture interrupted by other screen capture */
-    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_INTERRUPT = 3,
+    OH_SCREEN_CAPTURE_STATE_INTERRUPT_BY_OTHER = 3,
     /* ScreenCapture stopped by SIM call */
-    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_INCALL = 4,
+    OH_SCREEN_CAPTURE_STATE_STOPPED_BY_CALL = 4,
     /* Microphone is temporarily unavailable */
     OH_SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE = 5,
     /* Microphone is muted by user */
     OH_SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER = 6,
     /* Microphone is unmuted by user */
-    OH_SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_BSER = 7,
+    OH_SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER = 7,
     /* Current captured screen has private window */
     OH_SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE = 8,
     /* Private window disappeared on current captured screen*/

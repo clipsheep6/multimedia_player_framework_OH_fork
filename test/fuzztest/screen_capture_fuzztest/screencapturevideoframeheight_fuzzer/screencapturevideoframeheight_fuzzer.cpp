@@ -82,7 +82,7 @@ bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetMicrophoneEnabled(true);
-    TestScreenCapture::SetScreenCanvasRotation(true);
+    TestScreenCapture::SetCanvasRotation(true);
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
