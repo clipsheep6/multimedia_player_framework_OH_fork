@@ -261,7 +261,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetErrorCallback(struct OH_AVScre
  * @since 12
  * @version 1.0
  */
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScreenCapture *capture,
     bool canvasRotation);
 
 /**

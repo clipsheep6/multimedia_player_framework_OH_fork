@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SCREENCAPTURESETSCREENCANVASROTATIONNDK_FUZZER
-#define SCREENCAPTURESETSCREENCANVASROTATIONNDK_FUZZER
+#ifndef SCREENCAPTURESETCANVASROTATIONNDK_FUZZER
+#define SCREENCAPTURESETCANVASROTATIONNDK_FUZZER
 
 #include <fcntl.h>
 #include <securec.h>
@@ -25,19 +25,19 @@
 #include <cstdlib>
 #include "test_ndk_screen_capture.h"
 
-#define FUZZ_PROJECT_NAME "screencapturesetscreencanvasrotation_ndk_fuzzer"
+#define FUZZ_PROJECT_NAME "screencapturesetcanvasrotation_ndk_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureSetScreenCanvasRotationNdkFuzzer : public TestNdkScreenCapture {
+class ScreenCaptureSetCanvasRotationNdkFuzzer : public TestNdkScreenCapture {
 public:
-    ScreenCaptureSetScreenCanvasRotationNdkFuzzer();
-    ~ScreenCaptureSetScreenCanvasRotationNdkFuzzer();
-    bool FuzzScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size);
+    ScreenCaptureSetCanvasRotationNdkFuzzer();
+    ~ScreenCaptureSetCanvasRotationNdkFuzzer();
+    bool FuzzScreenCaptureSetCanvasRotationNdk(uint8_t *data, size_t size);
     OH_AVScreenCapture* screenCapture = nullptr;
     std::shared_ptr<TestScreenCaptureNdkCallback> screenCaptureCb = nullptr;
 };
 } // namespace Media
-bool FuzzTestScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size);
+bool FuzzTestScreenCaptureSetCanvasRotationNdk(uint8_t *data, size_t size);
 } // namespace OHOS
 #endif

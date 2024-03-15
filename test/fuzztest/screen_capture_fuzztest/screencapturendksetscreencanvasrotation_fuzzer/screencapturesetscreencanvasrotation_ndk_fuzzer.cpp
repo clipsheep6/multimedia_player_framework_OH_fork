@@ -19,7 +19,7 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-#include "screencapturesetscreencanvasrotation_ndk_fuzzer.h"
+#include "screencapturesetcanvasrotation_ndk_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -27,11 +27,11 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureSetScreenCanvasRotationNdkFuzzer::ScreenCaptureSetScreenCanvasRotationNdkFuzzer()
+ScreenCaptureSetCanvasRotationNdkFuzzer::ScreenCaptureSetCanvasRotationNdkFuzzer()
 {
 }
 
-ScreenCaptureSetScreenCanvasRotationNdkFuzzer::~ScreenCaptureSetScreenCanvasRotationNdkFuzzer()
+ScreenCaptureSetCanvasRotationNdkFuzzer::~ScreenCaptureSetCanvasRotationNdkFuzzer()
 {
 }
 
@@ -65,7 +65,7 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCanvasRotationNdk(
+bool ScreenCaptureSetCanvasRotationNdkFuzzer::FuzzScreenCaptureSetCanvasRotationNdk(
     uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
@@ -77,7 +77,7 @@ bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCa
     SetConfig(config);
     constexpr uint32_t recorderTime = 3;
 
-    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, *reinterpret_cast<bool *>(data));
+    OH_AVScreenCapture_SetCanvasRotation(screenCapture, *reinterpret_cast<bool *>(data));
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -92,7 +92,7 @@ bool ScreenCaptureSetScreenCanvasRotationNdkFuzzer::FuzzScreenCaptureSetScreenCa
 }
 } // namespace Media
 
-bool FuzzTestScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size)
+bool FuzzTestScreenCaptureSetCanvasRotationNdk(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
@@ -101,8 +101,8 @@ bool FuzzTestScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size)
     if (size < sizeof(bool)) {
         return true;
     }
-    ScreenCaptureSetScreenCanvasRotationNdkFuzzer testScreenCapture;
-    return testScreenCapture.FuzzScreenCaptureSetScreenCanvasRotationNdk(data, size);
+    ScreenCaptureSetCanvasRotationNdkFuzzer testScreenCapture;
+    return testScreenCapture.FuzzScreenCaptureSetCanvasRotationNdk(data, size);
 }
 } // namespace OHOS
 
@@ -110,6 +110,6 @@ bool FuzzTestScreenCaptureSetScreenCanvasRotationNdk(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestScreenCaptureSetScreenCanvasRotationNdk(data, size);
+    OHOS::FuzzTestScreenCaptureSetCanvasRotationNdk(data, size);
     return 0;
 }

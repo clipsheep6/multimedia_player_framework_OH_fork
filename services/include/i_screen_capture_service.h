@@ -46,7 +46,7 @@ public:
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
-    virtual int32_t SetScreenCanvasRotation(bool canvasRotation) = 0;
+    virtual int32_t SetCanvasRotation(bool canvasRotation) = 0;
     virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) = 0;
     virtual void Release() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;

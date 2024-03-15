@@ -20,7 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screen_capture.h"
-#include "screencapturesetscreencanvasrotation_fuzzer.h"
+#include "screencapturesetcanvasrotation_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -28,11 +28,11 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureSetScreenCanvasRotationFuzzer::ScreenCaptureSetScreenCanvasRotationFuzzer()
+ScreenCaptureSetCanvasRotationFuzzer::ScreenCaptureSetCanvasRotationFuzzer()
 {
 }
 
-ScreenCaptureSetScreenCanvasRotationFuzzer::~ScreenCaptureSetScreenCanvasRotationFuzzer()
+ScreenCaptureSetCanvasRotationFuzzer::~ScreenCaptureSetCanvasRotationFuzzer()
 {
 }
 
@@ -66,7 +66,7 @@ void SetConfig(AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureSetScreenCanvasRotationFuzzer::FuzzScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
+bool ScreenCaptureSetCanvasRotationFuzzer::FuzzScreenCaptureSetCanvasRotation(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(bool)) {
         return false;
@@ -80,7 +80,7 @@ bool ScreenCaptureSetScreenCanvasRotationFuzzer::FuzzScreenCaptureSetScreenCanva
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
-    TestScreenCapture::SetScreenCanvasRotation(*reinterpret_cast<bool *>(data));
+    TestScreenCapture::SetCanvasRotation(*reinterpret_cast<bool *>(data));
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
@@ -91,7 +91,7 @@ bool ScreenCaptureSetScreenCanvasRotationFuzzer::FuzzScreenCaptureSetScreenCanva
 }
 } // namespace Media
 
-bool FuzzTestScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
+bool FuzzTestScreenCaptureSetCanvasRotation(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
@@ -100,8 +100,8 @@ bool FuzzTestScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
     if (size < sizeof(bool)) {
         return true;
     }
-    ScreenCaptureSetScreenCanvasRotationFuzzer testScreenCapture;
-    return testScreenCapture.FuzzScreenCaptureSetScreenCanvasRotation(data, size);
+    ScreenCaptureSetCanvasRotationFuzzer testScreenCapture;
+    return testScreenCapture.FuzzScreenCaptureSetCanvasRotation(data, size);
 }
 } // namespace OHOS
 
@@ -109,6 +109,6 @@ bool FuzzTestScreenCaptureSetScreenCanvasRotation(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestScreenCaptureSetScreenCanvasRotation(data, size);
+    OHOS::FuzzTestScreenCaptureSetCanvasRotation(data, size);
     return 0;
 }

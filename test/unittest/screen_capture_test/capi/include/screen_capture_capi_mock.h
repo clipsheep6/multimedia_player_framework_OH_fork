@@ -33,7 +33,7 @@ public:
     int32_t StopScreenRecording() override;
     int32_t Release() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
-    int32_t SetScreenCanvasRotation(bool canvasRotation) override;
+    int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
         OHOS::Media::AudioCaptureSourceType type) override;
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;

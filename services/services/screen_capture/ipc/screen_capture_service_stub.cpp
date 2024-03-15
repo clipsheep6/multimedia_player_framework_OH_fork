@@ -55,7 +55,7 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureServiceStub::SetListenerObject;
     screenCaptureStubFuncs_[RELEASE] = &ScreenCaptureServiceStub::Release;
     screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
-    screenCaptureStubFuncs_[SET_SCREEN_ROTATION] = &ScreenCaptureServiceStub::SetScreenCanvasRotation;
+    screenCaptureStubFuncs_[SET_SCREEN_ROTATION] = &ScreenCaptureServiceStub::SetCanvasRotation;
     screenCaptureStubFuncs_[SET_CAPTURE_MODE] = &ScreenCaptureServiceStub::SetCaptureMode;
     screenCaptureStubFuncs_[SET_DATA_TYPE] = &ScreenCaptureServiceStub::SetDataType;
     screenCaptureStubFuncs_[SET_RECORDER_INFO] = &ScreenCaptureServiceStub::SetRecorderInfo;
@@ -219,11 +219,11 @@ int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(bool isMicrophone)
     return screenCaptureServer_->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t ScreenCaptureServiceStub::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureServiceStub::SetCanvasRotation(bool canvasRotation)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
                              "screen capture server is nullptr");
-    return screenCaptureServer_->SetScreenCanvasRotation(canvasRotation);
+    return screenCaptureServer_->SetCanvasRotation(canvasRotation);
 }
 
 int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
@@ -282,13 +282,13 @@ int32_t ScreenCaptureServiceStub::SetMicrophoneEnabled(MessageParcel &data, Mess
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServiceStub::SetScreenCanvasRotation(MessageParcel &data, MessageParcel &reply)
+int32_t ScreenCaptureServiceStub::SetCanvasRotation(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
                              "screen capture server is nullptr");
     (void)data;
     bool canvasRotation = data.ReadBool();
-    int32_t ret = SetScreenCanvasRotation(canvasRotation);
+    int32_t ret = SetCanvasRotation(canvasRotation);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

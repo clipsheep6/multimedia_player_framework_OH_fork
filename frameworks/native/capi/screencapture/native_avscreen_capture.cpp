@@ -796,7 +796,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScree
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH_AVScreenCapture *capture,
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScreenCapture *capture,
     bool canvasRotation)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
@@ -805,9 +805,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetScreenCanvasRotation(struct OH
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
 
-    int32_t ret = screenCaptureObj->screenCapture_->SetScreenCanvasRotation(canvasRotation);
+    int32_t ret = screenCaptureObj->screenCapture_->SetCanvasRotation(canvasRotation);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-                             "SetScreenCanvasRotation failed!");
+                             "SetCanvasRotation failed!");
 
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

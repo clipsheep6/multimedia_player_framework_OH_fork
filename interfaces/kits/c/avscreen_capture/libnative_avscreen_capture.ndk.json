@@ -13,7 +13,7 @@
     { "name": "OH_AVScreenCapture_SetCallback" },
     { "name": "OH_AVScreenCapture_Release" },
     { "name": "OH_AVScreenCapture_SetMicrophoneEnabled" },
-    { "name": "OH_AVScreenCapture_SetScreenCanvasRotation" },
+    { "name": "OH_AVScreenCapture_SetCanvasRotation" },
     { "name": "OH_AVScreenCapture_SetStateCallback" },
     { "name": "OH_AVScreenCapture_SetDataCallback" },
     { "name": "OH_AVScreenCapture_SetErrorCallback" },

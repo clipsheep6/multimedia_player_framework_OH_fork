@@ -103,12 +103,12 @@ int32_t TestScreenCapture::SetMicrophoneEnabled(bool isMicrophone)
     return screenCapture->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t TestScreenCapture::SetScreenCanvasRotation(bool canvasRotation)
+int32_t TestScreenCapture::SetCanvasRotation(bool canvasRotation)
 {
     if (screenCapture == nullptr) {
         return MSERR_INVALID_OPERATION;
     }
-    return screenCapture->SetScreenCanvasRotation(canvasRotation);
+    return screenCapture->SetCanvasRotation(canvasRotation);
 }
 
 int32_t TestScreenCapture::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)

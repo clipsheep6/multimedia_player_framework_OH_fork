@@ -455,7 +455,7 @@ int32_t ScreenCaptureServiceProxy::SetMicrophoneEnabled(bool isMicrophone)
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureServiceProxy::SetCanvasRotation(bool canvasRotation)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -469,7 +469,7 @@ int32_t ScreenCaptureServiceProxy::SetScreenCanvasRotation(bool canvasRotation)
 
     int error = Remote()->SendRequest(SET_SCREEN_ROTATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-                             "SetScreenCanvasRotation failed, error: %{public}d", error);
+                             "SetCanvasRotation failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 } // namespace Media
