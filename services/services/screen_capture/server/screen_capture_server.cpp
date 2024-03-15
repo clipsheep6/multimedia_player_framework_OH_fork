@@ -21,9 +21,10 @@
 #include "pixel_map.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
-#include "media_utils.h"
+
 
 using OHOS::Rosen::DMError;
 namespace {
