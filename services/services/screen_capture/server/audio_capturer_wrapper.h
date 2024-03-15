@@ -84,7 +84,7 @@ public:
     explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
         std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name)
         : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name)) {}
-    ~MicAudioCapturerWrapper() {}
+    ~MicAudioCapturerWrapper() override {}
 
 protected:
     void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode) override;

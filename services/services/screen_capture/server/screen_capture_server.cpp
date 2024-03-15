@@ -350,12 +350,12 @@ int32_t ScreenCaptureServer::CheckVideoCapParam(const VideoCaptureInfo &videoCap
     MEDIA_LOGD("CheckVideoCapParam width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
         videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
     if ((videoCapInfo.videoFrameWidth <= 0) || (videoCapInfo.videoFrameWidth > VIDEO_FRAME_WIDTH_MAX)) {
-        MEDIA_LOGE("videoCapInfo size is invalid, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d",
+        MEDIA_LOGE("videoCapInfo Width is invalid, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight);
         return MSERR_INVALID_VAL;
     }
-    if ((videoCapInfo.videoFrameWidth <= 0) || (videoCapInfo.videoFrameWidth > VIDEO_FRAME_HEIGHT_MAX)) {
-        MEDIA_LOGE("videoCapInfo size is invalid, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d",
+    if ((videoCapInfo.videoFrameHeight <= 0) || (videoCapInfo.videoFrameHeight > VIDEO_FRAME_HEIGHT_MAX)) {
+        MEDIA_LOGE("videoCapInfo Height is invalid, videoFrameWidth:%{public}d, videoFrameHeight:%{public}d",
             videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight);
         return MSERR_INVALID_VAL;
     }
@@ -406,6 +406,8 @@ int32_t ScreenCaptureServer::CheckVideoEncParam(const VideoEncInfo &videoEncInfo
 int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 {
     if (audioCapInfo.audioChannels == 0 && audioCapInfo.audioSampleRate == 0) {
+        MEDIA_LOGD("audioCap IGNORED sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d",
+            audioCapInfo.audioSampleRate, audioCapInfo.audioChannels, audioCapInfo.audioSource, audioCapInfo.state);
         audioCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
         return MSERR_OK;
     }
@@ -422,6 +424,8 @@ int32_t ScreenCaptureServer::CheckAudioCapInfo(AudioCaptureInfo &audioCapInfo)
 int32_t ScreenCaptureServer::CheckVideoCapInfo(VideoCaptureInfo &videoCapInfo)
 {
     if (videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0) {
+        MEDIA_LOGD("videoCap IGNORED width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
+            videoCapInfo.videoFrameWidth, videoCapInfo.videoFrameHeight, videoCapInfo.videoSource, videoCapInfo.state);
         videoCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
         return MSERR_OK;
     }
@@ -603,7 +607,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
     std::shared_ptr<AudioCapturerWrapper> micCapture;
-    if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
             std::string("OS_MicAudioCapture"));
@@ -967,13 +971,13 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
 
 int32_t ScreenCaptureServer::StartVideoCapture()
 {
-    if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+    if (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         MEDIA_LOGI("StartVideoCapture is ignored");
         return MSERR_OK;
     }
     CHECK_AND_RETURN_RET_LOG(
-        captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID,
-        MSERR_INVALID_VAL, "StartScreenCapture failed, invalid param, dataType:%{public}d", captureConfig_.dataType);
+        captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID,
+        MSERR_INVALID_VAL, "StartVideoCapture failed, invalid param, dataType:%{public}d", captureConfig_.dataType);
 
     int32_t ret = StartHomeVideoCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
@@ -1258,9 +1262,9 @@ int32_t ScreenCaptureServer::StopVideoCapture()
     MediaTrace trace("ScreenCaptureServer::StopVideoCapture");
     MEDIA_LOGI("StopVideoCapture");
     if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
-        MEDIA_LOGI("StopVideoCapture failed, stop");
+        MEDIA_LOGI("StopVideoCapture IGNORED, video capture not start");
         surfaceCb_ = nullptr;
-        return MSERR_INVALID_OPERATION;
+        return MSERR_OK;
     }
 
     DestroyVirtualScreen();

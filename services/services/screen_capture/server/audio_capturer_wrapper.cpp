@@ -131,7 +131,7 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
 int32_t AudioCapturerWrapper::CaptureAudio()
 {
     MEDIA_LOGI("CaptureAudio start, threadName:%{public}s", threadName_.c_str());
-    std::string name = threadName_.substr(0, std::min(threadName_.size(), (size_t)MAX_THREAD_NAME_LENGTH));
+    std::string name = threadName_.substr(0, std::min(threadName_.size(), static_cast<size_t>(MAX_THREAD_NAME_LENGTH)));
     pthread_setname_np(pthread_self(), name.c_str());
 
     size_t bufferLen;
