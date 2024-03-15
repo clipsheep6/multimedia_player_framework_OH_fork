@@ -105,7 +105,7 @@ bool ScreenCaptureAcquireVideoBufferNdkFuzzer::FuzzScreenCaptureAcquireVideoBuff
     OH_Rect damage = GetData<OH_Rect>();
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
-    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, true);
+    OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
     OH_NativeBuffer *nativeBuffer = OH_AVScreenCapture_AcquireVideoBuffer(screenCapture, &fence, &timestamp, &damage);

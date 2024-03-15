@@ -163,11 +163,11 @@ int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
     return screenCaptureProxy_->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t ScreenCaptureClient::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureClient::SetCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetScreenCanvasRotation(canvasRotation);
+    return screenCaptureProxy_->SetCanvasRotation(canvasRotation);
 }
 
 int32_t ScreenCaptureClient::StartScreenCapture(bool isPrivacyAuthorityEnabled)

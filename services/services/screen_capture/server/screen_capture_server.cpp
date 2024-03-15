@@ -895,8 +895,8 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent =
         std::make_shared<NotificationLocalLiveViewContent>();
     localLiveViewContent->SetType(1);
-    localLiveViewContent->SetTitle("系统录屏");
-    localLiveViewContent->SetText("录屏中...");
+    localLiveViewContent->SetTitle("System Capture");
+    localLiveViewContent->SetText("Capturing...");
 
     auto capsule = NotificationCapsule();
     std::string backgroundColor = "#E84026";
@@ -1229,12 +1229,12 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureServer::SetCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
-                             "SetScreenCanvasRotation failed virtual screen not init");
-    MEDIA_LOGI("ScreenCaptureServer::SetScreenCanvasRotation, canvasRotation:%{public}d", canvasRotation);
+                             "SetCanvasRotation failed virtual screen not init");
+    MEDIA_LOGI("ScreenCaptureServer::SetCanvasRotation, canvasRotation:%{public}d", canvasRotation);
     auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);

@@ -68,8 +68,8 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturendkcapturemode_fuzzer:ScreenCaptureNdkCaptureModeFuzzTest",
     "screen_capture_fuzztest/screencapturendkdatatype_fuzzer:ScreenCaptureNdkDataTypeFuzzTest",
     "screen_capture_fuzztest/screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest",
+    "screen_capture_fuzztest/screencapturendksetcanvasrotation_fuzzer:ScreenCaptureNdkSetCanvasRotationFuzzTest",
     "screen_capture_fuzztest/screencapturendksetmicrophoneenabled_fuzzer:ScreenCaptureNdkSetMicrophoneEnabledFuzzTest",
-    "screen_capture_fuzztest/screencapturendksetscreencanvasrotation_fuzzer:ScreenCaptureNdkSetScreenCanvasRotationFuzzTest",
     "screen_capture_fuzztest/screencapturendkurlfile_fuzzer:ScreenCaptureNdkUrlFileFuzzTest",
     "screen_capture_fuzztest/screencapturendkvideobitratefile_fuzzer:ScreenCaptureNdkVideoBitRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturendkvideocodecfile_fuzzer:ScreenCaptureNdkVideoCodecFileFuzzTest",
@@ -77,8 +77,8 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturendkvideoframeratefile_fuzzer:ScreenCaptureNdkVideoFrameRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturendkvideoframewidth_fuzzer:ScreenCaptureNdkVideoFrameWidthFuzzTest",
     "screen_capture_fuzztest/screencapturendkvideosourcetype_fuzzer:ScreenCaptureNdkVideoSourceTypeFuzzTest",
+    "screen_capture_fuzztest/screencapturesetcanvasrotation_fuzzer:ScreenCaptureSetCanvasRotationFuzzTest",
     "screen_capture_fuzztest/screencapturesetmicrophoneenabled_fuzzer:ScreenCaptureSetMicrophoneEnabledFuzzTest",
-    "screen_capture_fuzztest/screencapturesetscreencanvasrotation_fuzzer:ScreenCaptureSetScreenCanvasRotationFuzzTest",
     "screen_capture_fuzztest/screencaptureurlfile_fuzzer:ScreenCaptureUrlFileFuzzTest",
     "screen_capture_fuzztest/screencapturevideobitratefile_fuzzer:ScreenCaptureVideoBitRateFileFuzzTest",
     "screen_capture_fuzztest/screencapturevideocodecfile_fuzzer:ScreenCaptureVideoCodecFileFuzzTest",
@@ -88,4 +88,6 @@ group("fuzztest") {
     "screen_capture_fuzztest/screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
   ]
 }
+
 ###############################################################################
+
