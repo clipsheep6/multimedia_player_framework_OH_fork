@@ -214,6 +214,7 @@ private:
     std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
     std::string bundleName_ = "com.ohos.systemui";
     std::string abilityName_ = "com.ohos.systemui.dialog";
+    std::string callingLabel_;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;

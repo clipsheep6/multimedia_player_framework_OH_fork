@@ -21,6 +21,7 @@
 #include "pixel_map.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
 #include "scope_guard.h"
@@ -837,10 +838,15 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
 int32_t ScreenCaptureServer::StartPrivacyWindow()
 {
+    auto bundleName = GetClientBundleName(appInfo_.appUid);
+    callingLabel_ = GetBundleResourceLabel(bundleName);
+
     std::string comStr = "{\"ability.want.params.uiExtensionType\":\"sys/commonUI\",\"sessionId\":\"";
     comStr += std::to_string(sessionId_).c_str();
     comStr += "\",\"callerUid\":\"";
     comStr += std::to_string(appInfo_.appUid).c_str();
+    comStr += "\",\"appLabel\":\"";
+    comStr += callingLabel_.c_str();
     comStr += "\"}";
     
     AAFwk::Want want;
