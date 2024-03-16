@@ -680,8 +680,7 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
     int32_t ret = MSERR_UNSUPPORT;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         ret = StartScreenCaptureStream();
-    }
-    if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
+    } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
         ret = StartScreenCaptureFile();
     }
     if (ret == MSERR_OK) {
@@ -757,7 +756,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 
 int32_t ScreenCaptureServer::InitRecorder()
 {
-    CHECK_AND_RETURN_RET_LOG(outputFd_>0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
+    CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
     MEDIA_LOGI("InitRecorder start");
     MediaTrace trace("ScreenCaptureServer::InitRecorder");
     recorder_ = Media::RecorderServer::Create();
@@ -810,7 +809,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
 {
     // Root users should be whitelisted
     if (appInfo_.appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Privacy Granted");
+        MEDIA_LOGI("Root user. Privacy Granted. state: %{public}d", state);
         return true;
     }
 
@@ -846,7 +845,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
-        // Wait fro user interactions to ALLOW/DENY capture
+        // Wait for user interactions to ALLOW/DENY capture
         return MSERR_OK;
     }
 #endif
@@ -1056,8 +1055,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "StartScreenCapture failed, capture is not CREATED, state:%{public}d", captureState_);
-    MEDIA_LOGI("StartScreenCapture isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
+        "StartScreenCaptureWithSurface failed, capture is not CREATED, state:%{public}d", captureState_);
+    MEDIA_LOGI("StartScreenCaptureWithSurface isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
     if (surface == nullptr) {
         MEDIA_LOGE("surface is nullptr");
         return MSERR_INVALID_OPERATION;
@@ -1137,7 +1136,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
-    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed");
+    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenid");
 
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
@@ -1296,9 +1295,9 @@ int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
-        "AcquireVideoBuffer failed, capture is not STARTED, state:%{public}d", captureState_);
+        "ReleaseVideoBuffer failed, capture is not STARTED, state:%{public}d", captureState_);
 
-    CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
+    CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "ReleaseVideoBuffer failed, callback is nullptr");
     return (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->ReleaseVideoBuffer();
 }
 
@@ -1306,9 +1305,9 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "AcquireVideoBuffer failed, capture is not STARTED, state:%{public}d", captureState_);
+        "ExcludeContent failed, capture is not STARTED, state:%{public}d", captureState_);
 
-    MEDIA_LOGI("ScreenCaptureServer::SetMicrophoneEnabled start");
+    MEDIA_LOGI("ScreenCaptureServer::ExcludeContent start");
     contentFilter_ = contentFilter;
 
     // For the moment, not support:

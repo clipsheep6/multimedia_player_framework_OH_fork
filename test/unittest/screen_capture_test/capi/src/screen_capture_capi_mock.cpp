@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_capi_mock.h"
+#include "native_window.h"
 
 using namespace std;
 using namespace OHOS;
@@ -155,8 +156,10 @@ int32_t ScreenCaptureCapiMock::StartScreenCapture()
 int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface(const std::any& value)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    OHNativeWindow* window = std::any_cast<OHNativeWindow*>(value);
-    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, window);
+    sptr<Surface> surface = std::any_cast<sptr<Surface>>(value);
+    OHNativeWindow* nativeWindow = new OHNativeWindow();
+    nativeWindow->surface = surface;
+    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, nativeWindow);
 }
 
 int32_t ScreenCaptureCapiMock::Init(AVScreenCaptureConfig config)
