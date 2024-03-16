@@ -29,6 +29,7 @@ group("media_services_package") {
     deps += [
       "etc:screen_capture_capsule_image",
       "etc:screen_capture_mic_image",
+      "etc:screen_capture_mic_off_image",
       "etc:screen_capture_stop_image",
     ]
   }

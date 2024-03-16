@@ -63,7 +63,6 @@ public:
     void OnResponse(int32_t notificationId,
         OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption) override;
     void OnDied() override;
-    std::string buttonNameStop_ = "stop";
 };
 
 enum VideoPermissionState : int32_t {
@@ -164,6 +163,7 @@ public:
     void SetSessionId(int32_t sessionId);
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
+    void UpdateMicrophoneEnabled();
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -196,7 +196,9 @@ private:
     int32_t StartPrivacyWindow();
     int32_t StartNotification();
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
+    void UpdateLiveViewContent();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
+    std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path);
 
 private:
     std::mutex mutex_;
@@ -207,14 +209,9 @@ private:
 
     int32_t sessionId_;
     int32_t notificationId_;
-    std::string buttonNameMic_ = "mic";
-    std::string buttonNameStop_ = "stop";
-    std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.png";
-    std::string ICON_PATH_MIC = "/etc/screencapture/mic.png";
-    std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
-    std::string bundleName_ = "com.ohos.systemui";
-    std::string abilityName_ = "com.ohos.systemui.dialog";
     std::string callingLabel_;
+    std::string liveViewText_;
+    std::atomic<int32_t> micCount_{0};
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
@@ -225,6 +222,7 @@ private:
     std::vector<uint64_t> missionIds_;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
+    std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

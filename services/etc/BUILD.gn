@@ -28,7 +28,14 @@ ohos_prebuilt_etc("screen_capture_capsule_image") {
 }
 
 ohos_prebuilt_etc("screen_capture_mic_image") {
-  source = "image/mic.png"
+  source = "image/mic.svg"
+  subsystem_name = "multimedia"
+  relative_install_dir = "screencapture"
+  part_name = "player_framework"
+}
+
+ohos_prebuilt_etc("screen_capture_mic_off_image") {
+  source = "image/mic_off.svg"
   subsystem_name = "multimedia"
   relative_install_dir = "screencapture"
   part_name = "player_framework"

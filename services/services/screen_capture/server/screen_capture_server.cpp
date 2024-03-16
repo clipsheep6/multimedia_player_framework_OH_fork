@@ -45,10 +45,16 @@ static const std::string USER_CHOICE_DENY = "false";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.png";
-static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.png";
+static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
+static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
+static const std::string BACK_GROUND_COLOR = "#E84026";
+static const int32_t SVG_HEIGHT = 80;
+static const int32_t SVG_WIDTH = 80;
+static const int32_t MICROPHONE_OFF = 0;
+static const int32_t MICROPHONE_STATE_COUNT = 2;
 
 static const int32_t MAX_SESSION_ID = 256;
 static const auto NOTIFICATION_SUBSCRIBER = NotificationSubscriber();
@@ -71,6 +77,10 @@ void NotificationSubscriber::OnResponse(int32_t notificationId,
     if (BUTTON_NAME_STOP.compare(buttonOption->GetButtonName()) == 0) {
         std::shared_ptr<OHOS::Media::ScreenCaptureServer> server = serverMap.at(notificationId);
         server->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+    }
+    if (BUTTON_NAME_MIC.compare(buttonOption->GetButtonName()) == 0) {
+        std::shared_ptr<OHOS::Media::ScreenCaptureServer> server = serverMap.at(notificationId);
+        server->UpdateMicrophoneEnabled();
     }
 }
 
@@ -867,10 +877,10 @@ int32_t ScreenCaptureServer::StartNotification()
     int32_t result = NotificationHelper::SubscribeLocalLiveViewNotification(NOTIFICATION_SUBSCRIBER);
 
     NotificationRequest request;
-    std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent = GetLocalLiveViewContent();
+    localLiveViewContent_ = GetLocalLiveViewContent();
 
     std::shared_ptr<NotificationContent> content =
-        std::make_shared<NotificationContent>(localLiveViewContent);
+        std::make_shared<NotificationContent>(localLiveViewContent_);
 
     auto uid = getuid();
     request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
@@ -895,37 +905,38 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent =
         std::make_shared<NotificationLocalLiveViewContent>();
     localLiveViewContent->SetType(1);
-    localLiveViewContent->SetTitle("System Capture");
-    localLiveViewContent->SetText("Capturing...");
+    liveViewText_ = "\"";
+    liveViewText_ += callingLabel_.c_str();
+    liveViewText_ += "\"录屏中...";
+    localLiveViewContent->SetText(liveViewText_);
 
     auto capsule = NotificationCapsule();
-    std::string backgroundColor = "#E84026";
-    capsule.SetBackgroundColor(backgroundColor);
+    capsule.SetBackgroundColor(BACK_GROUND_COLOR);
     std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE);
     capsule.SetIcon(pixelMapCapSpr);
 
     localLiveViewContent->SetCapsule(capsule);
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
 
-    auto testTime = NotificationTime();
-    testTime.SetInitialTime(1);
-    testTime.SetIsCountDown(false);
-    testTime.SetIsPaused(false);
-    testTime.SetIsInTitle(true);
+    auto countTime = NotificationTime();
+    countTime.SetInitialTime(1);
+    countTime.SetIsCountDown(false);
+    countTime.SetIsPaused(false);
+    countTime.SetIsInTitle(true);
 
-    localLiveViewContent->SetTime(testTime);
+    localLiveViewContent->SetTime(countTime);
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 
-    auto testButton = NotificationLocalLiveViewButton();
-    testButton.addSingleButtonName(BUTTON_NAME_MIC);
-    std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMap(ICON_PATH_MIC);
-    testButton.addSingleButtonIcon(pixelMapSpr);
+    auto basicButton = NotificationLocalLiveViewButton();
+    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
+    std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC);
+    basicButton.addSingleButtonIcon(pixelMapSpr);
 
-    testButton.addSingleButtonName(BUTTON_NAME_STOP);
+    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
     std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
-    testButton.addSingleButtonIcon(pixelMapStopSpr);
+    basicButton.addSingleButtonIcon(pixelMapStopSpr);
 
-    localLiveViewContent->SetButton(testButton);
+    localLiveViewContent->SetButton(basicButton);
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
 
     return localLiveViewContent;
@@ -942,6 +953,85 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
     std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
     return pixelMapSpr;
+}
+
+std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path)
+{
+    uint32_t errorCode = 0;
+    SourceOptions opts;
+    opts.formatHint = "image/svg+xml";
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource(path, opts, errorCode);
+    DecodeOptions decodeOpts;
+    decodeOpts.desiredSize.width = SVG_WIDTH;
+    decodeOpts.desiredSize.height = SVG_HEIGHT;
+    std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
+    return pixelMapSpr;
+}
+
+void ScreenCaptureServer::UpdateMicrophoneEnabled()
+{
+    UpdateLiveViewContent();
+    NotificationRequest request;
+
+    std::shared_ptr<NotificationContent> content =
+        std::make_shared<NotificationContent>(localLiveViewContent_);
+
+    auto uid = getuid();
+    request.SetSlotType(NotificationConstant::SlotType::LIVE_VIEW);
+    request.SetNotificationId(notificationId_);
+    request.SetContent(content);
+    request.SetCreatorUid(uid);
+    request.SetUnremovable(true);
+    request.SetInProgress(true);
+
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    request.SetLittleIcon(pixelMapTotalSpr);
+    request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
+
+    int32_t result = NotificationHelper::PublishNotification(request);
+    MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d", uid, result);
+    micCount_.store(micCount_.load()+1);
+}
+
+void ScreenCaptureServer::UpdateLiveViewContent()
+{
+    localLiveViewContent_->SetType(1);
+    localLiveViewContent_->SetText(liveViewText_);
+
+    auto capsule = NotificationCapsule();
+    capsule.SetBackgroundColor(BACK_GROUND_COLOR);
+    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    capsule.SetIcon(pixelMapCapSpr);
+
+    localLiveViewContent_->SetCapsule(capsule);
+    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::CAPSULE);
+
+    auto countTime = NotificationTime();
+    countTime.SetIsCountDown(false);
+    countTime.SetIsPaused(false);
+    countTime.SetIsInTitle(true);
+
+    localLiveViewContent_->SetTime(countTime);
+    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
+
+    auto basicButton = NotificationLocalLiveViewButton();
+    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
+    if (micCount_.load() % MICROPHONE_STATE_COUNT == MICROPHONE_OFF) {
+        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF);
+        basicButton.addSingleButtonIcon(pixelMapSpr);
+    } else {
+        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC);
+        basicButton.addSingleButtonIcon(pixelMapSpr);
+    }
+
+    basicButton.addSingleButtonName(BUTTON_NAME_STOP);
+    std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
+    basicButton.addSingleButtonIcon(pixelMapStopSpr);
+
+    localLiveViewContent_->SetButton(basicButton);
+    localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
 }
 
 int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
@@ -1005,10 +1095,12 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
     auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
     CHECK_AND_RETURN_RET_LOG(producerSurface != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
-
     surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, screenCaptureCb_);
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
+    int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen failed");
+
     CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
 }
@@ -1343,6 +1435,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification ret:%{public}d ", ret);
+        micCount_.store(0);
 #endif
         isPrivacyAuthorityEnabled_ = false;
     }
