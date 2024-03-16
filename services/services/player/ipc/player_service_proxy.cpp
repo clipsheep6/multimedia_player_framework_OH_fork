@@ -70,6 +70,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
+    playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -514,6 +515,42 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackSpeed failed, error: %{public}d", error);
     return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR)
+{
+    MediaTrace trace("binder::SetDurationSize");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    auto headerSize = static_cast<uint32_t>(header.size());
+    if (!data.WriteUint32(headerSize)) {
+        MEDIA_LOGI("Write mapSize failed");
+        return -1;
+    }
+    for (auto [kstr, vstr] : header) {
+        if (!data.WriteString(kstr)) {
+            MEDIA_LOGI("Write kstr failed");
+            return -1;
+        }
+        if (!data.WriteString(vstr)) {
+            MEDIA_LOGI("Write vstr failed");
+            return -1;
+        }
+    }
+    (void)data.WriteUint32(preferedWidth);
+    (void)data.WriteUint32(preferedHeight);
+    (void)data.WriteUint32(bufferDuration);
+    (void)data.WriteBool(preferHDR);
+    int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMediaSource failed, error: %{public}d", error);
+    return reply.ReadInt32();
+
 }
 
 int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)

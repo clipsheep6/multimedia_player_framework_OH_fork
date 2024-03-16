@@ -161,6 +161,28 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor 
     return true;
 }
 
+bool CommonNapi::GetMediaSource(napi_env env, napi_value value, AVMediaSource &mediaSource)
+{
+    return true;
+}
+
+bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategy &playStrategy)
+{
+    if (!GetPropertyUint32(env, value, "preferedWidth", playStrategy.preferedWidth)) {
+        playStrategy.preferedWidth = 0; // use default value
+    }
+    if (!GetPropertyUint32(env, value, "preferedHeight", playStrategy.preferedHeight)) {
+        playStrategy.preferedHeight = 0; // use default value
+    }
+    if (!GetPropertyUint32(env, value, "preferedBufferDuration", playStrategy.preferedBufferDuration)) {
+        playStrategy.preferedBufferDuration = 0; // use default value
+    }
+    if (!GetPropertyBool(env, value, "preferedWidth", playStrategy.preferHDR )) {
+        playStrategy.preferHDR = 0; // use default value
+    }
+    return true;
+}
+
 napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;

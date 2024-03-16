@@ -16,6 +16,7 @@
 #ifndef COMMON_NAPI_H
 #define COMMON_NAPI_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -30,6 +31,8 @@
 namespace OHOS {
 namespace Media {
 struct AVFileDescriptor;
+struct AVMediaSource;
+struct AVPlayStrategy;
 
 class CommonNapi {
 public:
@@ -43,6 +46,8 @@ public:
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
+    static bool GetMediaSource(napi_env env, napi_value value, AVMediaSource &mediaSource);
+    static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategy &playStrategy);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
@@ -294,6 +299,20 @@ struct AutoRef {
 struct AVDataSrcDescriptor {
     int64_t fileSize = 0;
     napi_value callback = nullptr;
+};
+
+struct AVMediaSource {
+    std::string url;
+    std::map<std::string, std::string> header;
+    AVFileDescriptor fdSrc;
+    AVDataSrcDescriptor dataSrc;
+};
+
+struct AVPlayStrategy {
+    uint32_t preferedWidth;
+    uint32_t preferedHeight;
+    uint32_t preferedBufferDuration;
+    bool preferHDR; 
 };
 
 template<typename T>

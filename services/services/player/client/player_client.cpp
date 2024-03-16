@@ -258,6 +258,14 @@ int32_t PlayerClient::SetPlaybackSpeed(PlaybackRateMode mode)
     return playerProxy_->SetPlaybackSpeed(mode);
 }
 
+int32_t PlayerClient::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetMediaSource(header, preferedWidth, preferedHeight, bufferDuration, preferHDR);
+}
+
 int32_t PlayerClient::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);

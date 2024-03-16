@@ -184,6 +184,17 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR)
+{
+    this->header = header;
+    this->preferedWidth = preferedWidth;
+    this->preferedHeight = preferedHeight;
+    this->bufferDuration = bufferDuration;
+    this->preferHDR = preferHDR;
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
