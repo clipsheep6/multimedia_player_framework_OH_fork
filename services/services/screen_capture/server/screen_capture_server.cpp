@@ -278,12 +278,6 @@ int32_t ScreenCaptureServer::InitVideoEncInfo(VideoEncInfo videoEncInfo)
 
 bool ScreenCaptureServer::CheckScreenCapturePermission()
 {
-    // Root users should be whitelisted
-    if (appInfo_.appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return true;
-    }
-
     int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
         "ohos.permission.CAPTURE_SCREEN");
     if (result == Security::AccessToken::PERMISSION_GRANTED) {
@@ -555,14 +549,20 @@ void ScreenCaptureServer::InitAppInfo()
 
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
-    captureState_ = AVScreenCaptureState::STARTING;
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
     // Root users should be whitelisted
     if (appInfo_.appUid == ROOT_UID) {
         MEDIA_LOGI("Root user. Permission Granted");
         return MSERR_OK;
     }
-    return StartPrivacyWindow();
+
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION_NOTIFICATION
+    if (isPrivacyAuthorityEnabled_) {
+        return StartPrivacyWindow();
+    }
+#endif
+    MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
+    return CheckScreenCapturePermission() ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
 
 int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
@@ -588,21 +588,9 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
         return MSERR_UNKNOWN;
     }
     int32_t ret = OnStartScreenCapture();
-    if (ret == MSERR_OK) {
-        MEDIA_LOGI("OnReceiveUserPrivacyAuthority capture start success");
-        captureState_ = AVScreenCaptureState::STARTED;
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
-    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        ret = StartNotification();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "StartNotification failed");
-    #endif
-        return MSERR_OK;
-    } else {
-        captureState_ = AVScreenCaptureState::STOPPED;
-        screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
-            AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-        return MSERR_UNKNOWN;
-    }
+    PostStartScreenCapture(ret == MSERR_OK);
+
+    return ret;
 }
 
 int32_t ScreenCaptureServer::StartAudioCapture()
@@ -697,14 +685,39 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
         ret = StartScreenCaptureFile();
     }
     if (ret == MSERR_OK) {
-        if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
-            MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
-        }
-        BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appInfo_.appUid, appInfo_.appPid);
+        MEDIA_LOGI("OnStartScreenCapture start success, dataType:%{public}d", captureConfig_.dataType);
     } else {
         MEDIA_LOGE("OnStartScreenCapture start failed, dataType:%{public}d", captureConfig_.dataType);
     }
     return ret;
+}
+
+void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
+{
+    if (isSuccess) {
+        MEDIA_LOGI("PostStartScreenCapture handle success");
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+        if (isPrivacyAuthorityEnabled_) {
+            StartNotification();
+        }
+#endif
+        if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
+            MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
+        }
+        BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appInfo_.appUid, appInfo_.appPid);
+        captureState_ = AVScreenCaptureState::STARTED;
+    } else {
+        MEDIA_LOGE("PostStartScreenCapture handle failure");
+        isPrivacyAuthorityEnabled_ = false;
+        isSurfaceMode_ = false;
+        captureState_ = AVScreenCaptureState::STOPPED;
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+        if (isPrivacyAuthorityEnabled_) {
+            screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
+                AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
+        }
+#endif
+    }
 }
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
@@ -823,30 +836,25 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
 
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
-    if (isPrivacyAuthorityEnabled) {
-    #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        return RequestUserPrivacyAuthority();
-    #else
-        MEDIA_LOGE("StartScreenCaptureInner privacy notification window not support, check CAPTURE_SCREEN permission");
-        isPrivacyAuthorityEnabled_ = false;
-    #endif
-    }
-    if (!CheckScreenCapturePermission()) {
+    captureState_ = AVScreenCaptureState::STARTING;
+    ret = RequestUserPrivacyAuthority();
+    if (ret != MSERR_OK) {
         captureState_ = AVScreenCaptureState::STOPPED;
-        MEDIA_LOGE("StartScreenCaptureInner CheckScreenCapturePermission failed");
-        return MSERR_INVALID_OPERATION;
+        MEDIA_LOGE("StartScreenCaptureInner RequestUserPrivacyAuthority failed");
+        return ret;
     }
 
-    ret = OnStartScreenCapture();
-    if (ret == MSERR_OK) {
-        MEDIA_LOGI("StartScreenCaptureInner OnStartScreenCapture success");
-        captureState_ = AVScreenCaptureState::STARTED;
-    } else {
-        isPrivacyAuthorityEnabled_ = false;
-        isSurfaceMode_ = false;
-        captureState_ = AVScreenCaptureState::STOPPED;
-        MEDIA_LOGE("StartScreenCaptureInner OnStartScreenCapture failed");
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
+    if (isPrivacyAuthorityEnabled_) {
+        // Wait fro user interactions to ALLOW/DENY capture
+        return MSERR_OK;
     }
+#endif
+    MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
+
+    ret = OnStartScreenCapture();
+    PostStartScreenCapture(ret == MSERR_OK);
+
     return ret;
 }
 
@@ -1080,12 +1088,15 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
         int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen with surface failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen with input surface failed");
         return MSERR_OK;
     }
 
     ON_SCOPE_EXIT(0) {
         DestroyVirtualScreen();
+        if (consumer_ != nullptr && surfaceCb_ != nullptr) {
+            consumer_->UnregisterConsumerListener();
+        }
         consumer_ = nullptr;
         surfaceCb_ = nullptr;
     };
@@ -1231,7 +1242,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
 int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
 
     if (((type == AudioCaptureSourceType::MIC) || (type == AudioCaptureSourceType::SOURCE_DEFAULT)) &&
@@ -1249,7 +1260,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "ReleaseAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
 
     if (((type == AudioCaptureSourceType::MIC) || (type == AudioCaptureSourceType::SOURCE_DEFAULT)) &&
@@ -1268,7 +1279,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
                                                 int64_t &timestamp, OHOS::Rect &damage)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireVideoBuffer failed, capture is not STARTED, state:%{public}d", captureState_);
 
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
@@ -1284,7 +1295,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
 int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireVideoBuffer failed, capture is not STARTED, state:%{public}d", captureState_);
 
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
@@ -1428,17 +1439,19 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, ret, "state:%{public}d", captureState_);
     if (screenCaptureCb_ != nullptr) {
-        screenCaptureCb_->OnStateChange(stateCode);
+        if (stateCode != AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID) {
+            screenCaptureCb_->OnStateChange(stateCode);
+        }
     }
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
         // Remove real time notification
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        int32_t ret = NotificationHelper::CancelNotification(notificationId_);
-        MEDIA_LOGI("StopScreenCaptureInner CancelNotification ret:%{public}d ", ret);
+        ret = NotificationHelper::CancelNotification(notificationId_);
+        MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
         micCount_.store(0);
-#endif
-        isPrivacyAuthorityEnabled_ = false;
     }
+#endif
+    isPrivacyAuthorityEnabled_ = false;
 
     if (!UpdatePrivacyUsingPermissionState(STOP_VIDEO)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
