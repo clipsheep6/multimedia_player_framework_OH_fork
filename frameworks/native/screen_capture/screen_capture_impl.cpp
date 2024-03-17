@@ -69,7 +69,7 @@ ScreenCaptureImpl::~ScreenCaptureImpl()
 
 int32_t ScreenCaptureImpl::Release()
 {
-    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " CheckScreenCapturePermssion in", FAKE_POINTER(this));
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
     screenCaptureService_->Release();

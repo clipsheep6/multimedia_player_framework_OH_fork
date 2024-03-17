@@ -191,7 +191,9 @@ int32_t ScreenCaptureCapiMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     DelCallback(screenCapture_);
-    return OH_AVScreenCapture_Release(screenCapture_);
+    int32_t ret = OH_AVScreenCapture_Release(screenCapture_);
+    screenCapture_ = nullptr;
+    return ret;
 }
 
 int32_t ScreenCaptureCapiMock::SetMicrophoneEnabled(bool isMicrophone)
