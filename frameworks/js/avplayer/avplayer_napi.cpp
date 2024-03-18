@@ -32,6 +32,7 @@
 #endif
 #include "av_common.h"
 #include "meta/video_types.h"
+#include "media_source_napi.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -72,6 +73,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
+        DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
         DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
@@ -167,6 +169,8 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     }
     MEDIA_LOGI("Destructor success");
 }
+
+
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
 {
@@ -1252,6 +1256,51 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
     return value;
+}
+
+napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsSetMediaSource");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
+        return result;
+    }
+
+     napi_valuetype valueType = napi_undefined;
+     if (argCount < 2 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
+        || napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetMediaSource is not napi_object");
+    }
+
+    std::shared_ptr<AVMediaSource> mediaSource = MediaSourceNapi::GetMediaSource(env, args[0]);
+
+    struct AVPlayStrategy strategy;
+    if (!CommonNapi::GetPlayStrategy(env, args[1], strategy)) {
+        MEDIA_LOGE("get fileDescriptor argument failed!");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input parameters(fileDescriptor)");
+        return result;
+    }
+ 
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
+        if (jsPlayer->player_ != nullptr) {
+            std::map<std::string, std::string> header = mediaSource->header;
+            u_int32_t preferedWidth = strategy.preferedWidth;
+            u_int32_t preferedHeight = strategy.preferedHeight;
+            u_int32_t bufferDuration =  strategy.preferedBufferDuration;
+            bool preferHDR = strategy.preferHDR;
+            (void)jsPlayer->player_->SetMediaSource(header, preferedWidth, preferedHeight, bufferDuration, preferHDR);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    return result;
 }
 
 napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)

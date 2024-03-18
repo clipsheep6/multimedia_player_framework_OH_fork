@@ -30,6 +30,7 @@ declare_args() {
   multimedia_player_framework_support_seccomp = false
   multimedia_player_framework_support_screen_capture = true
   multimedia_player_framework_support_jssoundpool = true
+  multimedia_player_framework_support_mediasource = true
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }

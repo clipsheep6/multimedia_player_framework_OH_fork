@@ -91,6 +91,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
     playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
     playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
+    playerFuncs_[SET_MEDIA_SOURCE] = { &PlayerServiceStub::SetMediaSource, "Player::SetMediaSource" };
 #ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
 #endif
@@ -352,6 +353,14 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
     MediaTrace trace("binder::SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR)
+{
+    MediaTrace trace("binder::SetDuration");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetMediaSource(header, preferedWidth, preferedHeight, bufferDuration, preferHDR);
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
@@ -696,6 +705,23 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
 {
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode)));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
+{   
+    auto mapSize = data.ReadUint32();
+    std::map<std::string, std::string> headerMap;
+    while (mapSize--) {
+        auto kstr = data.ReadString();
+        auto vstr = data.ReadString();
+        headerMap.emplace(kstr, vstr);
+    }
+    u_int32_t preferedWidth = data.ReadUint32();
+    u_int32_t preferedHeight = data.ReadUint32();
+    u_int32_t bufferDuration = data.ReadUint32();
+    bool preferHDR = data.ReadBool();
+    reply.WriteInt32(SetMediaSource(headerMap, preferedWidth, preferedHeight, bufferDuration, preferHDR));
     return MSERR_OK;
 }
 

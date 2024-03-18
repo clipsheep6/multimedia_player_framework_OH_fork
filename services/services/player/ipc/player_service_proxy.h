@@ -37,6 +37,8 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+        u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;

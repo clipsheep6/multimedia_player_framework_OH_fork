@@ -277,6 +277,8 @@ public:
      */
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
 
+    virtual int32_t SetMediaSource(std::map<std::string, std::string> header, uint32_t preferedWidth, 
+        uint32_t preferedHeight, uint32_t bufferDuration, bool preferHDR) = 0;
     /**
      * @brief set the bit rate use for hls player
      *

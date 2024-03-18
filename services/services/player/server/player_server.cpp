@@ -912,6 +912,13 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) 
+{
+    (void)playerEngine_->SetMediaSource(header, preferedWidth, preferedHeight, bufferDuration, preferHDR);
+    return MSERR_OK;
+}
+
 void PlayerServer::HandleEos()
 {
     if (config_.looping.load()) {
