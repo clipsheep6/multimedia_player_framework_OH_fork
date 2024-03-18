@@ -870,7 +870,11 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(val);
+#ifdef ANDROID_PLATFORM
+    NapiCallback::CompleteCallback(env_, cb);
+#else
     NapiCallback::CompleteCallbackInOrder(cb, handler_);
+#endif
 }
 
 void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
