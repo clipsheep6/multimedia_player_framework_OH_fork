@@ -205,7 +205,7 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
 
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status != napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
     MEDIA_LOGI("argCountL %{public}zu", argCount);
 
     napi_valuetype valueType = napi_undefined;
@@ -504,7 +504,9 @@ AVScreenCaptureNapi *AVScreenCaptureNapi::GetJsInstanceAndArgs(
 
 RetInfo AVScreenCaptureNapi::StartRecording()
 {
-    int32_t ret = screenCapture_->StartScreenRecording();
+    int32_t ret = screenCapture_->SetPrivacyAuthorityEnabled();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "SetPrivacyAuthorityEnabled", ""));
+    ret = screenCapture_->StartScreenRecording();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, "StartRecording", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
