@@ -573,6 +573,8 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AcquireAudioBuffer(struct OH_AVSc
     OH_AudioBuffer **audiobuffer, OH_AudioCaptureSourceType type)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(audiobuffer != nullptr && (*audiobuffer != nullptr), AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
+        "input OH_AudioBuffer **audiobuffer is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,

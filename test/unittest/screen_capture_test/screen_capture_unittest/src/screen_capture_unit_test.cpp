@@ -42,11 +42,12 @@ void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCa
         std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
         if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
             if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer empty" << endl;
+                cout << "AcquireAudioBuffer failed, audio buffer empty, PLEASE CHECK IF IT IS OK!!!" << endl;
+            } else {
+                cout << "AcquireAudioBuffer, audioBufferLen:" << audioBuffer->length << ", timestampe:"
+                    << audioBuffer->timestamp << ", audioSourceType:" << audioBuffer->sourcetype << endl;
+                DumpAudioBuffer(audioBuffer);
             }
-            cout << "AcquireAudioBuffer, audioBufferLen:" << audioBuffer->length << ", timestampe:"
-                << audioBuffer->timestamp << ", audioSourceType:" << audioBuffer->sourcetype << endl;
-            DumpAudioBuffer(audioBuffer);
         }
         if (aFlag_ == 1) {
             screenCapture_->ReleaseAudioBuffer(type);

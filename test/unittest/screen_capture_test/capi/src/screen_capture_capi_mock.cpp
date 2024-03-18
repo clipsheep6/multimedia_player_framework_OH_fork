@@ -218,9 +218,12 @@ int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &
     }
     auto t_type = static_cast<OH_AudioCaptureSourceType>(type);
     int32_t ret = OH_AVScreenCapture_AcquireAudioBuffer(screenCapture_, &buffer, t_type);
-    audioBuffer =
-        std::make_shared<AudioBuffer>(buffer->buf, buffer->size, buffer->timestamp,
-            static_cast<AudioCaptureSourceType>(buffer->type));
+    if (ret == AV_SCREEN_CAPTURE_ERR_OK) {
+        // If ret is not AV_SCREEN_CAPTURE_ERR_OK, the object referenced by buffer is not initialized and can't be used.
+        audioBuffer =
+            std::make_shared<AudioBuffer>(buffer->buf, buffer->size, buffer->timestamp,
+                static_cast<AudioCaptureSourceType>(buffer->type));
+    }
     free(buffer);
     buffer = nullptr;
     return ret;

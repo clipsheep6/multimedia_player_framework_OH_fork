@@ -556,7 +556,7 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
         return MSERR_OK;
     }
 
-#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION_NOTIFICATION
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
         return StartPrivacyWindow();
     }
