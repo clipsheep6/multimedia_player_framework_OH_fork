@@ -198,6 +198,18 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetMediaSource()
+{
+    MEDIA_LOG_I("yzh SetMediaSource");
+
+    headers_ = {
+        {"ua", "userAngent"},
+        {"ref", "reference"},
+    };
+
+    return TransStatus(Status::OK);
+}
+
 void HiPlayerImpl::ResetIfSourceExisted()
 {
     FALSE_RETURN_MSG(demuxer_ != nullptr, "Source not exist, no need reset.");
@@ -223,7 +235,7 @@ int32_t HiPlayerImpl::Prepare()
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
-    MEDIA_LOG_I("PrepareAsync Start");
+    MEDIA_LOG_I("yzh1 PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
@@ -232,10 +244,18 @@ int32_t HiPlayerImpl::PrepareAsync()
         MEDIA_LOG_E("PrepareAsync error: init error");
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
+
+    SetMediaSource();
+
     if (dataSrc_ != nullptr) {
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        if (!headers_.empty()) {
+            MEDIA_LOG_I("yzh1 headers_ is not empty");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, headers_));
+        } else {
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
@@ -1045,6 +1065,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+
+    MEDIA_LOG_I("yzh1 GetSourceHeader, ua: " PUBLIC_LOG_S " ref: " PUBLIC_LOG_S, headers_["ua"].c_str(),
+        headers_["ref"].c_str());
+
     auto ret = demuxer_->SetDataSource(source);
     SetBundleName(bundleName_);
     pipeline_->AddHeadFilters({demuxer_});
