@@ -313,10 +313,10 @@ typedef struct OH_AVScreenCaptureConfig {
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @param errorCode specific error code
  *
- * @deprecated since 12
- * @useinstead {@link OH_AVScreenCapture_OnError}
  * @since 10
  * @version 1.0
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnError}
  */
 typedef void (*OH_AVScreenCaptureOnError)(OH_AVScreenCapture *capture, int32_t errorCode);
 
@@ -328,10 +328,10 @@ typedef void (*OH_AVScreenCaptureOnError)(OH_AVScreenCapture *capture, int32_t e
  * @param isReady Information describing whether audio buffer is available
  * @param type Information describing the audio source type
  *
- * @deprecated since 12
- * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  */
 typedef void (*OH_AVScreenCaptureOnAudioBufferAvailable)(OH_AVScreenCapture *capture, bool isReady,
     OH_AudioCaptureSourceType type);
@@ -343,10 +343,10 @@ typedef void (*OH_AVScreenCaptureOnAudioBufferAvailable)(OH_AVScreenCapture *cap
  * @param capture Pointer to an OH_AVScreenCapture instance
  * @param isReady Information describing whether video buffer is available
  *
- * @deprecated since 12
- * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnBufferAvailable}
  */
 typedef void (*OH_AVScreenCaptureOnVideoBufferAvailable)(OH_AVScreenCapture *capture, bool isReady);
 
@@ -359,10 +359,10 @@ typedef void (*OH_AVScreenCaptureOnVideoBufferAvailable)(OH_AVScreenCapture *cap
  * @param onAudioBufferAvailable Monitor audio buffer, refer to {@link OH_AVScreenCaptureOnAudioBufferAvailable}
  * @param onVideoBufferAvailable Monitor video buffer, refer to {@link OH_AVScreenCaptureOnVideoBufferAvailable}
  *
- * @deprecated since 12
- * @useinstead {@link OH_AVScreenCapture_OnError} {@link OH_AVScreenCapture_OnBufferAvailable}
  * @since 10
  * @version 1.0
+ * @deprecated since 12
+ * @useinstead {@link OH_AVScreenCapture_OnError} {@link OH_AVScreenCapture_OnBufferAvailable}
  */
 typedef struct OH_AVScreenCaptureCallback {
     /**
@@ -434,7 +434,7 @@ typedef enum OH_AVScreenCaptureStateCode {
     /* ScreenCapture stopped by user */
     OH_SCREEN_CAPTURE_STATE_STOPPED_BY_USER = 2,
     /* ScreenCapture interrupted by other screen capture */
-    OH_SCREEN_CAPTURE_STATE_INTERRUPT_BY_OTHER = 3,
+    OH_SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER = 3,
     /* ScreenCapture stopped by SIM call */
     OH_SCREEN_CAPTURE_STATE_STOPPED_BY_CALL = 4,
     /* Microphone is temporarily unavailable */

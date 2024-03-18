@@ -2077,7 +2077,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
     int32_t videoSourceId = 0;
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H265));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
@@ -2126,7 +2126,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
     int32_t videoSourceId = 0;
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H265));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 480, 640));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
