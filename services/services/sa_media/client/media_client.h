@@ -36,6 +36,7 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "screen_capture_client.h"
+#include "screen_capture_controller_client.h"
 #endif
 #include "nocopyable.h"
 
@@ -70,6 +71,8 @@ public:
 #ifdef SUPPORT_SCREEN_CAPTURE
     std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() override;
     int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture) override;
+    std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override;
+    int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) override;
 #endif
 
 private:
@@ -99,6 +102,7 @@ private:
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     std::list<std::shared_ptr<IScreenCaptureService>> screenCaptureClientList_;
+    std::list<std::shared_ptr<IScreenCaptureController>> screenCaptureControllerList_;
 #endif
     std::mutex mutex_;
 };

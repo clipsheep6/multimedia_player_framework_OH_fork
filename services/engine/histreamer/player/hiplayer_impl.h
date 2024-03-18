@@ -192,7 +192,7 @@ private:
     std::vector<std::pair<EventType, bool>> initialAVStates_;
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
-    std::string bundleName_;
+    std::string bundleName_ {};
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;

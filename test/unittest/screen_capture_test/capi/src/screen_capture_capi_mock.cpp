@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_capi_mock.h"
+#include "native_window.h"
 
 using namespace std;
 using namespace OHOS;
@@ -155,8 +156,10 @@ int32_t ScreenCaptureCapiMock::StartScreenCapture()
 int32_t ScreenCaptureCapiMock::StartScreenCaptureWithSurface(const std::any& value)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    OHNativeWindow* window = std::any_cast<OHNativeWindow*>(value);
-    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, window);
+    sptr<Surface> surface = std::any_cast<sptr<Surface>>(value);
+    OHNativeWindow* nativeWindow = new OHNativeWindow();
+    nativeWindow->surface = surface;
+    return OH_AVScreenCapture_StartScreenCaptureWithSurface(screenCapture_, nativeWindow);
 }
 
 int32_t ScreenCaptureCapiMock::Init(AVScreenCaptureConfig config)
@@ -188,7 +191,9 @@ int32_t ScreenCaptureCapiMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     DelCallback(screenCapture_);
-    return OH_AVScreenCapture_Release(screenCapture_);
+    int32_t ret = OH_AVScreenCapture_Release(screenCapture_);
+    screenCapture_ = nullptr;
+    return ret;
 }
 
 int32_t ScreenCaptureCapiMock::SetMicrophoneEnabled(bool isMicrophone)
@@ -197,10 +202,10 @@ int32_t ScreenCaptureCapiMock::SetMicrophoneEnabled(bool isMicrophone)
     return OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture_, isMicrophone);
 }
 
-int32_t ScreenCaptureCapiMock::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureCapiMock::SetCanvasRotation(bool canvasRotation)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    return OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture_, canvasRotation);
+    return OH_AVScreenCapture_SetCanvasRotation(screenCapture_, canvasRotation);
 }
 
 int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
@@ -213,9 +218,12 @@ int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &
     }
     auto t_type = static_cast<OH_AudioCaptureSourceType>(type);
     int32_t ret = OH_AVScreenCapture_AcquireAudioBuffer(screenCapture_, &buffer, t_type);
-    audioBuffer =
-        std::make_shared<AudioBuffer>(buffer->buf, buffer->size, buffer->timestamp,
-            static_cast<AudioCaptureSourceType>(buffer->type));
+    if (ret == AV_SCREEN_CAPTURE_ERR_OK) {
+        // If ret is not AV_SCREEN_CAPTURE_ERR_OK, the object referenced by buffer is not initialized and can't be used.
+        audioBuffer =
+            std::make_shared<AudioBuffer>(buffer->buf, buffer->size, buffer->timestamp,
+                static_cast<AudioCaptureSourceType>(buffer->type));
+    }
     free(buffer);
     buffer = nullptr;
     return ret;

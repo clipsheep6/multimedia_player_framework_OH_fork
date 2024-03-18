@@ -168,9 +168,13 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_screen_capture) {
     sources += [
+      "screen_capture/ipc/screen_capture_controller_stub.cpp",
       "screen_capture/ipc/screen_capture_listener_proxy.cpp",
       "screen_capture/ipc/screen_capture_service_stub.cpp",
+      "screen_capture/server/audio_capturer_wrapper.cpp",
+      "screen_capture/server/screen_capture_controller_server.cpp",
       "screen_capture/server/screen_capture_server.cpp",
+      "screen_capture/server/ui_extension_ability_connection.cpp",
     ]
   }
 
@@ -211,12 +215,20 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_screen_capture) {
     external_deps += [
+      "ability_base:base",
+      "ability_base:want",
+      "ability_base:zuri",
+      "ability_runtime:ability_context_native",
+      "ability_runtime:abilitykit_native",
+      "ability_runtime:extension_manager",
       "ability_runtime:runtime",
       "access_token:libnativetoken",
       "access_token:libprivacy_sdk",
       "access_token:libtoken_setproc",
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
+      "distributed_notification_service:ans_innerkits",
+      "relational_store:native_rdb",
       "window_manager:libdm",
     ]
   }

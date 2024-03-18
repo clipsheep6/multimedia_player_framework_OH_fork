@@ -54,10 +54,14 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnAudioBufferAvailable(isReady, type);
             return MSERR_OK;
         }
-
         case ScreenCaptureListenerMsg::ON_VIDEO_AVAILABLE: {
             bool isReady = data.ReadBool();
             OnVideoBufferAvailable(isReady);
+            return MSERR_OK;
+        }
+        case ScreenCaptureListenerMsg::ON_STAGE_CHANGE: {
+            AVScreenCaptureStateCode stateCode = static_cast<AVScreenCaptureStateCode>(data.ReadInt32());
+            OnStateChange(stateCode);
             return MSERR_OK;
         }
         default: {
@@ -67,10 +71,10 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
     }
 }
 
-void ScreenCaptureListenerStub::OnError(int32_t errorType, int32_t errorCode)
+void ScreenCaptureListenerStub::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
     if (callback_ != nullptr) {
-        callback_->OnError(static_cast<ScreenCaptureErrorType>(errorType), errorCode);
+        callback_->OnError(errorType, errorCode);
     }
 }
 
@@ -90,6 +94,13 @@ void ScreenCaptureListenerStub::OnVideoBufferAvailable(bool isReady)
 {
     if (callback_ != nullptr) {
         callback_->OnVideoBufferAvailable(isReady);
+    }
+}
+
+void ScreenCaptureListenerStub::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    if (callback_ != nullptr) {
+        callback_->OnStateChange(stateCode);
     }
 }
 } // namespace Media

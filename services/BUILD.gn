@@ -25,6 +25,14 @@ group("media_services_package") {
   if (multimedia_player_framework_support_seccomp) {
     deps += [ "seccomp_policy:media_seccomp_filter" ]
   }
+  if (multimedia_player_framework_support_screen_capture_controller) {
+    deps += [
+      "etc:screen_capture_capsule_image",
+      "etc:screen_capture_mic_image",
+      "etc:screen_capture_mic_off_image",
+      "etc:screen_capture_stop_image",
+    ]
+  }
 }
 
 ohos_prebuilt_etc("codec_caps") {
