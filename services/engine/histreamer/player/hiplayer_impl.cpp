@@ -1269,12 +1269,31 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 {
-    pipeline_->Pause();
     Format format;
     auto interruptEvent = AnyCast<AudioStandard::InterruptEvent>(event.param);
     int32_t hintType = interruptEvent.hintType;
     int32_t forceType = interruptEvent.forceType;
     int32_t eventType = interruptEvent.eventType;
+    if (forceType == OHOS::AudioStandard::INTERRUPT_FORCE) {
+        if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
+            || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
+            Status ret = Status::OK;
+            if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
+                syncManager_->Pause();
+                ret = pipeline_->Pause();
+            } else {
+                ret = pipeline_->Pause();
+                syncManager_->Pause();
+            }
+            if (audioSink_ != nullptr) {
+                audioSink_->Pause();
+            }
+            if (ret != Status::OK) {
+                UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+            }
+            callbackLooper_.StopReportMediaProgress();
+        }
+    }
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
