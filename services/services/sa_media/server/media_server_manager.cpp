@@ -218,11 +218,6 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 #ifdef SUPPORT_RECORDER
 sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
 {
-    constexpr uint32_t recorderMax = 2;
-    CHECK_AND_RETURN_RET_LOG(recorderStubMap_.size() < recorderMax,
-        nullptr, "The number of recorder services(%{public}zu) has reached the upper limit."
-        "Please release the applied resources.", recorderStubMap_.size());
-
     sptr<RecorderServiceStub> recorderStub = RecorderServiceStub::Create();
     CHECK_AND_RETURN_RET_LOG(recorderStub != nullptr, nullptr, "failed to create RecorderServiceStub");
 
