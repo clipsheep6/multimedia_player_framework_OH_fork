@@ -66,9 +66,9 @@ public:
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
-    void OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
+    Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
     {
-        hiPlayerImpl_->OnCallback(filter, cmd, outType);
+        return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
 private:
@@ -1362,28 +1362,26 @@ void HiPlayerImpl::OnStateChanged(PlayerStateId state)
     }
 }
 
-void HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
+Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
 {
     MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, ");
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case StreamType::STREAMTYPE_RAW_AUDIO:
-                LinkAudioSinkFilter(filter, outType);
-                break;
+                return LinkAudioSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
-                LinkAudioDecoderFilter(filter, outType);
-                break;
+                return LinkAudioDecoderFilter(filter, outType);
 #ifdef SUPPORT_VIDEO
             case StreamType::STREAMTYPE_RAW_VIDEO:
                 break;
             case StreamType::STREAMTYPE_ENCODED_VIDEO:
-                LinkVideoDecoderFilter(filter, outType);
-                break;
+                return LinkVideoDecoderFilter(filter, outType);
 #endif
             default:
                 break;
         }
     }
+    return Status::OK;
 }
 
 Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
