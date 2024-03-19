@@ -68,7 +68,8 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
     if (!firstFramePrinted) {
-        MEDIA_LOGI("first input buffer pts %{public} " PRId64 "", codecBuffer->hdiBuffer.pts);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " first input buffer pts %{public} " PRId64 "",
+            FAKE_POINTER(this), codecBuffer->hdiBuffer.pts);
         firstFramePrinted = true;
     }
     MEDIA_LOGD("id %{public}d, fillLen %{public}d, pts %{public} " PRId64 "",

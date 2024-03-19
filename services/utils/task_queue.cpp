@@ -40,7 +40,9 @@ int32_t TaskQueue::Start()
         MSERR_OK, "Started already, ignore ! [%{public}s]", name_.c_str());
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance thread started [%{public}s]", FAKE_POINTER(this), name_.c_str());
+    uint64_t curTimeNs = static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance thread started [%{public}s], curTimeUs: [%{public}" PRIu64 "]",
+        FAKE_POINTER(this), name_.c_str(), curTimeNs);
     return MSERR_OK;
 }
 

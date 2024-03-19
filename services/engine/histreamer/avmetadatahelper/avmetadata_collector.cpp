@@ -125,7 +125,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
         meta->Get<Tag::MIME_TYPE>(mime);
         int32_t imageTypeLength = 5;
         if (mime.substr(0, imageTypeLength).compare("image") == 0) {
-            MEDIA_LOGI("skip image track");
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " skip image track", FAKE_POINTER(this));
             ++imageTrackCount;
             continue;
         }
@@ -149,7 +149,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
 
 std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
 {
-    MEDIA_LOGI("GetArtPicture In");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " GetArtPicture In", FAKE_POINTER(this));
 
     if (collectedArtPicture_ != nullptr) {
         return collectedArtPicture_;

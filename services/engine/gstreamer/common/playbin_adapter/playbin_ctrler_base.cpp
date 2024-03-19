@@ -906,7 +906,10 @@ void PlayBinCtrlerBase::QueryDuration()
 
     gint64 duration = -1;
     gboolean ret = gst_element_query_duration(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &duration);
-    CHECK_AND_RETURN_LOG(ret, "0x%{public}06" PRIXPTR " query duration failed", FAKE_POINTER(this));
+    if (!(ret)) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " query duration failed", FAKE_POINTER(this));
+        return;
+    }
 
     if (duration >= 0) {
         duration_ = duration / NANO_SEC_PER_USEC;
@@ -1625,7 +1628,7 @@ void PlayBinCtrlerBase::OnAudioChanged()
 {
     CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
     if (!trackParse_->FindTrackInfo()) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " The plugin has been cleared, no need to report it", FAKE_POINTER(this));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " The plugin has been cleared, no need to report it", FAKE_POINTER(this));
         return;
     }
 

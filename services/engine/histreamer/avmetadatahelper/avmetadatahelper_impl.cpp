@@ -35,12 +35,12 @@ void AVMetadataHelperImpl::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
-    MEDIA_LOGI("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGD("Constructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
 {
-    MEDIA_LOGI("Destructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    MEDIA_LOGD("Destructor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
     Destroy();
 }
 
@@ -52,7 +52,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t /* usage
         return MSERR_UNSUPPORT;
     }
 
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " SetSource uri: %{private}s, type:%{public}d", FAKE_POINTER(this), uri.c_str(),
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " SetSource uri: %{private}s, type:%{public}d", FAKE_POINTER(this), uri.c_str(),
         uriHelper.UriType());
 
     auto ret = SetSourceInternel(uri);
@@ -112,7 +112,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
-    MEDIA_LOGI("enter FetchArtPicture");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " enter FetchArtPicture", FAKE_POINTER(this));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
     return metadataCollector_->GetArtPicture();
@@ -154,7 +154,7 @@ void AVMetadataHelperImpl::Destroy()
 
     metadataCollector_ = nullptr;
     thumbnailGenerator_ = nullptr;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Finish Destroy.", FAKE_POINTER(this));
 }
 
 Status AVMetadataHelperImpl::InitMetadataCollector()

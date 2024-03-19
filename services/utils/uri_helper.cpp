@@ -166,7 +166,7 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
             break;
     }
 
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " formatted uri: %{private}s", FAKE_POINTER(this), formattedUri_.c_str());
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " formatted uri: %{private}s", FAKE_POINTER(this), formattedUri_.c_str());
 }
 
 void UriHelper::FormatMeForFd() noexcept

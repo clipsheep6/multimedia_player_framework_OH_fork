@@ -80,7 +80,7 @@ int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
 int MediaServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
         FAKE_POINTER(this), code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();

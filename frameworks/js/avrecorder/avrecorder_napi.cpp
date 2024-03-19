@@ -871,7 +871,7 @@ AVRecorderNapi *AVRecorderNapi::GetJsInstanceAndArgs(
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
-    MEDIA_LOGI("argCount:%{public}zu", argCount);
+    MEDIA_LOGD("argCount:%{public}zu", argCount);
 
     AVRecorderNapi *recorderNapi = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));

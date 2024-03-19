@@ -125,7 +125,7 @@ static int32_t ConvertWarningMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     if (error == nullptr || debug == nullptr) {
         return MSERR_UNKNOWN;
     }
-    MEDIA_LOGW("[WARNING] %{public}s, %{public}s", error->message, debug);
+    MEDIA_LOGD("[WARNING] %{public}s, %{public}s", error->message, debug);
 
     innerMsg.type = INNER_MSG_WARNING;
     innerMsg.detail1 = MSERR_UNKNOWN;
