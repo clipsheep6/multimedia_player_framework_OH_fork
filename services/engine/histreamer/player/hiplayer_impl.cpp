@@ -289,7 +289,7 @@ void HiPlayerImpl::DoInitializeForHttp()
     MEDIA_LOG_I("DoInitializeForHttp");
     auto ret = demuxer_->GetBitRates(vBitRates);
     if (ret == Status::OK && vBitRates.size() > 0) {
-        int mSize = vBitRates.size();
+        int mSize = static_cast<int>(vBitRates.size());
         const int size = mSize;
         uint32_t* bitrates = vBitRates.data();
         Format bitRateFormat;
@@ -1114,7 +1114,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     MEDIA_LOG_I("OnComplete looping: " PUBLIC_LOG_D32 ".", singleLoop_.load());
     isStreaming_ = false;
     Format format;
-    int32_t curPosMs;
+    int32_t curPosMs = 0;
     GetCurrentTime(curPosMs);
     if (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY) {
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
