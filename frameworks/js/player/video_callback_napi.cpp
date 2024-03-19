@@ -355,7 +355,9 @@ void VideoCallbackNapi::UvWorkCallBack(uv_work_t *work, int status)
         napi_env env = asyncContext->env_;
         napi_open_handle_scope(env, &scope);
         CHECK_AND_RETURN_LOG(scope != nullptr, "scope is nullptr");
-        ON_SCOPE_EXIT(0) { napi_close_handle_scope(env, scope); };
+        ON_SCOPE_EXIT(0) {
+            napi_close_handle_scope(env, scope);
+        };
         MediaAsyncContext::CompleteCallback(asyncContext->env_, nstatus, work->data);
     }
     delete work;

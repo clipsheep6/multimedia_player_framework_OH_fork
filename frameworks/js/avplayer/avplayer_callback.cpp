@@ -47,7 +47,9 @@ public:
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -80,7 +82,9 @@ public:
             napi_open_handle_scope(errorRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(errorRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(errorRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status napiStatus = napi_get_reference_value(errorRef->env_, errorRef->cb_, &jsCallback);
@@ -110,7 +114,9 @@ public:
             napi_open_handle_scope(intRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(intRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(intRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(intRef->env_, intRef->cb_, &jsCallback);
@@ -139,7 +145,9 @@ public:
             napi_open_handle_scope(intVecRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(intVecRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(intVecRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(intVecRef->env_, intVecRef->cb_, &jsCallback);
@@ -170,7 +178,9 @@ public:
             napi_open_handle_scope(intArrayRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(intArrayRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(intArrayRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(intArrayRef->env_, intArrayRef->cb_, &jsCallback);
@@ -206,7 +216,9 @@ public:
             napi_open_handle_scope(doubleRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(doubleRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(doubleRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(doubleRef->env_, doubleRef->cb_, &jsCallback);
@@ -235,7 +247,9 @@ public:
             napi_open_handle_scope(subtitleRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(subtitleRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(subtitleRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(subtitleRef->env_, subtitleRef->cb_, &jsCallback);
@@ -265,7 +279,9 @@ public:
             napi_open_handle_scope(mapRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(mapRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(mapRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(mapRef->env_, mapRef->cb_, &jsCallback);
@@ -315,7 +331,9 @@ public:
             napi_open_handle_scope(propertyIntRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(propertyIntRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(propertyIntRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(propertyIntRef->env_, propertyIntRef->cb_, &jsCallback);
@@ -348,7 +366,9 @@ public:
             napi_open_handle_scope(stateChangeRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(stateChangeRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(stateChangeRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(stateChangeRef->env_, stateChangeRef->cb_, &jsCallback);
@@ -370,7 +390,9 @@ public:
 
     static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
     {
-        ON_SCOPE_EXIT(0) { delete jsCb; };
+        ON_SCOPE_EXIT(0) {
+            delete jsCb;
+        };
 
         uv_loop_s *loop = nullptr;
         napi_get_uv_event_loop(env, &loop);
@@ -402,7 +424,9 @@ public:
 
     static void CompleteCallbackInOrder(NapiCallback::Base *jsCb, std::shared_ptr<AppExecFwk::EventHandler> handler)
     {
-        ON_SCOPE_EXIT(0) { delete jsCb; };
+        ON_SCOPE_EXIT(0) {
+            delete jsCb;
+        };
         CHECK_AND_RETURN_LOG(handler != nullptr, "handler is nullptr");
 
         bool ret = handler->PostTask(std::bind(&Base::JsCallback, jsCb),
@@ -422,7 +446,9 @@ public:
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(trackChangeRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(trackChangeRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(trackChangeRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(trackChangeRef->env_, trackChangeRef->cb_, &jsCallback);
@@ -490,7 +516,9 @@ public:
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(trackInfoRef->env_, &scope);
             CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(trackInfoRef->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(trackInfoRef->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(trackInfoRef->env_, trackInfoRef->cb_, &jsCallback);
@@ -828,6 +856,7 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const int32_t extra, const Format &inf
         return;
     }
     NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new SubtitleProperty");
     if (infoBody.ContainKey(PlayerKeys::SUBTITLE_TEXT)) {
         (void)infoBody.GetStringValue(PlayerKeys::SUBTITLE_TEXT, cb->text);
     }
