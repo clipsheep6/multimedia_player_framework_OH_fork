@@ -122,7 +122,7 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     std::shared_ptr<TaskHandler<TaskRet>> task_ = nullptr;
     std::shared_ptr<std::unordered_map<int32_t, std::string>> metadata_ = nullptr;
     std::shared_ptr<PixelMap> artPicture_ = nullptr;
-    uint32_t status;
+    int32_t status;
 };
 } // namespace Media
 } // namespace OHOS

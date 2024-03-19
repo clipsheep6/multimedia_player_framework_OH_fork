@@ -76,14 +76,18 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
         CHECK_AND_RETURN_RET_LOG(cb_ != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
         cb_->callback_ = refMap_.at(READAT_CALLBACK_NAME);
     }
-    ON_SCOPE_EXIT(0) { cb_ = nullptr; };
+    ON_SCOPE_EXIT(0) {
+        cb_ = nullptr;
+    };
 
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_RET_LOG(loop != nullptr, 0, "Failed to get uv event loop");
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
-    ON_SCOPE_EXIT(1) { delete work; };
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
 
     MediaDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) MediaDataSourceJsCallbackWraper();
     CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new MediaDataSourceJsCallbackWraper");
@@ -116,7 +120,9 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(ref->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", event->callbackName_.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            ON_SCOPE_EXIT(0) {
+                napi_close_handle_scope(ref->env_, scope);
+            };
 
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
