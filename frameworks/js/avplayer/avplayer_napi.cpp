@@ -773,13 +773,18 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::setVolume");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsSetVolume In");
+    MEDIA_LOGI("JsSetVolume In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // setVolume(vol: number)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->playerCb_->isSetVolume_) {
+        MEDIA_LOGI("SetVolume is processing, skip this task until onVolumeChangedCb");
+    }
+    jsPlayer->playerCb_->isSetVolume_ = true;
+    
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "setVolume level is not number");

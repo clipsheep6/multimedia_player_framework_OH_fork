@@ -690,6 +690,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoB
     float volumeLevel = 0.0;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
 
+    isSetVolume_ = false;
     MEDIA_LOGD("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGD("can not find vol change callback!");

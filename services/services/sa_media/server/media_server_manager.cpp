@@ -182,10 +182,6 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 #ifdef SUPPORT_PLAYER
 sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 {
-    CHECK_AND_RETURN_RET_LOG(playerStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of player services(%{public}zu) has reached the upper limit."
-        "Please release the applied resources.", playerStubMap_.size());
-
 #ifdef PLAYER_USE_MEMORY_MANAGE
     sptr<PlayerServiceStub> playerStub = PlayerServiceStubMem::Create();
 #else
