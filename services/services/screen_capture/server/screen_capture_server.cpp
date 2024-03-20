@@ -1087,7 +1087,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
         int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "create virtual screen with input surface failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen with input surface failed");
         return MSERR_OK;
     }
 
@@ -1109,7 +1109,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
     int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen without input surface failed");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
@@ -1468,16 +1468,18 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 int32_t ScreenCaptureServer::StopScreenCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture S", FAKE_POINTER(this));
 
     std::lock_guard<std::mutex> lock(mutex_);
-    return StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+    int32_t ret = StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
+    return ret;
 }
 
 void ScreenCaptureServer::Release()
 {
     MediaTrace trace("ScreenCaptureServer::Release");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release S", FAKE_POINTER(this));
     int32_t sessionId;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -1491,6 +1493,7 @@ void ScreenCaptureServer::Release()
 
     std::lock_guard<std::mutex> lock(mutex_);
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release E", FAKE_POINTER(this));
 }
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()

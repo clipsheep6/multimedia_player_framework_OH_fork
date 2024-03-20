@@ -111,6 +111,9 @@
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_07.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_02.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01_inner.pcm"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01_mic.pcm"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01.yuv"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
@@ -137,6 +140,9 @@
             <option name="shell" value="touch /data/test/media/screen_capture_check_param_07.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_01.mp4"/>
             <option name="shell" value="touch /data/test/media/screen_capture_with_surface_02.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01_inner.pcm"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01_mic.pcm"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_specified_window_data_cb_01.yuv"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>

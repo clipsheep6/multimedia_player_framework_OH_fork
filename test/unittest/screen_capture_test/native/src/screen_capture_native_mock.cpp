@@ -48,6 +48,14 @@ void ScreenCaptureNativeCallbackMock::OnVideoBufferAvailable(bool isReady)
     }
 }
 
+void ScreenCaptureNativeCallbackMock::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (mockCb_ != nullptr) {
+        mockCb_->OnStateChange(stateCode);
+    }
+}
+
 void ScreenCaptureNativeCallbackMock::OnRelease()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -59,9 +67,13 @@ ScreenCaptureNativeMock::~ScreenCaptureNativeMock()
     MEDIA_LOGI("ScreenCaptureNativeMock::~ScreenCaptureNativeMock");
 }
 
-int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback)
+int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
+    const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled, const bool isStateChangeCallBackEnabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    (void)isErrorCallBackEnabled;
+    (void)isDataCallBackEnabled;
+    (void)isStateChangeCallBackEnabled;
     if (callback != nullptr) {
         cb_ = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
         return screenCapture_->SetScreenCaptureCallback(cb_);

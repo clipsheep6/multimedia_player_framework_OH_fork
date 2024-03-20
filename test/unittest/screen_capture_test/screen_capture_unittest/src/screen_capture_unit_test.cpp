@@ -33,12 +33,16 @@ namespace OHOS {
 namespace Media {
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode)
 {
+    ASSERT_FALSE(isErrorCallBackEnabled_);
     cout << "Error received, errorCode:" << errorCode << endl;
 }
 
 void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
+    cout << "OnAudioBufferAvailable S, isReady:" << isReady << endl;
+    ASSERT_FALSE(isDataCallBackEnabled_);
     if (isReady) {
+        cout << "OnAudioBufferAvailable isReady true" << endl;
         std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
         if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
             if (audioBuffer == nullptr) {
@@ -50,10 +54,12 @@ void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCa
             }
         }
         if (aFlag_ == 1) {
+            cout << "OnAudioBufferAvailable ReleaseAudioBuffer" << endl;
             screenCapture_->ReleaseAudioBuffer(type);
         }
+        cout << "OnAudioBufferAvailable isReady true E" << endl;
     } else {
-        cout << "AcquireAudioBuffer failed" << endl;
+        cout << "OnAudioBufferAvailable isReady false E" << endl;
     }
 }
 
@@ -68,7 +74,10 @@ void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer>
 
 void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
 {
+    cout << "OnVideoBufferAvailable S, isReady:" << isReady << endl;
+    ASSERT_FALSE(isDataCallBackEnabled_);
     if (isReady) {
+        cout << "OnVideoBufferAvailable isReady true" << endl;
         int32_t fence = 0;
         int64_t timestamp = 0;
         OHOS::Rect damage;
@@ -79,10 +88,11 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
                 << timestamp << ", size:"<< length << endl;
             DumpVideoBuffer(surfacebuffer);
             if (vFlag_ == 1) {
+                cout << "OnVideoBufferAvailable ReleaseVideoBuffer" << endl;
                 screenCapture_->ReleaseVideoBuffer();
             }
         } else {
-            cout << "AcquireVideoBuffer failed" << endl;
+            cout << "OnVideoBufferAvailable isReady true, AcquireVideoBuffer failed" << endl;
         }
     }
 }
@@ -94,6 +104,144 @@ void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> su
             cout << "error occurred in fwrite:" << strerror(errno) <<endl;
         }
     }
+}
+
+void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode, void *userData)
+{
+    ASSERT_TRUE(isErrorCallBackEnabled_);
+    cout << "Error received, errorCode:" << errorCode << ", userData:" << userData << endl;
+}
+
+void ScreenCaptureUnitTestCallback::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    ASSERT_TRUE(isStateChangeCallBackEnabled_);
+    cout << "OnStateChange received, stateCode:" << stateCode << endl;
+}
+
+void ScreenCaptureUnitTestCallback::OnBufferAvailable(std::shared_ptr<AVBuffer> buffer,
+    AVScreenCaptureBufferType bufferType, int64_t timestamp)
+{
+    ASSERT_TRUE(isDataCallBackEnabled_);
+    cout << "OnBufferAvailable received, bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+    if (buffer == nullptr || buffer->memory_ == nullptr) {
+        return;
+    }
+    switch (bufferType) {
+        case AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_VIDEO: {
+            sptr<OHOS::SurfaceBuffer> surfaceBuffer = buffer->memory_->GetSurfaceBuffer();
+            if (surfaceBuffer == nullptr || surfaceBuffer->GetVirAddr()) {
+                cout << "OnBufferAvailable videoBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!" <<
+                    "bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+                return;
+            }
+            ProcessVideoBuffer(surfaceBuffer, timestamp);
+            break;
+        }
+        case AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER: // fall-through
+        case AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC: {
+            uint8_t *auduioBuffer = buffer->memory_->GetAddr();
+            if (auduioBuffer == nullptr) {
+                cout << "OnBufferAvailable audioBuffer received is nullptr, PLEASE CHECK IF IT IS OK!!!" <<
+                    "bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+                return;
+            }
+            ProcessAudioBuffer(auduioBuffer, buffer->memory_->GetSize(), timestamp, bufferType);
+            break;
+        }
+        default:
+            cout << "OnBufferAvailable received invalid bufferType:" << bufferType <<
+                ", timestamp:" << timestamp << endl;
+            break;
+    }
+}
+
+void ScreenCaptureUnitTestCallback::DumpBuffer(FILE *file, uint8_t *buffer, int32_t size, int64_t timestamp,
+    AVScreenCaptureBufferType bufferType)
+{
+    cout << "DumpBuffer, bufferLen:" << size << ", bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+    if ((file == nullptr) || (buffer == nullptr)) {
+        cout << "DumpBuffer failed, file:" << (file == nullptr) << ", buffer:" << (buffer == nullptr) <<
+            ", bufferLen:" << size << ", bufferType:" << bufferType << ", timestamp:" << timestamp << endl;
+        return;
+    }
+    if (fwrite(buffer, 1, size, file) != static_cast<size_t>(size)) {
+        cout << "error occurred in fwrite:" << strerror(errno) << ", bufferType:" << bufferType <<
+            ", timestamp:" << timestamp << endl;
+    }
+}
+
+void ScreenCaptureUnitTestCallback::CheckDataCallbackVideo(int32_t flag)
+{
+    if (flag != 1 ) {
+        return;
+    }
+    if (isDataCallBackEnabled_) {
+        int32_t fence = 0;
+        int64_t timestamp = 0;
+        OHOS::Rect damage;
+        sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
+        EXPECT_EQ(nullptr, surfacebuffer);
+        EXPECT_NE(MSERR_OK, screenCapture_->ReleaseVideoBuffer());
+    }
+}
+
+void ScreenCaptureUnitTestCallback::ProcessVideoBuffer(sptr<OHOS::SurfaceBuffer> surfacebuffer, int64_t timestamp)
+{
+    int32_t size = surfacebuffer->GetSize();
+    DumpBuffer(videoFile_, reinterpret_cast<uint8_t *>(surfacebuffer->GetVirAddr()), size, timestamp);
+    CheckDataCallbackVideo(videoFlag_);
+}
+
+void ScreenCaptureUnitTestCallback::CheckDataCallbackAudio(AudioCaptureSourceType type, int32_t flag)
+{
+    if (flag != 1 ) {
+        return;
+    }
+    if (isDataCallBackEnabled_) {
+        std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
+        EXPECT_NE(MSERR_OK, screenCapture_->AcquireAudioBuffer(audioBuffer, type));
+        EXPECT_NE(MSERR_OK, screenCapture_->ReleaseAudioBuffer(type));
+    }
+}
+
+void ScreenCaptureUnitTestCallback::ProcessAudioBuffer(uint8_t *buffer, int32_t size, int64_t timestamp,
+    AVScreenCaptureBufferType bufferType)
+{
+    if (bufferType == AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER) {
+        DumpBuffer(innerAudioFile_, buffer, size, timestamp, bufferType);
+        CheckDataCallbackAudio(AudioCaptureSourceType::ALL_PLAYBACK, innerAudioFlag_);
+        return;
+    }
+    if (bufferType == AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC) {
+        DumpBuffer(micAudioFile_, buffer, size, timestamp, bufferType);
+        CheckDataCallbackAudio(AudioCaptureSourceType::MIC, micAudioFlag_);
+        return;
+    }
+    cout << "ProcessAudioBuffer invalid bufferType:" << bufferType << endl;
+}
+
+void ScreenCaptureUnitTestCallback::InitCaptureTrackInfo(FILE *file, int32_t flag, AVScreenCaptureBufferType bufferType)
+{
+    if (bufferType == AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_VIDEO) {
+        videoFile_ = file;
+        videoFlag_ = flag;
+    }
+    if (bufferType == AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER) {
+        innerAudioFile_ = file;
+        innerAudioFlag_ = flag;
+    }
+    if (bufferType == AVScreenCaptureBufferType::SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC) {
+        micAudioFile_ = file;
+        micAudioFlag_ = flag;
+    }
+}
+
+void ScreenCaptureUnitTestCallback::InitCallBackInfo(const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled,
+    const bool isStateChangeCallBackEnabled)
+{
+    isErrorCallBackEnabled_ = isErrorCallBackEnabled;
+    isDataCallBackEnabled_ = isDataCallBackEnabled;
+    isStateChangeCallBackEnabled_ = isStateChangeCallBackEnabled;
 }
 
 void ScreenCaptureUnitTest::SetUpTestCase(void) {}
@@ -208,6 +356,47 @@ int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, Reco
     return MSERR_OK;
 }
 
+void ScreenCaptureUnitTest::OpenFile(std::string name, bool isInnerAudioEnabled, bool isMicAudioEnabled,
+    bool isVideoEnabled)
+{
+    if (isInnerAudioEnabled) {
+        if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s_inner.pcm",
+            name.c_str()) >= 0) {
+            innerAudioFile_ = fopen(filename, "w+");
+            if (innerAudioFile_ == nullptr) {
+                cout << "micAudioFile_ open failed, " << strerror(errno) << endl;
+            }
+        } else {
+            cout << "snprintf micAudioFile_ failed, " << strerror(errno) << endl;
+            return;
+        }
+    }
+    if (isMicAudioEnabled) {
+        if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s_mic.pcm",
+            name.c_str()) >= 0) {
+            micAudioFile_ = fopen(filename, "w+");
+            if (micAudioFile_ == nullptr) {
+                cout << "micAudioFile_ open failed, " << strerror(errno) << endl;
+            }
+        } else {
+            cout << "snprintf micAudioFile_ failed, " << strerror(errno) << endl;
+            return;
+        }
+    }
+    if (isVideoEnabled) {
+        if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s.yuv",
+            name.c_str()) >= 0) {
+            videoFile_ = fopen(filename, "w+");
+            if (videoFile_ == nullptr) {
+                cout << "videoFile_ open failed, " << strerror(errno) << endl;
+            }
+        } else {
+            cout << "snprintf videoFile_ failed, " << strerror(errno) << endl;
+            return;
+        }
+    }
+}
+
 int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string filename, RecorderInfo &recorderInfo)
 {
     int32_t outputFd = open((screenCaptureRoot + filename).c_str(), O_RDWR | O_CREAT, 0777);
@@ -216,10 +405,10 @@ int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string filename, RecorderInf
     return MSERR_OK;
 }
 
-void ScreenCaptureUnitTest::OpenFile(std::string filename_)
+void ScreenCaptureUnitTest::OpenFile(std::string name)
 {
     if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s.pcm",
-        filename_.c_str()) >= 0) {
+        name.c_str()) >= 0) {
         aFile = fopen(filename, "w+");
         if (aFile == nullptr) {
             cout << "aFile audio open failed, " << strerror(errno) << endl;
@@ -229,7 +418,7 @@ void ScreenCaptureUnitTest::OpenFile(std::string filename_)
         return;
     }
     if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s.yuv",
-        filename_.c_str()) >= 0) {
+        name.c_str()) >= 0) {
         vFile = fopen(filename, "w+");
         if (vFile == nullptr) {
             cout << "vFile video open failed, " << strerror(errno) << endl;
@@ -249,6 +438,18 @@ void ScreenCaptureUnitTest::CloseFile(void)
     if (vFile != nullptr) {
         fclose(vFile);
         vFile = nullptr;
+    }
+    if (videoFile_ != nullptr) {
+        fclose(videoFile_);
+        videoFile_ = nullptr;
+    }
+    if (innerAudioFile_ != nullptr) {
+        fclose(innerAudioFile_);
+        innerAudioFile_ = nullptr;
+    }
+    if (micAudioFile_ != nullptr) {
+        fclose(micAudioFile_);
+        micAudioFile_ = nullptr;
     }
 }
 
@@ -516,6 +717,57 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    CloseFile();
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window after");
+}
+
+/**
+ * @tc.name: screen_capture_specified_window
+ * @tc.desc: open microphone
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window before");
+    Security::AccessToken::AccessTokenID tokenID =
+        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
+    SetSelfTokenID(tokenID);
+    AVScreenCaptureConfig config_;
+    SetConfig(config_);
+    config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
+    std::string deviceId = "";
+    std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
+    auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window result : %{public}d", result);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window size : %{public}s",
+        std::to_string(missionInfos.size()).c_str());
+    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window missionId : %{public}d", info.id);
+        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    }
+
+    std::string fileName = "screen_capture_specified_window_data_cb_01";
+
+    screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
+    ASSERT_NE(nullptr, screenCaptureCb_);
+    // track enalbed: inner: true, mic: true, video: true
+    OpenFile(fileName, true, true, true);
+    // check track aquire & release: inner: 1, mic: 1, video: 1
+    screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
+    screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
+    screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
+    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
+    screenCaptureCb_->InitCallBackInfo(true, true, true);
+    bool isMicrophone = true;
+    screenCapture_->SetMicrophoneEnabled(isMicrophone);
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(RECORDER_TIME);

@@ -103,6 +103,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "media_foundation:media_foundation",
     "player_framework:media_client",
     "window_manager:libdm",
   ]
