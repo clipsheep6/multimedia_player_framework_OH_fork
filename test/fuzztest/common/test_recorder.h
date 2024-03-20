@@ -71,6 +71,7 @@ public:
     void Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool CreateRecorder();
     void SetVideoEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoIsHdr(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetVideoSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetVideoFrameRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetVideoEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);

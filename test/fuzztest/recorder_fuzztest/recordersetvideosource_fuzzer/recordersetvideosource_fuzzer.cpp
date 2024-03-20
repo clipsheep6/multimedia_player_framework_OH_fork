@@ -57,6 +57,7 @@ bool RecorderSetVideoSourceFuzzer::FuzzRecorderSetVideoSource(uint8_t *data, siz
     
     if (g_videoRecorderConfig.outputFd >= 0) {
         TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetVideoIsHdr(g_videoRecorderConfig);
         TestRecorder::SetOutputFormat(g_videoRecorderConfig);
         TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
         TestRecorder::SetMaxDuration(g_videoRecorderConfig);
