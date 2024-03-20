@@ -184,6 +184,19 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
+{
+    MEDIA_LOG_I("url %{public}s", url.c_str());
+    MEDIA_LOG_I("HiPlayerImpl SetMediaSource header size %{public}d", header.size());
+    MEDIA_LOG_I("HiPlayerImpl SetMediaSource strategy.preferedWidth %{public}d", strategy.preferedWidth);
+    this->header = header;
+    this->preferedWidth = strategy.preferedWidth;
+    this->preferedHeight = strategy.preferedHeight;
+    this->bufferDuration = strategy.preferedBufferDuration;
+    this->preferHDR = strategy.preferHDR;
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MEDIA_LOG_I("SetSource entered source stream");
