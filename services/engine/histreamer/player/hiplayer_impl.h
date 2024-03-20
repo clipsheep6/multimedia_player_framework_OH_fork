@@ -66,6 +66,7 @@ public:
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetMediaSource(std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
@@ -194,6 +195,11 @@ private:
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
+    std::map<std::string, std::string> header;
+    u_int32_t preferedWidth = 0;
+    u_int32_t preferedHeight = 0;
+    u_int32_t bufferDuration = 0;
+    bool preferHDR = false;
 };
 } // namespace Media
 } // namespace OHOS

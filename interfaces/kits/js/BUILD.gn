@@ -54,6 +54,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/media",
+    "//foundation/multimedia/player_framework/frameworks/js/mediasource",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
@@ -68,6 +69,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/mediasource/media_source_napi.cpp"
   ]
 
   if (multimedia_player_framework_support_player) {
