@@ -935,10 +935,6 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     localLiveViewContent->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::TIME);
 
     auto basicButton = NotificationLocalLiveViewButton();
-    basicButton.addSingleButtonName(BUTTON_NAME_MIC);
-    std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC);
-    basicButton.addSingleButtonIcon(pixelMapSpr);
-
     basicButton.addSingleButtonName(BUTTON_NAME_STOP);
     std::shared_ptr<PixelMap> pixelMapStopSpr = GetPixelMap(ICON_PATH_STOP);
     basicButton.addSingleButtonIcon(pixelMapStopSpr);
@@ -1388,7 +1384,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
-        ret = recorder_->Stop(true);
+        ret = recorder_->Stop(false);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
         }
