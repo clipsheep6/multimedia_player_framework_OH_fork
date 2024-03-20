@@ -62,7 +62,9 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
     PixelMapMemHolder *holder = new (std::nothrow) PixelMapMemHolder;
     CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "alloc pixelmap mem holder failed");
 
-    ON_SCOPE_EXIT(0) { delete holder; };
+    ON_SCOPE_EXIT(0) {
+        delete holder;
+    };
 
     int32_t minStride = frame.width_ * frame.bytesPerPixel_;
     CHECK_AND_RETURN_RET_LOG(minStride <= frame.stride_, nullptr, "stride info wrong");
@@ -82,7 +84,9 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
     uint8_t *heap = new (std::nothrow) uint8_t[memSize];
     CHECK_AND_RETURN_RET_LOG(heap != nullptr, nullptr, "alloc heap failed");
 
-    ON_SCOPE_EXIT(1) { delete [] heap; };
+    ON_SCOPE_EXIT(1) {
+        delete [] heap;
+    };
 
     uint8_t *currDstPos = heap;
     uint8_t *currSrcPos = frame.GetFlattenedData();

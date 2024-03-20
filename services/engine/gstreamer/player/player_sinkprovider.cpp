@@ -213,7 +213,7 @@ void PlayerSinkProvider::OnFirstRenderFrame()
         PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
         notifier_(msg);
         SetFirstRenderFrameFlag(false);
-        MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
+        MEDIA_LOGD("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
     }
 }
 

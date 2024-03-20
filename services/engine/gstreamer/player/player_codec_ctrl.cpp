@@ -91,7 +91,7 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     SetupCodecCb(metaStr, src, videoSink, notifier);
     if (IsFirstCodecSetup()) {
         SetupCodecBufferNum(metaStr, videoSink);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Set isHardwareDec_ %{public}d", FAKE_POINTER(this), isHardwareDec_);
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " Set isHardwareDec_ %{public}d", FAKE_POINTER(this), isHardwareDec_);
         g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
         isHEBCMode_ = isHardwareDec_;
     }

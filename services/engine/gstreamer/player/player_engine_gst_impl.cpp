@@ -487,7 +487,7 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("Audio interrupt event in");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Audio interrupt event in", FAKE_POINTER(this));
     uint32_t value = std::any_cast<uint32_t>(msg.extra);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
@@ -504,7 +504,7 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Audio first frame event in", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Audio first frame event in", FAKE_POINTER(this));
     uint64_t value = std::any_cast<uint64_t>(msg.extra);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
@@ -516,7 +516,7 @@ void PlayerEngineGstImpl::HandleAudioFirstFrameMessage(const PlayBinMessage &msg
 
 void PlayerEngineGstImpl::HandleDeviceChangeMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Audio deviceChange event in", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Audio deviceChange event in", FAKE_POINTER(this));
     std::pair<void*, const int32_t> value = std::any_cast<std::pair<void*, const int32_t>>(msg.extra);
     std::unique_ptr<AudioStandard::DeviceInfo> deviceInfo(static_cast<AudioStandard::DeviceInfo*> (value.first));
     const int32_t reason = value.second;

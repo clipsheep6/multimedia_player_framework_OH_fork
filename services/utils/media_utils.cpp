@@ -119,6 +119,42 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
     return bundleName;
 }
 
+std::string __attribute__((visibility("default"))) GetBundleResourceLabel(std::string bundleName)
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOG_E("Get ability manager failed");
+        return bundleName;
+    }
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (object == nullptr) {
+        MEDIA_LOG_E("object is NULL.");
+        return bundleName;
+    }
+
+    sptr<OHOS::AppExecFwk::IBundleMgr> bms = iface_cast<OHOS::AppExecFwk::IBundleMgr>(object);
+    if (bms == nullptr) {
+        MEDIA_LOG_E("bundle manager service is NULL.");
+        return bundleName;
+    }
+
+    auto bundleResourceProxy = bms->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        MEDIA_LOG_E("GetBundleResourceProxy fail");
+        return bundleName;
+    }
+    AppExecFwk::BundleResourceInfo resourceInfo;
+    auto result = bundleResourceProxy->GetBundleResourceInfo(bundleName,
+        static_cast<uint32_t>(OHOS::AppExecFwk::ResourceFlag::GET_RESOURCE_INFO_ALL), resourceInfo);
+    if (result != ERR_OK) {
+        MEDIA_LOG_E("GetBundleResourceInfo failed");
+        return bundleName;
+    }
+    MEDIA_LOG_I("bundle resource label is %{public}s ", (resourceInfo.label).c_str());
+    return resourceInfo.label;
+}
+
 
 int __attribute__((visibility("default"))) TransStatus(Status status)
 {

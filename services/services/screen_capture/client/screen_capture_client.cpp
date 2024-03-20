@@ -149,6 +149,13 @@ int32_t ScreenCaptureClient::InitVideoCap(VideoCaptureInfo videoInfo)
     return screenCaptureProxy_->InitVideoCap(videoInfo);
 }
 
+int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
+    return screenCaptureProxy_->ExcludeContent(contentFilter);
+}
+
 int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -156,25 +163,25 @@ int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
     return screenCaptureProxy_->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t ScreenCaptureClient::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureClient::SetCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetScreenCanvasRotation(canvasRotation);
+    return screenCaptureProxy_->SetCanvasRotation(canvasRotation);
 }
 
-int32_t ScreenCaptureClient::StartScreenCapture()
+int32_t ScreenCaptureClient::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->StartScreenCapture();
+    return screenCaptureProxy_->StartScreenCapture(isPrivacyAuthorityEnabled);
 }
 
-int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface)
+int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->StartScreenCaptureWithSurface(surface);
+    return screenCaptureProxy_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
 }
 
 

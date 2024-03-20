@@ -121,7 +121,7 @@ void PlayerTrackParse::OnElementUnSetup(GstElement &elem)
 
         if (inputSelectMap_.empty()) {
             findTrackInfo_ = false;
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Remove all inputselect plugins", FAKE_POINTER(this));
+            MEDIA_LOGD("0x%{public}06" PRIXPTR " Remove all inputselect plugins", FAKE_POINTER(this));
         }
     }
 

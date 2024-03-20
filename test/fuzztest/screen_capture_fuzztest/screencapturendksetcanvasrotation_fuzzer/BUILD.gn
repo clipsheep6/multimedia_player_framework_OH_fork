@@ -18,12 +18,13 @@ import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScreenCaptureSetScreenCanvasRotationFuzzTest") {
+ohos_fuzztest("ScreenCaptureNdkSetCanvasRotationFuzzTest") {
   module_out_path = "$MODULE_OUTPUT_PATH/screen_capture"
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturesetscreencanvasrotation_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturendksetcanvasrotation_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
+    "$MEDIA_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
@@ -54,13 +55,14 @@ ohos_fuzztest("ScreenCaptureSetScreenCanvasRotationFuzzTest") {
   if (multimedia_player_framework_support_screen_capture) {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",
-      "screencapturesetscreencanvasrotation_fuzzer.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_ndk_screen_capture.cpp",
+      "screencapturesetcanvasrotation_ndk_fuzzer.cpp",
     ]
   }
   deps = [
     "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
   ]
   external_deps = [
     "access_token:libaccesstoken_sdk",

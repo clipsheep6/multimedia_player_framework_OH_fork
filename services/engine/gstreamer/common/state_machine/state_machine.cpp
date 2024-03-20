@@ -55,7 +55,7 @@ void StateMachine::ChangeState(const std::shared_ptr<State> &state)
             currState_->StateExit();
         }
 
-        MEDIA_LOGI("change state to %{public}s. Instances 0x%{public}06" PRIXPTR,
+        MEDIA_LOGD("change state to %{public}s. Instances 0x%{public}06" PRIXPTR,
             state->name_.c_str(), FAKE_POINTER(this));
         currState_ = state;
     }

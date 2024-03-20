@@ -96,7 +96,8 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     if (isFormatChange_ && !mBuffers.empty()) {
         MEDIA_LOGD("format change, waiting mBuffers empty");
     } else if (isFlushed_ || !isStart_) {
-        MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_.load(), isStart_);
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " isFlush %{public}d isStart %{public}d",
+            FAKE_POINTER(this), isFlushed_.load(), isStart_);
         return GST_CODEC_FLUSH;
     }
     if (!mBuffers.empty()) {
@@ -125,7 +126,7 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
         [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferReleased_; });
     FreeCodecBuffers();
-    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " unref mBuffers %{public}zu", FAKE_POINTER(this), mBuffers.size());
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });
     EmptyList(mBuffers);
     return GST_CODEC_OK;

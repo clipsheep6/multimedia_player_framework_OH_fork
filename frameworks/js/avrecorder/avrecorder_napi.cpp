@@ -66,6 +66,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_FUNCTION("SetOrientationHint", JsSetOrientationHint),
+        DECLARE_NAPI_FUNCTION("updateRecordRotation", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("getInputSurface", JsGetInputSurface),
         DECLARE_NAPI_FUNCTION("start", JsStart),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
@@ -870,7 +871,7 @@ AVRecorderNapi *AVRecorderNapi::GetJsInstanceAndArgs(
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
-    MEDIA_LOGI("argCount:%{public}zu", argCount);
+    MEDIA_LOGD("argCount:%{public}zu", argCount);
 
     AVRecorderNapi *recorderNapi = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
@@ -1442,7 +1443,8 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
 int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
 {
     napi_valuetype valueType = napi_undefined;
-    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
+    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok ||
+        (valueType != napi_object && valueType != napi_number)) {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetConfig", "AVRecorderConfig");
         return MSERR_INVALID_VAL;
     }
@@ -1452,6 +1454,14 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
         (asyncCtx->AVRecorderSignError(MSERR_NO_MEMORY, "AVRecorderConfig", "AVRecorderConfig"), MSERR_NO_MEMORY));
 
     std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
+
+    if (napi_get_value_int32(env, args, &(config->rotation)) == napi_ok) {
+        CHECK_AND_RETURN_RET((config->rotation == VIDEO_ROTATION_0 || config->rotation == VIDEO_ROTATION_90 ||
+                                 config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
+        MEDIA_LOGI("GetRecordRotation success %{public}d", config->rotation);
+        return MSERR_OK;
+    }
 
     bool getValue = false;
     int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);

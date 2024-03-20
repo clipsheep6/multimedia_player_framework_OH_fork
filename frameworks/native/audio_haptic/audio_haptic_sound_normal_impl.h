@@ -64,6 +64,7 @@ private:
     // var for avplayer
     std::shared_ptr<Media::Player> avPlayer_ = nullptr;
     std::shared_ptr<PlayerCallback> avPlayerCallback_ = nullptr;
+    int32_t fileDes_ = -1;
     bool isPrepared_ = false;
     bool isReleased_ = false;
     bool isUnsupportedFile_ = false;

@@ -27,6 +27,7 @@ namespace Media {
 namespace PlayerTestParam {
 inline constexpr int32_t SEEK_TIME_9_SEC = 9000;
 inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
+inline constexpr int32_t SEEK_TIME_4_SEC = 4000;
 inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
 inline constexpr int32_t waitsecond = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
@@ -149,6 +150,7 @@ public:
     int32_t AddSubSource(const std::string &url);
     int32_t AddSubSource(const std::string &path, int64_t offset, int64_t size);
     std::string GetSubtitleText(std::string text);
+    sptr<Surface> GetVideoSurfaceNext();
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
@@ -158,6 +160,9 @@ private:
     int32_t height_ = 1080;
     int32_t width_ = 1920;
     std::mutex mutex_;
+    sptr<Rosen::Window> previewWindowNext_ = nullptr;
+    int32_t nextSurfaceHeight_ = 100;
+    int32_t nextSurfaceWidth_ = 100;
 };
 } // namespace Media
 } // namespace OHOS

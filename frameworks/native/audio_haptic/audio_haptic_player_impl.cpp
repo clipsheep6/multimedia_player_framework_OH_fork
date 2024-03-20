@@ -322,7 +322,11 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
 void AudioHapticPlayerImpl::StopVibrate()
 {
     MEDIA_LOGI("Stop vibrate for audio haptic player right now.");
-    audioHapticVibrator_->StopVibrate();
+    if (audioHapticVibrator_ != nullptr) {
+        audioHapticVibrator_->StopVibrate();
+    } else {
+        MEDIA_LOGW("The audio haptic vibrator is nullptr!");
+    }
     {
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
         isVibrationStopped_ = true;
@@ -337,7 +341,11 @@ void AudioHapticPlayerImpl::StopVibrate()
 void AudioHapticPlayerImpl::ResetVibrateState()
 {
     isVibrationStopped_ = false;
-    audioHapticVibrator_->ResetStopState();
+    if (audioHapticVibrator_ != nullptr) {
+        audioHapticVibrator_->ResetStopState();
+    } else {
+        MEDIA_LOGW("The audio haptic vibrator is nullptr!");
+    }
 }
 
 void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent)

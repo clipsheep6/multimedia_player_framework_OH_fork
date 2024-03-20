@@ -209,7 +209,7 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         if (work->data != nullptr) {
-            MEDIA_LOGI("work data not nullptr");
+            MEDIA_LOGD("work data not nullptr");
             SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
             std::string request = event->callbackName;
             do {
