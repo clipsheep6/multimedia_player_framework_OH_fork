@@ -288,6 +288,7 @@ public:
             }
             dataCallback_->OnBufferAvailable(capture_,
                 OH_AVScreenCaptureBufferType::OH_SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
+            return;
         }
         if (capture_ != nullptr && callback_.onVideoBufferAvailable != nullptr) {
             callback_.onVideoBufferAvailable(capture_, isReady);
@@ -758,7 +759,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetStateCallback(struct OH_AVScre
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetStateCallback is null");
 
     if (screenCaptureObj->callback_ == nullptr ||
-        screenCaptureObj->callback_->SetStateChangeCallback(callback, userData)) {
+        !screenCaptureObj->callback_->SetStateChangeCallback(callback, userData)) {
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -776,7 +777,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetErrorCallback(struct OH_AVScre
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetErrorCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr || screenCaptureObj->callback_->SetErrorCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr || !screenCaptureObj->callback_->SetErrorCallback(callback, userData)) {
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -795,7 +796,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScree
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetDataCallback is null");
 
     if (screenCaptureObj->callback_ == nullptr ||
-        screenCaptureObj->callback_->SetDataCallback(callback, userData)) {
+        !screenCaptureObj->callback_->SetDataCallback(callback, userData)) {
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
     return AV_SCREEN_CAPTURE_ERR_OK;
