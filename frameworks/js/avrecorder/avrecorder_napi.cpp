@@ -66,7 +66,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
         DECLARE_NAPI_FUNCTION("SetOrientationHint", JsSetOrientationHint),
-        DECLARE_NAPI_FUNCTION("updateRecordRotation", JsSetOrientationHint),
+        DECLARE_NAPI_FUNCTION("updateRotation", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("getInputSurface", JsGetInputSurface),
         DECLARE_NAPI_FUNCTION("start", JsStart),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
