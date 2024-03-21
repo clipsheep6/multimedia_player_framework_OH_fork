@@ -120,7 +120,7 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     }
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
-    OH_AVScreenCapture_SetScreenCanvasRotation(screenCapture, true);
+    OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;

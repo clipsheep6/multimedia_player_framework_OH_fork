@@ -155,8 +155,13 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second.first;
         auto funcName = itFunc->second.second;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
-            FAKE_POINTER(this), funcName.c_str());
+        if (funcName.compare("Player::SetVolume") == 0) {
+            MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
+                FAKE_POINTER(this), funcName.c_str());
+        } else {
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
+                FAKE_POINTER(this), funcName.c_str());
+        }
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
                 (void)IpcRecovery(false);

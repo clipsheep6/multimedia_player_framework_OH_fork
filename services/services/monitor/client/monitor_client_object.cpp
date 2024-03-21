@@ -46,7 +46,7 @@ int32_t MonitorClientObject::EnableMonitor()
 
 int32_t MonitorClientObject::DisableMonitor()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " DisableMonitor", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " DisableMonitor", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(monitorMutex_);
     if (!monitorEnable_) {
         return MSERR_OK;

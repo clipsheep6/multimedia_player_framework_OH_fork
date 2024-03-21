@@ -166,7 +166,7 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
             break;
     }
 
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " formatted uri: %{private}s", FAKE_POINTER(this), formattedUri_.c_str());
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " formatted uri: %{private}s", FAKE_POINTER(this), formattedUri_.c_str());
 }
 
 void UriHelper::FormatMeForFd() noexcept
@@ -246,7 +246,6 @@ bool UriHelper::ParseFdUri(std::string_view uri)
     static constexpr std::string_view::size_type delim2Len = std::string_view("&size=").size();
     std::string_view::size_type delim1 = uri.find("?");
     std::string_view::size_type delim2 = uri.find("&");
-
     if (delim1 == std::string_view::npos && delim2 == std::string_view::npos) {
         CHECK_AND_RETURN_RET_LOG(StrToInt(uri, fd_), false, "Invalid fd url");
     } else if (delim1 != std::string_view::npos && delim2 != std::string_view::npos) {

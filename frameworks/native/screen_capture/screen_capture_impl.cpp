@@ -69,20 +69,39 @@ ScreenCaptureImpl::~ScreenCaptureImpl()
 
 int32_t ScreenCaptureImpl::Release()
 {
-    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " CheckScreenCapturePermssion in", FAKE_POINTER(this));
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
     screenCaptureService_->Release();
     return MSERR_OK;
 }
 
-bool ScreenCaptureImpl::NeedStartInnerAudio(AudioCaptureSourceType type)
+int32_t ScreenCaptureImpl::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
 {
-    if ((type == ALL_PLAYBACK) || (type == APP_PLAYBACK)) {
-        return true;
-    }
-    MEDIA_LOGI("No need start inner audiocapture");
-    return false;
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " ExcludeContent in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    return screenCaptureService_->ExcludeContent(contentFilter);
+}
+
+int32_t ScreenCaptureImpl::SetPrivacyAuthorityEnabled()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
+        "screen capture service does not exist..");
+    isPrivacyAuthorityEnabled_ = true;
+    MEDIA_LOGI("ScreenCaptureImpl:0x%{public}06" PRIXPTR " isPrivacyAuthorityEnabled:%{public}d",
+        FAKE_POINTER(this), isPrivacyAuthorityEnabled_);
+    return MSERR_OK;
+}
+
+bool ScreenCaptureImpl::IsAudioCapInfoIgnored(const AudioCaptureInfo &audioCapInfo)
+{
+    return audioCapInfo.audioChannels == 0 && audioCapInfo.audioSampleRate == 0;
+}
+
+bool ScreenCaptureImpl::IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapInfo)
+{
+    return videoCapInfo.videoFrameWidth == 0 && videoCapInfo.videoFrameHeight == 0;
 }
 
 int32_t ScreenCaptureImpl::SetMicrophoneEnabled(bool isMicrophone)
@@ -93,12 +112,12 @@ int32_t ScreenCaptureImpl::SetMicrophoneEnabled(bool isMicrophone)
     return screenCaptureService_->SetMicrophoneEnabled(isMicrophone);
 }
 
-int32_t ScreenCaptureImpl::SetScreenCanvasRotation(bool canvasRotation)
+int32_t ScreenCaptureImpl::SetCanvasRotation(bool canvasRotation)
 {
-    MEDIA_LOGD("SetScreenCanvasRotation:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
+    MEDIA_LOGD("SetCanvasRotation:0x%{public}06" PRIXPTR " init in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
                              "screen capture service does not exist..");
-    return screenCaptureService_->SetScreenCanvasRotation(canvasRotation);
+    return screenCaptureService_->SetCanvasRotation(canvasRotation);
 }
 
 int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
@@ -138,24 +157,34 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
 
 int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
 {
-    CHECK_AND_RETURN_RET_LOG(config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
-        config.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::MIC, MSERR_INVALID_VAL,
-        "audioSource source type error");
+    // For original stream:
+    // 1. Any of innerCapInfo/videoCapInfo should be not invalid and should not be both ignored
+    // 2. micCapInfo should not be invalid
     int32_t ret = MSERR_OK;
-    ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initMicAudioCap failed");
-    ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initVideoCap failed");
-
-    if (NeedStartInnerAudio(config.audioInfo.innerCapInfo.audioSource)) {
+    bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
+    bool isVideoCapInfoIgnored = IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo);
+    CHECK_AND_RETURN_RET_LOG(!(isInnerAudioCapInfoIgnored && isVideoCapInfoIgnored), MSERR_INVALID_VAL,
+        "init cap failed, both innerAudioCap and videoCap Info ignored is not allowed");
+    if (!isInnerAudioCapInfoIgnored) {
         ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "initInnerAudioCap failed");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerAudioCap failed");
+    }
+    if (!isVideoCapInfoIgnored) {
+        ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init videoCap failed");
+    }
+    if (!IsAudioCapInfoIgnored(config.audioInfo.micCapInfo)) {
+        ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
     return ret;
 }
 
 int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
 {
+    // For capture file:
+    // 1. All of innerCapInfo/videoCapInfo/audioEncInfo/videoEncInfo should be be valid
+    // 2. micCapInfo should not be invalid
     int32_t ret = MSERR_OK;
     ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
@@ -171,24 +200,23 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
-    int32_t retMic = MSERR_OK;
-    int32_t retInner = MSERR_OK;
-    AudioCaptureSourceType type = config.audioInfo.micCapInfo.audioSource;
-    if (type == AudioCaptureSourceType::SOURCE_DEFAULT || type == AudioCaptureSourceType::MIC) {
-        config.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::MIC;
-        retMic = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
-    } else {
-        return MSERR_INVALID_VAL;
+
+    bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
+    CHECK_AND_RETURN_RET_LOG(!isInnerAudioCapInfoIgnored, MSERR_INVALID_VAL,
+        "init innerCapInfo failed, innerCapInfo ignored is now allowed");
+    bool isMicAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.micCapInfo);
+    if (!isMicAudioCapInfoIgnored) {
+        if ((config.audioInfo.micCapInfo.audioChannels != config.audioInfo.innerCapInfo.audioChannels) ||
+            (config.audioInfo.micCapInfo.audioSampleRate != config.audioInfo.innerCapInfo.audioSampleRate)) {
+            MEDIA_LOGE("InitCaptureFile error, inner and mic param not consistent");
+            return MSERR_INVALID_VAL;
+        }
+        ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
-    type = config.audioInfo.innerCapInfo.audioSource;
-    if (type == AudioCaptureSourceType::ALL_PLAYBACK || type == AudioCaptureSourceType::APP_PLAYBACK) {
-        retInner = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
-    } else if (type == AudioCaptureSourceType::SOURCE_DEFAULT) {
-        retInner = MSERR_INVALID_VAL;
-    } else {
-        return MSERR_INVALID_VAL;
-    }
-    CHECK_AND_RETURN_RET_LOG(retMic == MSERR_OK || retInner == MSERR_OK, MSERR_INVALID_VAL, "InitAudioCap failed");
+    ret = screenCaptureService_->InitAudioCap(config.audioInfo.innerCapInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
+
     ret = screenCaptureService_->InitVideoEncInfo(config.videoInfo.videoEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed");
     ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
@@ -202,7 +230,7 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
     if (dataType_ == ORIGINAL_STREAM) {
-        return screenCaptureService_->StartScreenCapture();
+        return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
@@ -216,7 +244,7 @@ int32_t ScreenCaptureImpl::StartScreenCaptureWithSurface(sptr<Surface> surface)
         "screen capture service does not exist..");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_UNKNOWN, "surface is nullptr");
     if (dataType_ == ORIGINAL_STREAM) {
-        return screenCaptureService_->StartScreenCaptureWithSurface(surface);
+        return screenCaptureService_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
@@ -229,6 +257,7 @@ int32_t ScreenCaptureImpl::StopScreenCapture()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
     if (dataType_ == ORIGINAL_STREAM) {
+        isPrivacyAuthorityEnabled_ = false;
         return screenCaptureService_->StopScreenCapture();
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StopScreenCapture error , dataType_ : %{public}d", dataType_);
@@ -242,7 +271,7 @@ int32_t ScreenCaptureImpl::StartScreenRecording()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
     if (dataType_ == CAPTURE_FILE) {
-        return screenCaptureService_->StartScreenCapture();
+        return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
@@ -255,6 +284,7 @@ int32_t ScreenCaptureImpl::StopScreenRecording()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "screen capture service does not exist..");
     if (dataType_ == CAPTURE_FILE) {
+        isPrivacyAuthorityEnabled_ = false;
         return screenCaptureService_->StopScreenCapture();
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StopScreenRecording error , dataType_ : %{public}d", dataType_);

@@ -173,7 +173,7 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
         target = factorys_.front();
     }
 
-    MEDIA_LOGI("Selected factory: 0x%{public}06" PRIXPTR ", score: %{public}d,"
+    MEDIA_LOGD("Selected factory: 0x%{public}06" PRIXPTR ", score: %{public}d,"
         "appUid: %{public}d", FAKE_POINTER(target.get()), maxScore, appUid);
     return target;
 }

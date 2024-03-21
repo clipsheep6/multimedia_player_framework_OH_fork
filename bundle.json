@@ -64,6 +64,7 @@
           "ability_base",
           "ability_runtime",
           "bundle_framework",
+          "distributed_notification_service",
           "relational_store",
           "resource_management",
           "av_codec",

@@ -59,8 +59,14 @@ int32_t PlayerServerTaskMgr::EnqueueTask(const std::shared_ptr<ITaskHandler> &ta
     currTwoPhaseTask_ = task;
     currTwoPhaseType_ = type;
     currTwoPhaseTaskName_ = taskName;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] start",
-        FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
+    if (taskName.compare("volume") == 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] start",
+            FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
+    } else {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] start",
+            FAKE_POINTER(this), currTwoPhaseTaskName_.c_str());
+    }
+
     return MSERR_OK;
 }
 
@@ -81,8 +87,14 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
         if (currTwoPhaseTask_ == nullptr) {
             return EnqueueTask(task, type, taskName);
         } else {
-            MEDIA_LOGI("current 0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
-                FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+            if (taskName.compare("volume") == 0) {
+                MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
+                    FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+            } else {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
+                    FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+            }
+
             pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
         }
     }
@@ -167,7 +179,11 @@ int32_t PlayerServerTaskMgr::MarkTaskDone(const std::string &taskName)
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
 
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] end", FAKE_POINTER(this), taskName.c_str());
+    if (taskName.compare("volume done") == 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] end", FAKE_POINTER(this), taskName.c_str());
+    } else {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] end", FAKE_POINTER(this), taskName.c_str());
+    }
     currTwoPhaseTask_ = nullptr;
     currTwoPhaseType_ = PlayerServerTaskType::BUTT;
     currTwoPhaseTaskName_ = "None";

@@ -35,7 +35,6 @@ MediaServiceStub::MediaServiceStub()
 
 MediaServiceStub::~MediaServiceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void MediaServiceStub::Init()
@@ -80,7 +79,7 @@ int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
 int MediaServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest of code: %{public}u is received",
         FAKE_POINTER(this), code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
@@ -151,8 +150,7 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    LISTENER((void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
-        "MediaServiceStub::GetSystemAbility", true)
+    (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
     return MSERR_OK;
 }
 } // namespace Media

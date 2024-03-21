@@ -329,7 +329,7 @@ int32_t AudioSinkSvImpl::Pause()
             "AudioRenderer::Pause",
             PlayerXCollie::timerTimeout)
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " audioRenderer Pause Out", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " audioRenderer Pause Out", FAKE_POINTER(this));
     return MSERR_OK;
 }
 

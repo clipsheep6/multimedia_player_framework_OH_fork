@@ -36,6 +36,7 @@ namespace Media {
     bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName,
         const int32_t& uid);
     std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid);
+    std::string __attribute__((visibility("default"))) GetBundleResourceLabel(std::string bundleName);
     int __attribute__((visibility("default"))) TransStatus(Status status);
     PlayerStates __attribute__((visibility("default"))) TransStateId2PlayerState(PlayerStateId state);
     Plugins::SeekMode __attribute__((visibility("default"))) Transform2SeekMode(PlayerSeekMode mode);

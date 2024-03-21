@@ -86,7 +86,7 @@ public:
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
     void OnStateChanged(PlayerStateId state);
-    void OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
+    Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
 
 private:
@@ -191,7 +191,7 @@ private:
     std::vector<std::pair<EventType, bool>> initialAVStates_;
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
-    std::string bundleName_;
+    std::string bundleName_ {};
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;

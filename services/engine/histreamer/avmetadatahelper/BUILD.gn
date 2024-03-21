@@ -49,8 +49,8 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
     debug = false
   }
   sources = [
+    "av_thumbnail_generator.cpp",
     "avmetadata_collector.cpp",
-    "avmetadata_frame_converter.cpp",
     "avmetadatahelper_impl.cpp",
   ]
 

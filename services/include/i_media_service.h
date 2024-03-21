@@ -33,6 +33,7 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "i_screen_capture_service.h"
+#include "i_screen_capture_controller.h"
 #endif
 #include "i_standard_monitor_service.h"
 
@@ -211,6 +212,29 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCaptureHelper) = 0;
+
+    /**
+     * @brief Create an ScreenCaptureControllerClient service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() = 0;
+
+    /**
+     * @brief Destroy a ScreenCaptureControllerClient service.
+     *
+     * call the API to destroy the ScreenCaptureControllerClient service.
+     *
+     * @param pointer to the ScreenCaptureControllerClient service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t DestroyScreenCaptureControllerClient(std::shared_ptr<IScreenCaptureController> controller) = 0;
 #endif
 
     /**
