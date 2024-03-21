@@ -35,7 +35,6 @@ MediaServiceStub::MediaServiceStub()
 
 MediaServiceStub::~MediaServiceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void MediaServiceStub::Init()
