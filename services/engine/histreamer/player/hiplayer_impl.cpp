@@ -669,7 +669,7 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
         return TransStatus(Status::ERROR_UNKNOWN);
     }
     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
-    currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
+    currentPositionMs = Plugins::HstTime2Us32(syncManager_->GetMediaTimeNow());
     if (currentPositionMs < 0) {
         currentPositionMs = 0;
     }
