@@ -24,7 +24,9 @@ class ScreenCaptureNativeMock : public ScreenCaptureMock {
 public:
     explicit ScreenCaptureNativeMock(std::shared_ptr<ScreenCapture> screencapture) : screenCapture_(screencapture) {}
     ~ScreenCaptureNativeMock();
-    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback) override;
+    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
+        const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled,
+        const bool isStateChangeCallBackEnabled) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StartScreenCaptureWithSurface(const std::any& value) override;
@@ -56,6 +58,7 @@ public:
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
     void OnRelease();
 
 private:
