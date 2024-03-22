@@ -55,7 +55,6 @@
           "eventhandler",
           "init",
           "input",
-          "memmgr_plugin",
           "hicollie",
           "media_foundation",
           "drivers_peripheral_codec",

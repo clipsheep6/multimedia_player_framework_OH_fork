@@ -34,11 +34,6 @@ declare_args() {
     multimedia_player_framework_support_seccomp = true
   }
   multimedia_player_framework_support_monitor = true
-  use_memmgr_plugin = false
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_memmgr_plugin)) {
-    use_memmgr_plugin = true
-  }
   use_memmgr = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.resourceschedule_memmgr)) {
@@ -122,7 +117,7 @@ if (multimedia_player_framework_support_jsstack) {
   player_framework_defines += [ "SUPPORT_JSSTACK" ]
 }
 
-if (use_memmgr_plugin || use_memmgr) {
+if (use_memmgr) {
   player_framework_defines += [ "PLAYER_USE_MEMORY_MANAGE" ]
 }
 

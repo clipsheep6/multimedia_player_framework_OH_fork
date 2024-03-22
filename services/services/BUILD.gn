@@ -125,7 +125,7 @@ ohos_shared_library("media_service") {
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
     ]
-    if (use_memmgr_plugin || use_memmgr) {
+    if (use_memmgr) {
       sources += [
         "player/player_mem_manage/app_state_listener.cpp",
         "player/player_mem_manage/player_mem_manage.cpp",
@@ -232,11 +232,7 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (use_memmgr_plugin) {
-    external_deps += [ "memmgr_plugin:memmgrclient" ]
-  } else if (use_memmgr) {
-    external_deps += [ "memmgr:memmgrclient" ]
-  }
+  external_deps += [ "memmgr:memmgrclient" ]
 
   if (multimedia_player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
