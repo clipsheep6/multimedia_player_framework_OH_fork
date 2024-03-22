@@ -250,6 +250,11 @@ void TestRecorder::SetVideoEncoder(VideoRecorderConfig_ &recorderConfig)
     recorder->SetVideoEncoder(recorderConfig.videoSourceId, recorderConfig.videoFormat);
 }
 
+void TestRecorder::SetVideoIsHdr(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->SetVideoIsHdr(recorderConfig.videoSourceId, recorderConfig.isHdr);
+}
+
 void TestRecorder::SetVideoSize(VideoRecorderConfig_ &recorderConfig)
 {
     recorder->SetVideoSize(recorderConfig.videoSourceId, recorderConfig.width, recorderConfig.height);

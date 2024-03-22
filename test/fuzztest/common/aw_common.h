@@ -61,6 +61,7 @@ namespace RecorderTestParam {
         int32_t sampleRate = 48000;
         double captureFps = 30;
         int32_t outputFd = 0;
+        bool isHdr = false;
         AudioCodecFormat audioFormat = AAC_LC;
         AudioSourceType aSource = AUDIO_MIC;
         DataSourceType dataType = METADATA;
