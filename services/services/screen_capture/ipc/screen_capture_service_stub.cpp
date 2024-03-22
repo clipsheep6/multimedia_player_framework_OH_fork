@@ -22,6 +22,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
+constexpr int MAX_FILTER_CONTENTS_COUNT = 1000;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServiceStub"};
 }
 
@@ -262,6 +263,8 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
         "screen capture server is nullptr");
     ScreenCaptureContentFilter contentFilter;
     int32_t size = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(size < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+                             "content filter size is exceed max range");
     for (int32_t i = 0; i < size; i++) {
         contentFilter.filteredAudioContents.insert(
             static_cast<AVScreenCaptureFilterableAudioContent>(data.ReadInt32()));
