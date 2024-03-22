@@ -136,7 +136,8 @@ int32_t PlayerServer::Init()
 }
 
 int32_t PlayerServer::SetSource(const std::string &url)
-{
+{   
+    MEDIA_LOGE("PlayerServer SetSource A");
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
@@ -148,8 +149,18 @@ int32_t PlayerServer::SetSource(const std::string &url)
     return ret;
 }
 
+int32_t PlayerServer::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) 
+{  
+    config_.url = url;
+    int ret = InitPlayEngine(url);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMediaSource Failed!");
+    // playerEngine_->SetMediaSource(url, header, strategy);
+    return ret;
+}
+
 int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    MEDIA_LOGE("PlayerServer SetSource B");
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource dataSrc");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
@@ -171,6 +182,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
 
 int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
+    MEDIA_LOGE("PlayerServer SetSource C");
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource fd");
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
@@ -214,7 +226,6 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
-
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(url);
     } else {

@@ -1,0 +1,972 @@
+diff --git a/config.gni b/config.gni
+index e8abf8c13af4e53f065cf94ca66cee40667ab9ad..b8b5b5eaa37271e2ffeab22de10998d46706cf5d 100644
+--- a/config.gni
++++ b/config.gni
+@@ -31,6 +31,7 @@ declare_args() {
+   multimedia_player_framework_support_screen_capture = true
+   multimedia_player_framework_support_screen_capture_controller = false
+   multimedia_player_framework_support_jssoundpool = true
++  multimedia_player_framework_support_mediasource = true
+   if (defined(build_seccomp) && build_seccomp) {
+     multimedia_player_framework_support_seccomp = true
+   }
+@@ -163,6 +164,10 @@ if (multimedia_player_framework_support_power_manager) {
+   player_framework_defines += [ "SUPPORT_POWER_MANAGER" ]
+ }
+ 
++if (multimedia_player_framework_support_mediasource) {
++  player_framework_defines += [ "SUPPORT_MEDIA_SOURCE" ]
++}
++
+ # Config path
+ MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
+ MEDIA_PLAYER_AVCODEC = "//foundation/multimedia/av_codec"
+diff --git a/frameworks/js/avplayer/BUILD.gn b/frameworks/js/avplayer/BUILD.gn
+index daaeb68d5e12fa008b36bd805c4590e977ac5319..e6d37fd0ecb765726f86fee832e18b8602ed9b74 100644
+--- a/frameworks/js/avplayer/BUILD.gn
++++ b/frameworks/js/avplayer/BUILD.gn
+@@ -26,6 +26,7 @@ ohos_shared_library("media_avplayer") {
+     "//foundation/multimedia/player_framework/interfaces/inner_api",
+     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
+     "//foundation/multimedia/player_framework/frameworks/js/common",
++    "//foundation/multimedia/player_framework/frameworks/js/mediasource",
+     "//foundation/multimedia/player_framework/services/utils/include",
+     "//third_party/libuv/include",
+   ]
+@@ -35,6 +36,7 @@ ohos_shared_library("media_avplayer") {
+     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
+     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
+     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
++    "//foundation/multimedia/player_framework/frameworks/js/mediasource/media_source_napi.cpp"
+   ]
+ 
+   cflags = [
+diff --git a/frameworks/js/avplayer/avplayer_napi.cpp b/frameworks/js/avplayer/avplayer_napi.cpp
+index 709427df05d1abbde06a07ee9a3bab48c6e77b5f..968fee2cfe739db1a0cefdecf0af31e855b17afc 100644
+--- a/frameworks/js/avplayer/avplayer_napi.cpp
++++ b/frameworks/js/avplayer/avplayer_napi.cpp
+@@ -32,6 +32,7 @@
+ #endif
+ #include "av_common.h"
+ #include "meta/video_types.h"
++#include "media_source_napi.h"
+ 
+ using namespace OHOS::AudioStandard;
+ 
+@@ -72,6 +73,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
+         DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
+         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
+         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
++        DECLARE_NAPI_FUNCTION("setMediaSource", JsSetMediaSource),
+         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
+         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
+         DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
+@@ -1259,6 +1261,56 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info
+     return value;
+ }
+ 
++napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
++{
++    MEDIA_LOGE("AVPlayerNapi JsSetMediaSource");
++    MediaTrace trace("AVPlayerNapi::JsSetMediaSource");
++    napi_value result = nullptr;
++    napi_get_undefined(env, &result);
++    napi_value args[2] = { nullptr };
++    size_t argCount = 2;
++    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
++    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
++
++    if (jsPlayer->IsLiveSource()) {
++        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
++        return result;
++    }
++    napi_valuetype valueType = napi_undefined;
++    if (argCount < 2 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
++        || napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
++        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetMediaSource is not napi_object");
++    }
++
++    std::shared_ptr<AVMediaSource> mediaSource = MediaSourceNapi::GetMediaSource(env, args[0]);
++    if (mediaSource == nullptr)
++    {
++        MEDIA_LOGE("mediaSource is null");
++    }
++    
++    struct AVPlayStrategyForTemp strategyTmp;
++    struct AVPlayStrategy strategy;
++    if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
++        MEDIA_LOGE("get fileDescriptor argument failed!");
++        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
++            "invalid parameters, please check the input parameters(fileDescriptor)");
++        return result;
++    }
++    strategy.preferedBufferDuration = strategyTmp.preferedBufferDuration;
++    strategy.preferedHeight = strategyTmp.preferedHeight;
++    strategy.preferedWidth = strategyTmp.preferedWidth;
++    strategy.preferHDR = strategyTmp.preferHDR;
++    MEDIA_LOGE("AVPlayerNapi JsSetMediaSource Passed");
++    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mediaSource, strategy]() {
++        if (jsPlayer->player_ != nullptr) {
++             MEDIA_LOGE("header size %{public}d", mediaSource->header.size());
++            (void)jsPlayer->player_->SetMediaSource(mediaSource->url, mediaSource->header, strategy);
++        }
++    });
++    (void)jsPlayer->taskQue_->EnqueueTask(task);
++    return result;
++}
++
+ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
+ {
+     MediaTrace trace("AVPlayerNapi::set dataSrc");
+diff --git a/frameworks/js/avplayer/avplayer_napi.h b/frameworks/js/avplayer/avplayer_napi.h
+index 4f4d4629e349d4f9874c34b02f5869e2fb3eb407..cadfdd709eedddb4c09c70a381fafcc481f9a3fe 100644
+--- a/frameworks/js/avplayer/avplayer_napi.h
++++ b/frameworks/js/avplayer/avplayer_napi.h
+@@ -222,6 +222,8 @@ private:
+      * setDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: boolean): void;
+      */
+     static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
++
++    static napi_value JsSetMediaSource(napi_env env, napi_callback_info info);
+     /**
+      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
+      */
+diff --git a/frameworks/js/common/common_napi.cpp b/frameworks/js/common/common_napi.cpp
+index bb1dae179ced1ba7278442d2bb783828a4d7ba24..eb59477c90accd1c11ff26d336f9c313aaae2d24 100644
+--- a/frameworks/js/common/common_napi.cpp
++++ b/frameworks/js/common/common_napi.cpp
+@@ -161,6 +161,50 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor
+     return true;
+ }
+ 
++bool CommonNapi::GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map)
++{
++    napi_value jsProNameList = nullptr;
++    uint32_t jsProCount = 0;
++    napi_status status = napi_get_property_names(env, value, &jsProNameList);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get property name failed");
++    status = napi_get_array_length(env, jsProNameList, &jsProCount);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get subKeys length failed");
++
++    napi_value jsProName = nullptr;
++    napi_value jsProValue = nullptr;
++    MEDIA_LOGE("GetPropertyMap jsProCount %{public}d", jsProCount);
++    for (uint32_t i = 0; i < jsProCount; i++) {
++        status = napi_get_element(env, jsProNameList, i, &jsProName);
++        CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get sub key failed");
++        std::string strProName = GetStringArgument(env, jsProName);
++
++        status = napi_get_named_property(env, value, strProName.c_str(), &jsProValue);
++        CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get sub value failed");
++        std::string strProValue = GetStringArgument(env, jsProValue);
++
++        map.emplace(strProName, strProValue);
++    }
++
++    return true;
++}
++
++bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyForTemp &playStrategy)
++{
++    if (!GetPropertyUint32(env, value, "preferedWidth", playStrategy.preferedWidth)) {
++        playStrategy.preferedWidth = 0; // use default value
++    }
++    if (!GetPropertyUint32(env, value, "preferedHeight", playStrategy.preferedHeight)) {
++        playStrategy.preferedHeight = 0; // use default value
++    }
++    if (!GetPropertyUint32(env, value, "preferedBufferDuration", playStrategy.preferedBufferDuration)) {
++        playStrategy.preferedBufferDuration = 0; // use default value
++    }
++    if (!GetPropertyBool(env, value, "preferedWidth", playStrategy.preferHDR )) {
++        playStrategy.preferHDR = 0; // use default value
++    }
++    return true;
++}
++
+ napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
+ {
+     napi_value codeStr = nullptr;
+diff --git a/frameworks/js/common/common_napi.h b/frameworks/js/common/common_napi.h
+index 795aa6724dbf2b84aa19048e7fe62f743dbf3420..3f660ccb74ba1dba55d4a32658a1a6b2f166f6a9 100644
+--- a/frameworks/js/common/common_napi.h
++++ b/frameworks/js/common/common_napi.h
+@@ -16,6 +16,7 @@
+ #ifndef COMMON_NAPI_H
+ #define COMMON_NAPI_H
+ 
++#include <map>
+ #include <string>
+ #include <vector>
+ #include <unordered_map>
+@@ -30,6 +31,9 @@
+ namespace OHOS {
+ namespace Media {
+ struct AVFileDescriptor;
++struct AVPlayStrategyForTemp;
++struct AVDataSrcDescriptor;
++class AVMediaSource;
+ 
+ class CommonNapi {
+ public:
+@@ -42,7 +46,9 @@ public:
+     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);
+     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
+     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
++    static bool GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map);
+     static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
++    static bool GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyForTemp &playStrategy);
+     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
+     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
+     static napi_ref CreateReference(napi_env env, napi_value arg);
+@@ -296,6 +302,24 @@ struct AVDataSrcDescriptor {
+     napi_value callback = nullptr;
+ };
+ 
++class AVMediaSource {
++public:
++    AVMediaSource() = default;
++    ~AVMediaSource()
++    {
++        header.clear();
++    }
++    std::map<std::string, std::string> header;
++    std::string url {0};
++};
++
++struct AVPlayStrategyForTemp {
++    uint32_t preferedWidth;
++    uint32_t preferedHeight;
++    uint32_t preferedBufferDuration;
++    bool preferHDR; 
++};
++
+ template<typename T>
+ class ObjectRefMap {
+ public:
+diff --git a/frameworks/js/media/native_module_ohos_media.cpp b/frameworks/js/media/native_module_ohos_media.cpp
+index cc9111870c6034de9379da06dbd379b27d39bc5b..b4a7e6512c249fc7d226dbcc072179d001e17584 100644
+--- a/frameworks/js/media/native_module_ohos_media.cpp
++++ b/frameworks/js/media/native_module_ohos_media.cpp
+@@ -51,6 +51,10 @@ static napi_value Export(napi_env env, napi_value exports)
+ #ifdef SUPPORT_SOUND_POOL
+     OHOS::Media::SoundPoolNapi::Init(env, exports);
+ #endif
++#ifdef SUPPORT_MEDIA_SOURCE
++    OHOS::Media::MediaSourceNapi::Init(env, exports);
++#endif
++
+ #ifdef SUPPORT_SCREEN_CAPTURE
+     OHOS::Media::AVScreenCaptureNapi::Init(env, exports);
+ #endif
+diff --git a/frameworks/js/mediasource/media_source_napi.cpp b/frameworks/js/mediasource/media_source_napi.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0c5fc050cb91db971d42695445ea723454d02a5
+--- /dev/null
++++ b/frameworks/js/mediasource/media_source_napi.cpp
+@@ -0,0 +1,144 @@
++/*
++ * Copyright (C) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "media_source_napi.h"
++#include "media_log.h"
++
++namespace {
++    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaSourceNapi"};
++}
++
++namespace OHOS {
++namespace Media {
++
++const std::string CLASS_NAME = "MediaSource";
++thread_local napi_ref MediaSourceNapi::constructor_ = nullptr;
++
++napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
++{   
++    napi_property_descriptor staticProperty[] = {
++        DECLARE_NAPI_STATIC_FUNCTION("createMediaSourceWithURL", JsCreateMediaSourceWithUrl),
++    };
++    napi_property_descriptor properties[] = {
++        DECLARE_NAPI_FUNCTION("setTimeRange", JsSetTimeRange),
++    };
++
++    napi_value constructor = nullptr;
++    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
++        sizeof(properties) / sizeof(properties[0]), properties, &constructor);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVPlayer class");
++
++    status = napi_create_reference(env, constructor, 1, &constructor_);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
++
++    status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
++
++    status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
++    return exports;
++}
++
++std::shared_ptr<AVMediaSource> MediaSourceNapi::GetMediaSource(napi_env env, napi_value jsMediaSource)
++{
++    MediaSourceNapi *mediaSource = nullptr;
++    napi_status status = napi_unwrap(env, jsMediaSource, reinterpret_cast<void **>(&mediaSource));
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok && mediaSource != nullptr, nullptr, "failed to napi_unwrap");
++
++    return mediaSource->mediaSource_;
++}
++
++napi_value MediaSourceNapi::Constructor(napi_env env, napi_callback_info info)
++{
++    napi_value result = nullptr;
++    napi_get_undefined(env, &result);
++
++    size_t argCount = 0;
++    napi_value jsThis = nullptr;
++    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
++
++    MediaSourceNapi *jsMediaSource = new(std::nothrow) MediaSourceNapi();
++    CHECK_AND_RETURN_RET_LOG(jsMediaSource != nullptr, result, "failed to new MediaSourceNapi");
++
++    jsMediaSource->env_ = env;
++    jsMediaSource->mediaSource_ = std::make_shared<AVMediaSource>();
++    CHECK_AND_RETURN_RET_LOG(jsMediaSource->mediaSource_ != nullptr, result, "failed to Create MediaSource");
++
++    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsMediaSource),
++        MediaSourceNapi::Destructor, nullptr, nullptr);
++    if (status != napi_ok) {
++        delete jsMediaSource;
++        MEDIA_LOGE("Failed to wrap native instance");
++        return result;
++    }
++
++    MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor success", FAKE_POINTER(jsMediaSource));
++    return jsThis;
++}
++
++void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
++{
++    (void)env;
++    (void)finalize;
++    if (nativeObject != nullptr) {
++        MediaSourceNapi *jsMediaSource = reinterpret_cast<MediaSourceNapi *>(nativeObject);
++        jsMediaSource->mediaSource_ = nullptr;
++        delete jsMediaSource;
++    }
++    MEDIA_LOGI("Destructor success");
++}
++
++napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info)
++{
++    MEDIA_LOGD("JsCreateMediaSourceWithUrl In");
++    MEDIA_LOGE("JsCreateMediaSourceWithUrl In");
++    size_t argCount = 2;
++    napi_value args[2] = { nullptr };
++    napi_value jsMediaSource = nullptr;
++    napi_get_undefined(env, &jsMediaSource);
++    napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
++    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
++
++    napi_valuetype valueType = napi_undefined;
++    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
++        return nullptr;
++    }
++
++    napi_value constructor = nullptr;
++    napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
++    if (ret != napi_ok || constructor == nullptr) {
++        return nullptr;
++    }
++    napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
++
++    std::shared_ptr<AVMediaSource> mediaSource = GetMediaSource(env, jsMediaSource);
++    mediaSource->url = CommonNapi::GetStringArgument(env, args[0]);
++    MEDIA_LOGE("argCount %{public}d", argCount);
++   // if (argCount >= 2 && napi_typeof(env, args[1], &valueType) == napi_ok && valueType != napi_object) {
++        MEDIA_LOGE("JsCreateMediaSourceWithUrl get map");
++        (void)CommonNapi::GetPropertyMap(env, args[1], mediaSource->header);
++  //  }
++    MEDIA_LOGE("JsCreateMediaSourceWithUrl  Passed");
++    return jsMediaSource;
++}
++
++napi_value MediaSourceNapi::JsSetTimeRange(napi_env env, napi_callback_info info)
++{
++    return nullptr;
++}
++
++} // Media
++} // OHOS
+\ No newline at end of file
+diff --git a/frameworks/js/mediasource/media_source_napi.h b/frameworks/js/mediasource/media_source_napi.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..b149614dc86933442098cadbb58a1e747368d31b
+--- /dev/null
++++ b/frameworks/js/mediasource/media_source_napi.h
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (C) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef MEDIA_SOURCE_NAPI_H
++#define MEDIA_SOURCE_NAPI_H
++
++#include "napi/native_api.h"
++#include "napi/native_node_api.h"
++#include "common_napi.h"
++
++namespace OHOS {
++namespace Media {
++
++class MediaSourceNapi {
++public:
++    __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
++    static std::shared_ptr<AVMediaSource> GetMediaSource(napi_env env, napi_value jsMediaSource);
++private:
++    static napi_value Constructor(napi_env env, napi_callback_info info);
++    static void Destructor(napi_env env, void *nativeObject, void *finalize);
++    /**
++     * function createMediaSourceWithURL(url: string, header?: string): MediaSource
++     */
++    static napi_value JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info);
++    /**
++     * setTimeRange(startTime? : number, endTime? : number): void
++     */
++    static napi_value JsSetTimeRange(napi_env env, napi_callback_info info);
++
++    MediaSourceNapi() = default;
++    virtual ~MediaSourceNapi() = default;
++
++    static thread_local napi_ref constructor_;
++    napi_env env_ = nullptr;
++    std::shared_ptr<AVMediaSource> mediaSource_ {nullptr};
++};
++
++} // Media
++} // OHOS
++
++#endif // MEDIA_SOURCE_NAPI_H
+\ No newline at end of file
+diff --git a/frameworks/native/player/player_impl.cpp b/frameworks/native/player/player_impl.cpp
+index 2dd04b5ff1f17db46c51c0f2f34ab658b7b1a22b..61def1cf2d8b6083d81bfdd2844876ba94611154 100644
+--- a/frameworks/native/player/player_impl.cpp
++++ b/frameworks/native/player/player_impl.cpp
+@@ -104,6 +104,7 @@ int32_t PlayerImpl::Play()
+ 
+ int32_t PlayerImpl::Prepare()
+ {
++    MEDIA_LOGE("PlayerImpl Prepare A");
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+     return playerService_->Prepare();
+@@ -111,6 +112,7 @@ int32_t PlayerImpl::Prepare()
+ 
+ int32_t PlayerImpl::PrepareAsync()
+ {
++    MEDIA_LOGE("PlayerImpl Prepare B");
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+     return playerService_->PrepareAsync();
+@@ -222,6 +224,14 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
+     return playerService_->SetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) 
++{
++
++    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
++    return playerService_->SetMediaSource(url, header, strategy);
++}
++
++
+ int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
+ {
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackSpeed in", FAKE_POINTER(this));
+diff --git a/frameworks/native/player/player_impl.h b/frameworks/native/player/player_impl.h
+index 0a1c8c5ba3d7b6b68ff4710c1d6f02f09b4c00c2..6d5d4a4dac4eff7ba5726ce284806517779f8a92 100644
+--- a/frameworks/native/player/player_impl.h
++++ b/frameworks/native/player/player_impl.h
+@@ -66,6 +66,7 @@ public:
+     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+         bool svp) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     int32_t Init();
+ private:
+     std::shared_ptr<IPlayerService> playerService_ = nullptr;
+diff --git a/interfaces/inner_api/native/player.h b/interfaces/inner_api/native/player.h
+index 99ba49e699255efb326e8e044781589f2c8060eb..5f4ced282443c8121fdf8c629190a7a45ca2356b 100644
+--- a/interfaces/inner_api/native/player.h
++++ b/interfaces/inner_api/native/player.h
+@@ -27,6 +27,7 @@
+ 
+ namespace OHOS {
+ namespace Media {
++struct AVPlayStrategy;
+ 
+ namespace DrmConstant {
+ constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
+@@ -34,6 +35,13 @@ constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
+ constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
+ }
+ 
++struct AVPlayStrategy {
++    uint32_t preferedWidth;
++    uint32_t preferedHeight;
++    uint32_t preferedBufferDuration;
++    bool preferHDR; 
++};
++
+ struct DrmInfoItem {
+     uint8_t uuid[DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN];
+     uint8_t pssh[DrmConstant::DRM_MAX_M3U8_DRM_PSSH_LEN];
+@@ -385,6 +393,8 @@ public:
+      */
+     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
+ 
++    virtual int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) = 0;
++
+     /**
+      * @brief Changes the playback position.
+      *
+diff --git a/interfaces/kits/js/BUILD.gn b/interfaces/kits/js/BUILD.gn
+index c5dd71597cd392da455ef9131ae2536d3f1bdd61..d38bbadfd2c20924bb0ed91d2b6f96c75c6f8a95 100644
+--- a/interfaces/kits/js/BUILD.gn
++++ b/interfaces/kits/js/BUILD.gn
+@@ -54,6 +54,7 @@ ohos_shared_library("media") {
+     "//foundation/multimedia/player_framework/frameworks/js/player",
+     "//foundation/multimedia/player_framework/frameworks/js/recorder",
+     "//foundation/multimedia/player_framework/frameworks/js/media",
++    "//foundation/multimedia/player_framework/frameworks/js/mediasource",
+     "//foundation/multimedia/player_framework/frameworks/js/common",
+     "${multimedia_player_framework_path}/frameworks/js/avscreen_capture",
+     "//foundation/multimedia/player_framework/services/utils/include",
+@@ -69,6 +70,7 @@ ohos_shared_library("media") {
+     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
+     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
+     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
++    "//foundation/multimedia/player_framework/frameworks/js/mediasource/media_source_napi.cpp"
+   ]
+ 
+   if (multimedia_player_framework_support_player) {
+diff --git a/interfaces/kits/js/native_module_ohos_media.h b/interfaces/kits/js/native_module_ohos_media.h
+index 545dc2655f4c9ac526b91be2d7dded11f661bee2..cf2a350585f495f2f9af1215ba9a9abe06d137a3 100644
+--- a/interfaces/kits/js/native_module_ohos_media.h
++++ b/interfaces/kits/js/native_module_ohos_media.h
+@@ -28,6 +28,7 @@
+ #include "soundpool_napi.h"
+ #include "avmetadataextractor_napi.h"
+ #include "avimagegenerator_napi.h"
++#include "media_source_napi.h"
+ #include "avscreen_capture_napi.h"
+ 
+ #endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */
+diff --git a/services/engine/gstreamer/player/player_engine_gst_impl.cpp b/services/engine/gstreamer/player/player_engine_gst_impl.cpp
+index d1ce41ceed5fb0f1adad6496ea7e40a0e89769c3..c44983dc53adca00800c2a543159f2ebd0dcfa78 100644
+--- a/services/engine/gstreamer/player/player_engine_gst_impl.cpp
++++ b/services/engine/gstreamer/player/player_engine_gst_impl.cpp
+@@ -905,6 +905,22 @@ int32_t PlayerEngineGstImpl::SetVolume(float leftVolume, float rightVolume)
+     return MSERR_OK;
+ }
+ 
++int32_t PlayerEngineGstImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
++{
++    std::unique_lock<std::mutex> lock(mutex_);
++    if (playBinCtrler_ != nullptr) {
++        for (const auto& pair : header) {
++            MEDIA_LOGD("header info %s", pair.first.c_str());
++        }
++        MEDIA_LOGD("SetMediaSource %{public}s", url.c_str());
++        MEDIA_LOGD("SetMediaSource preferedWidth %d preferedHeight %d bufferDuration %d preferHDR %d", 
++            strategy.preferedWidth, strategy.preferedHeight, strategy.preferedBufferDuration , strategy.preferHDR);
++        //playBinCtrler_->SetDurationSize(durationSize);
++    }
++    return MSERR_OK;
++
++}
++
+ int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)
+ {
+     std::unique_lock<std::mutex> lock(mutex_);
+diff --git a/services/engine/gstreamer/player/player_engine_gst_impl.h b/services/engine/gstreamer/player/player_engine_gst_impl.h
+index a5ad408735abdd2d4f8aa131b688e640bba4db8d..1d172f6023fd7eed2ff6ee3d70391d37223d0d15 100644
+--- a/services/engine/gstreamer/player/player_engine_gst_impl.h
++++ b/services/engine/gstreamer/player/player_engine_gst_impl.h
+@@ -57,6 +57,7 @@ public:
+     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+     int32_t GetDuration(int32_t &duration) override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     int32_t SetParameter(const Format &param) override;
+     int32_t GetVideoHeight() override;
+     int32_t SetLooping(bool loop) override;
+diff --git a/services/engine/histreamer/player/hiplayer_impl.cpp b/services/engine/histreamer/player/hiplayer_impl.cpp
+index f7880af0db4a1cacd10e4cfd98d915bc4dfdfaf8..8115182382e773df71759b877660b9ae97f71d6b 100755
+--- a/services/engine/histreamer/player/hiplayer_impl.cpp
++++ b/services/engine/histreamer/player/hiplayer_impl.cpp
+@@ -186,6 +186,19 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
+     return TransStatus(Status::OK);
+ }
+ 
++int32_t HiPlayerImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
++{
++    MEDIA_LOG_I("url %{public}s", url.c_str());
++    MEDIA_LOG_I("HiPlayerImpl SetMediaSource header size %{public}d", header.size());
++    MEDIA_LOG_I("HiPlayerImpl SetMediaSource strategy.preferedWidth %{public}d", strategy.preferedWidth);
++    this->header = header;
++    this->preferedWidth = strategy.preferedWidth;
++    this->preferedHeight = strategy.preferedHeight;
++    this->bufferDuration = strategy.preferedBufferDuration;
++    this->preferHDR = strategy.preferHDR;
++    return MSERR_OK;
++}
++
+ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
+ {
+     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
+diff --git a/services/engine/histreamer/player/hiplayer_impl.h b/services/engine/histreamer/player/hiplayer_impl.h
+index 8242ead11195bc817b771fecf44e66225eea6dec..022fabf58e6a53f29cfb2b1487bfdb9510657ece 100755
+--- a/services/engine/histreamer/player/hiplayer_impl.h
++++ b/services/engine/histreamer/player/hiplayer_impl.h
+@@ -66,6 +66,7 @@ public:
+     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
+     int32_t GetDuration(int32_t& durationMs) override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
+     int32_t SelectBitRate(uint32_t bitRate) override;
+     int32_t GetAudioEffectMode(int32_t &effectMode) override;
+@@ -194,6 +195,11 @@ private:
+ 
+     int32_t rotation90 = 90;
+     int32_t rotation270 = 270;
++    std::map<std::string, std::string> header;
++    u_int32_t preferedWidth = 0;
++    u_int32_t preferedHeight = 0;
++    u_int32_t bufferDuration = 0;
++    bool preferHDR = false;
+ };
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/services/include/i_player_service.h b/services/include/i_player_service.h
+index 13ace880b889d2b9b478ea5bcc8aa2e784915460..87d55966e2c993779b6f26e317c66f0275cf24a3 100644
+--- a/services/include/i_player_service.h
++++ b/services/include/i_player_service.h
+@@ -277,6 +277,7 @@ public:
+      */
+     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+ 
++    virtual int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) = 0;
+     /**
+      * @brief set the bit rate use for hls player
+      *
+diff --git a/services/services/engine_intf/i_player_engine.h b/services/services/engine_intf/i_player_engine.h
+index 6ee15f862681250652effb604532a99f9cb6c3df..0a64afb75195ae63ab256f4dbfa9e9ba31df804a 100644
+--- a/services/services/engine_intf/i_player_engine.h
++++ b/services/services/engine_intf/i_player_engine.h
+@@ -78,6 +78,7 @@ public:
+     virtual int32_t GetDuration(int32_t &duration) = 0;
+     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
++    virtual int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) = 0;
+     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
+ 
+     virtual int32_t SetDecryptConfig(const sptr<OHOS::DrmStandard::IMediaKeySessionService> &keySessionProxy,
+diff --git a/services/services/player/client/player_client.cpp b/services/services/player/client/player_client.cpp
+index 7d81ff272d6db9424ebfdd846aa7f9a3039e857e..745910f9c647039073b35fe647fceb2c53a71d64 100644
+--- a/services/services/player/client/player_client.cpp
++++ b/services/services/player/client/player_client.cpp
+@@ -258,6 +258,13 @@ int32_t PlayerClient::SetPlaybackSpeed(PlaybackRateMode mode)
+     return playerProxy_->SetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerClient::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
++{
++    std::lock_guard<std::mutex> lock(mutex_);
++    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
++    return playerProxy_->SetMediaSource(url, header, strategy);
++}
++
+ int32_t PlayerClient::GetPlaybackSpeed(PlaybackRateMode &mode)
+ {
+     std::lock_guard<std::mutex> lock(mutex_);
+diff --git a/services/services/player/client/player_client.h b/services/services/player/client/player_client.h
+index efee98aaac07d37943235b9a9bcbc798d764bef5..6bb7173e40ece98060539e620a84ee5e0eba4355 100644
+--- a/services/services/player/client/player_client.h
++++ b/services/services/player/client/player_client.h
+@@ -52,6 +52,7 @@ public:
+     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+     int32_t GetVideoHeight() override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     int32_t GetDuration(int32_t &duration) override;
+     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+     int32_t GetVideoWidth() override;
+diff --git a/services/services/player/ipc/i_standard_player_service.h b/services/services/player/ipc/i_standard_player_service.h
+index ec760f8781b5832ede6262ae74e546753dfe0555..e000c280a44d1adc240eb37fea41c74697e57ce1 100644
+--- a/services/services/player/ipc/i_standard_player_service.h
++++ b/services/services/player/ipc/i_standard_player_service.h
+@@ -55,6 +55,7 @@ public:
+     virtual int32_t GetDuration(int32_t &duration) = 0;
+     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
+     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
++    virtual int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) = 0;
+ #ifdef SUPPORT_VIDEO
+     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
+ #endif
+@@ -99,6 +100,7 @@ public:
+         GET_DURATION,
+         SET_PLAYERBACK_SPEED,
+         GET_PLAYERBACK_SPEED,
++        SET_MEDIA_SOURCE,
+         SET_VIDEO_SURFACE,
+         IS_PLAYING,
+         IS_LOOPING,
+diff --git a/services/services/player/ipc/player_service_proxy.cpp b/services/services/player/ipc/player_service_proxy.cpp
+index 6899d6dc80a21b8c8c9928dafd2b4cce92761d7e..ab114925a54d6123c8bd5b1e873ec4b4b7187a55 100644
+--- a/services/services/player/ipc/player_service_proxy.cpp
++++ b/services/services/player/ipc/player_service_proxy.cpp
+@@ -70,6 +70,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
+     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
+     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
+     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
++    playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
+ }
+ 
+ PlayerServiceProxy::~PlayerServiceProxy()
+@@ -522,6 +523,44 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
+     return reply.ReadInt32();
+ }
+ 
++int32_t PlayerServiceProxy::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
++{
++    MediaTrace trace("binder::SetMediaSource");
++    MessageParcel data;
++    MessageParcel reply;
++    MessageOption option;
++    MEDIA_LOGI("PlayerServiceProxy SetMediaSource");
++    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
++    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
++    data.WriteString(url);
++    auto headerSize = static_cast<uint32_t>(header.size());
++    if (!data.WriteUint32(headerSize)) {
++        MEDIA_LOGI("Write mapSize failed");
++        return MSERR_INVALID_OPERATION;
++    }
++    for (auto [kstr, vstr] : header) {
++        MEDIA_LOGI("PlayerServiceProxy SetMediaSource passed %{public}s", kstr.c_str());
++        if (!data.WriteString(kstr)) {
++            MEDIA_LOGI("Write kstr failed");
++            return MSERR_INVALID_OPERATION;
++        }
++        if (!data.WriteString(vstr)) {
++            MEDIA_LOGI("Write vstr failed");
++            return MSERR_INVALID_OPERATION;
++        }
++    }
++      MEDIA_LOGI("PlayerServiceProxy SetMediaSource passed");
++    (void)data.WriteUint32(strategy.preferedWidth);
++    (void)data.WriteUint32(strategy.preferedHeight);
++    (void)data.WriteUint32(strategy.preferedBufferDuration);
++    (void)data.WriteBool(strategy.preferHDR);
++    int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
++    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
++        "SetMediaSource failed, error: %{public}d", error);
++    return reply.ReadInt32();
++
++}
++
+ int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)
+ {
+     MediaTrace trace("binder::GetPlaybackSpeed");
+diff --git a/services/services/player/ipc/player_service_proxy.h b/services/services/player/ipc/player_service_proxy.h
+index 6f782132189c7c5c4794d1cb727bd8395b4814c0..4b8e67e3466ec18d1821de50eeddbd9edc44bd9b 100644
+--- a/services/services/player/ipc/player_service_proxy.h
++++ b/services/services/player/ipc/player_service_proxy.h
+@@ -37,6 +37,7 @@ public:
+     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+     int32_t AddSubSource(const std::string &url) override;
+     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
+     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+     int32_t Stop() override;
+diff --git a/services/services/player/ipc/player_service_stub.cpp b/services/services/player/ipc/player_service_stub.cpp
+index 7e171699b9340160ea98da176e35948bf5f22f15..a7b196f2e0c75df9e4073b4b817c4be4a2c5cf71 100644
+--- a/services/services/player/ipc/player_service_stub.cpp
++++ b/services/services/player/ipc/player_service_stub.cpp
+@@ -91,6 +91,7 @@ void PlayerServiceStub::SetPlayerFuncs()
+     playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
+     playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
+     playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
++    playerFuncs_[SET_MEDIA_SOURCE] = { &PlayerServiceStub::SetMediaSource, "Player::SetMediaSource" };
+ #ifdef SUPPORT_VIDEO
+     playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
+ #endif
+@@ -359,6 +360,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
+     return playerServer_->SetPlaybackSpeed(mode);
+ }
+ 
++int32_t PlayerServiceStub::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
++{
++    MediaTrace trace("binder::SetMediaSource");
++    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServer_->SetMediaSource(url, header,strategy);
++}
++
+ int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
+ {
+     MediaTrace trace("binder::GetPlaybackSpeed");
+@@ -704,6 +712,31 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
+     return MSERR_OK;
+ }
+ 
++int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
++{   
++    std::string url = data.ReadString();
++    MEDIA_LOGE("SetMediaSource url %{public}s", url.c_str());
++    auto mapSize = data.ReadUint32();
++    std::map<std::string, std::string> headerMap;
++    MEDIA_LOGE("mapSize %{public}d", mapSize);
++    while (mapSize--) {
++        auto kstr = data.ReadString();
++        auto vstr = data.ReadString();
++        MEDIA_LOGE("SetMediaSource kstr %{public}s  vstr %{public}s", kstr.c_str(), vstr.c_str());
++        headerMap.emplace(kstr, vstr);
++    }
++    
++    struct AVPlayStrategy strategy;
++    strategy.preferedWidth = data.ReadUint32();
++    strategy.preferedHeight = data.ReadUint32();
++    strategy.preferedBufferDuration = data.ReadUint32();
++    strategy.preferHDR = data.ReadBool();
++    MEDIA_LOGE("SetMediaSource preferedWidth %{public}d preferedHeight %{public}d preferedBufferDuration %{public}d preferHDR %{public}d", 
++        strategy.preferedWidth, strategy.preferedHeight, strategy.preferedBufferDuration, strategy.preferHDR);
++    reply.WriteInt32(SetMediaSource(url, headerMap, strategy));
++    return MSERR_OK;
++}
++
+ int32_t PlayerServiceStub::GetPlaybackSpeed(MessageParcel &data, MessageParcel &reply)
+ {
+     (void)data;
+diff --git a/services/services/player/ipc/player_service_stub.h b/services/services/player/ipc/player_service_stub.h
+index 2cff901ff4a7370796ab9adaa17c038f38e7f035..6bbc0edcc3c078cbfa74b71bd0be08091a79130c 100644
+--- a/services/services/player/ipc/player_service_stub.h
++++ b/services/services/player/ipc/player_service_stub.h
+@@ -72,6 +72,7 @@ public:
+     int32_t DumpInfo(int32_t fd);
+     int32_t DeselectTrack(int32_t index) override;
+     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+     bool IsPlaying() override;
+     bool IsLooping() override;
+     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
+@@ -129,6 +130,7 @@ private:
+     int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
+     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
+     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
++    int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
+     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
+     std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;
+ };
+diff --git a/services/services/player/server/player_server.cpp b/services/services/player/server/player_server.cpp
+index 2bb5ddc747ec60933a257a75f7b9f8c377ca68db..7e04554f0471a29b5b86eb04166b647e3b8595fc 100755
+--- a/services/services/player/server/player_server.cpp
++++ b/services/services/player/server/player_server.cpp
+@@ -136,7 +136,8 @@ int32_t PlayerServer::Init()
+ }
+ 
+ int32_t PlayerServer::SetSource(const std::string &url)
+-{
++{   
++    MEDIA_LOGE("PlayerServer SetSource A");
+     std::lock_guard<std::mutex> lock(mutex_);
+     MediaTrace trace("PlayerServer::SetSource url");
+     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
+@@ -150,6 +151,7 @@ int32_t PlayerServer::SetSource(const std::string &url)
+ 
+ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+ {
++    MEDIA_LOGE("PlayerServer SetSource B");
+     std::lock_guard<std::mutex> lock(mutex_);
+     MediaTrace trace("PlayerServer::SetSource dataSrc");
+     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
+@@ -171,6 +173,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
+ 
+ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
+ {
++    MEDIA_LOGE("PlayerServer SetSource C");
+     std::lock_guard<std::mutex> lock(mutex_);
+     MediaTrace trace("PlayerServer::SetSource fd");
+     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
+@@ -214,8 +217,9 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
+     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
+     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
+         "failed to create player engine");
+-
+-    if (dataSrc_ == nullptr) {
++    if (header_.size() > 0) {
++        (void)playerEngine_->SetMediaSource(url_, header_, strategy_);
++    } else if (dataSrc_ == nullptr) {
+         ret = playerEngine_->SetSource(url);
+     } else {
+         ret = playerEngine_->SetSource(dataSrc_);
+@@ -912,6 +916,14 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
+     return MSERR_OK;
+ }
+ 
++int32_t PlayerServer::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) 
++{  
++    url_ = url;
++    header_ = header;
++    strategy_ = strategy;
++    return MSERR_OK;
++}
++
+ void PlayerServer::HandleEos()
+ {
+     if (config_.looping.load()) {
+diff --git a/services/services/player/server/player_server.h b/services/services/player/server/player_server.h
+index fe997ffd66705f6650b30f0987407a0d9d5ff992..2376d3096d110243854969a52405393b04f7ea66 100644
+--- a/services/services/player/server/player_server.h
++++ b/services/services/player/server/player_server.h
+@@ -96,6 +96,7 @@ public:
+     int32_t AddSubSource(const std::string &url) override;
+     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
+     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
++    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
+ #ifdef SUPPORT_VIDEO
+     int32_t SetVideoSurface(sptr<Surface> surface) override;
+ #endif
+@@ -199,6 +200,9 @@ private:
+     int32_t appUid_ = 0;
+     int32_t appPid_ = 0;
+     std::atomic<bool> inReleasing_ = false;
++    std::map<std::string, std::string> header_;
++    AVPlayStrategy strategy_;
++    std::string url_;
+ };
+ } // namespace Media
+ } // namespace OHOS

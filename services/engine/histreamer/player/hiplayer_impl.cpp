@@ -186,6 +186,35 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy)
+{
+    MEDIA_LOG_I("yzh url: " PUBLIC_LOG_S, url.c_str());
+    MEDIA_LOG_I("yzh header size %{public}d", header.size());
+    MEDIA_LOG_I("yzh strategy.preferedWidth %{public}d", strategy.preferedWidth);
+    this->url_ = url;
+    this->header = header;
+    this->preferedWidth = strategy.preferedWidth;
+    this->preferedHeight = strategy.preferedHeight;
+    this->bufferDuration = strategy.preferedBufferDuration;
+    this->preferHDR = strategy.preferHDR;
+
+    url_ = url;
+    if (IsFileUrl(url)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("SetSource error: GetRealPath error");
+            return result;
+        }
+        url_ = "file://" + realUriPath;
+    }
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
+    }
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    return MSERR_OK;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
 {
     MediaTrace trace("HiPlayerImpl::SetSource dataSrc");
@@ -223,7 +252,7 @@ int32_t HiPlayerImpl::Prepare()
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
-    MEDIA_LOG_I("PrepareAsync Start");
+    MEDIA_LOG_I("yzh PrepareAsync Start");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         return MSERR_INVALID_OPERATION;
     }
@@ -233,9 +262,16 @@ int32_t HiPlayerImpl::PrepareAsync()
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
     if (dataSrc_ != nullptr) {
+        MEDIA_LOG_I("yzh DoSetSource 1");
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        if (!header.empty()) {
+            MEDIA_LOG_I("yzh DoSetSource 2");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, header));
+        } else {
+            MEDIA_LOG_I("yzh DoSetSource 3");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
@@ -1041,10 +1077,17 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
+    MEDIA_LOG_I("yzh DoSetSource In");
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+
+    if (!header.empty()) {
+        MEDIA_LOG_I("yzh DoSetSource ua: " PUBLIC_LOG_S " ref: " PUBLIC_LOG_S, header["ua"].c_str(),
+            header["ref"].c_str());
+    }
+
     auto ret = demuxer_->SetDataSource(source);
     SetBundleName(bundleName_);
     pipeline_->AddHeadFilters({demuxer_});
