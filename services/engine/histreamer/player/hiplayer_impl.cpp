@@ -735,11 +735,11 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
             continue;
         }
         int32_t rotation = 0;
-        bool needSwapWH = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
+        needSwapWH_ = videoTrack.GetIntValue(Tag::VIDEO_ROTATION, rotation)
             && (rotation == rotation90 || rotation == rotation270);
         MEDIA_LOG_I("rotation %{public}d", rotation);
-        videoWidth_ = !needSwapWH ? width : height;
-        videoHeight_ = !needSwapWH ? height : width;
+        videoWidth_ = !needSwapWH_.load() ? width : height;
+        videoHeight_ = !needSwapWH_.load() ? height : width;
         MEDIA_LOG_I("InitVideoWidthAndHeight, width = %{public}d, height = %{public}d",
             videoWidth_.load(), videoHeight_.load());
         break;
@@ -989,6 +989,11 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleInitialPlayingStateChange(event.type);
             break;
         }
+        case EventType::EVENT_RESOLUTION_CHANGE: {
+            MEDIA_LOG_I("resolution change event received");
+            HandleResolutionChangeEvent(event);
+            break;
+        }
         default:
             break;
     }
@@ -1189,6 +1194,22 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
     lock.unlock();
 
     delete []drmInfoArray;
+}
+
+void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
+{
+#ifdef SUPPORT_VIDEO
+    // update new video size
+    std::pair<int32_t, int32_t> videoSize = AnyCast<std::pair<int32_t, int32_t>>(event.param);
+    int32_t width = videoSize.first;
+    int32_t height = videoSize.second;
+    videoWidth_ = !needSwapWH_.load() ? width : height;
+    videoHeight_ = !needSwapWH_.load() ? height : width;
+    MEDIA_LOG_I("HandleResolutionChangeEvent, width = %{public}d, height = %{public}d",
+        videoWidth_.load(), videoHeight_.load());
+    // notify size change
+    NotifyResolutionChange();
+#endif
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
