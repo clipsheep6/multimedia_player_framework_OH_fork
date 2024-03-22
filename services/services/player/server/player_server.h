@@ -96,6 +96,8 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+        u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif

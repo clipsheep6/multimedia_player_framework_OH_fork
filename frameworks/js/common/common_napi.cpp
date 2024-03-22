@@ -161,6 +161,61 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor 
     return true;
 }
 
+bool CommonNapi::GetPropertyMap(napi_env env, napi_value value, std::map<std::string, std::string>& map)
+{
+    napi_value jsProNameList = nullptr;
+    uint32_t jsProCount = 0;
+    napi_status status = napi_get_property_names(env, value, &jsProNameList);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get property name failed");
+    status = napi_get_array_length(env, jsProNameList, &jsProCount);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get subKeys length failed");
+
+    napi_value jsProName = nullptr;
+    napi_value jsProValue = nullptr;
+    for (uint32_t i = 0; i < jsProCount; i++) {
+        status = napi_get_element(env, jsProNameList, i, &jsProName);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get sub key failed");
+        std::string strProName = GetStringArgument(env, jsProName);
+
+        status = napi_get_named_property(env, value, strProName.c_str(), &jsProValue);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "get sub value failed");
+        std::string strProValue = GetStringArgument(env, jsProValue);
+
+        map.emplace(strProName, strProValue);
+    }
+
+    return true;
+}
+
+bool CommonNapi::GetDataSrcDescriptor(napi_env env, napi_value value, AVDataSrcDescriptor& dataSrc, napi_ref& ref)
+{
+    if (!GetPropertyInt64(env, value, "fileSize", dataSrc.fileSize)) {
+        dataSrc.fileSize = 0; // use default value
+    }
+    napi_get_named_property(env, value, "callback", &dataSrc.callback);
+    napi_status status = napi_create_reference(env, dataSrc.callback, 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, false, "failed to create reference!");
+
+    return true;
+}
+
+bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategy &playStrategy)
+{
+    if (!GetPropertyUint32(env, value, "preferedWidth", playStrategy.preferedWidth)) {
+        playStrategy.preferedWidth = 0; // use default value
+    }
+    if (!GetPropertyUint32(env, value, "preferedHeight", playStrategy.preferedHeight)) {
+        playStrategy.preferedHeight = 0; // use default value
+    }
+    if (!GetPropertyUint32(env, value, "preferedBufferDuration", playStrategy.preferedBufferDuration)) {
+        playStrategy.preferedBufferDuration = 0; // use default value
+    }
+    if (!GetPropertyBool(env, value, "preferedWidth", playStrategy.preferHDR )) {
+        playStrategy.preferHDR = 0; // use default value
+    }
+    return true;
+}
+
 napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;

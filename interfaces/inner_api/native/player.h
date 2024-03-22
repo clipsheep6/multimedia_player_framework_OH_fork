@@ -385,6 +385,9 @@ public:
      */
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
 
+    virtual int32_t SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+        u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) = 0;
+
     /**
      * @brief Changes the playback position.
      *

@@ -905,6 +905,22 @@ int32_t PlayerEngineGstImpl::SetVolume(float leftVolume, float rightVolume)
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (playBinCtrler_ != nullptr) {
+        for (const auto& pair : header) {
+            MEDIA_LOGD("header info %s", pair.first.c_str());
+        }
+        MEDIA_LOGD("SetMediaSource preferedWidth %d preferedHeight %d bufferDuration %d preferHDR %d", preferedWidth, 
+        preferedHeight, bufferDuration, preferHDR);
+        //playBinCtrler_->SetDurationSize(durationSize);
+    }
+    return MSERR_OK;
+
+}
+
 int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);
