@@ -151,10 +151,11 @@ int32_t PlayerServer::SetSource(const std::string &url)
 
 int32_t PlayerServer::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) 
 {  
+    MEDIA_LOGE("PlayerServer::SetMediaSource");
     config_.url = url;
     int ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMediaSource Failed!");
-    // playerEngine_->SetMediaSource(url, header, strategy);
+    playerEngine_->SetMediaSource(url, header, strategy);
     return ret;
 }
 

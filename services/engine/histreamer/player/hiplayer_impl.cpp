@@ -273,6 +273,7 @@ int32_t HiPlayerImpl::PrepareAsync()
             ret = DoSetSource(std::make_shared<MediaSource>(url_));
         }
     }
+
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
