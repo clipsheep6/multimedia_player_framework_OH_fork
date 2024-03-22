@@ -104,6 +104,7 @@ int32_t PlayerImpl::Play()
 
 int32_t PlayerImpl::Prepare()
 {
+    MEDIA_LOGE("PlayerImpl Prepare A");
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->Prepare();
@@ -111,6 +112,7 @@ int32_t PlayerImpl::Prepare()
 
 int32_t PlayerImpl::PrepareAsync()
 {
+    MEDIA_LOGE("PlayerImpl Prepare B");
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->PrepareAsync();
@@ -221,6 +223,14 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->SetPlaybackSpeed(mode);
 }
+
+int32_t PlayerImpl::SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) 
+{
+
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetMediaSource(url, header, strategy);
+}
+
 
 int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 {

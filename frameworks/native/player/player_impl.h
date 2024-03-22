@@ -66,6 +66,7 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
+    int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) override;
     int32_t Init();
 private:
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
