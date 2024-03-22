@@ -912,6 +912,12 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetMediaSource(std::map<std::string, std::string> header, AVPlayStrategy strategy) 
+{
+    (void)playerEngine_->SetMediaSource(header, strategy);
+    return MSERR_OK;
+}
+
 void PlayerServer::HandleEos()
 {
     if (config_.looping.load()) {

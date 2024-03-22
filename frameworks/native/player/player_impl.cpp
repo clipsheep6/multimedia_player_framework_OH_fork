@@ -222,6 +222,14 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     return playerService_->SetPlaybackSpeed(mode);
 }
 
+int32_t PlayerImpl::SetMediaSource(std::map<std::string, std::string> header, AVPlayStrategy strategy) 
+{
+
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetMediaSource(header, strategy);
+}
+
+
 int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackSpeed in", FAKE_POINTER(this));

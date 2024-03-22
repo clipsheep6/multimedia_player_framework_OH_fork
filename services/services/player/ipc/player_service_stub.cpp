@@ -91,6 +91,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
     playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
     playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
+    playerFuncs_[SET_MEDIA_SOURCE] = { &PlayerServiceStub::SetMediaSource, "Player::SetMediaSource" };
 #ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
 #endif
@@ -357,6 +358,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
     MediaTrace trace("binder::SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::SetMediaSource(std::map<std::string, std::string> header, AVPlayStrategy strategy)
+{
+    MediaTrace trace("binder::SetMediaSource");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetMediaSource(header,strategy);
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
@@ -701,6 +709,28 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
 {
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode)));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
+{   
+    auto mapSize = data.ReadUint32();
+    std::map<std::string, std::string> headerMap;
+    while (mapSize--) {
+        auto kstr = data.ReadString();
+        auto vstr = data.ReadString();
+        MEDIA_LOGE("SetMediaSource kstr %{public}s  vstr %{public}s", kstr.c_str(), vstr.c_str());
+        headerMap.emplace(kstr, vstr);
+    }
+    
+    struct AVPlayStrategy strategy;
+    strategy.preferedWidth = data.ReadUint32();
+    strategy.preferedHeight = data.ReadUint32();
+    strategy.preferedBufferDuration = data.ReadUint32();
+    strategy.preferHDR = data.ReadBool();
+    MEDIA_LOGE("SetMediaSource preferedWidth %{public}d preferedHeight %{public}d preferedBufferDuration %{public}d preferHDR %{public}d", 
+        strategy.preferedWidth, strategy.preferedHeight, strategy.preferedBufferDuration, strategy.preferHDR);
+    reply.WriteInt32(SetMediaSource(headerMap, strategy));
     return MSERR_OK;
 }
 
