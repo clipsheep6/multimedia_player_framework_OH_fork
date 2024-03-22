@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PLAYER_IMPL_H
-#define PLAYER_IMPL_H
+#ifndef PLAYER_IMPL_HP
+#define PLAYER_IMPL_HP
 
 #include "player.h"
 #include "nocopyable.h"
@@ -66,6 +66,8 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy,
         bool svp) override;
+    int32_t SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+        u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) override;
     int32_t Init();
 private:
     std::shared_ptr<IPlayerService> playerService_ = nullptr;

@@ -222,6 +222,15 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     return playerService_->SetPlaybackSpeed(mode);
 }
 
+int32_t PlayerImpl::SetMediaSource(std::map<std::string, std::string> header, u_int32_t preferedWidth, 
+    u_int32_t preferedHeight, u_int32_t bufferDuration, bool preferHDR) 
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetDurationSize in, mode is %{public}d", FAKE_POINTER(this),
+        bufferDuration);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetMediaSource(header, preferedWidth, preferedHeight, bufferDuration, preferHDR);
+}
+
 int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlaybackSpeed in", FAKE_POINTER(this));
