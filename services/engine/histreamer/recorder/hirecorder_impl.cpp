@@ -203,6 +203,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_FRAMERATE:
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
+        case RecorderPublicParamType::VID_HIERARCHICAL_P_ENABLE:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -559,6 +560,13 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             VidIsHdr vidIsHdr = static_cast<const VidIsHdr&>(recParam);
             if (vidIsHdr.isHdr) {
                 videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
+            }
+            break;
+        }
+        case RecorderPublicParamType::VID_HIERARCHICAL_P_ENABLE: {
+            VidHierarchicalPEnable vidHierarchicalPEnable = static_cast<const VidHierarchicalPEnable&>(recParam);
+            if (vidHierarchicalPEnable.hierarchicalPEnable) {
+                videoEncFormat_->Set<Tag::VIDEO_HIERARCHICAL_P_ENABLE>(vidHierarchicalPEnable.hierarchicalPEnable);
             }
             break;
         }

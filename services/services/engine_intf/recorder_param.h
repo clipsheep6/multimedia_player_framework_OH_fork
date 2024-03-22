@@ -41,6 +41,7 @@ enum RecorderPublicParamType : uint32_t {
     VID_BITRATE,
     VID_FRAMERATE,
     VID_IS_HDR,
+    VID_HIERARCHICAL_P_ENABLE,
     VID_CAPTURERATE,
     VID_PUBLIC_PARAM_END,
     VID_ORIENTATION_HINT,
@@ -106,6 +107,12 @@ struct VidFrameRate : public RecorderParam {
 struct VidIsHdr : public RecorderParam {
     explicit VidIsHdr(bool r) : RecorderParam(RecorderPublicParamType::VID_IS_HDR), isHdr(r) {}
     bool isHdr;
+};
+
+struct VidHierarchicalPEnable : public RecorderParam {
+    explicit VidHierarchicalPEnable(bool r)
+        : RecorderParam(RecorderPublicParamType::VID_HIERARCHICAL_P_ENABLE), hierarchicalPEnable(r) {}
+    bool hierarchicalPEnable;
 };
 
 struct CaptureRate : public RecorderParam {

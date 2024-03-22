@@ -42,6 +42,7 @@ public:
     int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate) override;
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) override;
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
+    int32_t SetVideoHierarchicalPEnable(int32_t sourceId, bool hierarchicalPEnable) override;
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
@@ -87,6 +88,7 @@ private:
     int32_t SetVideoFrameRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoEncodingBitRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoIsHdr(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVideoHierarchicalPEnable(MessageParcel &data, MessageParcel &reply);
     int32_t SetCaptureRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetSurface(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioSource(MessageParcel &data, MessageParcel &reply);
