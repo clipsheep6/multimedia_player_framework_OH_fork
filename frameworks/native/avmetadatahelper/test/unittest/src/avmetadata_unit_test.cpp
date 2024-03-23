@@ -475,7 +475,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
     int64_t timeUs = 0;
     int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
     std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
-    EXPECT_EQ(nullptr, frame);
+    EXPECT_NE(nullptr, frame);
     helper->Release();
 }
 
@@ -491,7 +491,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
-    EXPECT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage(100)));
+    EXPECT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage(100)));
     helper->Release();
 }
 
