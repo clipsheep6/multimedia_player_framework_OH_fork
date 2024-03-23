@@ -28,6 +28,7 @@ public:
 
     std::shared_ptr<IStandardMonitorService> GetMonitorProxy() override;
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
+    std::shared_ptr<ITransCoderService> CreateTransCoderService() override;
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
     std::shared_ptr<IAVCodecService> CreateAVCodecService() override;
@@ -35,6 +36,7 @@ public:
     std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
     std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
+    int32_t DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
     int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) override;

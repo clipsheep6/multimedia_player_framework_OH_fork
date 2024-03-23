@@ -24,6 +24,9 @@
 #include "recorder_client.h"
 #include "recorder_profiles_client.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "transcoder_client.h"
+#endif
 #ifdef SUPPORT_PLAYER
 #include "player_client.h"
 #endif
@@ -53,6 +56,10 @@ public:
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
     int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) override;
+#endif
+#ifdef SUPPORT_TRANSCODER
+    std::shared_ptr<ITransCoderService> CreateTransCoderService() override;
+    int32_t DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder) override;
 #endif
 #ifdef SUPPORT_PLAYER
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
@@ -89,6 +96,9 @@ private:
 #ifdef SUPPORT_RECORDER
     std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
     std::list<std::shared_ptr<IRecorderProfilesService>> recorderProfilesClientList_;
+#endif
+#ifdef SUPPORT_TRANSCODER
+    std::list<std::shared_ptr<ITransCoderService>> transCoderClientList_;
 #endif
 #ifdef SUPPORT_PLAYER
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;

@@ -31,6 +31,10 @@
 #include "i_avcodec_engine.h"
 #include "i_avcodeclist_engine.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "i_transcoder_engine.h"
+#include "i_transcoder_engine.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -90,6 +94,18 @@ public:
 
     virtual std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine()
     {
+        return nullptr;
+    }
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+    virtual std::unique_ptr<ITransCoderEngine> CreateTransCoderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+        uint64_t appFullTokenId)
+    {
+        (void)appUid;
+        (void)appPid;
+        (void)appTokenId;
+        (void)appFullTokenId;
         return nullptr;
     }
 #endif
