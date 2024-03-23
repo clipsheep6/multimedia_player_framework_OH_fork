@@ -38,7 +38,6 @@ config("media_engine_histreamer_transcoder_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_C_UTILS/base/include",
     "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
     "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
     "$MEDIA_PLAYER_AVCODEC/interfaces",
