@@ -70,6 +70,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
     playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
     playerFuncs_[SET_DECRYPT_CONFIG] = "Player::SetDecryptConfig";
+    playerFuncs_[SET_MEDIA_SOURCE] = "Player::SetMediaSource";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -519,6 +520,42 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
     int32_t error = SendRequest(SET_PLAYERBACK_SPEED, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlaybackSpeed failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteString(mediaSource->url);
+    auto headerSize = static_cast<uint32_t>(mediaSource->header.size());
+    if (!data.WriteUint32(headerSize)) {
+        MEDIA_LOGI("Write mapSize failed");
+        return MSERR_INVALID_OPERATION;
+    }
+    for (auto [kstr, vstr] : mediaSource->header) {
+        if (!data.WriteString(kstr)) {
+            MEDIA_LOGI("Write kstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+        if (!data.WriteString(vstr)) {
+            MEDIA_LOGI("Write vstr failed");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+    (void)data.WriteUint32(strategy.preferredWidth);
+    (void)data.WriteUint32(strategy.preferredHeight);
+    (void)data.WriteUint32(strategy.preferredBufferDuration);
+    (void)data.WriteBool(strategy.preferredHdr);
+    int32_t error = SendRequest(SET_MEDIA_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMediaSource failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 
