@@ -36,6 +36,7 @@ ScreenCaptureListenerStub::~ScreenCaptureListenerStub()
 int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances OnRemoteRequest code:%{public}u", FAKE_POINTER(this), code);
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (ScreenCaptureListenerStub::GetDescriptor() != remoteDescriptor) {
         MEDIA_LOGE("Invalid descriptor");

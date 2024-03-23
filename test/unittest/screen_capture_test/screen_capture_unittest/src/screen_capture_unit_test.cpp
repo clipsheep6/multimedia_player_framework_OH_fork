@@ -31,278 +31,6 @@ using namespace OHOS::Media::ScreenCaptureTestParam;
 
 namespace OHOS {
 namespace Media {
-void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode)
-{
-    cout << "Error received, errorCode:" << errorCode << endl;
-}
-
-void ScreenCaptureUnitTestCallback::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
-{
-    if (isReady) {
-        std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
-        if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
-            if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer empty, PLEASE CHECK IF IT IS OK!!!" << endl;
-            } else {
-                cout << "AcquireAudioBuffer, audioBufferLen:" << audioBuffer->length << ", timestampe:"
-                    << audioBuffer->timestamp << ", audioSourceType:" << audioBuffer->sourcetype << endl;
-                DumpAudioBuffer(audioBuffer);
-            }
-        }
-        if (aFlag_ == 1) {
-            screenCapture_->ReleaseAudioBuffer(type);
-        }
-    } else {
-        cout << "AcquireAudioBuffer failed" << endl;
-    }
-}
-
-void ScreenCaptureUnitTestCallback::DumpAudioBuffer(std::shared_ptr<AudioBuffer> audioBuffer)
-{
-    if ((aFile_ != nullptr) && (audioBuffer->buffer != nullptr)) {
-        if (fwrite(audioBuffer->buffer, 1, audioBuffer->length, aFile_) != static_cast<size_t>(audioBuffer->length)) {
-            cout << "error occurred in fwrite:" << strerror(errno) <<endl;
-        }
-    }
-}
-
-void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
-{
-    if (isReady) {
-        int32_t fence = 0;
-        int64_t timestamp = 0;
-        OHOS::Rect damage;
-        sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
-        if (surfacebuffer != nullptr) {
-            int32_t length = surfacebuffer->GetSize();
-            cout << "AcquireVideoBuffer, videoBufferLen:" << surfacebuffer->GetSize() << ", timestamp:"
-                << timestamp << ", size:"<< length << endl;
-            DumpVideoBuffer(surfacebuffer);
-            if (vFlag_ == 1) {
-                screenCapture_->ReleaseVideoBuffer();
-            }
-        } else {
-            cout << "AcquireVideoBuffer failed" << endl;
-        }
-    }
-}
-
-void ScreenCaptureUnitTestCallback::DumpVideoBuffer(sptr<OHOS::SurfaceBuffer> surfacebuffer)
-{
-    if (vFile_ != nullptr) {
-        if (fwrite(surfacebuffer->GetVirAddr(), 1, surfacebuffer->GetSize(), vFile_) != surfacebuffer->GetSize()) {
-            cout << "error occurred in fwrite:" << strerror(errno) <<endl;
-        }
-    }
-}
-
-void ScreenCaptureUnitTest::SetUpTestCase(void) {}
-
-void ScreenCaptureUnitTest::TearDownTestCase(void) {}
-
-void ScreenCaptureUnitTest::SetUp(void)
-{
-    screenCapture_ = ScreenCaptureMockFactory::CreateScreenCapture();
-    ASSERT_NE(nullptr, screenCapture_);
-}
-
-void ScreenCaptureUnitTest::TearDown(void)
-{
-    if (screenCaptureCb_ != nullptr) {
-        screenCaptureCb_.reset();
-        screenCaptureCb_ = nullptr;
-    }
-    if (screenCapture_ != nullptr) {
-        screenCapture_->Release();
-        screenCapture_ = nullptr;
-    }
-}
-
-int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
-{
-    AudioCaptureInfo miccapinfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = SOURCE_DEFAULT
-    };
-
-    VideoCaptureInfo videocapinfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1280,
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
-    };
-
-    VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::H264,
-        .videoBitrate = 2000000,
-        .videoFrameRate = 30
-    };
-
-    AudioInfo audioinfo = {
-        .micCapInfo = miccapinfo,
-    };
-
-    VideoInfo videoinfo = {
-        .videoCapInfo = videocapinfo,
-        .videoEncInfo = videoEncInfo
-    };
-
-    config = {
-        .captureMode = CAPTURE_HOME_SCREEN,
-        .dataType = ORIGINAL_STREAM,
-        .audioInfo = audioinfo,
-        .videoInfo = videoinfo
-    };
-    return MSERR_OK;
-}
-
-int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo)
-{
-    AudioEncInfo audioEncInfo = {
-        .audioBitrate = 48000,
-        .audioCodecformat = AudioCodecFormat::AAC_LC
-    };
-
-    VideoCaptureInfo videoCapInfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1080,
-        .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
-    };
-
-    VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::H264,
-        .videoBitrate = 2000000,
-        .videoFrameRate = 30
-    };
-
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 0,
-        .audioChannels = 0,
-        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
-    };
-
-    AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 0,
-        .audioChannels = 0,
-        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
-    };
-
-    AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo
-    };
-
-    VideoInfo videoInfo = {
-        .videoCapInfo = videoCapInfo,
-        .videoEncInfo = videoEncInfo
-    };
-
-    config = {
-        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
-        .dataType = DataType::CAPTURE_FILE,
-        .audioInfo = audioInfo,
-        .videoInfo = videoInfo,
-        .recorderInfo = recorderInfo
-    };
-    return MSERR_OK;
-}
-
-int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string filename, RecorderInfo &recorderInfo)
-{
-    int32_t outputFd = open((screenCaptureRoot + filename).c_str(), O_RDWR | O_CREAT, 0777);
-    recorderInfo.url = "fd://" + to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
-    return MSERR_OK;
-}
-
-void ScreenCaptureUnitTest::OpenFile(std::string filename_)
-{
-    if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s.pcm",
-        filename_.c_str()) >= 0) {
-        aFile = fopen(filename, "w+");
-        if (aFile == nullptr) {
-            cout << "aFile audio open failed, " << strerror(errno) << endl;
-        }
-    } else {
-        cout << "snprintf audio file failed, " << strerror(errno) << endl;
-        return;
-    }
-    if (snprintf_s(filename, sizeof(filename), sizeof(filename) - 1, "/data/test/media/%s.yuv",
-        filename_.c_str()) >= 0) {
-        vFile = fopen(filename, "w+");
-        if (vFile == nullptr) {
-            cout << "vFile video open failed, " << strerror(errno) << endl;
-        }
-    } else {
-        cout << "snprintf video file failed, " << strerror(errno) << endl;
-        return;
-    }
-}
-
-void ScreenCaptureUnitTest::CloseFile(void)
-{
-    if (aFile != nullptr) {
-        fclose(aFile);
-        aFile = nullptr;
-    }
-    if (vFile != nullptr) {
-        fclose(vFile);
-        vFile = nullptr;
-    }
-}
-
-void ScreenCaptureUnitTest::AudioLoop(void)
-{
-    int index_ = 200;
-    int index_audio_frame = 0;
-    while (index_) {
-        if (screenCapture_ == nullptr) {
-            break;
-        }
-        std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
-        AudioCaptureSourceType type = MIC;
-        if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
-            if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer is nullptr" << endl;
-                continue;
-            }
-            cout << "index audio:" << index_audio_frame++ << ", AcquireAudioBuffer, audioBufferLen:"
-                << audioBuffer->length << ", timestampe:" << audioBuffer->timestamp << ", audioSourceType:"
-                << audioBuffer->sourcetype << endl;
-            screenCapture_->ReleaseAudioBuffer(type);
-        } else {
-            cout << "AcquireAudioBuffer failed" << endl;
-        }
-        index_--;
-    }
-}
-
-void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
-{
-    int index_ = 200;
-    int index_audio_frame = 0;
-    while (index_) {
-        if (screenCapture_ == nullptr) {
-            break;
-        }
-        std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
-        AudioCaptureSourceType type = MIC;
-        if (screenCapture_->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
-            if (audioBuffer == nullptr) {
-                cout << "AcquireAudioBuffer failed, audio buffer is nullptr" << endl;
-                continue;
-            }
-            cout << "index audio:" << index_audio_frame++ << ", AcquireAudioBuffer, audioBufferLen:"
-                << audioBuffer->length << ", timestampe:" << audioBuffer->timestamp << ", audioSourceType:"
-                << audioBuffer->sourcetype << endl;
-        } else {
-            cout << "AcquireAudioBuffer failed" << endl;
-        }
-        index_--;
-    }
-}
-
 /**
  * @tc.name: screen_capture_specified_window_file_01
  * @tc.desc: do screencapture
@@ -315,7 +43,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSiz
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -360,7 +87,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSiz
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -405,7 +131,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSiz
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -450,7 +175,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSiz
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_04.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -493,7 +217,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
@@ -537,7 +260,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSi
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
@@ -581,7 +303,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSi
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_01 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -609,7 +330,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_01, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_02 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -662,7 +382,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_02, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_03 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -696,18 +415,17 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_03, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_04 before");
-    AVScreenCaptureConfig config;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_04.mp4", recorderInfo);
-    SetConfigFile(config, recorderInfo);
+    SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
-    config.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.innerCapInfo = innerCapInfo;
 
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenCapture());
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenCapture());
@@ -724,9 +442,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_04, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_05 before");
-    AVScreenCaptureConfig config;
-    SetConfig(config);
-    config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     OpenFile("screen_capture_get_screen_capture_05");
 
     aFlag = 1;
@@ -736,7 +453,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
     bool isMicrophone = true;
     screenCapture_->SetMicrophoneEnabled(isMicrophone);
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
@@ -754,9 +471,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_05, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation before");
-    AVScreenCaptureConfig config;
-    SetConfig(config);
-    config.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
+    SetConfig(config_);
+    config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     OpenFile("screen_capture_save_file_Rotation");
 
     aFlag = 1;
@@ -768,7 +484,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Leve
     bool canvasRotation = true;
     EXPECT_NE(MSERR_OK, screenCapture_->SetCanvasRotation(canvasRotation));
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_));
-    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config));
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_NE(MSERR_OK, screenCapture_->StartScreenRecording());
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, screenCapture_->StopScreenRecording());
@@ -786,7 +502,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_01 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_Rotation_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -825,7 +540,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_02 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_Rotation_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -858,7 +572,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_02, TestSize.L
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_save_file_Rotation_03 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_Rotation_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -891,7 +604,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_03, TestSize.L
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_screen_file_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -928,7 +640,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_01, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -968,7 +679,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_get_screen_capture_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1010,7 +720,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_03, TestSiz
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Level1)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     std::vector<sptr<Screen>> screens;
@@ -1043,7 +752,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Lev
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_01 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1094,7 +802,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_01, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_02 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1134,7 +841,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_02, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_03 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1176,7 +882,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_04 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_04.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1228,7 +933,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_04, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1264,11 +968,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_06 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_check_param_06.mp4").c_str(),
-        O_RDWR | O_CREAT, 0777);
-    recorderInfo.url = "fd://" + to_string(outputFd);
+    SetRecorderInfo("screen_capture_check_param_06.mp4", recorderInfo);
     recorderInfo.fileFormat = "avi";
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
@@ -1292,7 +993,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_06, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_07, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_07 before");
-    AVScreenCaptureConfig config_;
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_07.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -1333,7 +1033,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_07, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1352,7 +1051,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0001, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1371,7 +1069,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0002, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0003, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_YUV;
 
@@ -1389,7 +1086,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0003, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0004, TestSize.Level0)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_ES;
 
@@ -1407,7 +1103,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0004, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_without_audio_data, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     OpenFile("screen_capture_without_audio_data");
@@ -1435,7 +1130,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_without_audio_data, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = -1;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1454,7 +1148,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0001, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioChannels = -1;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1473,7 +1166,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0002, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0003, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSource = SOURCE_INVALID;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1492,7 +1184,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audio_configure_0003, TestSize.Le
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_avconfigure, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSource = SOURCE_INVALID;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -1511,7 +1202,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_avconfigure, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_audio_data, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     OpenFile("screen_capture_with_audio_data");
@@ -1539,7 +1229,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_audio_data, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.captureMode = static_cast<CaptureMode>(-1);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1558,7 +1247,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0001, TestSize.Level2
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.captureMode = static_cast<CaptureMode>(5);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1577,7 +1265,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0002, TestSize.Level2
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     config_.dataType = ENCODED_STREAM;
@@ -1596,7 +1283,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0001, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     config_.dataType = CAPTURE_FILE;
@@ -1615,7 +1301,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0002, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0003, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     config_.dataType = INVAILD;
@@ -1634,7 +1319,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_init_datatype_0003, TestSize.Leve
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_audioSampleRate_48000, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 48000;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -1661,12 +1345,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_audioSampleRate_48000, TestSize.L
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 160;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 160;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    vFile = fopen("/data/screen_capture/screen_capture_video_size_0001.yuv", "w+");
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_video_size_0001.yuv";
+    vFile = fopen(name.c_str(), "w+");
     if (vFile == nullptr) {
         cout << "vFile video open failed, " << strerror(errno) << endl;
     }
@@ -1694,12 +1379,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0001, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 640;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 480;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    vFile = fopen("/data/screen_capture/screen_capture_video_size_0002.yuv", "w+");
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_video_size_0002.yuv";
+    vFile = fopen(name.c_str(), "w+");
     if (vFile == nullptr) {
         cout << "vFile video open failed, " << strerror(errno) << endl;
     }
@@ -1727,12 +1413,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0002, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0003, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 1920;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    vFile = fopen("/data/screen_capture/screen_capture_video_size_0003.yuv", "w+");
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_video_size_0003.yuv";
+    vFile = fopen(name.c_str(), "w+");
     if (vFile == nullptr) {
         cout << "vFile video open failed, " << strerror(errno) << endl;
     }
@@ -1760,14 +1447,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_size_0003, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_from_display, TestSize.Level0)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     sptr<Display> display = DisplayManager::GetInstance().GetDefaultDisplaySync();
     ASSERT_NE(display, nullptr);
     cout << "get displayinfo: " << endl;
-    cout << "width: " << display->GetWidth() << "; height: " << display->GetHeight() << "; density: "
-        << display->GetDpi() << "; refreshRate: " << display->GetRefreshRate() << endl;
+    cout << "width: " << display->GetWidth() << "; height: " << display->GetHeight() << "; density: " <<
+        display->GetDpi() << "; refreshRate: " << display->GetRefreshRate() << endl;
 
     config_.videoInfo.videoCapInfo.videoFrameWidth = display->GetWidth();
     config_.videoInfo.videoCapInfo.videoFrameHeight = display->GetHeight();
@@ -1794,7 +1480,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_from_display, TestSize.Level0)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0001, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1812,8 +1497,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0001, TestSize.Level2)
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:"
-                << surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
+                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
         } else {
             cout << "AcquireVideoBuffer failed" << endl;
         }
@@ -1836,7 +1521,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0001, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0002, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1854,8 +1538,8 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0002, TestSize.Level2)
         sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture_->AcquireVideoBuffer(fence, timestamp, damage);
         if (surfacebuffer != nullptr) {
             int32_t length = surfacebuffer->GetSize();
-            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:"
-                << surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
+            cout << "index video:" << index_video_frame++ << "; AcquireVideoBuffer, videoBufferLen:" <<
+                surfacebuffer->GetSize() << ", timestamp:" << timestamp << ", size:"<< length << endl;
             screenCapture_->ReleaseVideoBuffer();
         } else {
             cout << "AcquireVideoBuffer failed" << endl;
@@ -1879,7 +1563,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0002, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0003, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1905,7 +1588,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0003, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0004, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1931,7 +1613,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0004, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1957,7 +1638,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_0005, TestSize.Level2)
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
@@ -1986,10 +1666,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_buffertest_Rotation, TestSize.Lev
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_open_close_open, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    aFile = fopen("/data/screen_capture/screen_capture_mic_open_close_open.pcm", "w+");
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_mic_open_close_open.pcm";
+    aFile = fopen(name.c_str(), "w+");
     if (aFile == nullptr) {
         cout << "aFile audio open failed, " << strerror(errno) << endl;
     }
@@ -2023,10 +1704,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_open_close_open, TestSize.Lev
  */
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_close_open_close, TestSize.Level2)
 {
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    aFile = fopen("/data/screen_capture/screen_capture_mic_close_open_close.pcm", "w+");
+
+    std::string name = SCREEN_CAPTURE_ROOT_DIR + "screen_capture_mic_close_open_close.pcm";
+    aFile = fopen(name.c_str(), "w+");
     if (aFile == nullptr) {
         cout << "aFile audio open failed, " << strerror(errno) << endl;
     }
@@ -2064,7 +1746,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 1920;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
@@ -2081,10 +1762,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_with_surface_01.mp4").c_str(),
-        O_RDWR | O_CREAT, 0777);
-    ASSERT_TRUE(outputFd >= 0);
-    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd));
+    OpenFileFd("screen_capture_with_surface_01.mp4");
+    ASSERT_TRUE(outputFd_ >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd_));
     EXPECT_EQ(MSERR_OK, recorder->Prepare());
     sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
@@ -2113,7 +1793,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
     Security::AccessToken::AccessTokenID tokenID =
         Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
     SetSelfTokenID(tokenID);
-    AVScreenCaptureConfig config_;
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 640;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 480;
@@ -2130,10 +1809,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 480, 640));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_with_surface_02.mp4").c_str(),
-        O_RDWR | O_CREAT, 0777);
-    ASSERT_TRUE(outputFd >= 0);
-    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd));
+    OpenFileFd("screen_capture_with_surface_02.mp4");
+    ASSERT_TRUE(outputFd_ >= 0);
+    EXPECT_EQ(MSERR_OK, recorder->SetOutputFile(outputFd_));
     EXPECT_EQ(MSERR_OK, recorder->Prepare());
     sptr<OHOS::Surface> consumer = recorder->GetSurface(videoSourceId);
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));

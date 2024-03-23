@@ -48,6 +48,14 @@ void ScreenCaptureNativeCallbackMock::OnVideoBufferAvailable(bool isReady)
     }
 }
 
+void ScreenCaptureNativeCallbackMock::OnStateChange(AVScreenCaptureStateCode stateCode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (mockCb_ != nullptr) {
+        mockCb_->OnStateChange(stateCode);
+    }
+}
+
 void ScreenCaptureNativeCallbackMock::OnRelease()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -59,9 +67,13 @@ ScreenCaptureNativeMock::~ScreenCaptureNativeMock()
     MEDIA_LOGI("ScreenCaptureNativeMock::~ScreenCaptureNativeMock");
 }
 
-int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback)
+int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
+    const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled, const bool isStateChangeCallBackEnabled)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    (void)isErrorCallBackEnabled; // Inner is not support to set New ErrorCallBack
+    (void)isDataCallBackEnabled; // Inner is not support to set New DataCallBack
+    isStateChangeCallBackEnabled_ = isStateChangeCallBackEnabled;
     if (callback != nullptr) {
         cb_ = std::make_shared<ScreenCaptureNativeCallbackMock>(callback, screenCapture_);
         return screenCapture_->SetScreenCaptureCallback(cb_);
@@ -72,12 +84,20 @@ int32_t ScreenCaptureNativeMock::SetScreenCaptureCallback(const std::shared_ptr<
 int32_t ScreenCaptureNativeMock::StartScreenCapture()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    if (isStateChangeCallBackEnabled_) {
+        int32_t ret = screenCapture_->SetPrivacyAuthorityEnabled();
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPrivacyAuthorityEnabled failed");
+    }
     return screenCapture_->StartScreenCapture();
 }
 
 int32_t ScreenCaptureNativeMock::StartScreenCaptureWithSurface(const std::any& value)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    if (isStateChangeCallBackEnabled_) {
+        int32_t ret = screenCapture_->SetPrivacyAuthorityEnabled();
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPrivacyAuthorityEnabled failed");
+    }
     sptr<Surface> surface = std::any_cast<sptr<Surface>>(value);
     return screenCapture_->StartScreenCaptureWithSurface(surface);
 }
@@ -97,6 +117,10 @@ int32_t ScreenCaptureNativeMock::StopScreenCapture()
 int32_t ScreenCaptureNativeMock::StartScreenRecording()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
+    if (isStateChangeCallBackEnabled_) {
+        int32_t ret = screenCapture_->SetPrivacyAuthorityEnabled();
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPrivacyAuthorityEnabled failed");
+    }
     return screenCapture_->StartScreenRecording();
 }
 
@@ -109,8 +133,10 @@ int32_t ScreenCaptureNativeMock::StopScreenRecording()
 int32_t ScreenCaptureNativeMock::Release()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    if (cb_ != nullptr) {
-        cb_->OnRelease();
+    std::shared_ptr<ScreenCaptureCallBack> cb = cb_;
+    ScreenCaptureNativeCallbackMock *callback = static_cast<ScreenCaptureNativeCallbackMock *>(cb.get());
+    if (callback != nullptr) {
+        callback->OnRelease();
         cb_ = nullptr;
     }
     return screenCapture_->Release();

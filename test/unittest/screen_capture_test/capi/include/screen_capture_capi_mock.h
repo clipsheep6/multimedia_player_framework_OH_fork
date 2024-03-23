@@ -24,7 +24,9 @@ class ScreenCaptureCapiMock : public ScreenCaptureMock {
 public:
     explicit ScreenCaptureCapiMock(OH_AVScreenCapture* screencapture) : screenCapture_(screencapture) {}
     ~ScreenCaptureCapiMock() = default;
-    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& cb) override;
+    int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
+        const bool isErrorCallBackEnabled, const bool isDataCallBackEnabled,
+        const bool isStateChangeCallBackEnabled) override;
     int32_t Init(AVScreenCaptureConfig config) override;
     int32_t StartScreenCapture() override;
     int32_t StartScreenCaptureWithSurface(const std::any& value) override;
@@ -39,7 +41,18 @@ public:
     sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(OHOS::Media::AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
-
+    bool IsErrorCallBackEnabled() override
+    {
+        return isErrorCallBackEnabled_;
+    }
+    bool IsDataCallBackEnabled() override
+    {
+        return isDataCallBackEnabled_;
+    }
+    bool IsStateChangeCallBackEnabled() override
+    {
+        return isStateChangeCallBackEnabled_;
+    }
 private:
     static void SetScreenCaptureCallback(OH_AVScreenCapture *screencapture,
         std::shared_ptr<ScreenCaptureCallBackMock> cb);
@@ -48,15 +61,20 @@ private:
     static void OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode);
     static void OnAudioBufferAvailable(OH_AVScreenCapture *screenCapture, bool isReady, OH_AudioCaptureSourceType type);
     static void OnVideoBufferAvailable(OH_AVScreenCapture *screenCapture, bool isReady);
+    static void OnErrorNew(OH_AVScreenCapture *screenCapture, int32_t errorCode, void *userData);
+    static void OnBufferAvailable(OH_AVScreenCapture *screenCapture, OH_AVBuffer *buffer,
+        OH_AVScreenCaptureBufferType bufferType, int64_t timestamp, void *userData);
+    static void OnStateChange(struct OH_AVScreenCapture *capture,
+        OH_AVScreenCaptureStateCode stateCode, void *userData);
     OH_AVScreenCaptureConfig Convert(AVScreenCaptureConfig config);
 
     static std::mutex mutex_;
     static std::map<OH_AVScreenCapture *, std::shared_ptr<ScreenCaptureCallBackMock>> mockCbMap_;
 
     OH_AVScreenCapture* screenCapture_ = nullptr;
-
-    std::atomic<bool> isExit_ { false };
-    AVScreenCaptureConfig config_;
+    bool isErrorCallBackEnabled_ = false;
+    bool isDataCallBackEnabled_ = false;
+    bool isStateChangeCallBackEnabled_ = false;
 };
 } // namespace Media
 } // namespace OHOS

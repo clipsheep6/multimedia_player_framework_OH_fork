@@ -115,6 +115,8 @@ enum AVScreenCaptureStateCode {
 
 enum AVScreenCaptureBufferType {
     /* Buffer of video data from screen */
+    SCREEN_CAPTURE_BUFFERTYPE_INVALID = -1,
+    /* Buffer of video data from screen */
     SCREEN_CAPTURE_BUFFERTYPE_VIDEO = 0,
     /* Buffer of audio data from inner capture */
     SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER = 1,

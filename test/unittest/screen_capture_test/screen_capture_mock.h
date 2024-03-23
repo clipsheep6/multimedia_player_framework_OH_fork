@@ -22,6 +22,7 @@
 #include <string>
 #include <thread>
 #include <cstdio>
+#include "avbuffer.h"
 #include "gtest/gtest.h"
 #include "screen_capture.h"
 #include "unittest_log.h"
@@ -41,12 +42,22 @@ public:
     virtual void OnError(int32_t errorCode) = 0;
     virtual void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) = 0;
     virtual void OnVideoBufferAvailable(bool isReady) = 0;
+    virtual void OnStateChange(AVScreenCaptureStateCode stateCode) = 0;
+    virtual void OnError(int32_t errorCode, void *userData)
+    {
+        (void)errorCode;
+        (void)userData;
+    }
+    virtual void OnBufferAvailable(const std::shared_ptr<AVBuffer> buffer,
+        AVScreenCaptureBufferType bufferType, int64_t timestamp) = 0;
 };
 
 class ScreenCaptureMock {
 public:
     virtual ~ScreenCaptureMock() = default;
-    virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback) = 0;
+    virtual int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBackMock>& callback,
+        const bool isErrorCallBackEnabled = false, const bool isDataCallBackEnabled = false,
+        const bool isStateChangeCallBackEnabled = false) = 0;
     virtual int32_t Init(AVScreenCaptureConfig config) = 0;
     virtual int32_t StartScreenCapture() = 0;
     virtual int32_t StartScreenCaptureWithSurface(const std::any& value) = 0;
@@ -60,6 +71,18 @@ public:
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
+    virtual bool IsErrorCallBackEnabled()
+    {
+        return false;
+    }
+    virtual bool IsDataCallBackEnabled()
+    {
+        return false;
+    }
+    virtual bool IsStateChangeCallBackEnabled()
+    {
+        return false;
+    }
 };
 
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {
