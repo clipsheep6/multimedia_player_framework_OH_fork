@@ -50,6 +50,15 @@ config("media_engine_common_avcodeclist_config") {
 }
 
 ohos_static_library("media_engine_common_avcodeclist") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   sources = [
     "avcodec_ability_singleton.cpp",
     "avcodec_xml_parser.cpp",

@@ -19,9 +19,13 @@ config("media_service_utils_public_config") {
 }
 
 ohos_shared_library("media_service_utils") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

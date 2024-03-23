@@ -16,7 +16,16 @@ import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
 ohos_shared_library("soundpool_client") {
+  stack_protector_ret = true
   install_enable = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   sources = [
     "cache_buffer.cpp",
     "sound_id_manager.cpp",

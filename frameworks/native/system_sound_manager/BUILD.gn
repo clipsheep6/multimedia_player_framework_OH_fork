@@ -22,7 +22,11 @@ config("system_sound_client_public_config") {
 }
 
 ohos_shared_library("system_sound_client") {
+  stack_protector_ret = true
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

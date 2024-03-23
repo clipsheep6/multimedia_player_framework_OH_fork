@@ -49,7 +49,11 @@ config("media_engine_histreamer_player_config") {
 }
 
 ohos_static_library("media_engine_histreamer_player") {
+  stack_protector_ret = true
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

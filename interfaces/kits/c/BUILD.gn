@@ -59,9 +59,13 @@ config("media_capi_public_config") {
 }
 
 ohos_shared_library("native_avscreen_capture") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -90,9 +94,13 @@ ohos_shared_library("native_avscreen_capture") {
 }
 
 ohos_shared_library("avplayer") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

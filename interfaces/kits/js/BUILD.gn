@@ -41,7 +41,11 @@ ohos_copy("media_declaration") {
 }
 
 ohos_shared_library("media") {
+  stack_protector_ret = true
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false

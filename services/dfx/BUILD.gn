@@ -20,9 +20,13 @@ config("media_service_log_dfx_public_config") {
 }
 
 ohos_shared_library("media_service_log_dfx") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
@@ -68,9 +72,13 @@ ohos_shared_library("media_service_log_dfx") {
 }
 
 ohos_shared_library("media_service_dfx") {
+  stack_protector_ret = true
   install_enable = true
 
   sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
