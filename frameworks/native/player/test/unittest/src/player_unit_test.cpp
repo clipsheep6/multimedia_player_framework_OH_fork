@@ -109,6 +109,91 @@ void PlayerUnitTest::GetSetParaFunTest()
 }
 
 /**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_001
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_001, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(VIDEO_FILE1, header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_002
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_002, TestSize.Level0)
+{
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    int32_t ret = player_->SetMediaSource(nullptr, strategy);
+    EXPECT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_003
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_003, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_004
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_004, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+    EXPECT_NE(MSERR_OK, player_->Prepare());
+}
+
+/**
+ * @tc.name  : Test Player SetMediaSource API
+ * @tc.number: Player_SetMediaSource_005
+ * @tc.desc  : Test Player SetMediaSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetMediaSource_005, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    struct AVPlayStrategy strategy = {1080, 920, 10000, false};
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(MEDIA_ROOT + "error.mp4", header);
+    int32_t ret = player_->SetMediaSource(mediaSource, strategy);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_EQ(false, player_->IsPlaying());
+}
+
+/**
  * @tc.name  : Test Player SetSource API
  * @tc.number: Player_SetSource_001
  * @tc.desc  : Test Player SetSource interface

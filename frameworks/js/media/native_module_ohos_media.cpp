@@ -54,6 +54,10 @@ static napi_value Export(napi_env env, napi_value exports)
 #ifdef SUPPORT_SCREEN_CAPTURE
     OHOS::Media::AVScreenCaptureNapi::Init(env, exports);
 #endif
+#ifdef SUPPORT_MEDIA_SOURCE
+    OHOS::Media::MediaSourceNapi::Init(env, exports);
+#endif
+
     return exports;
 }
 
