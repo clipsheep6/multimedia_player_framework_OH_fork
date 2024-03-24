@@ -80,12 +80,8 @@ bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string
     MEDIA_LOG_I("IsEnableHiStreamer enableHiStreamerBySwitch = %{public}d, enableHiStreamerByBundleList = %{public}d, "
 	    "enableGstreamerForBundle = %{public}d", enableHiStreamerBySwitch,
         enableHiStreamerByBundleList, enableGstreamerForBundle);
-#ifdef EMULATOR_ENABLED
-    // emulator use gst
-    return false;
-#else
+
     return (!enableGstreamerForBundle && enableHiStreamerByBundleList) || enableHiStreamerBySwitch;
-#endif
 }
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
