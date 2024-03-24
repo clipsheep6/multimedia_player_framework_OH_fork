@@ -344,6 +344,15 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
     }
 }
 
+bool ScreenCaptureServer::IsUserPrivacyAuthorityNeeded()
+{
+    if (appInfo_.appUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Privacy Authority Granted automaticly");
+        return false;
+    }
+    return true;
+}
+
 int32_t ScreenCaptureServer::CheckCaptureMode(CaptureMode captureMode)
 {
     MEDIA_LOGD("CheckCaptureMode start, captureMode:%{public}d", captureMode);
@@ -605,9 +614,8 @@ void ScreenCaptureServer::InitAppInfo()
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
-    // Root users should be whitelisted
-    if (appInfo_.appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
+    if (!IsUserPrivacyAuthorityNeeded()) {
+        MEDIA_LOGI("Privacy Authority Granted. uid:%{public}d", appInfo_.appUid);
         return MSERR_OK;
     }
 
@@ -863,9 +871,8 @@ int32_t ScreenCaptureServer::InitRecorder()
 
 bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState state)
 {
-    // Root users should be whitelisted
-    if (appInfo_.appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Privacy Granted. state: %{public}d", state);
+    if (!IsUserPrivacyAuthorityNeeded()) {
+        MEDIA_LOGI("Using Permission Ignored. state: %{public}d, uid: %{public}d", state, appInfo_.appUid);
         return true;
     }
 
@@ -899,13 +906,18 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         return ret;
     }
 
+    if (IsUserPrivacyAuthorityNeeded()) {
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    if (isPrivacyAuthorityEnabled_) {
-        // Wait for user interactions to ALLOW/DENY capture
-        return MSERR_OK;
-    }
+        if (isPrivacyAuthorityEnabled_) {
+            // Wait for user interactions to ALLOW/DENY capture
+            MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
+            return MSERR_OK;
+        }
 #endif
-    MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
+        MEDIA_LOGI("privacy notification window not support, app has CAPTURE_SCREEN permission and go on");
+    } else {
+        MEDIA_LOGI("Privacy Authority granted automaticly and go on");
+    }
 
     ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
@@ -1051,7 +1063,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
 
     int32_t result = NotificationHelper::PublishNotification(request);
     MEDIA_LOGI("Screencapture service UpdateMicrophoneEnabled uid %{public}d, result %{public}d", uid, result);
-    micCount_.store(micCount_.load()+1);
+    micCount_.store(micCount_.load() + 1);
 }
 
 void ScreenCaptureServer::UpdateLiveViewContent()
@@ -1162,7 +1174,6 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     consumer_->RegisterConsumerListener(surfaceCb_);
     int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen without input surface failed");
-
     CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
 }

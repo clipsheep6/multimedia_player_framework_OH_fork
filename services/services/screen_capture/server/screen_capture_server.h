@@ -192,6 +192,7 @@ private:
     void DestroyVirtualScreen();
 
     bool CheckScreenCapturePermission();
+    bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     int32_t RequestUserPrivacyAuthority();
     int32_t StartPrivacyWindow();
