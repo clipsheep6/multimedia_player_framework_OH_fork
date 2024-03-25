@@ -1392,7 +1392,7 @@ void HiPlayerImpl::NotifyPositionUpdate()
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
-void HiPlayerImpl::OnStateChanged(PlayerStateId state)
+void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
 {
     curState_ = state;
     MEDIA_LOG_I("OnStateChanged from " PUBLIC_LOG_D32 " to " PUBLIC_LOG_D32, pipelineStates_.load(),
