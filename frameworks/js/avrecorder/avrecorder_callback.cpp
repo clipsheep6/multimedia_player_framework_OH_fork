@@ -130,6 +130,9 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
     } else if (errCode == MSERR_AUD_INTERRUPT) {
         SendErrorCallback(MSERR_EXT_API9_AUDIO_INTERRUPTED,
             "Record failed by audio interrupt.");
+    } else if (errCode == MSERR_SERVICE_DIED) {
+        SendErrorCallback(MSERR_EXT_API9_SERVICE_DIED,
+            "Record failed by service died.");
     } else {
         SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
     }
