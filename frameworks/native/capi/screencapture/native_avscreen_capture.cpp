@@ -240,7 +240,7 @@ public:
 
     void OnStateChange(AVScreenCaptureStateCode stateCode) override
     {
-        MEDIA_LOGI("OnError() is called, stateCode %{public}d", stateCode);
+        MEDIA_LOGI("OnStateChange() is called, stateCode %{public}d", stateCode);
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
 

@@ -105,17 +105,33 @@ void AudioCapturerWrapper::SetIsMuted(bool isMuted)
     isMuted_.store(isMuted);
 }
 
-std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
+void AudioCapturerWrapper::SetInnerAudioStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
+{
+    // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
+}
+
+std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(
+    const OHOS::AudioStandard::AppInfo &appInfo)
 {
     AudioCapturerOptions capturerOptions;
     capturerOptions.streamInfo.samplingRate = static_cast<AudioSamplingRate>(audioInfo_.audioSampleRate);
     capturerOptions.streamInfo.channels = static_cast<AudioChannel>(audioInfo_.audioChannels);
     capturerOptions.streamInfo.encoding = AudioEncodingType::ENCODING_PCM;
     capturerOptions.streamInfo.format = AudioSampleFormat::SAMPLE_S16LE;
-    if (audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
-        capturerOptions.capturerInfo.sourceType = static_cast<SourceType>(0); // Audio Source Type Mic is 0
-    } else {
-        capturerOptions.capturerInfo.sourceType = static_cast<SourceType>(audioInfo_.audioSource);
+    if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
+        audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
+        capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC; // Audio Source Type Mic is 0
+    } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
+        audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
+        capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
+        SetInnerAudioStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
     }
     capturerOptions.capturerInfo.capturerFlags = 0;
     std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);

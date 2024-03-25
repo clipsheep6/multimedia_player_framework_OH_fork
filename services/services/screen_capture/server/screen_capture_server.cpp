@@ -1546,16 +1546,16 @@ void ScreenCaptureServer::Release()
     int32_t sessionId;
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         sessionId = sessionId_;
         sessionId_ = SESSION_ID_INVALID;
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release Stop done sessionId:%{public}d", sessionId,
+            FAKE_POINTER(this));
     }
     {
         std::lock_guard<std::mutex> lock(mutexGlobal);
         serverMap.erase(sessionId);
     }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release E", FAKE_POINTER(this));
 }
 

@@ -54,7 +54,9 @@ protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
 
 private:
-    std::shared_ptr<AudioCapturer> CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo);
+    std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
+        const OHOS::AudioStandard::AppInfo &appInfo);
+    void SetInnerAudioStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -66,8 +68,8 @@ private:
     AudioCaptureInfo audioInfo_;
     std::string threadName_;
     std::unique_ptr<std::thread> readAudioLoop_ = nullptr;
-    std::shared_ptr<AudioCapturer> audioCapturer_ = nullptr;
-    std::shared_ptr<AudioCapturerCallbackImpl> audioCaptureCallback_ = nullptr;
+    std::shared_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
+    std::shared_ptr<OHOS::Media::AudioCapturerCallbackImpl> audioCaptureCallback_ = nullptr;
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
