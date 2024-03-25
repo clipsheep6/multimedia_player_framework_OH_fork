@@ -221,24 +221,21 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     int32_t result = MSERR_OK;
     volume_ = volume;
-
-    if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
-        playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
-        return result;
-    }
     if (audioHapticSound_ == nullptr) {
         MEDIA_LOGW("Audio haptic sound is nullptr!");
         return result;
     }
+    float actualVolume = volume_ * (muteAudio_ ? 0 : 1);
+    result = audioHapticSound_->SetVolume(actualVolume);
+
     if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL &&
         streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE &&
+        playerState_ == AudioHapticPlayerState::STATE_RUNNING &&
         std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
         // only for the call manager ringtone
         StopVibrate();
     }
-    float actualVolume = volume_ * (muteAudio_ ? 0 : 1);
-    result = audioHapticSound_->SetVolume(actualVolume);
+
     return result;
 }
 
@@ -248,12 +245,6 @@ int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     int32_t result = MSERR_OK;
     loop_ = loop;
-
-    if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
-        playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
-        return result;
-    }
     if (audioHapticSound_ == nullptr) {
         MEDIA_LOGW("Audio haptic sound is nullptr!");
         return result;
