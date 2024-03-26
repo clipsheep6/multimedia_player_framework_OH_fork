@@ -778,11 +778,7 @@ int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
 
 int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
-    MEDIA_LOG_I("SetPlaybackSpeed entered.");
-    if (mode == playbackRateMode_.load()) {
-        MEDIA_LOG_I("SetPlaybackSpeed new mode same as the old.");
-        return MSERR_OK;
-    }
+    MEDIA_LOG_I("SetPlaybackSpeed entered, mode=%{public}d", mode);
     Status res = Status::OK;
     float speed = TransformPlayRate2Float(mode);
     if (audioSink_ != nullptr) {
