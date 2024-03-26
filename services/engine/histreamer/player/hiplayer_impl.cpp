@@ -41,6 +41,7 @@ const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame a
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
+using namespace OHOS::Media::Plugins;
 const std::string BUNDLE_NAME_FIRST = "com.hua";
 const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
@@ -235,7 +236,13 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (dataSrc_ != nullptr) {
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
-        ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        if (!header_.empty()) {
+            MEDIA_LOG_I("DoSetSource header");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, header_));
+        } else {
+            MEDIA_LOG_I("DoSetSource url");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
     }
     if (ret != Status::OK) {
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
@@ -1067,6 +1074,14 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
+
+    PlayStrategy* playStrategy = new PlayStrategy;
+    playStrategy->width = preferedWidth_;
+    playStrategy->height = preferedHeight_;
+    playStrategy->duration = bufferDuration_;
+    playStrategy->preferHDR = preferHDR_;
+    source->SetPlayStrategy(playStrategy);
+
     auto ret = demuxer_->SetDataSource(source);
     SetBundleName(bundleName_);
     pipeline_->AddHeadFilters({demuxer_});

@@ -198,6 +198,11 @@ private:
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
+    std::map<std::string, std::string> header_;
+    uint32_t preferedWidth_ = 0;
+    uint32_t preferedHeight_ = 0;
+    uint32_t bufferDuration_ = 0;
+    bool preferHDR_ = false;
 };
 } // namespace Media
 } // namespace OHOS
