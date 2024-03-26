@@ -912,6 +912,20 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::SetMediaSource");
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+    InitPlayEngine(mediaSource->url);
+    int ret = playerEngine_->SetMediaSource(mediaSource, strategy);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMediaSource Failed!");
+    config_.url = mediaSource->url;
+    config_.header = mediaSource->header;
+    config_.strategy_ = strategy;
+    return MSERR_OK;
+}
+
 void PlayerServer::HandleEos()
 {
     if (config_.looping.load()) {

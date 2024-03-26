@@ -66,6 +66,7 @@ public:
     int32_t GetCurrentTime(int32_t& currentPositionMs) override;
     int32_t GetDuration(int32_t& durationMs) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode& mode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
@@ -196,6 +197,9 @@ private:
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
+    std::map<std::string, std::string> header_;
+    std::string url;
+    AVPlayStrategy strategy_;
 };
 } // namespace Media
 } // namespace OHOS

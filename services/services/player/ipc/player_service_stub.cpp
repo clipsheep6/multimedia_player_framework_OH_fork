@@ -91,6 +91,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
     playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
     playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
+    playerFuncs_[SET_MEDIA_SOURCE] = { &PlayerServiceStub::SetMediaSource, "Player::SetMediaSource" };
 #ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
 #endif
@@ -357,6 +358,13 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
     MediaTrace trace("binder::SetPlaybackSpeed");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServiceStub::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetMediaSource(mediaSource, strategy);
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
@@ -701,6 +709,26 @@ int32_t PlayerServiceStub::SetPlaybackSpeed(MessageParcel &data, MessageParcel &
 {
     int32_t mode = data.ReadInt32();
     reply.WriteInt32(SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode)));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &reply)
+{
+    std::string url = data.ReadString();
+    auto mapSize = data.ReadUint32();
+    std::map<std::string, std::string> header;
+    while (mapSize--) {
+        auto kstr = data.ReadString();
+        auto vstr = data.ReadString();
+        header.emplace(kstr, vstr);
+    }
+    std::shared_ptr<AVMediaSource> meidaSource = std::make_shared<AVMediaSource>(url, header);
+    struct AVPlayStrategy strategy;
+    strategy.preferredWidth = data.ReadUint32();
+    strategy.preferredHeight = data.ReadUint32();
+    strategy.preferredBufferDuration = data.ReadUint32();
+    strategy.preferredHdr = data.ReadBool();
+    reply.WriteInt32(SetMediaSource(meidaSource, strategy));
     return MSERR_OK;
 }
 

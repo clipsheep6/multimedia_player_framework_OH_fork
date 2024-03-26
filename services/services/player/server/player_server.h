@@ -96,6 +96,7 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
 #ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
@@ -163,6 +164,8 @@ protected:
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+        std::map<std::string, std::string> header;
+        AVPlayStrategy strategy_;
     } config_;
 
 private:

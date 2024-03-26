@@ -341,6 +341,12 @@ bool PlayerMock::CreatePlayer()
     return player_ != nullptr;
 }
 
+int32_t PlayerMock::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetMediaSource(mediaSource, strategy);
+}
+
 int32_t PlayerMock::SetSource(const std::string url)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
