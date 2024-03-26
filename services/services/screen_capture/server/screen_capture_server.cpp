@@ -57,7 +57,8 @@ static const std::string USER_CHOICE_ALLOW = "true";
 static const std::string USER_CHOICE_DENY = "false";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
-static const std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.png";
+static const std::string ICON_PATH_CAPSULE = "/etc/screencapture/capsule.svg";
+static const std::string ICON_PATH_NOTIFICATION = "/etc/screencapture/notification.png";
 static const std::string ICON_PATH_MIC = "/etc/screencapture/mic.svg";
 static const std::string ICON_PATH_MIC_OFF = "/etc/screencapture/mic_off.svg";
 static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
@@ -66,6 +67,7 @@ static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
+static const int32_t MDPI = 160;
 static const int32_t MICROPHONE_OFF = 0;
 static const int32_t MICROPHONE_STATE_COUNT = 2;
 
@@ -897,6 +899,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     int32_t ret = CheckAllParams();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
 
+    sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    density_ = display->GetDpi();
+
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::STARTING;
     ret = RequestUserPrivacyAuthority();
@@ -966,7 +971,7 @@ int32_t ScreenCaptureServer::StartNotification()
     request.SetUnremovable(true);
     request.SetInProgress(true);
 
-    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    std::shared_ptr<PixelMap> pixelMapTotalSpr = GetPixelMap(ICON_PATH_NOTIFICATION);
     request.SetLittleIcon(pixelMapTotalSpr);
     request.SetBadgeIconStyle(NotificationRequest::BadgeStyle::LITTLE);
 
@@ -982,12 +987,13 @@ std::shared_ptr<NotificationLocalLiveViewContent> ScreenCaptureServer::GetLocalL
     localLiveViewContent->SetType(1);
     liveViewText_ = "\"";
     liveViewText_ += callingLabel_.c_str();
-    liveViewText_ += "\"录屏中...";
+    liveViewText_ += "\"正在使用屏幕";
     localLiveViewContent->SetText(liveViewText_);
 
     auto capsule = NotificationCapsule();
     capsule.SetBackgroundColor(BACK_GROUND_COLOR);
-    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMap(ICON_PATH_CAPSULE);
+    capsulePxSize_ = capsuleVpSize_ * density_ / MDPI;
+    std::shared_ptr<PixelMap> pixelMapCapSpr = GetPixelMapSvg(ICON_PATH_CAPSULE, capsulePxSize_, capsulePxSize_);
     capsule.SetIcon(pixelMapCapSpr);
 
     localLiveViewContent->SetCapsule(capsule);
@@ -1026,7 +1032,7 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMap(std::string path)
     return pixelMapSpr;
 }
 
-std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path)
+std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path, int32_t width, int32_t height)
 {
     uint32_t errorCode = 0;
     SourceOptions opts;
@@ -1034,8 +1040,8 @@ std::shared_ptr<PixelMap> ScreenCaptureServer::GetPixelMapSvg(std::string path)
     std::unique_ptr<ImageSource> imageSource =
         ImageSource::CreateImageSource(path, opts, errorCode);
     DecodeOptions decodeOpts;
-    decodeOpts.desiredSize.width = SVG_WIDTH;
-    decodeOpts.desiredSize.height = SVG_HEIGHT;
+    decodeOpts.desiredSize.width = width;
+    decodeOpts.desiredSize.height = height;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
     std::shared_ptr<PixelMap> pixelMapSpr = std::move(pixelMap);
     return pixelMapSpr;
@@ -1090,10 +1096,10 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     auto basicButton = NotificationLocalLiveViewButton();
     basicButton.addSingleButtonName(BUTTON_NAME_MIC);
     if (micCount_.load() % MICROPHONE_STATE_COUNT == MICROPHONE_OFF) {
-        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF);
+        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC_OFF, SVG_HEIGHT, SVG_WIDTH);
         basicButton.addSingleButtonIcon(pixelMapSpr);
     } else {
-        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC);
+        std::shared_ptr<PixelMap> pixelMapSpr = GetPixelMapSvg(ICON_PATH_MIC, SVG_HEIGHT, SVG_WIDTH);
         basicButton.addSingleButtonIcon(pixelMapSpr);
     }
 

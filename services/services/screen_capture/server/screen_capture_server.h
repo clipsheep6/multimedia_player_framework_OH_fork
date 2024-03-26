@@ -200,7 +200,7 @@ private:
     std::shared_ptr<NotificationLocalLiveViewContent> GetLocalLiveViewContent();
     void UpdateLiveViewContent();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
-    std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path);
+    std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
 
 private:
     std::mutex mutex_;
@@ -214,6 +214,9 @@ private:
     std::string callingLabel_;
     std::string liveViewText_;
     std::atomic<int32_t> micCount_{0};
+    int32_t density_;
+    int32_t capsuleVpSize_ = 18;
+    int32_t capsulePxSize_;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;

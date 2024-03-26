@@ -30,6 +30,8 @@ group("media_services_package") {
       "etc:screen_capture_capsule_image",
       "etc:screen_capture_mic_image",
       "etc:screen_capture_mic_off_image",
+      "etc:screen_capture_notification_image",
+      "etc:screen_capture_stop_dark_image",
       "etc:screen_capture_stop_image",
     ]
   }
