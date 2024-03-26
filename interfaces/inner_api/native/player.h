@@ -27,12 +27,20 @@
 
 namespace OHOS {
 namespace Media {
+struct AVPlayStrategy;
 
 namespace DrmConstant {
 constexpr uint32_t DRM_MAX_M3U8_DRM_PSSH_LEN = 2048;
 constexpr uint32_t DRM_MAX_M3U8_DRM_UUID_LEN = 16;
 constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
 }
+
+struct AVPlayStrategy {
+    uint32_t preferedWidth;
+    uint32_t preferedHeight;
+    uint32_t preferedBufferDuration;
+    bool preferHDR; 
+};
 
 struct DrmInfoItem {
     uint8_t uuid[DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN];
@@ -388,6 +396,8 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
+
+    virtual int32_t SetMediaSource(std::string url, std::map<std::string, std::string> header, AVPlayStrategy strategy) = 0;
 
     /**
      * @brief Changes the playback position.

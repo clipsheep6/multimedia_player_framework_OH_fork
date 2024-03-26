@@ -30,6 +30,7 @@ ohos_shared_library("media_avplayer") {
     "//foundation/multimedia/player_framework/interfaces/inner_api",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/common",
+    "//foundation/multimedia/player_framework/frameworks/js/mediasource",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//third_party/libuv/include",
   ]
@@ -39,6 +40,7 @@ ohos_shared_library("media_avplayer") {
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/mediasource/media_source_napi.cpp"
   ]
 
   cflags = [
