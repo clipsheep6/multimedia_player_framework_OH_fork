@@ -161,6 +161,24 @@ int32_t RecorderServiceProxy::SetVideoIsHdr(int32_t sourceId, bool isHdr)
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetVideoHierarchicalPEnable(int32_t sourceId, bool hierarchicalPEnable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteBool(hierarchicalPEnable);
+    int error = Remote()->SendRequest(SET_VIDEO_HIERARCHICAL_P_ENABLE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoHierarchicalPEnable failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetCaptureRate(int32_t sourceId, double fps)
 {
     MessageParcel data;
