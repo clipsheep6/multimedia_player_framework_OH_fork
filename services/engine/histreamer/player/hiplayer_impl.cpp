@@ -536,9 +536,26 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doSeek.");
+    int64_t seekTimeUs = 0;
+    if (!Plugins::Us2HstTime(seekPos, seekTimeUs)) { // ms to us
+        MEDIA_LOG_E("Invalid seekPos: %{public}" PRId64, seekPos);
+        return Status::ERROR_INVALID_PARAMETER;
+    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
-        MEDIA_LOG_I("doSeek change state SEEK_PREVIOUS_SYNC.");
-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+        MEDIA_LOG_I("doSeek SEEK_CLOSEST.");
+        if (videoDecoder_ != nullptr) {
+            videoDecoder_->SetSeekTime(seekTimeUs);
+        }
+        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        auto res = seekAgent_->Seek(seekPos);
+        MEDIA_LOG_I("seekAgent_ Seek end");
+        if (res != Status::OK) {
+            MEDIA_LOG_E("Seek closest failed.");
+        } else {
+            syncManager_->Seek(seekTimeUs);
+        }
+        seekAgent_.reset();
+        return res;
     }
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
@@ -549,7 +566,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
     }
     if (rtv == Status::OK) {
-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
+        syncManager_->Seek(seekTimeUs);
     }
     return rtv;
 }
@@ -1301,6 +1318,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
+    MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
 }
@@ -1384,6 +1402,7 @@ void HiPlayerImpl::NotifyPositionUpdate()
 {
     int32_t currentPosMs = 0;
     GetCurrentTime(currentPosMs);
+    MEDIA_LOG_D("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }

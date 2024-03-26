@@ -107,7 +107,7 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
         Format format;
         int32_t currentPositionMs;
         if (playerEngine_->GetDuration(currentPositionMs) == 0) {
-            MEDIA_LOG_DD("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
+            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
             MEDIA_LOG_W("get player engine current time error");
@@ -123,7 +123,7 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
         Format format;
         int32_t currentPositionMs;
         if (playerEngine_->GetCurrentTime(currentPositionMs) == 0) {
-            MEDIA_LOG_DD("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
+            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
         } else {
             MEDIA_LOG_W("get player engine current time error");

@@ -31,6 +31,7 @@
 #include "i_player_engine.h"
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
+#include "seek_agent.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -193,6 +194,7 @@ private:
     std::vector<std::pair<std::string, bool>> completeState_;
     std::mutex seekMutex_;
     std::string bundleName_ {};
+    std::shared_ptr<SeekAgent> seekAgent_;
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
