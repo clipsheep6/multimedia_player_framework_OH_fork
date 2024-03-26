@@ -505,6 +505,17 @@ public:
     virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
 
     /**
+     * @brief Sets the status of the video whether to enable the hierarchical P encoding structure.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param HierarchicalPEnable Indicates the hierarchical P encoding status to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoHierarchicalPEnable(int32_t sourceId, bool hierarchicalPEnable) = 0;
+
+    /**
      * @brief Sets the width and height of the video to record.
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.

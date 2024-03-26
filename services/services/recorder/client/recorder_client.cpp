@@ -136,6 +136,16 @@ int32_t RecorderClient::SetVideoIsHdr(int32_t sourceId, bool isHdr)
     return recorderProxy_->SetVideoIsHdr(sourceId, isHdr);
 }
 
+int32_t RecorderClient::SetVideoHierarchicalPEnable(int32_t sourceId, bool hierarchicalPEnable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetVideoHierarchicalPEnable sourceId(%{public}d), hierarchicalPEnable(%{public}d)",
+        sourceId, hierarchicalPEnable);
+    return recorderProxy_->SetVideoHierarchicalPEnable(sourceId, hierarchicalPEnable);
+}
+
 int32_t RecorderClient::SetCaptureRate(int32_t sourceId, double fps)
 {
     std::lock_guard<std::mutex> lock(mutex_);
