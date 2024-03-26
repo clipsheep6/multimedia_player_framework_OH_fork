@@ -1426,7 +1426,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StopVideoCapture");
     MEDIA_LOGI("StopVideoCapture");
-    if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
+    if ((screenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_) || !isConsumerStart_) {
         MEDIA_LOGI("StopVideoCapture IGNORED, video capture not start");
         surfaceCb_ = nullptr;
         return MSERR_OK;
