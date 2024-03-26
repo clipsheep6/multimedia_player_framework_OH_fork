@@ -142,6 +142,8 @@ private:
     int32_t InitVideoWidthAndHeight();
     void SetBundleName(std::string bundleName);
 
+    int32_t SetMediaSource();
+
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -195,6 +197,9 @@ private:
     std::mutex seekMutex_;
     std::string bundleName_ {};
     std::shared_ptr<SeekAgent> seekAgent_;
+
+    std::map<std::string, std::string> headers_ {};
+    PlayStragy* playStragy {nullptr};
 
     int32_t rotation90 = 90;
     int32_t rotation270 = 270;
