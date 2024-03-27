@@ -1555,8 +1555,8 @@ void ScreenCaptureServer::Release()
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         sessionId = sessionId_;
         sessionId_ = SESSION_ID_INVALID;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release Stop done sessionId:%{public}d", sessionId,
-            FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release Stop done sessionId:%{public}d", FAKE_POINTER(this),
+            sessionId);
     }
     {
         std::lock_guard<std::mutex> lock(mutexGlobal);
