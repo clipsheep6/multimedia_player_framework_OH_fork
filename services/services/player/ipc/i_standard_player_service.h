@@ -55,6 +55,7 @@ public:
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
+    virtual int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) = 0;
 #ifdef SUPPORT_VIDEO
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
 #endif
@@ -99,6 +100,7 @@ public:
         GET_DURATION,
         SET_PLAYERBACK_SPEED,
         GET_PLAYERBACK_SPEED,
+        SET_MEDIA_SOURCE,
         SET_VIDEO_SURFACE,
         IS_PLAYING,
         IS_LOOPING,

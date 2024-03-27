@@ -43,6 +43,10 @@ public:
     {
         return 0;
     }
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override
+    {
+        return 0;
+    }
     int32_t AddSubSource(const std::string &url) override
     {
         return 0;

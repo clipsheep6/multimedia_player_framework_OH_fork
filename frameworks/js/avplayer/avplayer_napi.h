@@ -222,6 +222,8 @@ private:
      * setDecryptionConfig(mediaKeySession: drm.MediaKeySession, secureVideoPath: boolean): void;
      */
     static napi_value JsSetDecryptConfig(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetMediaSource(napi_env env, napi_callback_info info);
     /**
      * getMediaKeySystemInfos(): Array<MediaKeySystemInfo>;
      */
