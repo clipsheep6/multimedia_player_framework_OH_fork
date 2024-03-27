@@ -82,12 +82,12 @@ Status SeekAgent::Seek(int64_t seekPos)
 
     MEDIA_LOG_I("demuxer_ realSeekTime: %{public}" PRId64 "ns", realSeekTime);
     demuxer_->PrepareBeforeStart();
-    demuxer_->ResumeForSeek();
     MEDIA_LOG_I("ResumeForSeek end");
     {
         AutoLock lock(targetArrivedLock_);
         isAudioTargetArrived_ = false;
         isVideoTargetArrived_ = false;
+        demuxer_->ResumeForSeek();
         targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
         MEDIA_LOG_I("Wait end");
     }
@@ -209,4 +209,4 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
     return Status::OK;
 }
 }  // namespace Media
-}  // namespace OHOS
+}  // namespace OHOS

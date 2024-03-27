@@ -248,7 +248,22 @@ OH_AVErrCode OH_AVPlayer_Seek(OH_AVPlayer *player, int32_t mSeconds, AVPlayerSee
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
-    int32_t ret = playerObj->player_->Seek(mSeconds, static_cast<PlayerSeekMode>(mode));
+    PlayerSeekMode seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    switch (mode) {
+        case AVPlayerSeekMode::AV_SEEK_NEXT_SYNC:
+            seekMode = PlayerSeekMode::SEEK_NEXT_SYNC;
+            break;
+        case AVPlayerSeekMode::AV_SEEK_PREVIOUS_SYNC:
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+            break;
+        case AVPlayerSeekMode::AV_SEEK_CLOSEST:
+            seekMode = PlayerSeekMode::SEEK_CLOSEST;
+            break;
+        default:
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+            break;
+    }
+    int32_t ret = playerObj->player_->Seek(mSeconds, seekMode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Seek failed");
     return AV_ERR_OK;
 }

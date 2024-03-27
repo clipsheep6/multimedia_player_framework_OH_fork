@@ -532,6 +532,7 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     auto rtv = doSeek(seekPos, mode);
     if (isStreaming_) {
         pipeline_->Resume();
+        syncManager_->Resume();
     } else {
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();

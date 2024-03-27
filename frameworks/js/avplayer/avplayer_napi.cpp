@@ -673,25 +673,21 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-
     if (jsPlayer->IsLiveSource()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
         return result;
     }
-
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
         return result;
     }
-
     int32_t time = -1;
     napi_status status = napi_get_value_int32(env, args[0], &time);
     if (status != napi_ok || time < 0) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
         return result;
     }
-
     int32_t mode = SEEK_PREVIOUS_SYNC;
     if (argCount > 1) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
@@ -710,14 +706,34 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         return result;
     }
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
-        MEDIA_LOGD("Seek Task");
         if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->Seek(time, static_cast<PlayerSeekMode>(mode));
+            (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
         }
     });
     jsPlayer->playerCb_->seekNum_++;
     (void)jsPlayer->taskQue_->EnqueueTask(task);
     return result;
+}
+
+PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
+{
+    MEDIA_LOGI("Seek Task TransferSeekMode, mode: %{public}d", mode);
+    PlayerSeekMode seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    switch (mode) {
+        case 0: // Seek to the next sync frame of the given timestamp.
+            seekMode = PlayerSeekMode::SEEK_NEXT_SYNC;
+            break;
+        case 1: // Seek to the previous sync frame of the given timestamp.
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+            break;
+        case 2: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
+            seekMode = PlayerSeekMode::SEEK_CLOSEST;
+            break;
+        default:
+            seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+            break;
+    }
+    return seekMode;
 }
 
 napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)

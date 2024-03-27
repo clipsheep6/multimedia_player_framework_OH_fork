@@ -84,6 +84,11 @@ typedef enum AVPlayerSeekMode {
     AV_SEEK_NEXT_SYNC = 0,
     /* sync to keyframes before the time point. */
     AV_SEEK_PREVIOUS_SYNC,
+    /**
+     * @brief sync to the closest frame of the given timestamp.
+     * @since 12
+     */
+    AV_SEEK_CLOSEST = 2,
 } AVPlayerSeekMode;
 
 /**

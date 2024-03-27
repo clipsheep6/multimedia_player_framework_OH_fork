@@ -290,6 +290,8 @@ private:
     void EnqueueNetworkTask(const std::string url);
     void EnqueueFdTask(const int32_t fd);
 
+    PlayerSeekMode TransferSeekMode(int32_t mode);
+
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
     void NotifyState(PlayerStates state) override;
