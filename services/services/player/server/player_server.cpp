@@ -32,9 +32,6 @@ using namespace OHOS::QOS;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
-#ifdef SUPPORT_VIDEO
-    constexpr uint32_t VIDEO_MAX_NUMBER = 13; // max video player
-#endif
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 
@@ -78,8 +75,6 @@ int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
     if (videoPlayerList.find(player) != videoPlayerList.end()) {
         return MSERR_OK;
     }
-    CHECK_AND_RETURN_RET_LOG(videoPlayerList.size() < VIDEO_MAX_NUMBER, MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,
-        "failed to start VideoPlayer");
     videoPlayerList.insert(player);
     return MSERR_OK;
 }
