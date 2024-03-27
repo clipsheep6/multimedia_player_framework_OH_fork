@@ -904,6 +904,9 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             int32_t audioSampleRate;
             trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
             audioTrackInfo.PutIntValue("sample_rate", static_cast<int32_t>(audioSampleRate));
+            int32_t bitDepth;
+            trackInfo->GetData(Tag::BITS_PER_CODEC_SAMPLE, bitDepth);
+            audioTrackInfo.PutIntValue("bit_depth", static_cast<int32_t>(bitDepth));
             audioTrack.emplace_back(std::move(audioTrackInfo));
         }
     }
