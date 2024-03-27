@@ -191,6 +191,9 @@ void HiPlayerCallbackLooper::LoopOnce()
 
 void HiPlayerCallbackLooper::EventQueue::Enqueue(const std::shared_ptr<HiPlayerCallbackLooper::Event>& event)
 {
+    if (!event) {
+        return;
+    }
     if (event->what == WHAT_NONE) {
         MEDIA_LOG_I("invalid event");
     }
