@@ -118,6 +118,7 @@ public:
     int32_t SetDataSrc(const std::string &path, int32_t size, bool seekable);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size);
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size);
+    int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy);
     int32_t Prepare();
     int32_t PrepareAsync();
     int32_t Play();

@@ -905,6 +905,16 @@ int32_t PlayerEngineGstImpl::SetVolume(float leftVolume, float rightVolume)
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (playBinCtrler_ != nullptr) {
+        MEDIA_LOGD("SetMediaSource in");
+        MEDIA_LOGD("preferedWidth = %{public}d url = %{public}s", strategy.preferredWidth, mediaSource->url.c_str());
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);

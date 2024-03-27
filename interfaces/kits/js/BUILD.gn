@@ -58,6 +58,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/media",
+    "${multimedia_player_framework_path}/frameworks/js/mediasource",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "${multimedia_player_framework_path}/frameworks/js/avscreen_capture",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -70,6 +71,7 @@ ohos_shared_library("media") {
   ]
 
   sources = [
+    "${multimedia_player_framework_path}/frameworks/js/mediasource/media_source_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
