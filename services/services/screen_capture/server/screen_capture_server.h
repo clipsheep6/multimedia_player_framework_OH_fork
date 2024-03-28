@@ -182,6 +182,7 @@ private:
     int32_t CheckAllParams();
     int32_t CheckCaptureStreamParams();
     int32_t CheckCaptureFileParams();
+    int32_t SetCanvasRotationInner();
     void InitAppInfo();
     void CloseFd();
  
@@ -206,6 +207,7 @@ private:
     std::mutex mutex_;
     std::mutex cbMutex_;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
 

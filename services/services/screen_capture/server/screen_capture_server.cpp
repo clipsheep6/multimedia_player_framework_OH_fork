@@ -654,7 +654,6 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
     }
     int32_t ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
-
     return ret;
 }
 
@@ -1213,7 +1212,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         DestroyVirtualScreen();
         return MSERR_UNKNOWN;
     }
-
+    if (canvasRotation_) {
+        SetCanvasRotationInner();
+    }
     int32_t ret = MakeVirtualScreenMirror();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("MakeVirtualScreenMirror failed");
@@ -1403,10 +1404,19 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetCanvasRotation(bool canvasRotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    canvasRotation_ = canvasRotation;
+    MEDIA_LOGI("ScreenCaptureServer::SetCanvasRotation, canvasRotation:%{public}d", canvasRotation);
+    if (captureState_ != AVScreenCaptureState::STARTED) { // Before Start
+        return MSERR_OK;
+    }
+    return SetCanvasRotationInner();
+}
+
+int32_t ScreenCaptureServer::SetCanvasRotationInner()
+{
     CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
-    MEDIA_LOGI("ScreenCaptureServer::SetCanvasRotation, canvasRotation:%{public}d", canvasRotation);
-    auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation);
+    auto ret = ScreenManager::GetInstance().SetVirtualMirrorScreenCanvasRotation(screenId_, canvasRotation_);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNSUPPORT,
                              "SetVirtualMirrorScreenCanvasRotation failed, ret: %{public}d", ret);
     return MSERR_OK;
