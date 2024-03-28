@@ -104,6 +104,7 @@ private:
     void HandleDrmInfoUpdatedEvent(const Event& event);
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
+    void HandleVideoFirstFrameEvent(int32_t errorCode);
     void HandleResolutionChangeEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
