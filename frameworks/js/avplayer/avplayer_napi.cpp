@@ -2288,7 +2288,6 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to off event");
         return result;
     }
 
