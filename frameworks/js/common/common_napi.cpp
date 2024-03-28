@@ -189,16 +189,16 @@ bool CommonNapi::GetPropertyMap(napi_env env, napi_value value, std::map<std::st
 
 bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyTmp &playStrategy)
 {
-    if (!GetPropertyUint32(env, value, "preferedWidth", playStrategy.preferredWidth)) {
+    if (!GetPropertyUint32(env, value, "preferredWidth", playStrategy.preferredWidth)) {
         playStrategy.preferredWidth = 0; // use default value
     }
-    if (!GetPropertyUint32(env, value, "preferedHeight", playStrategy.preferredHeight)) {
+    if (!GetPropertyUint32(env, value, "preferredHeight", playStrategy.preferredHeight)) {
         playStrategy.preferredHeight = 0; // use default value
     }
-    if (!GetPropertyUint32(env, value, "preferedBufferDuration", playStrategy.preferredBufferDuration)) {
+    if (!GetPropertyUint32(env, value, "preferredBufferDuration", playStrategy.preferredBufferDuration)) {
         playStrategy.preferredBufferDuration = 0; // use default value
     }
-    if (!GetPropertyBool(env, value, "preferedWidth", playStrategy.preferredHdr)) {
+    if (!GetPropertyBool(env, value, "preferredHdr", playStrategy.preferredHdr)) {
         playStrategy.preferredHdr = 0; // use default value
     }
     return true;
