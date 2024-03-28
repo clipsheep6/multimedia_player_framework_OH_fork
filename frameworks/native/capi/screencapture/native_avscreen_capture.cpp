@@ -105,7 +105,7 @@ public:
     }
 
 private:
-    OH_AVSCREEN_CAPTURE_ErrCode AcquireAudioBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
+    static OH_AVSCREEN_CAPTURE_ErrCode AcquireAudioBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
         OHOS::sptr<OH_AVBuffer> &ohAvBuffer, int64_t &timestamp, AudioCaptureSourceType type)
     {
         std::shared_ptr<AudioBuffer> aBuffer;
@@ -127,7 +127,7 @@ private:
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
 
-    OH_AVSCREEN_CAPTURE_ErrCode ReleaseAudioBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
+    static OH_AVSCREEN_CAPTURE_ErrCode ReleaseAudioBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
         AudioCaptureSourceType type)
     {
         int32_t ret = screenCapture->ReleaseAudioBuffer(type);
@@ -164,7 +164,7 @@ private:
         errCode = ReleaseAudioBuffer(screenCaptureObj->screenCapture_, audioSourceType);
         return errCode;
     }
-    OH_AVSCREEN_CAPTURE_ErrCode AcquireVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
+    static OH_AVSCREEN_CAPTURE_ErrCode AcquireVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture,
         OHOS::sptr<OH_AVBuffer> &ohAvBuffer, int64_t &timestamp)
     {
         int32_t fence;
@@ -183,7 +183,7 @@ private:
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
 
-    OH_AVSCREEN_CAPTURE_ErrCode ReleaseVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture)
+    static OH_AVSCREEN_CAPTURE_ErrCode ReleaseVideoBuffer(const std::shared_ptr<ScreenCapture> &screenCapture)
     {
         int32_t ret = screenCapture->ReleaseVideoBuffer();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,

@@ -163,7 +163,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
 }
 
-int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice)
+int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
 {
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
 
@@ -214,7 +214,7 @@ ScreenCaptureServer::ScreenCaptureServer()
 ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    Release();
+    ReleaseInner();
 }
 
 void ScreenCaptureServer::SetSessionId(int32_t sessionId)
@@ -594,8 +594,8 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         return MSERR_OK;
     }
-    AudioCaptureInfo &micCapInfo = captureConfig_.audioInfo.micCapInfo;
-    AudioCaptureInfo &innerCapInfo = captureConfig_.audioInfo.innerCapInfo;
+    const AudioCaptureInfo &micCapInfo = captureConfig_.audioInfo.micCapInfo;
+    const AudioCaptureInfo &innerCapInfo = captureConfig_.audioInfo.innerCapInfo;
     if (micCapInfo.audioSampleRate == innerCapInfo.audioSampleRate &&
         micCapInfo.audioChannels == innerCapInfo.audioChannels) {
         return MSERR_OK;
@@ -772,15 +772,15 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
-        isPrivacyAuthorityEnabled_ = false;
-        isSurfaceMode_ = false;
-        captureState_ = AVScreenCaptureState::STOPPED;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
         if (isPrivacyAuthorityEnabled_) {
             screenCaptureCb_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
         }
 #endif
+        isPrivacyAuthorityEnabled_ = false;
+        isSurfaceMode_ = false;
+        captureState_ = AVScreenCaptureState::STOPPED;
     }
 }
 
@@ -954,7 +954,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
 int32_t ScreenCaptureServer::StartNotification()
 {
     int32_t result = NotificationHelper::SubscribeLocalLiveViewNotification(NOTIFICATION_SUBSCRIBER);
-
+    MEDIA_LOGD("Screencapture service PublishNotification, result %{public}d", result);
     NotificationRequest request;
     localLiveViewContent_ = GetLocalLiveViewContent();
 
@@ -1557,22 +1557,27 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
 void ScreenCaptureServer::Release()
 {
-    MediaTrace trace("ScreenCaptureServer::Release");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release S", FAKE_POINTER(this));
+    ReleaseInner();
+}
+
+void ScreenCaptureServer::ReleaseInner()
+{
+    MediaTrace trace("ScreenCaptureServer::ReleaseInner");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
     int32_t sessionId;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
         sessionId = sessionId_;
         sessionId_ = SESSION_ID_INVALID;
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release Stop done sessionId:%{public}d", FAKE_POINTER(this),
-            sessionId);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
+            FAKE_POINTER(this), sessionId);
     }
     {
         std::lock_guard<std::mutex> lock(mutexGlobal);
         serverMap.erase(sessionId);
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances Release E", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));
 }
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()

@@ -114,6 +114,8 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool enable);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static VideoCodecFormat GetVideoCodecFormat(const int32_t &preset);
+    static int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    static int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();
@@ -129,8 +131,6 @@ private:
     void CancelCallback();
 
     int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
 
     static thread_local napi_ref constructor_;

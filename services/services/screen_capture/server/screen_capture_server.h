@@ -134,7 +134,7 @@ private:
 class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice);
+    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -185,6 +185,7 @@ private:
     int32_t SetCanvasRotationInner();
     void InitAppInfo();
     void CloseFd();
+    void ReleaseInner();
  
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);

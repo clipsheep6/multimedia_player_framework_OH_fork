@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 class UIExtensionAbilityConnection : public AAFwk::AbilityConnectionStub {
 public:
-    explicit UIExtensionAbilityConnection(const std::string commandStr)
+    explicit UIExtensionAbilityConnection(const std::string &commandStr)
     {
         commandStr_ = commandStr;
     }
