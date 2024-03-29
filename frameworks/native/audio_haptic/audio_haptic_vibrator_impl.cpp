@@ -126,12 +126,16 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGE("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
         return MSERR_OK;
     }
 
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
+    if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
+        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        return MSERR_INVALID_OPERATION;
+    }
     int32_t vibrateTime = 0; // record the pattern time which has been played
     for (int32_t i = 0; i < vibratorPkg_->patternNum; ++i) {
         int32_t patternTime = vibratorPkg_->patterns[i].time - vibrateTime; // calculate the time of single pattern
@@ -154,12 +158,16 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGE("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
         return MSERR_OK;
     }
 
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
+    if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
+        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        return MSERR_INVALID_OPERATION;
+    }
     int32_t vibrateTime = 0; // record the pattern time which has been played
     for (int32_t i = 0; i < vibratorPkg_->patternNum; ++i) {
         // the delay time of first frame has been handled in audio haptic player
