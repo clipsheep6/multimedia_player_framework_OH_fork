@@ -40,9 +40,6 @@ namespace Media {
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -84,9 +81,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -128,9 +122,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_02, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_03 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -172,9 +163,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_03, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_file_04 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_specified_window_file_04.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
@@ -214,9 +202,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_04, TestSiz
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
@@ -230,7 +215,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window missionId : %{public}d", info.id);
         config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
     }
-    OpenFile("screen_capture_specified_window_data");
+    OpenFile("screen_capture_specified_window");
 
     aFlag = 1;
     vFlag = 1;
@@ -257,9 +242,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window, TestSize.Level2
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
@@ -273,7 +255,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_Rotation, TestSi
         MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_Rotation missionId : %{public}d", info.id);
         config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
     }
-    OpenFile("screen_capture_specified_window_data");
+    OpenFile("screen_capture_specified_window_Rotation");
 
     aFlag = 1;
     vFlag = 1;
@@ -616,12 +598,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_01, TestSiz
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
 
     std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens = size-1 : %{public}s",
-    std::to_string(screens[screens.size()-1]->GetId()).c_str());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens = 0 : %{public}s",
-    std::to_string(screens[0]->GetId()).c_str());
-    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens size:%{public}s",
+        std::to_string(screens.size()).c_str());
+    if (screens.size() > 0) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens id(size-1):%{public}s",
+            std::to_string(screens[screens.size()-1]->GetId()).c_str());
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 screens id(size-1):%{public}s",
+            std::to_string(screens[0]->GetId()).c_str());
+        config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    } else {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_01 GetAllScreens failed, ret:%{public}d",
+            ret);
+    }
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -641,10 +630,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 before");
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_get_screen_capture_02.mp4", recorderInfo);
+    SetRecorderInfo("screen_capture_specified_screen_file_02.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 16000,
+        .audioSampleRate = 48000,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
@@ -652,13 +641,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
 
     std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 size : %{public}s",
-    std::to_string(screens.size()).c_str());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens = size-1 : %{public}s",
-    std::to_string(screens[screens.size()-1]->GetId()).c_str());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens = 0 : %{public}s",
-    std::to_string(screens[0]->GetId()).c_str());
+    DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens size:%{public}s",
+        std::to_string(screens.size()).c_str());
+    if (screens.size() > 0) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens id(size-1):%{public}s",
+            std::to_string(screens[screens.size()-1]->GetId()).c_str());
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 screens id(size-1):%{public}s",
+            std::to_string(screens[0]->GetId()).c_str());
+        config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    } else {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_02 GetAllScreens failed, ret:%{public}d",
+            ret);
+    }
 
     config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
 
@@ -680,7 +675,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_03, TestSiz
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 before");
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_get_screen_capture_03.mp4", recorderInfo);
+    SetRecorderInfo("screen_capture_specified_screen_file_03.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 16000,
@@ -697,12 +692,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_03, TestSiz
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
 
     std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens = size-1 : %{public}s",
-    std::to_string(screens[screens.size()-1]->GetId()).c_str());
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens = 0 : %{public}s",
-    std::to_string(screens[0]->GetId()).c_str());
-    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens size:%{public}s",
+        std::to_string(screens.size()).c_str());
+    if (screens.size() > 0) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens id(size-1):%{public}s",
+            std::to_string(screens[screens.size()-1]->GetId()).c_str());
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 screens id(size-1):%{public}s",
+            std::to_string(screens[0]->GetId()).c_str());
+        config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    } else {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_file_03 GetAllScreens failed, ret:%{public}d",
+            ret);
+    }
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
@@ -723,8 +725,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_01, TestSize.Lev
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
     std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
-    config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_01 screens size:%{public}s",
+        std::to_string(screens.size()).c_str());
+    if (screens.size() > 0) {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_01 screens id(size-1):%{public}s",
+            std::to_string(screens[screens.size()-1]->GetId()).c_str());
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_01 screens id(size-1):%{public}s",
+            std::to_string(screens[0]->GetId()).c_str());
+        config_.videoInfo.videoCapInfo.displayId = screens[0]->GetId();
+    } else {
+        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_screen_01 GetAllScreens failed, ret:%{public}d",
+            ret);
+    }
 
     OpenFile("screen_capture_specified_screen_01");
 
@@ -1743,9 +1756,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_mic_close_open_close, TestSize.Le
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 1920;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
@@ -1790,9 +1800,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_01, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 640;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 480;

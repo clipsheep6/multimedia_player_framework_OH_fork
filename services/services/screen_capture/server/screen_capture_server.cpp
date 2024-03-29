@@ -328,7 +328,7 @@ int32_t ScreenCaptureServer::InitVideoEncInfo(VideoEncInfo videoEncInfo)
     MEDIA_LOGD("videoEncInfo videoCodec:%{public}d,  videoBitrate:%{public}d, videoFrameRate:%{public}d",
         videoEncInfo.videoCodec, videoEncInfo.videoBitrate, videoEncInfo.videoFrameRate);
     int32_t ret = CheckVideoEncInfo(videoEncInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckVideoEncInfo failed, ret:%{public}d", ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed, ret:%{public}d", ret);
     captureConfig_.videoInfo.videoEncInfo = videoEncInfo;
     return MSERR_OK;
 }
@@ -894,6 +894,9 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
 
 int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnabled)
 {
+    MEDIA_LOGI("StartScreenCaptureInner S, appUid:%{public}d, appPid:%{pulibc}d, isPrivacyAuthorityEnabled:%{pulibc}d"
+        ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
+        isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
     int32_t ret = CheckAllParams();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartScreenCaptureInner failed, invalid params");
@@ -926,6 +929,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
 
+    MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{pulibc}d", appInfo_.appUid, appInfo_.appPid);
     return ret;
 }
 
@@ -1147,12 +1151,14 @@ int32_t ScreenCaptureServer::StartVideoCapture()
 
     int32_t ret = StartHomeVideoCapture();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
-        "StartHomeVideoCapture failed, invalid param, dataType:%{public}d", captureConfig_.dataType);
+        "StartHomeVideoCapture failed, isSurfaceMode:%{public}d, dataType:%{public}d",
+        isSurfaceMode_, captureConfig_.dataType);
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::StartHomeVideoCapture()
 {
+    MediaTrace trace("ScreenCaptureServer::StartHomeVideoCapture");
     std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
         int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
@@ -1232,30 +1238,34 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0 && screenId_ != SCREEN_ID_INVALID, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, invalid screenId");
     std::vector<sptr<Screen>> screens;
-    ScreenManager::GetInstance().GetAllScreens(screens);
+    DMError ret = ScreenManager::GetInstance().GetAllScreens(screens);
+    CHECK_AND_RETURN_RET_LOG(screens.size() > 0, MSERR_UNKNOWN,
+        "MakeVirtualScreenMirror failed to GetAllScreens, ret:%{public}d", ret);
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(screenId_);
     ScreenId mirrorGroup = static_cast<ScreenId>(1);
 
-    DMError ret = DMError::DM_OK;
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
         ret = ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
-        MEDIA_LOGI("MakeVirtualScreenMirror main screen");
+        CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+            "MakeVirtualScreenMirror failed to MakeMirror, captureMode:%{public}d, ret:%{public}d",
+            captureConfig_.captureMode, ret);
+        MEDIA_LOGI("MakeVirtualScreenMirror main screen success, screenId:%{public}" PRIu64, screens[0]->GetId());
+        return MSERR_OK;
     }
     for (uint32_t i = 0; i < screens.size() ; i++) {
         if (screens[i]->GetId() == captureConfig_.videoInfo.videoCapInfo.displayId) {
             ret = ScreenManager::GetInstance().MakeMirror(screens[i]->GetId(), mirrorIds, mirrorGroup);
-            MEDIA_LOGI("MakeVirtualScreenMirror extand screen");
-            break;
+            CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+                "MakeVirtualScreenMirror failed to MakeMirror for CAPTURE_SPECIFIED_SCREEN, ret:%{public}d", ret);
+            MEDIA_LOGI("MakeVirtualScreenMirror extand screen success, screenId:%{public}" PRIu64,
+                captureConfig_.videoInfo.videoCapInfo.displayId);
+            return MSERR_OK;
         }
     }
-    if (ret == DMError::DM_OK) {
-        MEDIA_LOGI("MakeMirror success");
-        return MSERR_OK;
-    } else {
-        MEDIA_LOGI("MakeMirror fail");
-        return MSERR_UNKNOWN;
-    }
+    MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64,
+        captureConfig_.videoInfo.videoCapInfo.displayId);
+    return MSERR_UNKNOWN;
 }
 
 void ScreenCaptureServer::DestroyVirtualScreen()
@@ -1463,7 +1473,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 
 int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 {
-    MEDIA_LOGE("StopScreenCaptureRecorder start");
+    MEDIA_LOGI("StopScreenCaptureRecorder start");
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
@@ -1483,7 +1493,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
 
 int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode)
 {
-    MEDIA_LOGE("StopScreenCaptureByEvent start");
+    MEDIA_LOGI("StopScreenCaptureByEvent start");
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureByEvent");
     std::lock_guard<std::mutex> lock(mutex_);
     return StopScreenCaptureInner(stateCode);

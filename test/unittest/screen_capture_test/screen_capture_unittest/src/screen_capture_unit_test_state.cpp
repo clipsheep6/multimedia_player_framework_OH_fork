@@ -448,11 +448,13 @@ int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string name, RecorderInfo &r
 
 void ScreenCaptureUnitTest::OpenFileFd(std::string name)
 {
+    CloseFile();
     outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, FLIE_CREATE_FLAGS);
 }
 
 void ScreenCaptureUnitTest::OpenFile(std::string name)
 {
+    CloseFile();
     std::string nameFormt = SCREEN_CAPTURE_ROOT_DIR + "%s.pcm";
     if (snprintf_s(fileName, sizeof(fileName), sizeof(fileName) - 1, nameFormt.c_str(),
         name.c_str()) >= 0) {
@@ -565,9 +567,6 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -619,9 +618,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -671,9 +667,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_03 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
@@ -720,9 +713,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_04 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -775,9 +765,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_05 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
@@ -829,9 +816,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
@@ -886,9 +870,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -1003,9 +984,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_cb_02, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -1065,9 +1043,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -1129,9 +1104,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_03 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     screenCapture_->SetMicrophoneEnabled(true);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_03 CreateRecorder");
@@ -1186,9 +1158,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_04 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;

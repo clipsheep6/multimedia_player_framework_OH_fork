@@ -812,7 +812,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScree
 
     if (screenCaptureObj->callback_ == nullptr ||
         !screenCaptureObj->callback_->SetDataCallback(callback, userData)) {
-        MEDIA_LOGE("OH_AVScreenCapture_SetErrorCallback error");
+        MEDIA_LOGE("OH_AVScreenCapture_SetDataCallback error");
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
     MEDIA_LOGD("OH_AVScreenCapture_SetDataCallback E");
