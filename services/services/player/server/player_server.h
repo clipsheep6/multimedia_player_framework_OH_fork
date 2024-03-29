@@ -22,6 +22,7 @@
 #include "uri_helper.h"
 #include "player_server_task_mgr.h"
 #include "audio_effect.h"
+#include "account_subscriber.h"
 
 namespace OHOS {
 namespace Media {
@@ -67,7 +68,8 @@ class PlayerServer
     : public IPlayerService,
       public IPlayerEngineObs,
       public NoCopyable,
-      public PlayerServerStateMachine {
+      public PlayerServerStateMachine,
+      public CommonEventReceiver {
 public:
     static std::shared_ptr<IPlayerService> Create();
     PlayerServer();
@@ -119,6 +121,8 @@ public:
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
+    void OnCommonEventReceived(const std::string &event) override;
+
 protected:
     class BaseState;
     class IdleState;
@@ -140,6 +144,7 @@ protected:
 
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
+    std::shared_ptr<AccountSubscriber> accountSubscriber_ = nullptr;
     bool errorCbOnce_ = false;
     bool disableStoppedCb_ = false;
     std::string lastErrMsg_;
