@@ -48,6 +48,7 @@ public:
 private:
     int32_t LoadAVPlayer();
     int32_t ResetAVPlayer();
+    int32_t ReleaseSoundInner();
 
     std::string audioUri_ = "";
     bool muteAudio_ = false;

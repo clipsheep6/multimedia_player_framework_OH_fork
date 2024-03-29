@@ -80,7 +80,7 @@ AudioHapticPlayerImpl::AudioHapticPlayerImpl()
 AudioHapticPlayerImpl::~AudioHapticPlayerImpl()
 {
     if (playerState_ != AudioHapticPlayerState::STATE_RELEASED) {
-        Release();
+        ReleaseInner();
     }
 }
 
@@ -180,6 +180,11 @@ int32_t AudioHapticPlayerImpl::Stop()
 }
 
 int32_t AudioHapticPlayerImpl::Release()
+{
+    return ReleaseInner();
+}
+
+int32_t AudioHapticPlayerImpl::ReleaseInner()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
