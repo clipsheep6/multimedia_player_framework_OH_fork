@@ -49,6 +49,7 @@ public:
 private:
     // func for vibration
     int32_t StartVibrate();
+    int32_t ReleaseInner();
     void StopVibrate();
     void ResetVibrateState();
 

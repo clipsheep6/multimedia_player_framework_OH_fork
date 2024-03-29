@@ -45,6 +45,7 @@ public:
 
 private:
     int32_t LoadSoundPoolPlayer();
+    int32_t ReleaseSoundInner();
 
     std::string audioUri_ = "";
     bool muteAudio_ = false;

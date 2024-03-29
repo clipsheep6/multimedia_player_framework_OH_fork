@@ -40,7 +40,7 @@ AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const std::string &audioU
 AudioHapticSoundNormalImpl::~AudioHapticSoundNormalImpl()
 {
     if (avPlayer_ != nullptr) {
-        ReleaseSound();
+        ReleaseSoundInner();
     }
 }
 
@@ -161,6 +161,11 @@ int32_t AudioHapticSoundNormalImpl::StopSound()
 }
 
 int32_t AudioHapticSoundNormalImpl::ReleaseSound()
+{
+    return ReleaseSoundInner();
+}
+
+int32_t AudioHapticSoundNormalImpl::ReleaseSoundInner()
 {
     MEDIA_LOGI("ReleaseSound with AVPlayer");
     {

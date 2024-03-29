@@ -41,7 +41,7 @@ AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string
 AudioHapticSoundLowLatencyImpl::~AudioHapticSoundLowLatencyImpl()
 {
     if (soundPoolPlayer_ != nullptr) {
-        ReleaseSound();
+        ReleaseSoundInner();
     }
 }
 
@@ -159,7 +159,12 @@ int32_t AudioHapticSoundLowLatencyImpl::StopSound()
 
 int32_t AudioHapticSoundLowLatencyImpl::ReleaseSound()
 {
-    MEDIA_LOGI("Enter ReleaseSound with sound pool");
+    return ReleaseSoundInner();
+}
+
+int32_t AudioHapticSoundLowLatencyImpl::ReleaseSoundInner()
+{
+    MEDIA_LOGI("Enter ReleaseSoundInner with sound pool");
     {
         std::lock_guard<std::mutex> lockPrepare(prepareMutex_);
         isReleased_ = true;
