@@ -109,6 +109,7 @@ void ScreenCaptureUnitTestCallback::OnVideoBufferAvailable(bool isReady)
     ASSERT_FALSE(screenCapture_->IsDataCallBackEnabled());
     if (!isReady) {
         cout << "OnVideoBufferAvailable isReady false E" << endl;
+        return;
     }
     cout << "OnVideoBufferAvailable isReady true" << endl;
     int32_t fence = 0;
@@ -461,11 +462,13 @@ int32_t ScreenCaptureUnitTest::SetRecorderInfo(std::string name, RecorderInfo &r
 
 void ScreenCaptureUnitTest::OpenFileFd(std::string name)
 {
+    CloseFile();
     outputFd_ = open((SCREEN_CAPTURE_ROOT_DIR + name).c_str(), O_RDWR | O_CREAT, FLIE_CREATE_FLAGS);
 }
 
 void ScreenCaptureUnitTest::OpenFile(std::string name)
 {
+    CloseFile();
     std::string nameFormt = SCREEN_CAPTURE_ROOT_DIR + "%s.pcm";
     if (snprintf_s(fileName, sizeof(fileName), sizeof(fileName) - 1, nameFormt.c_str(),
         name.c_str()) >= 0) {
@@ -578,9 +581,6 @@ void ScreenCaptureUnitTest::AudioLoopWithoutRelease(void)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -590,12 +590,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_01 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_01 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_01 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_01 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_01 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_01 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -632,9 +635,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_01, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -644,12 +644,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_02 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_02 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_02 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_02 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_02 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_02 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -684,21 +687,21 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_02, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_03 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_03 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_03 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_03 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_03 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_03 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_03 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -733,9 +736,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_03, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_04 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -748,12 +748,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_04 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_04 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_04 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_04 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_04 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_04 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -788,9 +791,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_04, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_05 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
@@ -802,12 +802,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_05 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_05 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_05 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_05 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_05 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_05 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -842,9 +845,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_05, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
@@ -859,12 +859,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_06 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_06 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_06 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_06 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -899,9 +902,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_06, TestSize.
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -911,12 +911,15 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     std::string deviceId = "";
     std::vector<OHOS::AAFwk::MissionInfo> missionInfos;
     auto result = client_->GetMissionInfos(deviceId, 10, missionInfos);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 result : %{public}d", result);
-    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 size : %{public}s",
-        std::to_string(missionInfos.size()).c_str());
-    for (OHOS::AAFwk::MissionInfo info : missionInfos) {
-        MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 missionId : %{public}d", info.id);
-        config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+    MEDIA_LOGI("screen_capture_specified_window_cb_07 missionInfos size:%{public}s, result:%{public}d",
+        std::to_string(missionInfos.size()).c_str(), result);
+    if (missionInfos.size() > 0) {
+        for (OHOS::AAFwk::MissionInfo info : missionInfos) {
+            MEDIA_LOGI("screen_capture_specified_window_cb_07 missionId:%{public}d", info.id);
+            config_.videoInfo.videoCapInfo.taskIDs.push_back(info.id);
+        }
+    } else {
+        MEDIA_LOGE("screen_capture_specified_window_cb_07 GetMissionInfos failed");
     }
 
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
@@ -1016,9 +1019,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_cb_02, TestSize.Level2)
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_01 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
     config_.audioInfo.innerCapInfo.audioChannels = 2;
@@ -1032,7 +1032,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Leve
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1080));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
     OpenFileFd("screen_capture_with_surface_cb_01.mp4");
@@ -1078,9 +1078,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_01, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_02 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -1096,7 +1093,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Leve
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1080));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
     OpenFileFd("screen_capture_with_surface_cb_02.mp4");
@@ -1142,9 +1139,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_02, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_03 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     screenCapture_->SetMicrophoneEnabled(true);
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_03 CreateRecorder");
@@ -1153,7 +1147,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Leve
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1080));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
     OpenFileFd("screen_capture_with_surface_cb_03.mp4");
@@ -1199,9 +1193,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_03, TestSize.Leve
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_04, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_with_surface_cb_04 before");
-    Security::AccessToken::AccessTokenID tokenID =
-        Security::AccessToken::AccessTokenKit::GetNativeTokenId("distributedsched");
-    SetSelfTokenID(tokenID);
     SetConfig(config_);
     config_.audioInfo.micCapInfo.audioSampleRate = 0;
     config_.audioInfo.micCapInfo.audioChannels = 0;
@@ -1213,7 +1204,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_04, TestSize.Leve
     EXPECT_EQ(MSERR_OK, recorder->SetVideoSource(VIDEO_SOURCE_SURFACE_RGBA, videoSourceId));
     EXPECT_EQ(MSERR_OK, recorder->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncoder(videoSourceId, VideoCodecFormat::H264));
-    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 1080, 1920));
+    EXPECT_EQ(MSERR_OK, recorder->SetVideoSize(videoSourceId, 720, 1080));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoFrameRate(videoSourceId, 30));
     EXPECT_EQ(MSERR_OK, recorder->SetVideoEncodingBitRate(videoSourceId, 2000000));
     OpenFileFd("screen_capture_with_surface_cb_04.mp4");

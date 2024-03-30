@@ -56,7 +56,7 @@ protected:
 private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
-    static void SetInnerAudioStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
+    static void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;

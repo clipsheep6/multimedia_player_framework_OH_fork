@@ -19,7 +19,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SC_AudioCapturerWrapper"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureACW"};
 }
 
 namespace OHOS {
@@ -105,7 +105,7 @@ void AudioCapturerWrapper::SetIsMuted(bool isMuted)
     isMuted_.store(isMuted);
 }
 
-void AudioCapturerWrapper::SetInnerAudioStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
+void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
 {
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
@@ -117,8 +117,7 @@ void AudioCapturerWrapper::SetInnerAudioStreamUsage(std::vector<OHOS::AudioStand
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
 }
 
-std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(
-    const OHOS::AudioStandard::AppInfo &appInfo)
+std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
 {
     AudioCapturerOptions capturerOptions;
     capturerOptions.streamInfo.samplingRate = static_cast<AudioSamplingRate>(audioInfo_.audioSampleRate);
@@ -131,7 +130,7 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(
     } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
-        SetInnerAudioStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
+        SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
     }
     capturerOptions.capturerInfo.capturerFlags = 0;
     std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);
