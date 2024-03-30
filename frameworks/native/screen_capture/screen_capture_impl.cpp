@@ -246,7 +246,7 @@ int32_t ScreenCaptureImpl::StartScreenCaptureWithSurface(sptr<Surface> surface)
     if (dataType_ == ORIGINAL_STREAM) {
         return screenCaptureService_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled_);
     } else {
-        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
+        MEDIA_LOGE("ScreenCaptureImpl::StartScreenCaptureWithSurface error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;
     }
 }
