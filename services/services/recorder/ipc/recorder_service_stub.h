@@ -121,6 +121,7 @@ private:
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
+    std::mutex stmutex_;
     int32_t pid_;
     AudioSourceType audioSourceType_ = AUDIO_SOURCE_INVALID;
     bool needAudioPermissionCheck = false;

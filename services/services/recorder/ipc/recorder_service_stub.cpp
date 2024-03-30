@@ -118,10 +118,16 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
         MSERR_INVALID_OPERATION, "Invalid descriptor");
 
-    if (code == SET_AUDIO_SOURCE) {
-        int32_t type = data.ReadInt32();
-        audioSourceType_ = static_cast<AudioSourceType>(type);
+    {
+        if (code == SET_AUDIO_SOURCE) {
+            std::lock_guard<std::mutex> lock(stmutex_);
+            int32_t type = data.ReadInt32();
+            CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
+                MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
+            audioSourceType_ = static_cast<AudioSourceType>(type);
+        }
     }
+
     if (AUDIO_REQUEST.count(code) != 0) {
         permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
