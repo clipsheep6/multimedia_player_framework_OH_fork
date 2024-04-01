@@ -32,6 +32,29 @@ constexpr int32_t MAX_WAITING_LOOP_COUNT = 10;
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_VIBRATOR
+static const std::unordered_map<AudioStandard::StreamUsage, VibratorUsage> USAGE_MAP = {
+    {AudioStandard::StreamUsage::STREAM_USAGE_MEDIA, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_MUSIC, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION, VibratorUsage::USAGE_COMMUNICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_VOICE_ASSISTANT, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_ALARM, VibratorUsage::USAGE_ALARM},
+    {AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MESSAGE, VibratorUsage::USAGE_COMMUNICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE, VibratorUsage::USAGE_RING},
+    {AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE, VibratorUsage::USAGE_RING},
+    {AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION, VibratorUsage::USAGE_NOTIFICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_ACCESSIBILITY, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_SYSTEM, VibratorUsage::USAGE_NOTIFICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_MOVIE, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_GAME, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_DTMF, VibratorUsage::USAGE_NOTIFICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_ENFORCED_TONE, VibratorUsage::USAGE_NOTIFICATION},
+    {AudioStandard::StreamUsage::STREAM_USAGE_ULTRASONIC, VibratorUsage::USAGE_MEDIA},
+    {AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION, VibratorUsage::USAGE_COMMUNICATION},
+};
+#endif
 
 AudioHapticVibratorImpl::AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer)
     : audioHapticPlayer_(audioHapticPlayer)
@@ -53,10 +76,19 @@ std::shared_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibra
     return audioHapticVibrator;
 }
 
-int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri)
+int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri, const AudioStandard::StreamUsage &streamUsage)
 {
+    MEDIA_LOGI("PreLoad vibrator: hapticUri [%{public}s], streamUsage [%{public}d]", hapticUri.c_str(), streamUsage);
+    streamUsage_ = streamUsage;
 #ifdef SUPPORT_VIBRATOR
-    MEDIA_LOGI("PreLoad vibration source. hapticUri [%{public}s]", hapticUri.c_str());
+    auto iterator = USAGE_MAP.find(streamUsage_);
+    if (iterator != USAGE_MAP.end()) {
+        vibratorUsage_ = iterator->second;
+    } else {
+        MEDIA_LOGW("Invalid stream usage! Use the default usage (USAGE_MEDIA).");
+        vibratorUsage_ = VibratorUsage::USAGE_MEDIA;
+    }
+
     int32_t fd = open(hapticUri.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
@@ -144,6 +176,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
             [this]() { return isStopped_; });
         CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
             "StartVibrateForSoundPool: Stop() is call when waiting");
+        (void)Sensors::SetUsage(vibratorUsage_);
         result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
         if (result != 0) {
             MEDIA_LOGE("StartVibrateForSoundPool: PlayPattern error %{public}d", result);
@@ -176,6 +209,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
             [this]() { return isStopped_; });
         CHECK_AND_RETURN_RET_LOG(!isStopped_, result,
             "StartVibrateForAVPlayer: Stop() is call when waiting");
+        (void)Sensors::SetUsage(vibratorUsage_);
         result = Sensors::PlayPattern(vibratorPkg_->patterns[i]);
         CHECK_AND_RETURN_RET_LOG(result == 0, result,
             "StartVibrateForAVPlayer: PlayPattern error %{public}d", result);

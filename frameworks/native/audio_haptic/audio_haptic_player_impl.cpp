@@ -133,7 +133,7 @@ int32_t AudioHapticPlayerImpl::Prepare()
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
     CHECK_AND_RETURN_RET_LOG(hapticUri_ != "", MSERR_OPEN_FILE_FAILED, "Invalid val: haptic uri is empty");
-    result = audioHapticVibrator_->PreLoad(hapticUri_);
+    result = audioHapticVibrator_->PreLoad(hapticUri_, streamUsage_);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to load vobration file");
 
     playerState_ = AudioHapticPlayerState::STATE_PREPARED;
