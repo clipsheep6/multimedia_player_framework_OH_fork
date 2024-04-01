@@ -80,7 +80,8 @@ AudioHapticPlayerImpl::AudioHapticPlayerImpl()
 AudioHapticPlayerImpl::~AudioHapticPlayerImpl()
 {
     if (playerState_ != AudioHapticPlayerState::STATE_RELEASED) {
-        Release();
+        ReleaseVibrator();
+        ReleaseSound();
     }
 }
 
@@ -184,10 +185,25 @@ int32_t AudioHapticPlayerImpl::Release()
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
         "The audio haptic player has been released.");
+
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
-    (void)audioHapticVibrator_->Release();
-    audioHapticVibrator_ = nullptr;
+    ReleaseVibrator();
+
+    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
+        "Audio haptic sound is nullptr");
+    ReleaseSound();
+
+    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
+    return MSERR_OK;
+}
+
+void AudioHapticPlayerImpl::ReleaseVibrator()
+{
+    if (audioHapticVibrator_ != nullptr) {
+        (void)audioHapticVibrator_->Release();
+        audioHapticVibrator_ = nullptr;
+    }
     {
         // When player is releasing，notify vibrate thread immediately
         std::lock_guard<std::mutex> lockVibrate(waitStartVibrateMutex_);
@@ -197,17 +213,17 @@ int32_t AudioHapticPlayerImpl::Release()
     }
     if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
         vibrateThread_->join();
-        vibrateThread_.reset();
     }
+    vibrateThread_.reset();
+}
 
-    CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
-        "Audio haptic sound is nullptr");
-    (void)audioHapticSound_->ReleaseSound();
-    audioHapticSound_ = nullptr;
+void AudioHapticPlayerImpl::ReleaseSound()
+{
+    if (audioHapticSound_ != nullptr) {
+        (void)audioHapticSound_->ReleaseSound();
+        audioHapticSound_ = nullptr;
+    }
     soundCallback_ = nullptr;
-
-    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
-    return MSERR_OK;
 }
 
 int32_t AudioHapticPlayerImpl::SetVolume(float volume)
@@ -325,8 +341,8 @@ void AudioHapticPlayerImpl::StopVibrate()
     }
     if (vibrateThread_ != nullptr && vibrateThread_->joinable()) {
         vibrateThread_->join();
-        vibrateThread_.reset();
     }
+    vibrateThread_.reset();
 }
 
 void AudioHapticPlayerImpl::ResetVibrateState()

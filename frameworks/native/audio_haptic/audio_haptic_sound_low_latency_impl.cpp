@@ -41,7 +41,7 @@ AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string
 AudioHapticSoundLowLatencyImpl::~AudioHapticSoundLowLatencyImpl()
 {
     if (soundPoolPlayer_ != nullptr) {
-        ReleaseSound();
+        ReleaseSoundPoolPlayer();
     }
 }
 
@@ -168,19 +168,23 @@ int32_t AudioHapticSoundLowLatencyImpl::ReleaseSound()
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
         "The audio haptic player has been released.");
-    CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
+    ReleaseSoundPoolPlayer();
+    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
 
-    (void)soundPoolPlayer_->Release();
-    soundPoolPlayer_ = nullptr;
+    return MSERR_OK;
+}
+
+void AudioHapticSoundLowLatencyImpl::ReleaseSoundPoolPlayer()
+{
+    if (soundPoolPlayer_ != nullptr) {
+        (void)soundPoolPlayer_->Release();
+        soundPoolPlayer_ = nullptr;
+    }
+    soundPoolCallback_ = nullptr;
     if (fileDes_ != -1) {
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-    soundPoolCallback_ = nullptr;
-
-    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
-
-    return MSERR_OK;
 }
 
 int32_t AudioHapticSoundLowLatencyImpl::SetVolume(float volume)
@@ -223,7 +227,7 @@ int32_t AudioHapticSoundLowLatencyImpl::SetLoop(bool loop)
         int32_t loopCount = loop_ ? -1 : 0;
         result = soundPoolPlayer_->SetLoop(streamID_, loopCount);
     }
-    return MSERR_OK;
+    return result;
 }
 
 int32_t AudioHapticSoundLowLatencyImpl::GetAudioCurrentTime()

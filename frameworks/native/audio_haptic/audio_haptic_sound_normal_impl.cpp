@@ -40,7 +40,7 @@ AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const std::string &audioU
 AudioHapticSoundNormalImpl::~AudioHapticSoundNormalImpl()
 {
     if (avPlayer_ != nullptr) {
-        ReleaseSound();
+        ReleaseAVPlayer();
     }
 }
 
@@ -171,6 +171,13 @@ int32_t AudioHapticSoundNormalImpl::ReleaseSound()
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(playerState_ != AudioHapticPlayerState::STATE_RELEASED, MSERR_OK,
         "The audio haptic player for normal mode has been released.");
+    ReleaseAVPlayer();
+    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
+    return MSERR_OK;
+}
+
+void AudioHapticSoundNormalImpl::ReleaseAVPlayer()
+{
     if (avPlayer_ != nullptr) {
         (void)avPlayer_->Release();
         avPlayer_ = nullptr;
@@ -180,9 +187,6 @@ int32_t AudioHapticSoundNormalImpl::ReleaseSound()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-
-    playerState_ = AudioHapticPlayerState::STATE_RELEASED;
-    return MSERR_OK;
 }
 
 int32_t AudioHapticSoundNormalImpl::SetVolume(float volume)
@@ -222,7 +226,7 @@ int32_t AudioHapticSoundNormalImpl::SetLoop(bool loop)
     }
 
     result = avPlayer_->SetLooping(loop_);
-    return MSERR_OK;
+    return result;
 }
 
 int32_t AudioHapticSoundNormalImpl::GetAudioCurrentTime()

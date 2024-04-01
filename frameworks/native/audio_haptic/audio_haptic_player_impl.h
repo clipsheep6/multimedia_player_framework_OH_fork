@@ -47,10 +47,13 @@ public:
     void NotifyEndOfStreamEvent();
 
 private:
+    // func for sound
+    void ReleaseSound();
     // func for vibration
     int32_t StartVibrate();
     void StopVibrate();
     void ResetVibrateState();
+    void ReleaseVibrator();
 
     // var for all
     AudioLatencyMode latencyMode_;
