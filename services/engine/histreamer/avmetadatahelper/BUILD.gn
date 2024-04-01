@@ -30,6 +30,7 @@ config("media_engine_histreamer_avmetadatahelper_config") {
 
   include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",

@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_description.h"
+#include "meta_utils.h"
 #include "uri_helper.h"
 
 namespace {
@@ -58,6 +59,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t /* usage
     auto ret = SetSourceInternel(uri);
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL,
         "0x%{public}06" PRIXPTR " Failed to call SetSourceInternel", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -67,6 +70,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
     Status ret = SetSourceInternel(dataSrc);
     CHECK_AND_RETURN_RET_LOG(ret == Status::OK, MSERR_INVALID_VAL, "Failed to call SetSourceInternel");
 
+    CHECK_AND_RETURN_RET_LOG(MetaUtils::CheckFileType(mediaDemuxer_->GetGlobalMetaInfo()),
+        MSERR_UNSUPPORT, "0x%{public}06" PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
     MEDIA_LOGI("0x%{public}06" PRIXPTR "set source success", FAKE_POINTER(this));
     return MSERR_OK;
 }
