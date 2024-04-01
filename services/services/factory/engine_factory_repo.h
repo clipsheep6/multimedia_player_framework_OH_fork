@@ -32,7 +32,6 @@ public:
 private:
     EngineFactoryRepo() = default;
     ~EngineFactoryRepo();
-    int32_t LoadGstreamerEngine();
     int32_t LoadHistreamerEngine(const int32_t& appUid);
     __attribute__((no_sanitize("cfi"))) int32_t LoadLib(const std::string &libPath);
     __attribute__((no_sanitize("cfi"))) void UnloadLib();
@@ -40,7 +39,6 @@ private:
     std::mutex mutex_;
     std::vector<std::shared_ptr<IEngineFactory>> factorys_;
     std::vector<void*> factoryLibs_;
-    bool isLoadGstreamer_ = false;
     bool isLoadHistreamer_ = false;
 };
 } // namespace Media

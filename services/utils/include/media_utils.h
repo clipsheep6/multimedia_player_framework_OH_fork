@@ -33,8 +33,6 @@ enum class PlayerStateId {
 
 namespace OHOS {
 namespace Media {
-    bool __attribute__((visibility("default"))) IsEnableHiStreamer(const std::string& clientBundleName,
-        const int32_t& uid);
     std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid);
     std::string __attribute__((visibility("default"))) GetBundleResourceLabel(std::string bundleName);
     int __attribute__((visibility("default"))) TransStatus(Status status);

@@ -16,12 +16,6 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 group("media_engine_package") {
   deps = []
-  if (multimedia_player_framework_support_gstreamer) {
-    deps += [
-      "common:media_engine_common",
-      "gstreamer:media_engine_gst_package",
-    ]
-  }
   if (multimedia_player_framework_support_histreamer) {
     deps += [
       "common:media_engine_common",
