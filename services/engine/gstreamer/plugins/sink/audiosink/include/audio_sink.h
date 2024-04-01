@@ -50,7 +50,7 @@ public:
     virtual int32_t GetLatency(uint64_t &latency) const = 0;
     virtual int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) = 0;
     virtual void SetAudioInterruptMode(int32_t interruptMode) = 0;
-    virtual bool Writeable() const;
+    virtual bool Writeable() const = 0;
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
                                 void (*firstFrameCb)(GstBaseSink *, gulong),
