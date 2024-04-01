@@ -228,7 +228,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 "current state is not stopped or initialized, unsupport prepare operation");
         }
 
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " Prepare Task Out", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Prepare Task Out", FAKE_POINTER(this));
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
 
@@ -241,7 +241,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::prepare");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsPrepare In");
+    MEDIA_LOGI("JsPrepare In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -281,7 +281,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        MEDIA_LOGD("Play Task In");
+        MEDIA_LOGI("Play Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PREPARED ||
@@ -313,7 +313,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::play");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsPlay In");
+    MEDIA_LOGI("JsPlay In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -389,7 +389,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::pause");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsPause In");
+    MEDIA_LOGI("JsPause In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -428,7 +428,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        MEDIA_LOGD("Stop Task In");
+        MEDIA_LOGI("Stop Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
         if (IsControllable()) {
             int32_t ret = player_->Stop();
@@ -457,7 +457,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::stop");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsStop In");
+    MEDIA_LOGI("JsStop In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -498,7 +498,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        MEDIA_LOGD("Reset Task In");
+        MEDIA_LOGI("Reset Task In");
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
         {
@@ -531,7 +531,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::reset");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsReset In");
+    MEDIA_LOGI("JsReset In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -632,7 +632,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::release");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsRelease In");
+    MEDIA_LOGI("JsRelease In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -669,6 +669,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
 napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::seek");
+    MEDIA_LOGI("JsSeek in");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_value args[2] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
@@ -831,7 +832,7 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGD("JsSetVolume Out");
+    MEDIA_LOGI("JsSetVolume Out");
     return result;
 }
 
