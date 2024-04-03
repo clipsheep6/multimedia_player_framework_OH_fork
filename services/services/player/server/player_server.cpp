@@ -23,6 +23,8 @@
 #include "player_server_state.h"
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
+#include "media_permission.h"
+#include "accesstoken_kit.h"
 #include "av_common.h"
 #include "parameter.h"
 #include "concurrent_task_client.h"
@@ -143,6 +145,14 @@ int32_t PlayerServer::SetSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
 
     MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
+    if (url.find("http") != std::string::npos) {
+        int32_t permissionResult = MediaPermission::CheckNetWorkPermission();
+        if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+            MEDIA_LOGE("user do not have the right to access INTERNET");
+            OnErrorMessage(MSERR_EXT_API9_NO_PERMISSION, "user do not have the right to access INTERNET");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
@@ -1277,6 +1287,17 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 }
 
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
+{
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    lastErrMsg_ = errorMsg;
+    FaultEventWrite(lastErrMsg_, "Player");
+    if (playerCb_ != nullptr && !errorCbOnce_) {
+        playerCb_->OnError(errorCode, errorMsg);
+        errorCbOnce_ = true;
+    }
+}
+
+void PlayerServer::OnErrorMessage(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = errorMsg;

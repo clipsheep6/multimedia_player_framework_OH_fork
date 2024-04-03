@@ -20,6 +20,7 @@ namespace Media {
 class __attribute__((visibility("default"))) MediaPermission {
 public:
     static int32_t CheckMicPermission();
+    static int32_t CheckNetWorkPermission();
 };
 } // namespace Media
 } // namespace OHOS

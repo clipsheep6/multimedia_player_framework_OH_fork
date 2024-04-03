@@ -119,6 +119,7 @@ public:
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
+    void OnErrorMessage(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
     void OnCommonEventReceived(const std::string &event) override;
