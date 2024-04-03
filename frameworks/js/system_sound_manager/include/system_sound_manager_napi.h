@@ -78,9 +78,9 @@ private:
     static void GetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
     static void GetSystemTonePlayerAsyncCallbackComp(napi_env env, napi_status status, void* data);
-    static napi_ref sConstructor_;
-    static napi_ref ringtoneType_;
-    static napi_ref systemToneType_;
+    static thread_local napi_ref sConstructor_;
+    static thread_local napi_ref ringtoneType_;
+    static thread_local napi_ref systemToneType_;
 
     napi_env env_;
 

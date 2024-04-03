@@ -37,9 +37,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 
 namespace OHOS {
 namespace Media {
-napi_ref AudioHapticManagerNapi::sConstructor_ = nullptr;
-napi_ref AudioHapticManagerNapi::sAudioLatencyMode_ = nullptr;
-napi_ref AudioHapticManagerNapi::sAudioHapticType_ = nullptr;
+thread_local napi_ref AudioHapticManagerNapi::sConstructor_ = nullptr;
+thread_local napi_ref AudioHapticManagerNapi::sAudioLatencyMode_ = nullptr;
+thread_local napi_ref AudioHapticManagerNapi::sAudioHapticType_ = nullptr;
 
 AudioHapticManagerNapi::AudioHapticManagerNapi()
     : env_(nullptr), audioHapticMgrClient_(nullptr) {}

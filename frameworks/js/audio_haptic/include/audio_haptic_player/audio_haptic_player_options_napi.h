@@ -39,7 +39,7 @@ private:
     static napi_value IsHapticsMute(napi_env env, napi_callback_info info);
     static napi_value SetHapticsMute(napi_env env, napi_callback_info info);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
 
     static bool sMuteAudio_;
     static bool sMuteHaptics_;

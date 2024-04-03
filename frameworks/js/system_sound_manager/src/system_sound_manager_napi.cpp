@@ -46,9 +46,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoun
 
 namespace OHOS {
 namespace Media {
-napi_ref SystemSoundManagerNapi::sConstructor_ = nullptr;
-napi_ref SystemSoundManagerNapi::ringtoneType_ = nullptr;
-napi_ref SystemSoundManagerNapi::systemToneType_ = nullptr;
+thread_local napi_ref SystemSoundManagerNapi::sConstructor_ = nullptr;
+thread_local napi_ref SystemSoundManagerNapi::ringtoneType_ = nullptr;
+thread_local napi_ref SystemSoundManagerNapi::systemToneType_ = nullptr;
 
 SystemSoundManagerNapi::SystemSoundManagerNapi()
     : env_(nullptr), sysSoundMgrClient_(nullptr) {}

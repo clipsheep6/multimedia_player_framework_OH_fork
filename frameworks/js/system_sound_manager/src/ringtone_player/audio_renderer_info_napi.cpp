@@ -24,7 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRende
 
 namespace OHOS {
 namespace Media {
-napi_ref AudioRendererInfoNapi::sConstructor_ = nullptr;
+thread_local napi_ref AudioRendererInfoNapi::sConstructor_ = nullptr;
 unique_ptr<AudioStandard::AudioRendererInfo> AudioRendererInfoNapi::sAudioRendererInfo_ = nullptr;
 
 AudioRendererInfoNapi::AudioRendererInfoNapi() : env_(nullptr) {}
@@ -202,7 +202,7 @@ napi_value AudioRendererInfoNapi::GetStreamUsage(napi_env env, napi_callback_inf
     }
 
     status = napi_unwrap(env, jsThis, (void **)&audioRendererInfoNapi);
-    if (status == napi_ok) {
+    if (status == napi_ok && audioRendererInfoNapi->audioRendererInfo_ != nullptr) {
         usage = audioRendererInfoNapi->audioRendererInfo_->streamUsage;
         status = napi_create_int32(env, usage, &jsResult);
         if (status == napi_ok) {

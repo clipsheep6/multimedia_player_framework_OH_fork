@@ -39,7 +39,7 @@ private:
     static napi_value GetLoop(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
 
     static float sVolume_;
     static bool sLoop_;

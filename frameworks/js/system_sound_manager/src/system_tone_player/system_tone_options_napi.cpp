@@ -24,7 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemTone
 
 namespace OHOS {
 namespace Media {
-napi_ref SystemToneOptionsNapi::sConstructor_ = nullptr;
+thread_local napi_ref SystemToneOptionsNapi::sConstructor_ = nullptr;
 
 bool SystemToneOptionsNapi::sMuteAudio_ = false;
 bool SystemToneOptionsNapi::sMuteHaptics_ = false;

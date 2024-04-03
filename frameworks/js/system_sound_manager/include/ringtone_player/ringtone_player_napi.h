@@ -70,7 +70,7 @@ private:
     std::shared_ptr<RingtonePlayer> ringtonePlayer_;
     std::shared_ptr<RingtonePlayerInterruptCallback> callbackNapi_ = nullptr;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static std::shared_ptr<RingtonePlayer> sRingtonePlayer_;
 };
 

@@ -65,7 +65,7 @@ private:
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer_;
     std::shared_ptr<AudioHapticPlayerCallbackNapi> callbackNapi_ = nullptr;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static std::shared_ptr<AudioHapticPlayer> sAudioHapticPlayer_;
 };
 

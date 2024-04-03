@@ -71,9 +71,9 @@ private:
     static bool IsLegalAudioLatencyMode(int32_t latencyMode);
     static bool IsLegalAudioStreamUsage(int32_t streamUsage);
 
-    static napi_ref sConstructor_;
-    static napi_ref sAudioLatencyMode_;
-    static napi_ref sAudioHapticType_;
+    static thread_local napi_ref sConstructor_;
+    static thread_local napi_ref sAudioLatencyMode_;
+    static thread_local napi_ref sAudioHapticType_;
 
     napi_env env_;
 

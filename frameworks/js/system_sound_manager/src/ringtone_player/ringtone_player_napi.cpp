@@ -49,7 +49,7 @@ static const std::map<RingtoneState, std::string> STATEMAP = {
     {STATE_PAUSED, AVPlayerState::STATE_PAUSED},
 };
 
-napi_ref RingtonePlayerNapi::sConstructor_ = nullptr;
+thread_local napi_ref RingtonePlayerNapi::sConstructor_ = nullptr;
 shared_ptr<RingtonePlayer> RingtonePlayerNapi::sRingtonePlayer_ = nullptr;
 
 RingtonePlayerNapi::RingtonePlayerNapi() : env_(nullptr) {}
@@ -609,7 +609,7 @@ napi_value RingtonePlayerNapi::GetAudioState(napi_env env, napi_callback_info in
     std::unique_ptr<RingtonePlayerAsyncContext> asyncContext
         = std::make_unique<RingtonePlayerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    if (status == napi_ok) {
+    if (status == napi_ok && asyncContext->objectInfo && asyncContext->objectInfo->ringtonePlayer_ != nullptr) {
         RingtoneState ringtoneState_ = asyncContext->objectInfo->ringtonePlayer_->GetRingtoneState();
         if (STATEMAP.find(ringtoneState_) != STATEMAP.end()) {
             curState = STATEMAP.at(ringtoneState_);

@@ -43,7 +43,7 @@ private:
     static napi_value GetRendererFlags(napi_env env, napi_callback_info info);
     static napi_value SetRendererFlags(napi_env env, napi_callback_info info);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
 
     static std::unique_ptr<AudioStandard::AudioRendererInfo> sAudioRendererInfo_;
 

@@ -24,7 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtoneOp
 
 namespace OHOS {
 namespace Media {
-napi_ref RingtoneOptionsNapi::sConstructor_ = nullptr;
+thread_local napi_ref RingtoneOptionsNapi::sConstructor_ = nullptr;
 
 float RingtoneOptionsNapi::sVolume_ = 1;
 bool RingtoneOptionsNapi::sLoop_ = true;

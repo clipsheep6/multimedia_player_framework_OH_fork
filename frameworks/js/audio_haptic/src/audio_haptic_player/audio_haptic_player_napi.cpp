@@ -34,7 +34,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 
 namespace OHOS {
 namespace Media {
-napi_ref AudioHapticPlayerNapi::sConstructor_ = nullptr;
+thread_local napi_ref AudioHapticPlayerNapi::sConstructor_ = nullptr;
 std::shared_ptr<AudioHapticPlayer> AudioHapticPlayerNapi::sAudioHapticPlayer_ = nullptr;
 
 AudioHapticPlayerNapi::AudioHapticPlayerNapi() : env_(nullptr) {}
