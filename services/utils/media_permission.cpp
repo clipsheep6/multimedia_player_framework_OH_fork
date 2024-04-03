@@ -38,5 +38,16 @@ int32_t MediaPermission::CheckMicPermission()
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
 }
+
+int32_t MediaPermission::CheckNetWorkPermission()
+{
+    auto callerUid = IPCSkeleton::GetCallingUid();
+    if (callerUid == ROOT_UID) {
+        MEDIA_LOGI("Root user. Permission Granted");
+        return Security::AccessToken::PERMISSION_GRANTED;
+    }
+    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
+    return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.INTERNET");
+}
 }
 }
