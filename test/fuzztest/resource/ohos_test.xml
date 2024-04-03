@@ -381,4 +381,64 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
+    <target name="SoundPoolSetLoopFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
+    <target name="SoundPoolSetRateFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
+    <target name="SoundPoolSetVolumeFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
+    <target name="SoundPoolLoadUnloadFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
+    <target name="SoundPoolPlayStopFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
+    <target name="SoundPoolSetPriorityFuzzTest">
+        <preparer>
+            <option name="push" value="soundpool/fuzztest_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_01.ogg -> /data/test" src="res"/>
+            <option name="push" value="soundpool/fuzztest_02.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
 </configuration>
