@@ -136,6 +136,13 @@ std::shared_ptr<Meta> AVThumbnailGenerator::GetVideoTrackInfo()
             trackIndex_ = index;
             MEDIA_LOGI("0x%{public}06" PRIXPTR " GetTrackInfo success trackIndex_:%{public}d, trackMime_:%{public}s",
                 FAKE_POINTER(this), trackIndex_, trackMime_.c_str());
+            Plugins::VideoRotation rotation;
+            if (trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation)) {
+                rotation_ = rotation;
+                MEDIA_LOGD("rotation %{public}d", static_cast<int32_t>(rotation_));
+            } else {
+                MEDIA_LOGD("no rotation");
+            }
             return trackInfos[trackIndex_];
         }
     }
@@ -243,6 +250,7 @@ bool AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &su
         outputConfig_.dstHeight > 0 ? outputConfig_.dstHeight : height };
     decodeOpts.desiredPixelFormat = outputConfig_.colorFormat;
     std::unique_ptr<PixelMap> pixelMap = imageSource->CreatePixelMapEx(0, decodeOpts, errorCode);
+    pixelMap->rotate(static_cast<int32_t>(rotation_));
     CHECK_AND_RETURN_RET_LOG(errorCode == 0, false, "CreatePixelMapEx failed:%{public}d", errorCode);
 
     auto fetchedFrameAtTime =

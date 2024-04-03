@@ -56,6 +56,7 @@ private:
     std::atomic_bool hasFetchedFrame_{false};
     std::atomic_bool stopProcessing_{false};
     std::string trackMime_;
+    Plugins::VideoRotation rotation_ = Plugins::VideoRotation::VIDEO_ROTATION_0;
     size_t trackIndex_{0};
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
