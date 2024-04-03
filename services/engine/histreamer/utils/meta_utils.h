@@ -25,6 +25,9 @@ namespace Media {
 namespace MetaUtils {
 inline bool CheckFileType(const std::shared_ptr<Meta> meta)
 {
+    if (meta == nullptr) {
+        return false;
+    }
     FileType fileType = FileType::UNKNOW;
     return meta->Get<Tag::MEDIA_FILE_TYPE>(fileType) && fileType != FileType::UNKNOW;
 }
