@@ -1134,6 +1134,26 @@ HWTEST_F(PlayerUnitTest, Player_GetVideoTrackInfo_002, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test GetAudioTrackInfo API
+ * @tc.number: Player_GetAudioTrackInfo_001
+ * @tc.desc  : Test Player GetAudioTrackInfo
+ */
+HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
+{
+    std::vector<Format> audioTrack;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(1, audioTrack.size());
+    Format audioTrackFormat = audioTrack.front();
+    int32_t sampleDepth;
+    audioTrackFormat.GetIntValue("sample_depth", sampleDepth);
+    EXPECT_EQ(16, sampleDepth);
+}
+
+/**
  * @tc.name  : Test GetVideoHeight API
  * @tc.number: Player_GetVideoHeight_001
  * @tc.desc  : Test Player GetVideoHeight
