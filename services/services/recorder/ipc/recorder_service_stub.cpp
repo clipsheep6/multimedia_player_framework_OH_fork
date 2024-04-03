@@ -625,6 +625,7 @@ int32_t RecorderServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
 {
     bool block = data.ReadBool();
     reply.WriteInt32(Stop(block));
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -633,6 +634,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
     (void)data;
     reply.WriteInt32(Reset());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -641,6 +643,7 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
     (void)data;
     reply.WriteInt32(Release());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
@@ -659,6 +662,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
     (void)data;
     reply.WriteInt32(DestroyStub());
     needAudioPermissionCheck = false;
+    audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
 
