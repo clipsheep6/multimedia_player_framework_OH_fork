@@ -60,6 +60,7 @@ public:
     virtual int32_t GetAVRecorderConfig(ConfigMap &configMap) = 0;
     virtual int32_t GetLocation(Location &location) = 0;
     virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
+    virtual int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) = 0;
     virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
     virtual int32_t GetMaxAmplitude() = 0;
@@ -100,6 +101,7 @@ public:
         GET_AV_RECORDER_CONFIG,
         GET_LOCATION,
         SET_VIDEO_IS_HDR,
+        SET_VIDEO_ENABLE_TEMPORAL_SCALE,
 		GET_AUDIO_CAPTURER_CHANGE_INFO,
         GET_AVAILABLE_ENCODER,
         GET_MAX_AMPLITUDE,

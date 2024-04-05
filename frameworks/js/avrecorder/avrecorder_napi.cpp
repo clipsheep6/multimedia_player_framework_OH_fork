@@ -1322,61 +1322,76 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
     return MSERR_OK;
 }
 
+int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
+    napi_value item, AVRecorderProfile &profile)
+{
+    int32_t ret = MSERR_OK;
+    std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
+    ret = AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "GetAudioCodecFormat", "audioCodecFormat"), ret));
+    ret = MSERR_INVALID_VAL;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioBitrate", profile.audioBitrate),
+        (asyncCtx->AVRecorderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels),
+        (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate),
+        (asyncCtx->AVRecorderSignError(ret, "GetauidoSampleRate", "auidoSampleRate"), ret));
+    MediaProfileLog(false, profile);
+    return ret;
+}
+
+int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
+    napi_value item, AVRecorderProfile &profile)
+{
+    int32_t ret = MSERR_OK;
+    std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
+    ret = AVRecorderNapi::GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "GetVideoCodecFormat", "videoCodecFormat"), ret));
+    ret = MSERR_INVALID_VAL;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoBitrate", profile.videoBitrate),
+        (asyncCtx->AVRecorderSignError(ret, "GetvideoBitrate", "videoBitrate"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth),
+        (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameWidth", "videoFrameWidth"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight),
+        (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
+        (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
+    if (CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr)) {
+        CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat != VideoCodecFormat::H265)),
+            (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
+            MSERR_UNSUPPORT_VID_PARAMS));
+    } else {
+        profile.isHdr = false;
+    }
+    if (!CommonNapi::GetPropertyBool(env, item, "enableTemporalScale", profile.enableTemporalScale)) {
+        MEDIA_LOGI("avRecorderProfile enableTemporalScale is not set.");
+        profile.enableTemporalScale = false;
+    }
+
+    MediaProfileLog(true, profile);
+    return ret;
+}
+
 int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
 {
     napi_value item = nullptr;
     napi_get_named_property(env, args, "profile", &item);
     CHECK_AND_RETURN_RET_LOG(item != nullptr, MSERR_INVALID_VAL, "get profile error");
-
     AVRecorderProfile &profile = asyncCtx->config_->profile;
-
     int32_t ret = MSERR_OK;
     if (asyncCtx->config_->withAudio) {
-        std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
-        ret = AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK,
-            (asyncCtx->AVRecorderSignError(ret, "GetAudioCodecFormat", "audioCodecFormat"), ret));
-
-        ret = MSERR_INVALID_VAL;
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioBitrate", profile.audioBitrate),
-            (asyncCtx->AVRecorderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels),
-            (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate),
-            (asyncCtx->AVRecorderSignError(ret, "GetauidoSampleRate", "auidoSampleRate"), ret));
-        MediaProfileLog(false, profile);
+        ret = GetAudioProfile(asyncCtx, env, item, profile);
     }
-
     if (asyncCtx->config_->withVideo) {
-        std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
-        ret = AVRecorderNapi::GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK,
-            (asyncCtx->AVRecorderSignError(ret, "GetVideoCodecFormat", "videoCodecFormat"), ret));
-
-        ret = MSERR_INVALID_VAL;
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoBitrate", profile.videoBitrate),
-            (asyncCtx->AVRecorderSignError(ret, "GetvideoBitrate", "videoBitrate"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth),
-            (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameWidth", "videoFrameWidth"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight),
-            (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
-        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
-            (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
-        if (CommonNapi::GetPropertyBool(env, item, "isHdr", profile.isHdr)) {
-            CHECK_AND_RETURN_RET(!(profile.isHdr && (profile.videoCodecFormat != VideoCodecFormat::H265)),
-                (asyncCtx->AVRecorderSignError(MSERR_UNSUPPORT_VID_PARAMS, "isHdr needs to match video/hevc", ""),
-                MSERR_UNSUPPORT_VID_PARAMS));
-        } else {
-            profile.isHdr = false;
-        }
-        MediaProfileLog(true, profile);
+        ret = GetVideoProfile(asyncCtx, env, item, profile);
     }
 
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
     ret = AVRecorderNapi::GetOutputFormat(outputFile, profile.fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVRecorderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
     MEDIA_LOGI("fileFormat %{public}d", profile.fileFormat);
-
     return MSERR_OK;
 }
 
@@ -1384,9 +1399,9 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
 {
     if (isVideo) {
         MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
-            " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr  %{public}d",
+            " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr %{public}d, enableTemporalScale %{public}d",
             profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
-            profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr);
+            profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr, profile.enableTemporalScale);
         return;
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
@@ -1512,6 +1527,9 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 
         ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoIsHdr", "isHdr"));
+
+        ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableTemporalScale", "enableTemporalScale"));
     }
 
     return RetInfo(MSERR_EXT_API9_OK, "");
