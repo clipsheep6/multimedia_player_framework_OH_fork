@@ -60,6 +60,7 @@ enum RecorderPublicParamType : uint32_t {
     GEO_LOCATION,
 
     PUBLIC_PARAM_TYPE_END,
+    VID_ENABLE_TEMPORAL_SCALE,
 };
 
 /*
@@ -106,6 +107,12 @@ struct VidFrameRate : public RecorderParam {
 struct VidIsHdr : public RecorderParam {
     explicit VidIsHdr(bool r) : RecorderParam(RecorderPublicParamType::VID_IS_HDR), isHdr(r) {}
     bool isHdr;
+};
+
+struct VidEnableTemporalScale : public RecorderParam {
+    explicit VidEnableTemporalScale(bool r)
+        : RecorderParam(RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE), enableTemporalScale(r) {}
+    bool enableTemporalScale;
 };
 
 struct CaptureRate : public RecorderParam {

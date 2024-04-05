@@ -203,6 +203,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_FRAMERATE:
         case RecorderPublicParamType::VID_ENC_FMT:
         case RecorderPublicParamType::VID_IS_HDR:
+        case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -562,10 +563,24 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             }
             break;
         }
+        case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE: {
+            ConfigureVideoEnableTemporalScale(recParam);
+            break;
+        }
         default:
             break;
     }
 }
+
+void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recParam)
+{
+    VidEnableTemporalScale vidEnableTemporalScale = static_cast<const VidEnableTemporalScale&>(recParam);
+    if (vidEnableTemporalScale.enableTemporalScale) {
+        videoEncFormat_->Set<Tag::VIDEO_ENCODER_ENABLE_TEMPORAL_SCALABILITY>(
+            vidEnableTemporalScale.enableTemporalScale);
+    }
+}
+
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
 {
