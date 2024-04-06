@@ -717,13 +717,10 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::string url = data.ReadString();
     auto mapSize = data.ReadUint32();
     std::map<std::string, std::string> header;
-    while (mapSize--) {
+    for (size_t i = 0; i < mapSize; i++) {
         auto kstr = data.ReadString();
         auto vstr = data.ReadString();
         header.emplace(kstr, vstr);
-        if (mapSize == 0) {
-            break;
-        }
     }
     std::shared_ptr<AVMediaSource> meidaSource = std::make_shared<AVMediaSource>(url, header);
     struct AVPlayStrategy strategy;

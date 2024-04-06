@@ -1296,7 +1296,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
     if (argCount < expectedargCounts || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
-        || napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
+        || napi_typeof(env, args[1], &valueType) != napi_ok) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetMediaSource is not napi_object");
         return result;
     }
