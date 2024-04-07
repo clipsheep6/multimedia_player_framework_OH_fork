@@ -114,6 +114,17 @@ public:
     virtual int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) = 0;
 
     /**
+     * @brief Sets the status of the video whether to encode the video in temporal scale mode.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param enableTemporalScale Indicates the temporal scale mode to set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) = 0;
+
+    /**
      * @brief Sets the video capture rate.
      *
      * This function must be called after {@link SetVideoSource} but before {@link Prepare}. It is valid when the

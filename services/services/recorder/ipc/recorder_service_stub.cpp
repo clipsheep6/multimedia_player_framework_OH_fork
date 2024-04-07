@@ -92,6 +92,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
     recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
+    recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] = &RecorderServiceStub::SetVideoEnableTemporalScale;
     recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
     recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
     recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
@@ -221,6 +222,12 @@ int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetVideoIsHdr(sourceId, isHdr);
+}
+
+int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
 sptr<OHOS::Surface> RecorderServiceStub::GetSurface(int32_t sourceId)
@@ -464,6 +471,14 @@ int32_t RecorderServiceStub::SetVideoIsHdr(MessageParcel &data, MessageParcel &r
     int32_t sourceId = data.ReadInt32();
     bool isHdr = data.ReadBool();
     reply.WriteInt32(SetVideoIsHdr(sourceId, isHdr));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    bool enableTemporalScale = data.ReadBool();
+    reply.WriteInt32(SetVideoEnableTemporalScale(sourceId, enableTemporalScale));
     return MSERR_OK;
 }
 

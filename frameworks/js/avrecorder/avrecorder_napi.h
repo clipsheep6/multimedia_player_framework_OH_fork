@@ -147,6 +147,7 @@ struct AVRecorderProfile {
     int32_t videoFrameHeight = AVRECORDER_DEFAULT_FRAME_WIDTH;
     int32_t videoFrameRate = AVRECORDER_DEFAULT_FRAME_RATE;
     bool isHdr = false;
+    bool enableTemporalScale = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
@@ -330,6 +331,10 @@ private:
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
     int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value item,
+        AVRecorderProfile &profile);
+    int32_t GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value item,
+        AVRecorderProfile &profile);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
