@@ -47,6 +47,7 @@ int32_t PlayerImpl::Init()
 PlayerImpl::PlayerImpl()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    ResetSeekVariables();
 }
 
 PlayerImpl::~PlayerImpl()
@@ -55,7 +56,17 @@ PlayerImpl::~PlayerImpl()
         (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
         playerService_ = nullptr;
     }
+    ResetSeekVariables();
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void PlayerImpl::ResetSeekVariables()
+{
+    mCurrentPosition = -1;
+    mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    mSeekPosition = -1;
+    mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    isSeeking_ = false;
 }
 
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
@@ -170,7 +181,54 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
         FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->Seek(mSeconds, mode);
+
+    std::unique_lock<std::recursive_mutex> lock(recMutex_);
+    mCurrentPosition = mSeconds;
+    mCurrentSeekMode = mode;
+    if ((mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) && !isSeeking_) {
+        MEDIA_LOGI("Start seek once.");
+        isSeeking_ = true;
+        mSeekPosition = mSeconds;
+        mSeekMode = mode;
+        return playerService_->Seek(mSeconds, mode);
+    } else {
+        MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
+    }
+    MEDIA_LOGI("Seeking task end. %{public}d ms, mode is %{public}d", mSeconds, mode);
+    return MSERR_OK;
+}
+
+void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
+{
+    if (type == INFO_TYPE_SEEKDONE) {
+        CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
+        std::unique_lock<std::recursive_mutex> lock(recMutex_);
+        if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
+            MEDIA_LOGI("Start seek again (%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
+            mSeekPosition = mCurrentPosition;
+            mSeekMode = mCurrentSeekMode;
+            playerService_->Seek(mCurrentPosition, mCurrentSeekMode);
+        } else {
+            MEDIA_LOGI("All seeks complete - return to regularly scheduled program");
+            ResetSeekVariables();
+        }
+        MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
+    }
+}
+
+void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    HandleSeekDoneInfo(type);
+    CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
+    if (type == INFO_TYPE_SEEKDONE || type == INFO_TYPE_POSITION_UPDATE) {
+        if (!isSeeking_) {
+            callback_->OnInfo(type, extra, infoBody);
+        } else {
+            MEDIA_LOGD("Is seeking to (%{public}d, %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
+        }
+    } else {
+        callback_->OnInfo(type, extra, infoBody);
+    }
 }
 
 int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
@@ -290,7 +348,9 @@ int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cal
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayerCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
-    return playerService_->SetPlayerCallback(callback);
+    callback_ = callback;
+    std::shared_ptr<PlayerCallback> playerCb = std::make_shared<PlayerImplCallback>(callback, shared_from_this());
+    return playerService_->SetPlayerCallback(playerCb);
 }
 
 int32_t PlayerImpl::SetParameter(const Format &param)
@@ -335,6 +395,26 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
     (void)svp;
     return 0;
 #endif
+}
+
+PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb,
+    std::shared_ptr<PlayerImpl> player)
+{
+    playerCb_ = playerCb;
+    player_ = player;
+}
+
+void PlayerImplCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    auto player = player_.lock();
+    CHECK_AND_RETURN_LOG(player != nullptr, "player does not exist..");
+    player->OnInfo(type, extra, infoBody);
+}
+
+void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
+{
+    CHECK_AND_RETURN_LOG(playerCb_ != nullptr, "playerCb_ does not exist..");
+    playerCb_->OnError(errorCode, errorMsg);
 }
 
 } // namespace Media

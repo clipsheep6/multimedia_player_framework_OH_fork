@@ -18,12 +18,13 @@
 
 #include "player.h"
 #include "nocopyable.h"
+#include "osal/task/autolock.h"
 #include "i_player_service.h"
 
 
 namespace OHOS {
 namespace Media {
-class PlayerImpl : public Player, public NoCopyable {
+class PlayerImpl : public Player, public NoCopyable, public std::enable_shared_from_this<PlayerImpl> {
 public:
     PlayerImpl();
     ~PlayerImpl();
@@ -68,9 +69,32 @@ public:
         bool svp) override;
     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
     int32_t Init();
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
 private:
+    void ResetSeekVariables();
+    void HandleSeekDoneInfo(PlayerOnInfoType type);
+    std::recursive_mutex recMutex_;
+    int32_t mCurrentPosition = -1;
+    PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    int32_t mSeekPosition = -1;
+    PlayerSeekMode mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
+    std::atomic<bool> isSeeking_{false};
+    std::shared_ptr<PlayerCallback> callback_;
+
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
+};
+
+class PlayerImplCallback : public PlayerCallback {
+public:
+    PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb, std::shared_ptr<PlayerImpl> player);
+    ~PlayerImplCallback() = default;
+
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void OnError(int32_t errorCode, const std::string &errorMsg);
+private:
+    std::shared_ptr<PlayerCallback> playerCb_;
+    std::weak_ptr<PlayerImpl> player_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -738,22 +738,19 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t currentPositon = extra;
-    seekNum_--;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d, seek: %{public}d",
-        FAKE_POINTER(this), currentPositon, seekNum_.load());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
+        FAKE_POINTER(this), currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
         return;
     }
-    if (seekNum_ == 0) {
-        NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
-        cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
-        cb->value = currentPositon;
-        NapiCallback::CompleteCallback(env_, cb);
-    }
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
+    cb->value = currentPositon;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
@@ -811,15 +808,13 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
         MEDIA_LOGD("can not find timeupdate callback!");
         return;
     }
-    if (seekNum_ == 0) {
-        NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
-        cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
-        cb->value = position;
-        NapiCallback::CompleteCallback(env_, cb);
-    }
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
+    cb->value = position;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)

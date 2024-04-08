@@ -711,6 +711,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
+    MEDIA_LOGI("Queue seekTask end, position %{public}d, seek mode is %{public}d", mSeconds, mode);
     return MSERR_OK;
 }
 

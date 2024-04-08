@@ -54,7 +54,6 @@ public:
     void Pause();
     void Release();
 
-    std::atomic<uint32_t> seekNum_ = 0;
     std::atomic<bool> isSetVolume_ = false;
 private:
     void OnStartRenderFrameCb() const;
