@@ -192,6 +192,7 @@ private:
 
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
+    void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
