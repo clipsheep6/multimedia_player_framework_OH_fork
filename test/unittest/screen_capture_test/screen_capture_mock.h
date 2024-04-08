@@ -25,6 +25,7 @@
 #include "avbuffer.h"
 #include "gtest/gtest.h"
 #include "screen_capture.h"
+#include "screen_capture_controller.h"
 #include "unittest_log.h"
 #include "media_errors.h"
 #include "display_manager.h"
