@@ -13,6 +13,7 @@
       "name": "player_framework",
       "subsystem": "multimedia",
       "syscap": [
+        "SystemCapability.Multimedia.Media.AVTransCoder",
         "SystemCapability.Multimedia.Media.AVMetadataExtractor",
         "SystemCapability.Multimedia.Media.AVImageGenerator",
         "SystemCapability.Multimedia.SystemSound.Core",
