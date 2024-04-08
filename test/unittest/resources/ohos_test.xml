@@ -58,8 +58,8 @@
             <option name="shell" value="touch /data/test/media/recorder_video_pause_resume.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_es.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_audio_es.m4a"/>
-            <option name="shell" value="touch /data/test/media/recorder_av_yuv_mpeg4.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_video_yuv_mpeg4.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_av_yuv_H264.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_yuv_H264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetParameter_001.mp4"/>
@@ -89,6 +89,7 @@
             <option name="shell" value="touch /data/test/media/recorder_video_DrainBufferTrue_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetVideoSourceRGBA_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_DrainBufferStarted_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetCurrentCapturerChangeInfo_001.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
