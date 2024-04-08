@@ -43,10 +43,6 @@ public:
 #ifdef SUPPORT_METADATA
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
 #endif
-#ifdef SUPPORT_CODEC
-    std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine() override;
-    std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine() override;
-#endif
 };
 
 int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::string& uri)
@@ -99,20 +95,6 @@ std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelpe
         return nullptr;
     }
     return helper;
-}
-#endif
-
-#ifdef SUPPORT_CODEC
-std::unique_ptr<IAVCodecEngine> HstEngineFactory::CreateAVCodecEngine()
-{
-    MEDIA_LOG_E("Hst engine unsupport avcodec.");
-    return nullptr;
-}
-
-std::unique_ptr<IAVCodecListEngine> HstEngineFactory::CreateAVCodecListEngine()
-{
-    MEDIA_LOG_E("Hst engine unsupport avcodec.");
-    return nullptr;
 }
 #endif
 } // namespace Media

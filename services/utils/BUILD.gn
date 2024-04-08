@@ -47,6 +47,7 @@ ohos_shared_library("media_service_utils") {
   include_dirs = [
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "//third_party/libxml2/include",
   ]

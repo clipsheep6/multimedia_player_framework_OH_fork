@@ -30,6 +30,7 @@ config("media_capi_config") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
     "$MEDIA_PLAYER_AVCODEC/interfaces/kits/c",
     "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]

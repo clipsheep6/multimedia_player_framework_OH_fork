@@ -35,6 +35,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+using namespace MediaAVCodec;
+
 thread_local napi_ref AVRecorderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVRecorder";
 std::map<std::string, AVRecorderNapi::AvRecorderTaskqFunc> AVRecorderNapi::taskQFuncs_ = {

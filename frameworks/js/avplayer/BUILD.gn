@@ -28,6 +28,7 @@ ohos_shared_library("media_avplayer") {
   }
 
   include_dirs = [
+    "//foundation/multimedia/av_codec/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/interfaces/inner_api",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/common",

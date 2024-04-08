@@ -33,6 +33,7 @@ ohos_shared_library("media_soundpool") {
     "${multimedia_player_framework_path}/interfaces/inner_api/native",
     "${multimedia_player_framework_path}/services/utils/include",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
+    "${av_codec_root_path}/interfaces/inner_api/native",
   ]
 
   sources = [
