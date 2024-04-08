@@ -1295,7 +1295,7 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         if (playerEngine_ != nullptr) {
             return;
         }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPuase in", FAKE_POINTER(this));
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg in", FAKE_POINTER(this));
 
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
             MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
@@ -1304,9 +1304,10 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
             OnErrorCb(errorCode, errorMsg);
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg out", FAKE_POINTER(this));
         return;
     }
+    OnErrorCb(errorCode, errorMsg);
 }
 
 void PlayerServer::OnErrorCb(int32_t errorCode, const std::string &errorMsg)
