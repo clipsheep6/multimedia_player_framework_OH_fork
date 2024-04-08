@@ -640,6 +640,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 
     Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, leftVolume);
+    MEDIA_LOGI("SetVolume callback");
     OnInfoNoChangeStatus(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
