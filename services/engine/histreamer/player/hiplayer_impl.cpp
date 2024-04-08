@@ -1145,25 +1145,7 @@ void HiPlayerImpl::HandleIsLiveStreamEvent(bool isLiveStream)
 
 void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 {
-    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
-        Status ret = Status::OK;
-        if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
-            syncManager_->Pause();
-            ret = pipeline_->Pause();
-        } else {
-            ret = pipeline_->Pause();
-            syncManager_->Pause();
-        }
-        if (audioSink_ != nullptr) {
-            audioSink_->Pause();
-        }
-        if (ret != Status::OK) {
-            UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
-        }
-        callbackLooper_.StopReportMediaProgress();
-    }
-    Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_ERROR_MSG, errorCode, format);
+    callbackLooper_.OnError(PLAYER_ERROR, errorCode);
 }
 
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
