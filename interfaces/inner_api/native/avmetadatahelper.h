@@ -84,6 +84,18 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {35,    "videoHeight"},
     {37,    "videoWidth"},
     {38,    "videoOrientation"},
+    {39,    "hdrType"},
+};
+
+enum HdrType : int32_t {
+    /**
+     * This option is used to mark none HDR type.
+     */
+    AV_HDR_TYPE_NONE,
+    /**
+     * This option is used to mark HDR Vivid type.
+     */
+    AV_HDR_TYPE_VIVID,
 };
 
 /**
@@ -190,6 +202,11 @@ enum AVMetadataCode : int32_t {
      * orientation.
      */
     AV_KEY_VIDEO_ORIENTATION = 38,
+    /**
+     * The metadata key to retrieve the information about the video
+     * is HDR or not.
+     */
+    AV_KEY_VIDEO_IS_HDR_VIVID = 39,
 };
 
 /**

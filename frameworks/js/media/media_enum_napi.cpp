@@ -143,6 +143,11 @@ static const std::vector<struct JsEnumInt> g_frameFlags = {
     { "CODEC_DATA", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_CODEC_DATA },
 };
 
+static const std::vector<struct JsEnumInt> g_hdrType = {
+    { "AV_HDR_TYPE_NONE", HdrType::AV_HDR_TYPE_NONE },
+    { "AV_HDR_TYPE_VIVID", HdrType::AV_HDR_TYPE_VIVID },
+};
+
 static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
@@ -354,6 +359,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "AudioSourceType", g_audioSourceType },
     { "VideoSourceType", g_videoSourceType },
     { "FrameFlags", g_frameFlags },
+    { "HdrType", g_hdrType},
     { "SeekMode", g_seekMode },
     { "AVCodecType", g_AVCodecType },
     { "AACProfile", g_AACProfile },

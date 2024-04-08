@@ -258,7 +258,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
 
     napi_value result = nullptr;
     napi_create_object(env, &result);
-
+    const std::string HDR_TYPE_STR = "hdrType";
     if (status == napi_ok && promiseCtx->errCode == napi_ok) {
         for (auto iter = promiseCtx->metadata_->begin(); iter != promiseCtx->metadata_->end(); ++iter) {
             MEDIA_LOGI("Resolve metadata completed, key: %{public}d, val: %{public}s",
@@ -277,7 +277,13 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             napi_status st = napi_create_string_utf8(env, key, NAPI_AUTO_LENGTH, &keyNapi);
 
             napi_value valueNapi = nullptr;
-            st = napi_create_string_utf8(env, iter->second.c_str(), NAPI_AUTO_LENGTH, &valueNapi);
+            if (std::string(key) == HDR_TYPE_STR) {
+                int32_t hdrTypeValue = (iter->second == "yes") ? static_cast<int32_t>(HdrType::AV_HDR_TYPE_VIVID) :
+                    static_cast<int32_t>(HdrType::AV_HDR_TYPE_NONE);
+                st = napi_create_int32(env, hdrTypeValue, &valueNapi);
+            } else {
+                st = napi_create_string_utf8(env, iter->second.c_str(), NAPI_AUTO_LENGTH, &valueNapi);
+            }
             napi_set_property(env, result, keyNapi, valueNapi);
             if (st != napi_ok) {
                 MEDIA_LOGW("failed to set property: %{public}d", iter->first);

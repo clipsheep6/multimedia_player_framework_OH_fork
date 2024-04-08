@@ -31,6 +31,7 @@ declare_args() {
   multimedia_player_framework_support_screen_capture_controller = false
   multimedia_player_framework_support_jssoundpool = true
   multimedia_player_framework_support_mediasource = true
+  multimedia_player_framework_check_video_is_hdr_vivid = false
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }

@@ -211,6 +211,8 @@
             <option name="push" value="res_avmetadata/MP3_SURFACE.mp3 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
             <option name="push" value="error.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/HDR.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/SDR.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="vcodec_native_unit_test">

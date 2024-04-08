@@ -66,6 +66,7 @@ static const std::unordered_map<int32_t, std::string> AVMETA_KEY_TO_X_MAP = {
     { AV_KEY_VIDEO_HEIGHT, Tag::VIDEO_HEIGHT },
     { AV_KEY_VIDEO_WIDTH, Tag::VIDEO_WIDTH },
     { AV_KEY_VIDEO_ORIENTATION, Tag::VIDEO_ROTATION },
+    { AV_KEY_VIDEO_IS_HDR_VIVID, Tag::VIDEO_IS_HDR_VIVID },
 };
 
 AVMetaDataCollector::AVMetaDataCollector(std::shared_ptr<MediaDemuxer> &mediaDemuxer) : mediaDemuxer_(mediaDemuxer)

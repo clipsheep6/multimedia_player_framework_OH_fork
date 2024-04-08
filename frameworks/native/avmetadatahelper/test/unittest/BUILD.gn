@@ -58,6 +58,9 @@ ohos_unittest("avmetadata_unit_test") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/window/window_manager/wm:libwm",
   ]
-
+  defines = []
+  if (multimedia_player_framework_check_video_is_hdr_vivid) {
+    defines += [ "CHECKING_VIDEO_IS_HDR_VIVID" ]
+  }
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
 }
