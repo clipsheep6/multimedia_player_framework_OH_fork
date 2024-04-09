@@ -522,7 +522,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
             .audioChannels = 2,
             .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
     config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -666,7 +672,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 48000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
 
     std::vector<sptr<Screen>> screens;
