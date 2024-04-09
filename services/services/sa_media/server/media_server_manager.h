@@ -69,10 +69,6 @@ private:
 #ifdef SUPPORT_METADATA
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
 #endif
-#ifdef SUPPORT_CODEC
-    sptr<IRemoteObject> CreateAVCodecListStubObject();
-    sptr<IRemoteObject> CreateAVCodecStubObject();
-#endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     sptr<IRemoteObject> CreateScreenCaptureStubObject();
     sptr<IRemoteObject> CreateScreenCaptureControllerStubObject();
