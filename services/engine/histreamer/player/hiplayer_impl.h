@@ -205,6 +205,7 @@ private:
     uint32_t preferedHeight_ = 0;
     uint32_t bufferDuration_ = 0;
     bool preferHDR_ = false;
+    bool isInCompleted_ {false};
 };
 } // namespace Media
 } // namespace OHOS
