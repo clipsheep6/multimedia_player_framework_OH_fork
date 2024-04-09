@@ -93,10 +93,10 @@ namespace RecorderTestParam {
         double captureFps = 30;
         int32_t outputFd = 0;
         AudioCodecFormat audioFormat = AAC_LC;
-        AudioSourceType aSource = AUDIO_MIC;
+        AudioSourceType aSource = AUDIO_SOURCE_DEFAULT;
         OutputFormatType outPutFormat = FORMAT_MPEG_4;
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
-        VideoCodecFormat videoFormat = MPEG4;
+        VideoCodecFormat videoFormat = H264;
     };
     struct AudioRecorderConfig {
         int32_t outputFd = 0;
@@ -156,6 +156,8 @@ public:
     int32_t GetStubFile();
     void GetFileFd();
     uint64_t GetPts();
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
+
 private:
     std::shared_ptr<Recorder> recorder_ = nullptr;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
@@ -176,6 +178,7 @@ public:
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
     int32_t GetErrorCode();
 private:
     int32_t errorCode_ = 0;

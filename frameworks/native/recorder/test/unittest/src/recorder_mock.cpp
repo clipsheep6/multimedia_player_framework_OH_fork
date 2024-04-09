@@ -84,6 +84,11 @@ void RecorderCallbackTest::OnInfo(int32_t type, int32_t extra)
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
 }
 
+void OHOS::Media::RecorderCallbackTest::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
+{
+    cout<< "AudioCaptureChange" << audioRecorderChangeInfo.capturerState << endl;
+}
+
 int32_t RecorderCallbackTest::GetErrorCode()
 {
     return errorCode_;
@@ -347,6 +352,12 @@ uint64_t RecorderMock::GetPts()
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
     uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
     return time;
+}
+
+int32_t OHOS::Media::RecorderMock::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
 void RecorderMock::HDICreateESBuffer()
