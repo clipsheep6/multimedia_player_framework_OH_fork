@@ -13,6 +13,7 @@
       "name": "player_framework",
       "subsystem": "multimedia",
       "syscap": [
+        "SystemCapability.Multimedia.Media.AVTransCoder",
         "SystemCapability.Multimedia.Media.AVMetadataExtractor",
         "SystemCapability.Multimedia.Media.AVImageGenerator",
         "SystemCapability.Multimedia.SystemSound.Core",
@@ -110,10 +111,6 @@
             "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "header": {
               "header_files": [
-                "avcodec_audio_decoder.h",
-                "avcodec_audio_encoder.h",
-                "avcodec_video_decoder.h",
-                "avcodec_video_encoder.h",
                 "player.h",
                 "recorder.h",
                 "screen_capture.h",
