@@ -32,6 +32,96 @@ using namespace OHOS::Media::ScreenCaptureTestParam;
 namespace OHOS {
 namespace Media {
 
+int32_t ScreenCaptureUnitTest::SetConfig(AVScreenCaptureConfig &config)
+{
+    AudioCaptureInfo miccapinfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = SOURCE_DEFAULT
+    };
+
+    VideoCaptureInfo videocapinfo = {
+            .videoFrameWidth = 720,
+            .videoFrameHeight = 1280,
+            .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+            .videoCodec = VideoCodecFormat::H264,
+            .videoBitrate = 2000000,
+            .videoFrameRate = 30
+    };
+
+    AudioInfo audioinfo = {
+            .micCapInfo = miccapinfo,
+    };
+
+    VideoInfo videoinfo = {
+            .videoCapInfo = videocapinfo,
+            .videoEncInfo = videoEncInfo
+    };
+
+    config = {
+            .captureMode = CAPTURE_HOME_SCREEN,
+            .dataType = ORIGINAL_STREAM,
+            .audioInfo = audioinfo,
+            .videoInfo = videoinfo
+    };
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureUnitTest::SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo)
+{
+    AudioEncInfo audioEncInfo = {
+            .audioBitrate = 48000,
+            .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
+
+    VideoCaptureInfo videoCapInfo = {
+            .videoFrameWidth = 720,
+            .videoFrameHeight = 1080,
+            .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    VideoEncInfo videoEncInfo = {
+            .videoCodec = VideoCodecFormat::H264,
+            .videoBitrate = 2000000,
+            .videoFrameRate = 30
+    };
+
+    AudioCaptureInfo innerCapInfo = {
+            .audioSampleRate = 0,
+            .audioChannels = 0,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 0,
+            .audioChannels = 0,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+
+    AudioInfo audioInfo = {
+            .micCapInfo = micCapInfo,
+            .innerCapInfo = innerCapInfo,
+            .audioEncInfo = audioEncInfo
+    };
+
+    VideoInfo videoInfo = {
+            .videoCapInfo = videoCapInfo,
+            .videoEncInfo = videoEncInfo
+    };
+
+    config = {
+            .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
+            .dataType = DataType::CAPTURE_FILE,
+            .audioInfo = audioInfo,
+            .videoInfo = videoInfo,
+            .recorderInfo = recorderInfo
+    };
+    return MSERR_OK;
+}
+
 /**
  * @tc.name: screen_capture_report_user_choice_01
  * @tc.desc: do screencapture
@@ -66,7 +156,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_file_01, TestSiz
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
     };
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     std::shared_ptr<OHOS::AAFwk::AbilityManagerClient> client_ = OHOS::AAFwk::AbilityManagerClient::GetInstance();
     std::string deviceId = "";
@@ -522,7 +618,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_Rotation_01, TestSize.L
             .audioChannels = 2,
             .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 16000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
     config_.videoInfo.videoCapInfo.videoFrameWidth = 2720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1260;
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
@@ -666,7 +768,13 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_screen_file_02, TestSiz
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::APP_PLAYBACK
     };
+    AudioCaptureInfo micCapInfo = {
+            .audioSampleRate = 48000,
+            .audioChannels = 2,
+            .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
     config_.audioInfo.innerCapInfo = innerCapInfo;
+    config_.audioInfo.micCapInfo = micCapInfo;
     config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
 
     std::vector<sptr<Screen>> screens;
