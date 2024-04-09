@@ -91,7 +91,9 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 HiPlayerImpl::~HiPlayerImpl()
 {
     MEDIA_LOG_I("~HiPlayerImpl dtor called.");
-    ReleaseInner();
+    if (demuxer_) {
+        pipeline_->RemoveHeadFilter(demuxer_);
+    }
 }
 
 void HiPlayerImpl::ReleaseInner()
@@ -392,13 +394,7 @@ int32_t HiPlayerImpl::Stop()
     MediaTrace trace("HiPlayerImpl::Stop");
     MEDIA_LOG_I("Stop entered.");
     callbackLooper_.StopReportMediaProgress();
-    if (audioSink_ != nullptr) {
-        audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
-    }
     // close demuxer first to avoid concurrent problem
-    if (demuxer_ != nullptr) {
-        demuxer_->Stop();
-    }
     auto ret = Status::ERROR_UNKNOWN;
     if (pipeline_ != nullptr) {
         ret = pipeline_->Stop();
