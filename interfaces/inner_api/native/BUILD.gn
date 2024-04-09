@@ -14,7 +14,6 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-AV_CODEC_ROOT_DIR = "//foundation/multimedia/av_codec"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
 config("media_public_config") {
@@ -50,7 +49,6 @@ config("media_client_ipc_config") {
 
 config("media_client_base_config") {
   include_dirs = [
-    "$AV_CODEC_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
@@ -165,6 +163,7 @@ ohos_shared_library("media_client") {
 
   external_deps = [
     "audio_framework:audio_client",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

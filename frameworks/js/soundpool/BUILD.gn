@@ -33,7 +33,6 @@ ohos_shared_library("media_soundpool") {
     "${multimedia_player_framework_path}/interfaces/inner_api/native",
     "${multimedia_player_framework_path}/services/utils/include",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
-    "${av_codec_root_path}/interfaces/inner_api/native",
   ]
 
   sources = [
@@ -79,6 +78,7 @@ ohos_shared_library("media_soundpool") {
     "ability_runtime:napi_base_context",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
