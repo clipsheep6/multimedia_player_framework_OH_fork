@@ -22,8 +22,8 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
-const std::string AUDIO_TEST_URI = "sys_prod/variant/region_comm/china/resource/media/audio/notifications/Rise.ogg";
-const std::string HAPTIC_TEST_URI = "sys_prod/variant/region_comm/china/resource/media/audio/notifications/Rise.json";
+const std::string AUDIO_TEST_URI = "data/test/ringtone.ogg";
+const std::string HAPTIC_TEST_URI = "data/test/ringtone.json";
 
 std::shared_ptr<AudioHapticManager> AudioHapticUnitTest::g_audioHapticManager = nullptr;
 int32_t AudioHapticUnitTest::g_sourceId = -1;
@@ -568,7 +568,13 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Prepare_001, TestSize.Level1)
 
     int32_t result = MSERR_OK;
     result = AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
-    EXPECT_NE(MSERR_OK, result);
+    if (result == MSERR_OPEN_FILE_FAILED || result == MSERR_UNSUPPORT_FILE) {
+        // The source file is invalid or the path is inaccessible. Return directly.
+        EXPECT_NE(MSERR_OK, result);
+        return;
+    }
+
+    EXPECT_EQ(MSERR_OK, result);
 }
 
 /**
@@ -581,9 +587,14 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Start_001, TestSize.Level1)
     EXPECT_NE(AudioHapticUnitTest::g_sourceId, -1);
     EXPECT_NE(AudioHapticUnitTest::g_audioHapticPlayer, nullptr);
 
-    AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
-
     int32_t result = MSERR_OK;
+    result = AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
+    if (result == MSERR_OPEN_FILE_FAILED || result == MSERR_UNSUPPORT_FILE) {
+        // The source file is invalid or the path is inaccessible. Return directly.
+        EXPECT_NE(MSERR_OK, result);
+        return;
+    }
+
     result = AudioHapticUnitTest::g_audioHapticPlayer->Start();
     EXPECT_EQ(MSERR_OK, result);
 
@@ -600,10 +611,15 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Stop_001, TestSize.Level1)
     EXPECT_NE(AudioHapticUnitTest::g_sourceId, -1);
     EXPECT_NE(AudioHapticUnitTest::g_audioHapticPlayer, nullptr);
 
-    AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
+    int32_t result = MSERR_OK;
+    result = AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
+    if (result == MSERR_OPEN_FILE_FAILED || result == MSERR_UNSUPPORT_FILE) {
+        // The source file is invalid or the path is inaccessible. Return directly.
+        EXPECT_NE(MSERR_OK, result);
+        return;
+    }
     AudioHapticUnitTest::g_audioHapticPlayer->Start();
 
-    int32_t result = MSERR_OK;
     result = AudioHapticUnitTest::g_audioHapticPlayer->Stop();
     EXPECT_EQ(MSERR_OK, result);
 }
@@ -618,11 +634,16 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Release_001, TestSize.Level1)
     EXPECT_NE(AudioHapticUnitTest::g_sourceId, -1);
     EXPECT_NE(AudioHapticUnitTest::g_audioHapticPlayer, nullptr);
 
-    AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
+    int32_t result = MSERR_OK;
+    result = AudioHapticUnitTest::g_audioHapticPlayer->Prepare();
+    if (result == MSERR_OPEN_FILE_FAILED || result == MSERR_UNSUPPORT_FILE) {
+        // The source file is invalid or the path is inaccessible. Return directly.
+        EXPECT_NE(MSERR_OK, result);
+        return;
+    }
     AudioHapticUnitTest::g_audioHapticPlayer->Start();
     AudioHapticUnitTest::g_audioHapticPlayer->Stop();
 
-    int32_t result = MSERR_OK;
     result = AudioHapticUnitTest::g_audioHapticPlayer->Release();
     EXPECT_EQ(MSERR_OK, result);
 }

@@ -19,11 +19,11 @@ group("media_unit_test") {
   deps = []
   if (multimedia_player_framework_support_test) {
     deps += [
-      "../frameworks/native/audio_haptic/test/unittest:audio_haptic_unit_test",
       "../frameworks/native/avmetadatahelper/test/unittest:avmetadata_unit_test",
       "../frameworks/native/player/test/unittest:player_unit_test",
       "../frameworks/native/recorder/test/unittest:recorder_unit_test",
       "../frameworks/native/recorder_profiles/test/unittest:recorder_profiles_unit_test",
+      "unittest/audio_haptic_test:audio_haptic_unit_test",
       "unittest/avcodec_test:format_native_unit_test",
       "unittest/screen_capture_test:screen_capture_capi_unit_test",
       "unittest/screen_capture_test:screen_capture_native_unit_test",

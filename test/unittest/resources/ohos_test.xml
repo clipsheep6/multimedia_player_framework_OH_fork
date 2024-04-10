@@ -242,5 +242,12 @@
             <option name="shell" value="restorecon /data/test"/>
         </preparer>
     </target>
+    <target name="audio_haptic_unit_test">
+        <preparer>
+            <option name="push" value="res_audio_haptic/ringtone.ogg -> /data/test/" src="res"/>
+            <option name="push" value="res_audio_haptic/ringtone.json -> /data/test/" src="res"/>
+            <option name="shell" value="restorecon /data/test/"/>
+        </preparer>
+    </target>
 </configuration>
 

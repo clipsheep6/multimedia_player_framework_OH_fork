@@ -20,10 +20,8 @@ ohos_unittest("audio_haptic_unit_test") {
   module_out_path = module_output_path
   include_dirs = [
     "./",
-    "./../../",
-    "./../../../../../interfaces/inner_api/native/audio_haptic/include",
-    "./../../../../../interfaces/inner_api/native/soundpool/include",
-    "./../../../../../services/utils/include",
+    "./../../../interfaces/inner_api/native",
+    "./../../../interfaces/inner_api/native/audio_haptic/include",
   ]
 
   cflags = [
@@ -34,9 +32,9 @@ ohos_unittest("audio_haptic_unit_test") {
   sources = [ "audio_haptic_unit_test.cpp" ]
 
   deps = [
-    "./../../../../../interfaces/inner_api/native:media_client",
-    "./../../../audio_haptic:audio_haptic",
-    "./../../../soundpool:soundpool_client",
+    "./../../../interfaces/inner_api/native:media_client",
+    "./../../../frameworks/native/audio_haptic:audio_haptic",
+    "./../../../frameworks/native/soundpool:soundpool_client",
   ]
 
   external_deps = [
@@ -44,4 +42,6 @@ ohos_unittest("audio_haptic_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
   ]
+
+  resource_config_file = "./../resources/ohos_test.xml"
 }
