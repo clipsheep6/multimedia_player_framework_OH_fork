@@ -70,6 +70,8 @@ config("media_service_config") {
     "recorder_profiles/server",
     "screen_capture/server",
     "screen_capture/ipc",
+    "transcoder/server",
+    "transcoder/ipc",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -179,6 +181,14 @@ ohos_shared_library("media_service") {
       "screen_capture/server/screen_capture_controller_server.cpp",
       "screen_capture/server/screen_capture_server.cpp",
       "screen_capture/server/ui_extension_ability_connection.cpp",
+    ]
+  }
+  
+  if (multimedia_player_framework_support_transcoder) {
+    sources += [
+      "transcoder/ipc/transcoder_listener_proxy.cpp",
+      "transcoder/ipc/transcoder_service_stub.cpp",
+      "transcoder/server/transcoder_server.cpp",
     ]
   }
 

@@ -172,6 +172,15 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
     ]
   }
+  
+  if (multimedia_player_framework_support_transcoder) {
+    sources += [
+      "$MEDIA_ROOT_DIR/frameworks/native/transcoder/transcoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/transcoder/client/transcoder_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/transcoder/ipc/transcoder_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/transcoder/ipc/transcoder_service_proxy.cpp",
+    ]
+  }
 
   configs = [
     ":media_client_base_config",

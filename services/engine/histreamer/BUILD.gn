@@ -43,6 +43,10 @@ ohos_shared_library("media_engine_histreamer") {
     deps += [ "avmetadatahelper:media_engine_histreamer_avmetadatahelper" ]
   }
 
+  if (multimedia_player_framework_support_transcoder) {
+    deps += [ "transcoder:media_engine_histreamer_transcoder" ]
+  }
+
   relative_install_dir = "media"
   subsystem_name = "multimedia"
   part_name = "player_framework"

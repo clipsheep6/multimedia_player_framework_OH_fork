@@ -39,6 +39,7 @@ public:
         MEDIA_MONITOR = 7,
         MEDIA_SCREEN_CAPTURE = 8,
         MEDIA_SCREEN_CAPTURE_CONTROLLER = 9,
+		MEDIA_TRANSCODER = 10
     };
 
     /**

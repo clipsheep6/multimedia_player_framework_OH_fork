@@ -121,6 +121,13 @@ ohos_shared_library("media") {
       "${multimedia_player_framework_path}/frameworks/js/avscreen_capture/avscreen_capture_napi.cpp",
     ]
   }
+  
+  if (multimedia_player_framework_support_transcoder) {
+    sources += [
+      "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_callback.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avtranscoder/avtranscoder_napi.cpp",
+    ]
+  }
 
   cflags = [
     "-std=c++17",
