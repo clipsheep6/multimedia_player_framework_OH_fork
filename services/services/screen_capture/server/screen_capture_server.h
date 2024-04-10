@@ -48,6 +48,7 @@
 #include "notification_request.h"
 #include "notification_constant.h"
 #include "notification_slot.h"
+#include "incall_observer.h"
 
 namespace OHOS {
 namespace Media {
@@ -131,7 +132,19 @@ private:
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
-class ScreenCaptureServer : public IScreenCaptureService, public NoCopyable {
+class ScreenCaptureServer;
+class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
+public:
+    explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
+    ~ScreenCaptureObserverCallBack() = default;
+    bool StopAndRelease() override;
+
+private:
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
+        public IScreenCaptureService, public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
@@ -211,6 +224,7 @@ private:
 private:
     std::mutex mutex_;
     std::mutex cbMutex_;
+    std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
