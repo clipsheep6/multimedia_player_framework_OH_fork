@@ -200,9 +200,13 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             if (freshCacheBuffer == nullptr) {
                 break;
             }
-            if (freshCacheBuffer->GetPriority() <= playingCacheBuffer->GetPriority()) {
+            if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
                 break;
+            }
+            if (i == playingStreamIDs_.size() - 1 &&
+                freshCacheBuffer->GetPriority() < playingCacheBuffer->GetPriority()) {
+                playingStreamIDs_.push_back(streamID);
             }
         }
         if (shouldReCombinePlayingQueue) {
@@ -231,9 +235,13 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
             if (freshCacheBuffer == nullptr) {
                 break;
             }
-            if (freshCacheBuffer->GetPriority() <= willPlayCacheBuffer->GetPriority()) {
+            if (freshCacheBuffer->GetPriority() >= willPlayCacheBuffer->GetPriority()) {
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
                 break;
+            }
+            if (i == willPlayStreamInfos_.size() - 1 &&
+                freshCacheBuffer->GetPriority() < willPlayCacheBuffer->GetPriority()) {
+                willPlayStreamInfos_.push_back(freshStreamIDAndPlayParamsInfo);
             }
         }
         if (shouldReCombineWillPlayQueue) {
