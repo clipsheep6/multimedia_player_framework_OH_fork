@@ -1480,6 +1480,24 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
         FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
     }
+
+    // set decrypt config for drm audios
+    if (isDrmProtected_) {
+        MEDIA_LOG_D("HiPlayerImpl::LinkAudioDecoderFilter will SetDecryptConfig");
+        std::unique_lock<std::mutex> lock(drmMutex_);
+        static constexpr int32_t timeout = 5;
+        bool notTimeout = drmConfigCond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
+            return this->isDrmPrepared_ || this->stopWaitingDrmConfig_;
+        });
+        if (notTimeout && isDrmPrepared_) {
+            MEDIA_LOG_I("HiPlayerImpl::LinkAudioDecoderFilter will SetDecryptConfig");
+            bool svpFlag = svpMode_ == HiplayerSvpMode::SVP_TRUE ? true : false;
+            audioDecoder_->SetDecryptionConfig(keySessionServiceProxy_, svpFlag);
+        } else {
+            MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected audio failed!");
+            return Status::ERROR_INVALID_OPERATION;
+        }
+    }
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
 }
 
