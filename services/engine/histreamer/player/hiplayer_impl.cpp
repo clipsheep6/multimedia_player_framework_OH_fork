@@ -360,7 +360,9 @@ int32_t HiPlayerImpl::Pause()
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOG_I("Pause entered.");
-    isReadyComplete_ = false;
+    if (isReadyComplete_) {
+        isReadyComplete_ = false;
+    }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOG_E("completed not allow pause");
         return TransStatus(Status::OK);
@@ -385,7 +387,6 @@ int32_t HiPlayerImpl::Pause()
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
     OnStateChanged(PlayerStateId::PAUSE);
-    isReadyComplete_ = true;
     return TransStatus(ret);
 }
 
@@ -458,7 +459,9 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
     isSeek_ = true;
-    isReadyComplete_ = false;
+    if (isReadyComplete_) {
+        isReadyComplete_ = false;
+    }
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
@@ -490,7 +493,6 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
-    isReadyComplete_ = true;
     return rtv;
 }
 
@@ -1162,6 +1164,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
+    isReadyComplete_ = true;
     for (std::pair<std::string, bool>& item: completeState_) {
         if (item.first == event.srcFilter) {
             MEDIA_LOG_I("one eos event received " PUBLIC_LOG_S, item.first.c_str());
@@ -1200,6 +1203,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
+    isReadyComplete_ = false;
 }
 
 void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
