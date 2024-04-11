@@ -109,9 +109,6 @@ PlayerServer::~PlayerServer()
 #ifdef SUPPORT_VIDEO
     VideoPlayerManager::GetInstance().UnRegisterVideoPlayer(this);
 #endif
-    if (accountSubscriber_) {
-        accountSubscriber_->UnregisterCommonEventReceiver(this);
-    }
 }
 
 int32_t PlayerServer::Init()
@@ -132,9 +129,6 @@ int32_t PlayerServer::Init()
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{public}u", appUid_, appPid_, appTokenId_);
 
     PlayerServerStateMachine::Init(idleState_);
-
-    accountSubscriber_ = AccountSubscriber::GetInstance();
-    accountSubscriber_->RegisterCommonEventReceiver(this);
     return MSERR_OK;
 }
 
@@ -1428,15 +1422,6 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
 {
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
-}
-
-void PlayerServer::OnCommonEventReceived(const std::string &event)
-{
-    MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " receive event %{public}s",
-            FAKE_POINTER(this), event.c_str());
-    if (event == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        this->Pause();
-    }
 }
 } // namespace Media
 } // namespace OHOS

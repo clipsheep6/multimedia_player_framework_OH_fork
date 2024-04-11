@@ -52,7 +52,6 @@ config("media_service_config") {
     "player/ipc",
     "player/player_mem_manage",
     "player/server",
-    "player/subscriber",
     "media_data_source/ipc",
     "media_data_source/server",
     "monitor/client",
@@ -128,7 +127,6 @@ ohos_shared_library("media_service") {
       "player/server/player_server.cpp",
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
-      "player/subscriber/account_subscriber.cpp",
     ]
     if (use_memmgr_plugin || use_memmgr) {
       sources += [
@@ -201,12 +199,10 @@ ohos_shared_library("media_service") {
   ]
 
   external_deps = [
-    "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
-    "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
