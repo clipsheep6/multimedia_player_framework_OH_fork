@@ -284,9 +284,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     NotifyResolutionChange();
     NotifyPositionUpdate();
     DoInitializeForHttp();
-    if (!demuxer_->IsExistVideoTrace()) {
-        OnStateChanged(PlayerStateId::READY);
-    }
+    OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
 }
@@ -1029,7 +1027,9 @@ void HiPlayerImpl::OnEvent(const Event &event)
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOG_I("video first frame reneder received");
-            HandleVideoFirstFrameEvent(AnyCast<int32_t>(event.param));
+            Format format;
+            callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
+            HandleInitialPlayingStateChange(event.type);
             break;
         }
         case EventType::EVENT_RESOLUTION_CHANGE: {
@@ -1200,19 +1200,6 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
-}
-
-void HiPlayerImpl::HandleVideoFirstFrameEvent(int32_t errorCode)
-{
-    if (static_cast<Status>(errorCode) == Status::PREPARE_BEFORE_START_END) {
-        pipeline_->Pause();
-        OnStateChanged(PlayerStateId::READY);
-        MEDIA_LOG_I("prepare start and pause success.");
-        return;
-    }
-    Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
-    HandleInitialPlayingStateChange(EventType::EVENT_VIDEO_RENDERING_START);
 }
 
 void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
