@@ -152,7 +152,7 @@ private:
     OHOS::Media::ConditionVariable cond_{};
     std::atomic<bool> singleLoop_ {false};
     std::atomic<bool> isSeek_ {false};
-    std::atomic<bool> isReadyComplete_ {true};
+    std::atomic<bool> isReadyComplete_ {false};
     std::atomic<PlaybackRateMode> playbackRateMode_ {PlaybackRateMode::SPEED_FORWARD_1_00_X};
 
     std::shared_ptr<EventReceiver> playerEventReceiver_;
