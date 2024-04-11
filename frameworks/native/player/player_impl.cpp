@@ -190,7 +190,11 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         isSeeking_ = true;
         mSeekPosition = mSeconds;
         mSeekMode = mode;
-        return playerService_->Seek(mSeconds, mode);
+        auto retCode = playerService_->Seek(mSeconds, mode);
+        if (retCode != MSERR_OK) {
+            ResetSeekVariables();
+        }
+        return retCode;
     } else {
         MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
     }
