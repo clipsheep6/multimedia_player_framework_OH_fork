@@ -180,10 +180,12 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  sources += [
-    "observer/incall_observer.cpp",
-    "observer/media_telephony_listener.cpp",
-  ]
+  if (multimedia_player_framework_support_screen_capture_stopbycall) {
+    sources += [
+      "observer/incall_observer.cpp",
+      "observer/media_telephony_listener.cpp",
+    ]
+  }
 
   configs = [
     ":media_service_config",

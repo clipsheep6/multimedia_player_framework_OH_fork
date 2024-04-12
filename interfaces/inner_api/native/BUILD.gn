@@ -73,7 +73,6 @@ config("media_client_base_config") {
     "-FS",
     "-O2",
     "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
@@ -184,17 +183,13 @@ ohos_shared_library("media_client") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
-    "call_manager:tel_call_manager_api",
-    "core_service:tel_core_service_api",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image_native",
-    "init:libbegetutil",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "qos_manager:qos",
     "samgr:samgr_proxy",
-    "state_registry:tel_state_registry_api",
   ]
   public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 

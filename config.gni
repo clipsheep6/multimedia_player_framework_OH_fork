@@ -28,6 +28,7 @@ declare_args() {
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
   multimedia_player_framework_support_screen_capture = true
+  multimedia_player_framework_support_screen_capture_stopbycall = true
   multimedia_player_framework_support_screen_capture_controller = false
   multimedia_player_framework_support_jssoundpool = true
   multimedia_player_framework_support_mediasource = true
