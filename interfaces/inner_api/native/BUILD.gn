@@ -172,6 +172,10 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
     ]
   }
+  sources += [
+    "$MEDIA_ROOT_DIR/services/services/observer/incall_observer.cpp",
+    "$MEDIA_ROOT_DIR/services/services/observer/media_telephony_listener.cpp",
+  ]
 
   configs = [
     ":media_client_base_config",
@@ -184,6 +188,8 @@ ohos_shared_library("media_client") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
+    "call_manager:tel_call_manager_api",
+    "core_service:tel_core_service_api",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image_native",
@@ -191,6 +197,7 @@ ohos_shared_library("media_client") {
     "media_foundation:media_foundation",
     "qos_manager:qos",
     "samgr:samgr_proxy",
+    "state_registry:tel_state_registry_api",
   ]
   public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 

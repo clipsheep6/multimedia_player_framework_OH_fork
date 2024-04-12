@@ -38,8 +38,6 @@ ohos_unittest("incallobserver_unit_test") {
 
   sources = [ "./observer_unittest/observer_func_unittest.cpp" ]
 
-  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
