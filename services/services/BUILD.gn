@@ -179,12 +179,12 @@ ohos_shared_library("media_service") {
       "screen_capture/server/screen_capture_server.cpp",
       "screen_capture/server/ui_extension_ability_connection.cpp",
     ]
-
-    sources += [
-      "observer/incall_observer.cpp",
-      "observer/media_telephony_listener.cpp",
-    ]
   }
+
+  sources += [
+    "observer/incall_observer.cpp",
+    "observer/media_telephony_listener.cpp",
+  ]
 
   configs = [
     ":media_service_config",
