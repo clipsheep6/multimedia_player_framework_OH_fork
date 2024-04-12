@@ -73,6 +73,7 @@ config("media_client_base_config") {
     "-FS",
     "-O2",
     "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
