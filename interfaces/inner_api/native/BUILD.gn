@@ -173,8 +173,8 @@ ohos_shared_library("media_client") {
     ]
 
     sources += [
-      $MEDIA_PLAYER_ROOT_DIR/services/services/observer/incall_observer.cpp",
-      $MEDIA_PLAYER_ROOT_DIR/services/services/observer/media_telephony_listener.cpp",
+      $MEDIA_ROOT_DIR/services/services/observer/incall_observer.cpp",
+      $MEDIA_ROOT_DIR/services/services/observer/media_telephony_listener.cpp",
     ]
   }
 
