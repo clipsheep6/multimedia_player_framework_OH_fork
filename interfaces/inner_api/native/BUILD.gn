@@ -173,11 +173,6 @@ ohos_shared_library("media_client") {
     ]
   }
 
-  sources += [
-    "$MEDIA_ROOT_DIR/services/services/observer/incall_observer.cpp",
-    "$MEDIA_ROOT_DIR/services/services/observer/media_telephony_listener.cpp",
-  ]
-
   configs = [
     ":media_client_base_config",
     ":media_client_ipc_config",
