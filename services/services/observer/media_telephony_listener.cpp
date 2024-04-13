@@ -43,12 +43,15 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
     // skip no sim card CALL_STATUS_UNKNOWN
     if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ALERTING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DIALING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_INCOMING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_HOLDING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_WAITING)) {
         InCallObserver::GetInstance().OnCallStateUpdated(true);
-    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED)) {
+    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED) ||
+               callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTING)) {
         InCallObserver::GetInstance().OnCallStateUpdated(false);
     }
 }
