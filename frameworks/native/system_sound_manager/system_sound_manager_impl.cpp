@@ -394,7 +394,10 @@ void RingerModeCallbackImpl::OnRingerModeUpdated(const AudioStandard::AudioRinge
     ringerMode_ = ringerMode;
     int32_t result = sysSoundMgr_.SetRingerMode(ringerMode_);
     if (result == MSERR_OK && ringerMode_ == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
-        SystemSoundVibrator::StopVibrator();
+
+        // to do: Stop vibrator!!!
+
+        // SystemSoundVibrator::StopVibrator();
     }
 }
 } // namesapce AudioStandard

@@ -27,6 +27,23 @@ struct SystemToneOptions {
     bool muteHaptics;
 };
 
+enum class SystemToneState {
+    /** INVALID state */
+    STATE_INVALID = -1,
+    /** Create New instance */
+    STATE_NEW,
+    /** Prepared state */
+    STATE_PREPARED,
+    /** Running state */
+    STATE_RUNNING,
+    /** Stopped state */
+    STATE_STOPPED,
+    /** Released state */
+    STATE_RELEASED,
+    /** Paused state */
+    STATE_PAUSED
+};
+
 class SystemTonePlayer {
 public:
     virtual ~SystemTonePlayer() = default;

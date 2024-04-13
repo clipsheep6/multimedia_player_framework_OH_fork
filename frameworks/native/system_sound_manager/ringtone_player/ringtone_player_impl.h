@@ -17,10 +17,7 @@
 #define RINGTONE_PLAYER_IMPL_H
 
 #include "audio_haptic_manager.h"
-#include "player.h"
 #include "system_sound_manager_impl.h"
-#include "system_sound_vibrator.h"
-
 
 namespace OHOS {
 namespace Media {
