@@ -33,9 +33,8 @@ constexpr int32_t TUPLE_POS_0 = 0;
 constexpr int32_t TUPLE_POS_1 = 1;
 constexpr int32_t TUPLE_POS_2 = 2;
 }
-HiPlayerCallbackLooper::HiPlayerCallbackLooper() : task_("callbackThread", OHOS::Media::TaskPriority::NORMAL)
+HiPlayerCallbackLooper::HiPlayerCallbackLooper()
 {
-    task_.RegisterJob([this] {LoopOnce();});
 }
 
 HiPlayerCallbackLooper::~HiPlayerCallbackLooper()
@@ -51,8 +50,7 @@ bool HiPlayerCallbackLooper::IsStarted()
 void HiPlayerCallbackLooper::Stop()
 {
     if (taskStarted_) {
-        eventQueue_.Quit();
-        task_.Stop();
+        task_->Stop();
         taskStarted_ = false;
     }
 }
@@ -62,15 +60,16 @@ void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlaye
     OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
     if (!taskStarted_) {
-        task_.Start();
+        task_->Start();
         taskStarted_ = true;
         MEDIA_LOG_I("start callback looper");
     }
 }
-void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine)
+void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     playerEngine_ = engine;
+    task_ = std::make_unique<Task>("callbackThread", "", TaskType::GLOBAL, OHOS::Media::TaskPriority::NORMAL, false);
 }
 
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
@@ -81,24 +80,18 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
         return;
     }
     reportMediaProgress_ = true;
-    eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 {
-    eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
 }
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
     MEDIA_LOG_I("StopReportMediaProgress");
     reportMediaProgress_ = false;
-}
-
-void HiPlayerCallbackLooper::DropMediaProgress()
-{
-    isDropMediaProgress_ = true;
-    eventQueue_.RemoveMediaProgressEvent();
 }
 
 void HiPlayerCallbackLooper::DoReportCompletedTime()
@@ -133,14 +126,14 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
     }
     isDropMediaProgress_ = false;
     if (reportMediaProgress_) {
-        eventQueue_.Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+        Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
             SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
     }
 }
 
 void HiPlayerCallbackLooper::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
+    Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_ERROR, SteadyClock::GetCurrentTimeMs(),
     std::make_pair(errorType, errorCode)));
 }
 
@@ -158,7 +151,7 @@ void HiPlayerCallbackLooper::DoReportError(const Any &error)
 
 void HiPlayerCallbackLooper::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    eventQueue_.Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_INFO, SteadyClock::GetCurrentTimeMs(),
+    Enqueue(std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_INFO, SteadyClock::GetCurrentTimeMs(),
         std::make_tuple(type, extra, infoBody)));
 }
 
@@ -173,9 +166,8 @@ void HiPlayerCallbackLooper::DoReportInfo(const Any& info)
     }
 }
 
-void HiPlayerCallbackLooper::LoopOnce()
+void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLooper::Event>& item)
 {
-    auto item = eventQueue_.Next();
     switch (item->what) {
         case WHAT_MEDIA_PROGRESS:
             DoReportMediaProgress();
@@ -191,7 +183,7 @@ void HiPlayerCallbackLooper::LoopOnce()
     }
 }
 
-void HiPlayerCallbackLooper::EventQueue::Enqueue(const std::shared_ptr<HiPlayerCallbackLooper::Event>& event)
+void HiPlayerCallbackLooper::Enqueue(const std::shared_ptr<HiPlayerCallbackLooper::Event>& event)
 {
     if (!event) {
         return;
@@ -199,61 +191,10 @@ void HiPlayerCallbackLooper::EventQueue::Enqueue(const std::shared_ptr<HiPlayerC
     if (event->what == WHAT_NONE) {
         MEDIA_LOG_I("invalid event");
     }
-    OHOS::Media::AutoLock lock(queueMutex_);
-    if (quit_) {
-        MEDIA_LOG_W("event already quit");
-        return;
-    }
-    auto ite = queue_.begin();
-    for (; ite != queue_.end(); ite++) {
-        if ((*ite)->whenMs > event->whenMs) {
-            break;
-        }
-    }
-    auto pos = queue_.insert(ite, event);
-    if (pos == queue_.begin()) {
-        queueHeadUpdatedCond_.NotifyOne();
-    }
-}
-
-std::shared_ptr<HiPlayerCallbackLooper::Event> HiPlayerCallbackLooper::EventQueue::Next()
-{
-    OHOS::Media::AutoLock lock(queueMutex_);
-    // not empty
-    while (queue_.empty() && !quit_) {
-        queueHeadUpdatedCond_.Wait(lock);
-    }
-
-    do {
-        if (quit_) {
-            return std::make_shared<HiPlayerCallbackLooper::Event>(WHAT_NONE, 0, Any());
-        }
-        auto wakenAtTime = (*queue_.begin())->whenMs;
-        auto leftTime = wakenAtTime - SteadyClock::GetCurrentTimeMs();
-        if (leftTime <= 0) {
-            auto first = *queue_.begin();
-            queue_.erase(queue_.begin());
-            return first;
-        }
-        queueHeadUpdatedCond_.WaitFor(lock, leftTime);
-    } while (1);
-}
-
-void HiPlayerCallbackLooper::EventQueue::Quit()
-{
-    OHOS::Media::AutoLock lock(queueMutex_);
-    quit_ = true;
-    queueHeadUpdatedCond_.NotifyOne();
-}
-
-void HiPlayerCallbackLooper::EventQueue::RemoveMediaProgressEvent()
-{
-    OHOS::Media::AutoLock lock(queueMutex_);
-    for (auto iter = queue_.begin(); iter != queue_.end(); iter++) {
-        if ((*iter)->what == WHAT_MEDIA_PROGRESS) {
-            (*iter)->what = WHAT_NONE;
-        }
-    }
+    int64_t delayUs = (event->whenMs - SteadyClock::GetCurrentTimeMs()) * 1000;
+    task_->SubmitJob([this, event]() {
+        LoopOnce(event);
+    }, delayUs);
 }
 }  // namespace Media
 }  // namespace OHOS

@@ -19,6 +19,9 @@
 #include <list>
 #include <utility>
 #include "osal/task/task.h"
+#include "osal/task/condition_variable.h"
+#include "osal/task/mutex.h"
+
 #include "i_player_engine.h"
 #include "meta/any.h"
 #include "osal/utils/steady_clock.h"
@@ -36,13 +39,11 @@ public:
 
     void StartWithPlayerEngineObs(const std::weak_ptr<IPlayerEngineObs>& obs);
 
-    void SetPlayEngine(IPlayerEngine* engine);
+    void SetPlayEngine(IPlayerEngine* engine, std::string playerId);
 
     void StartReportMediaProgress(int64_t updateIntervalMs = 1000);
 
     void StopReportMediaProgress();
-
-    void DropMediaProgress();
 
     void ManualReportMediaProgressOnce();
 
@@ -53,8 +54,6 @@ public:
     void DoReportCompletedTime();
 
 private:
-
-    void LoopOnce();
 
     void DoReportMediaProgress();
     void DoReportInfo(const Any& info);
@@ -67,25 +66,15 @@ private:
         int64_t whenMs {INT64_MAX};
         Any detail;
     };
-    class EventQueue {
-    public:
-        void Enqueue(const std::shared_ptr<Event>& event);
-        std::shared_ptr<Event> Next();
-        void RemoveMediaProgressEvent();
-        void Quit();
-    private:
-        OHOS::Media::Mutex queueMutex_ {};
-        OHOS::Media::ConditionVariable queueHeadUpdatedCond_ {};
-        std::list<std::shared_ptr<Event>> queue_ {};
-        bool quit_ {false};
-    };
 
-    OHOS::Media::Task task_;
+    void LoopOnce(const std::shared_ptr<HiPlayerCallbackLooper::Event>& item);
+    void Enqueue(const std::shared_ptr<Event>& event);
+
+    std::unique_ptr<OHOS::Media::Task> task_;
     OHOS::Media::Mutex loopMutex_ {};
     bool taskStarted_ {false};
     IPlayerEngine* playerEngine_ {};
     std::weak_ptr<IPlayerEngineObs> obs_ {};
-    EventQueue eventQueue_ {};
     bool reportMediaProgress_ {false};
     bool isDropMediaProgress_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms

@@ -23,6 +23,8 @@
 #include "filter/filter_factory.h"
 #include "media_errors.h"
 #include "osal/task/jobutils.h"
+#include "osal/task/pipeline_threadpool.h"
+#include "osal/task/task.h"
 #include "osal/utils/dump_buffer.h"
 #include "common/plugin_time.h"
 #include "media_dfx.h"
@@ -47,18 +49,21 @@ const std::string BUNDLE_NAME_FIRST = "com.hua";
 const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
 public:
-    explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl)
+    explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
     {
         hiPlayerImpl_ = hiPlayerImpl;
+        task_ = std::make_unique<Task>("PlayerEventReceiver", playerId, TaskType::GLOBAL,
+            OHOS::Media::TaskPriority::HIGH, false);
     }
 
     void OnEvent(const Event &event)
     {
-        hiPlayerImpl_->OnEvent(event);
+        task_->SubmitJobOnce([this, event] { hiPlayerImpl_->OnEvent(event); });
     }
 
 private:
     HiPlayerImpl* hiPlayerImpl_;
+    std::unique_ptr<Task> task_;
 };
 
 class PlayerFilterCallback : public FilterCallback {
@@ -82,9 +87,10 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
 {
     MEDIA_LOG_I("hiPlayerImpl ctor appUid " PUBLIC_LOG_D32 " appPid " PUBLIC_LOG_D32 " appTokenId " PUBLIC_LOG_D32
         " appFullTokenId " PUBLIC_LOG_D64, appUid_, appPid_, appTokenId_, appFullTokenId_);
+    playerId_ = std::string("HiPlayer_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
     pipeline_ = std::make_shared<OHOS::Media::Pipeline::Pipeline>();
     syncManager_ = std::make_shared<MediaSyncManager>();
-    callbackLooper_.SetPlayEngine(this);
+    callbackLooper_.SetPlayEngine(this, playerId_);
     bundleName_ = GetClientBundleName(appUid);
 }
 
@@ -94,6 +100,7 @@ HiPlayerImpl::~HiPlayerImpl()
     if (demuxer_) {
         pipeline_->RemoveHeadFilter(demuxer_);
     }
+    PipeLineThreadPool::GetInstance().DestroyThread(playerId_);
 }
 
 void HiPlayerImpl::ReleaseInner()
@@ -115,12 +122,12 @@ Status HiPlayerImpl::Init()
 {
     MediaTrace trace("HiPlayerImpl::Init");
     MEDIA_LOG_I("Init entered.");
-    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this);
+    std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     playerEventReceiver_ = playerEventReceiver;
     std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
     playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOG_I("pipeline init start");
-    pipeline_->Init(playerEventReceiver, playerFilterCallback);
+    pipeline_->Init(playerEventReceiver, playerFilterCallback, playerId_);
     MEDIA_LOG_I("Init End.");
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
@@ -374,9 +381,6 @@ int32_t HiPlayerImpl::Pause()
     } else {
         ret = pipeline_->Pause();
         syncManager_->Pause();
-    }
-    if (audioSink_ != nullptr) {
-        audioSink_->Pause();
     }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
@@ -1092,6 +1096,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
+    pipeline_->AddHeadFilters({demuxer_});
     demuxer_->Init(playerEventReceiver_, playerFilterCallback_);
 
     PlayStrategy* playStrategy = new PlayStrategy;
@@ -1107,7 +1112,6 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         ret = Status::ERROR_INVALID_DATA;
     }
     SetBundleName(bundleName_);
-    pipeline_->AddHeadFilters({demuxer_});
     return ret;
 }
 

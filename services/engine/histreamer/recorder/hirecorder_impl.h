@@ -135,6 +135,7 @@ private:
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
     
     std::string avRecorderTag_ = "[AVRecorder]";
+    std::string playerId_;
 };
 } // namespace MEDIA
 } // namespace OHOS

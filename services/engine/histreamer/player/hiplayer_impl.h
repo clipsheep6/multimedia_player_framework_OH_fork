@@ -205,6 +205,7 @@ private:
     uint32_t bufferDuration_ = 0;
     bool preferHDR_ = false;
     bool isInCompleted_ {false};
+    std::string playerId_;
 };
 } // namespace Media
 } // namespace OHOS
