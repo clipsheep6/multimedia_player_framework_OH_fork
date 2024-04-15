@@ -284,7 +284,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         MEDIA_LOG_E("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         return TransStatus(ret);
     }
-    ret = pipeline_->PrepareFrame(false);
+    ret = pipeline_->PrepareFrame(renderFirstFrame_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "PrepareFrame failed.");
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     InitDuration();
