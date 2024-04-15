@@ -63,6 +63,10 @@ public:
     {
         return 0;
     }
+    int32_t SetRenderFirstFrame(bool display) override
+    {
+        return 0;
+    }
     int32_t PrepareAsync() override
     {
         return 0;
@@ -190,6 +194,7 @@ private:
     int32_t AddSubFdSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Play(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Prepare(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SetRenderFirstFrame(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t PrepareAsync(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Pause(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Stop(uint8_t *inputData, size_t size, bool isFuzz);
