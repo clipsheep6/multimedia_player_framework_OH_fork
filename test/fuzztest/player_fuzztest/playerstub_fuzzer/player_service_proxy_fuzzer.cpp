@@ -33,6 +33,7 @@ PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &im
     playerFuncs_[ADD_SUB_FD_SOURCE] = &PlayerServiceProxyFuzzer::AddSubFdSource;
     playerFuncs_[PLAY] = &PlayerServiceProxyFuzzer::Play;
     playerFuncs_[PREPARE] = &PlayerServiceProxyFuzzer::Prepare;
+    playerFuncs_[SET_RENDER_FIRST_FRAME] = &PlayerServiceProxyFuzzer::SetRenderFirstFrame;
     playerFuncs_[PREPAREASYNC] = &PlayerServiceProxyFuzzer::PrepareAsync;
     playerFuncs_[PAUSE] = &PlayerServiceProxyFuzzer::Pause;
     playerFuncs_[STOP] = &PlayerServiceProxyFuzzer::Stop;
@@ -272,6 +273,23 @@ int32_t PlayerServiceProxyFuzzer::Prepare(uint8_t *inputData, size_t size, bool 
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     return SendRequest(PREPARE, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::SetRenderFirstFrame(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "SetRenderFirstFrame:Failed to write descriptor!" << std::endl;
+        return false;
+    }
+    (void)data.WriteBool(*reinterpret_cast<int32_t *>(inputData) % 2);  // 2 true or false
+    return SendRequest(SET_RENDER_FIRST_FRAME, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::PrepareAsync(uint8_t *inputData, size_t size, bool isFuzz)

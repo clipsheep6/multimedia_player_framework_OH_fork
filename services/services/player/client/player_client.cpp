@@ -144,6 +144,13 @@ int32_t PlayerClient::Prepare()
     return playerProxy_->Prepare();
 }
 
+int32_t PlayerClient::SetRenderFirstFrame(bool display)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetRenderFirstFrame(display);
+}
+
 int32_t PlayerClient::PrepareAsync()
 {
     std::lock_guard<std::mutex> lock(mutex_);

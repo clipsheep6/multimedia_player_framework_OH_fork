@@ -36,6 +36,7 @@ public:
     int32_t Pause() override;
     int32_t Play() override;
     int32_t Reset() override;
+    int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
     int32_t AddSubSource(const std::string &url) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
