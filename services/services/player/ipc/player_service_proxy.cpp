@@ -243,7 +243,7 @@ int32_t PlayerServiceProxy::Prepare()
 
 int32_t PlayerServiceProxy::SetRenderFirstFrame(bool display)
 {
-    MediaTrace trace("binder::SetRenderFirstFrame");
+    MediaTrace trace("Proxy::SetRenderFirstFrame");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

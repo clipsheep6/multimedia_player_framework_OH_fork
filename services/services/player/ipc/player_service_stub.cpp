@@ -258,7 +258,7 @@ int32_t PlayerServiceStub::Prepare()
 
 int32_t PlayerServiceStub::SetRenderFirstFrame(bool display)
 {
-    MediaTrace trace("binder::SetRenderFirstFrame");
+    MediaTrace trace("Stub::SetRenderFirstFrame");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetRenderFirstFrame(display);
 }
