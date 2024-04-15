@@ -28,10 +28,6 @@
 #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_service_stub.h"
 #endif
-#ifdef SUPPORT_CODEC
-#include "avcodec_service_stub.h"
-#include "avcodeclist_service_stub.h"
-#endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "screen_capture_service_stub.h"
 #include "screen_capture_controller_stub.h"
@@ -159,12 +155,6 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case AVMETADATAHELPER:
             return CreateAVMetadataHelperStubObject();
 #endif
-#ifdef SUPPORT_CODEC
-        case AVCODECLIST:
-            return CreateAVCodecListStubObject();
-        case AVCODEC:
-            return CreateAVCodecStubObject();
-#endif
 #ifdef SUPPORT_SCREEN_CAPTURE
         case SCREEN_CAPTURE:
             return CreateScreenCaptureStubObject();
@@ -284,56 +274,6 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
 
     MEDIA_LOGD("The number of avmetadatahelper services(%{public}zu) pid(%{public}d).",
         avMetadataHelperStubMap_.size(), pid);
-    (void)Dump(-1, std::vector<std::u16string>());
-    return object;
-}
-#endif
-
-#ifdef SUPPORT_CODEC
-sptr<IRemoteObject> MediaServerManager::CreateAVCodecListStubObject()
-{
-    CHECK_AND_RETURN_RET_LOG(avCodecListStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of codeclist services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", avCodecListStubMap_.size());
-
-    sptr<AVCodecListServiceStub> avCodecListStub = AVCodecListServiceStub::Create();
-    CHECK_AND_RETURN_RET_LOG(avCodecListStub != nullptr, nullptr,
-        "failed to create AVCodecListServiceStub");
-
-    sptr<IRemoteObject> object = avCodecListStub->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr,
-        "failed to create AVMetadataHelperServiceStub");
-
-    pid_t pid = IPCSkeleton::GetCallingPid();
-    avCodecListStubMap_[object] = pid;
-    MEDIA_LOGD("The number of codeclist services(%{public}zu).", avCodecListStubMap_.size());
-    return object;
-}
-
-sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
-{
-    CHECK_AND_RETURN_RET_LOG(avCodecStubMap_.size() < SERVER_MAX_NUMBER,
-        nullptr, "The number of avcodec services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", avCodecStubMap_.size());
-
-    sptr<AVCodecServiceStub> avCodecHelperStub = AVCodecServiceStub::Create();
-    CHECK_AND_RETURN_RET_LOG(avCodecHelperStub != nullptr, nullptr, "failed to create AVCodecServiceStub");
-
-    sptr<IRemoteObject> object = avCodecHelperStub->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create AVCodecServiceStub");
-
-    pid_t pid = IPCSkeleton::GetCallingPid();
-    avCodecStubMap_[object] = pid;
-
-    Dumper dumper;
-    dumper.entry_ = [avcodec = avCodecHelperStub](int32_t fd) -> int32_t {
-        return avcodec->DumpInfo(fd);
-    };
-    dumper.pid_ = pid;
-    dumper.uid_ = IPCSkeleton::GetCallingUid();
-    dumper.remoteObject_ = object;
-    dumperTbl_[StubType::AVCODEC].emplace_back(dumper);
-    MEDIA_LOGD("The number of avcodec services(%{public}zu).", avCodecStubMap_.size());
     (void)Dump(-1, std::vector<std::u16string>());
     return object;
 }

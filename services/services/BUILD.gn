@@ -77,7 +77,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
   ]
 
@@ -151,16 +150,6 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  if (multimedia_player_framework_support_codec) {
-    sources += [
-      "avcodec/ipc/avcodec_listener_proxy.cpp",
-      "avcodec/ipc/avcodec_service_stub.cpp",
-      "avcodec/server/avcodec_server.cpp",
-      "avcodeclist/ipc/avcodeclist_service_stub.cpp",
-      "avcodeclist/server/avcodeclist_server.cpp",
-      "sa_media/ipc/avcodeclist_parcel.cpp",
-    ]
-  }
   if (multimedia_player_framework_support_metadata) {
     sources += [
       "avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
@@ -201,6 +190,7 @@ ohos_shared_library("media_service") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
     "core_service:tel_core_service_api",

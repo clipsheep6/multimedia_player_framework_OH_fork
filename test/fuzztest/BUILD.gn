@@ -18,10 +18,6 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    "avcodec_fuzztest/acodecconfigure_fuzzer:ACodecConfigureFuzzTest",
-    "avcodec_fuzztest/acodecfile_fuzzer:ACodecFileFuzzTest",
-    "avcodec_fuzztest/vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
-    "avcodec_fuzztest/vcodecfile_fuzzer:VCodecFileFuzzTest",
     "avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
     "avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
     "avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",

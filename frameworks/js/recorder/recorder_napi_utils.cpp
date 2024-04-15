@@ -26,6 +26,7 @@ using namespace OHOS::Security::AccessToken;
 
 namespace OHOS {
 namespace Media {
+using namespace MediaAVCodec;
 const std::map<std::string_view, int32_t> g_mimeStrToCodecFormat = {
     { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
     { CodecMimeType::VIDEO_AVC, VideoCodecFormat::H264 },

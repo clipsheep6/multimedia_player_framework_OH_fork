@@ -169,6 +169,7 @@ ohos_shared_library("media") {
     "access_token:libtokenid_sdk",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "hilog:libhilog",
     "image_framework:image",
