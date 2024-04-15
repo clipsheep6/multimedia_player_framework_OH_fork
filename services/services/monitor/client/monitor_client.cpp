@@ -29,6 +29,8 @@ std::mutex MonitorClient::instanceMutex_;
 std::shared_ptr<MonitorClient> MonitorClient::monitorClient_ = std::make_shared<MonitorClient>();
 MonitorClient::Destroy MonitorClient::destroy_;
 
+constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
+
 MonitorClient::MonitorClient()
 {
     MEDIA_LOGI("Instances create");
@@ -133,7 +135,6 @@ void MonitorClient::ClickThread()
 {
     pthread_setname_np(pthread_self(), "OS_MonitorClick");
     MEDIA_LOGD("ClickThread start");
-    static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
 
     CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
     CHECK_AND_RETURN_LOG(monitorProxy_->EnableMonitor() == MSERR_OK, "failed to EnableMonitor");
@@ -141,7 +142,7 @@ void MonitorClient::ClickThread()
     while (true) {
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            clickCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] {
+            clickCond_.wait_for(lock, std::chrono::seconds(TIME_INTERVAL), [this] {
                 return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
             });
 
@@ -170,6 +171,7 @@ void MonitorClient::ClickThreadCtrl()
 {
     while (true) {
         ClickThread();
+        std::this_thread::sleep_for(std::chrono::seconds(TIME_INTERVAL));
         std::unique_lock<std::mutex> lock(mutex_);
         if (objSet_.empty() || clientDestroy_) {
             threadRunning_ = false;
