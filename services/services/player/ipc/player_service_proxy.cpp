@@ -40,6 +40,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_FD_SOURCE] = "Player::SetFdSource";
     playerFuncs_[PLAY] = "Player::Play";
     playerFuncs_[PREPARE] = "Player::Prepare";
+    playerFuncs_[SET_RENDER_FIRST_FRAME] = "Player::SetRenderFirstFrame";
     playerFuncs_[PREPAREASYNC] = "Player::PrepareAsync";
     playerFuncs_[PAUSE] = "Player::Pause";
     playerFuncs_[STOP] = "Player::Stop";
@@ -237,6 +238,24 @@ int32_t PlayerServiceProxy::Prepare()
     int32_t error = SendRequest(PREPARE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "Prepare failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetRenderFirstFrame(bool display)
+{
+    MediaTrace trace("binder::SetRenderFirstFrame");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteBool(display);
+    int32_t error = SendRequest(SET_RENDER_FIRST_FRAME, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetRenderFirstFrame failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 

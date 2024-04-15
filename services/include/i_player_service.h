@@ -105,6 +105,16 @@ public:
     virtual int32_t Prepare() = 0;
 
     /**
+     * @brief Enables render video first frame of the media playback.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRenderFirstFrame(bool display) = 0;
+
+    /**
      * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.

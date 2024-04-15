@@ -664,6 +664,16 @@ public:
         (void)svp;
         return 0;
     }
+
+    /**
+     * @brief Enables render video first frame of the media playback.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRenderFirstFrame(bool display) = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

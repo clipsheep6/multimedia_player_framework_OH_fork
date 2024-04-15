@@ -239,6 +239,13 @@ int32_t HiPlayerImpl::Prepare()
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
+{
+    MEDIA_LOG_I("SetRenderFirstFrame entered, display: " PUBLIC_LOG_D32, display);
+    renderFirstFrame_ = display;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");

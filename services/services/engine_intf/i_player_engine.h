@@ -59,6 +59,7 @@ public:
     {
         return 0;
     }
+    virtual int32_t SetRenderFirstFrame(bool display) = 0;
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;

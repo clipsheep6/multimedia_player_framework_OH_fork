@@ -313,6 +313,28 @@ int32_t PlayerServer::Prepare()
     }
 }
 
+int32_t PlayerServer::SetRenderFirstFrame(bool display)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED) {
+        MEDIA_LOGE("Can not SetRenderFirstFrame, currentState is not PLAYER_INITIALIZED");
+        return MSERR_INVALID_OPERATION;
+    }
+    MEDIA_LOGD("PlayerServer SetRenderFirstFrame in, display %{public}d", display);
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetRenderFirstFrame, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetRenderFirstFrame, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->SetRenderFirstFrame(display);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRenderFirstFrame Failed!");
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::PrepareAsync()
 {
     if (inReleasing_.load()) {

@@ -120,6 +120,14 @@ int32_t PlayerImpl::Prepare()
     return playerService_->Prepare();
 }
 
+int32_t PlayerImpl::SetRenderFirstFrame(bool display)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetRenderFirstFrame in, display %{public}d",
+         FAKE_POINTER(this), display);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetRenderFirstFrame(display);
+}
+
 int32_t PlayerImpl::PrepareAsync()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));

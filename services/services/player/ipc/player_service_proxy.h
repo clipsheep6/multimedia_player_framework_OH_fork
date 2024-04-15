@@ -32,6 +32,7 @@ public:
     int32_t Pause() override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;

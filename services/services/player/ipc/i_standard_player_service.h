@@ -35,6 +35,7 @@ public:
     virtual int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) = 0;
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
+    virtual int32_t SetRenderFirstFrame(bool display) = 0;
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
@@ -89,6 +90,7 @@ public:
         ADD_SUB_FD_SOURCE,
         PLAY,
         PREPARE,
+        SET_RENDER_FIRST_FRAME,
         PREPAREASYNC,
         PAUSE,
         STOP,
