@@ -185,7 +185,6 @@ ohos_shared_library("media_service") {
     "observer/media_telephony_listener.cpp",
   ]
 
-
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
