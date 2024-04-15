@@ -493,6 +493,7 @@ int32_t PlayerServer::OnPause()
 
 int32_t PlayerServer::HandlePause()
 {
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     int32_t ret = playerEngine_->Pause();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
 
@@ -1285,20 +1286,15 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
 {
     if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (playerEngine_ != nullptr) {
-            return;
-        }
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg in", FAKE_POINTER(this));
-
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error in", FAKE_POINTER(this));
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
-            MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
+            MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Pause();
             OnErrorCb(errorCode, errorMsg);
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMsg out", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error out", FAKE_POINTER(this));
         return;
     }
     OnErrorCb(errorCode, errorMsg);
