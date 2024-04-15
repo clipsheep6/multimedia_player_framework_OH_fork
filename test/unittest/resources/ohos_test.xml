@@ -122,5 +122,16 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
+    <target name="soundpool_unit_test">
+        <preparer>
+            <option name="push" value="res_soundpool/test_01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="res_soundpool/test_02.mp3 -> /data/test" src="res"/>
+            <option name="push" value="res_soundpool/test_03.mp3 -> /data/test" src="res"/>
+            <option name="push" value="res_soundpool/test_04.mp3 -> /data/test" src="res"/>
+            <option name="push" value="res_soundpool/test_05.ogg -> /data/test" src="res"/>
+            <option name="push" value="res_soundpool/test_06.ogg -> /data/test" src="res"/>
+            <option name="shell" value="restorecon /data/test"/>
+        </preparer>
+    </target>
 </configuration>
 

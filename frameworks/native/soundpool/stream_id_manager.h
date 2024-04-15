@@ -36,6 +36,8 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
 
+    int32_t ReorderStream(int32_t streamID, int32_t priority);
+
 private:
     class CacheBufferCallBack : public ISoundPoolCallback {
     public:

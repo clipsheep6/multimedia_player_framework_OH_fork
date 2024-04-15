@@ -73,6 +73,7 @@ bool SoundPool::CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo 
 
 int32_t SoundPool::Load(const std::string url)
 {
+    MEDIA_INFO_LOG("SoundPool::Load url::%{public}s", url.c_str());
     CHECK_AND_RETURN_RET_LOG(!url.empty(), -1, "Failed to obtain SoundPool for load");
     std::lock_guard lock(soundPoolLock_);
     return soundIDManager_->Load(url);
@@ -80,6 +81,7 @@ int32_t SoundPool::Load(const std::string url)
 
 int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 {
+    MEDIA_INFO_LOG("SoundPool::Load fd::%{public}d", fd);
     CHECK_AND_RETURN_RET_LOG((fd > 0 && length > 0 && offset >= 0), -1, "Invalid fd param.");
     std::lock_guard lock(soundPoolLock_);
     return soundIDManager_->Load(fd, offset, length);
@@ -87,6 +89,7 @@ int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 
 int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
 {
+    MEDIA_INFO_LOG("SoundPool::Play soundID::%{public}d ,priority::%{public}d", soundID, playParameters.priority);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, -1, "sound pool have released.");
     std::lock_guard lock(soundPoolLock_);
     std::shared_ptr<SoundParser> soundParser = soundIDManager_->FindSoundParser(soundID);
@@ -97,11 +100,13 @@ int32_t SoundPool::Play(int32_t soundID, PlayParams playParameters)
         return -1;
     }
     const int32_t streamID = streamIdManager_->Play(soundParser, playParameters);
+    MEDIA_INFO_LOG("SoundPool::Play streamID::%{public}d", streamID);
     return streamID;
 }
 
 int32_t SoundPool::Stop(int32_t streamID)
 {
+    MEDIA_INFO_LOG("SoundPool::Stop streamID::%{public}d", streamID);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     std::lock_guard lock(soundPoolLock_);
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
@@ -122,6 +127,7 @@ int32_t SoundPool::SetLoop(int32_t streamID, int32_t loop)
 
 int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
 {
+    MEDIA_INFO_LOG("SoundPool::SetPriority streamID::%{public}d ,priority::%{public}d", streamID, priority);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     std::lock_guard lock(soundPoolLock_);
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
@@ -129,7 +135,9 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
             MEDIA_INFO_LOG("Invalid priority, align priority to min.");
             priority = MIN_STREAM_PRIORITY;
         }
-        return cacheBuffer->SetPriority(streamID, priority);
+        int32_t ret = cacheBuffer->SetPriority(streamID, priority);
+        streamIdManager_->ReorderStream(streamID, priority);
+        return ret;
     }
     return MSERR_INVALID_OPERATION;
 }
@@ -160,6 +168,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
 
 int32_t SoundPool::Unload(int32_t soundID)
 {
+    MEDIA_INFO_LOG("SoundPool::Unload soundID::%{public}d", soundID);
     return soundIDManager_->Unload(soundID);
 }
 
