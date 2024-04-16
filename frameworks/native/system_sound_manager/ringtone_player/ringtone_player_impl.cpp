@@ -184,6 +184,7 @@ std::string RingtonePlayerImpl::GetTitle()
 {
     MEDIA_LOGI("RingtonePlayerImpl::GetTitle");
     std::lock_guard<std::mutex> lock(playerMutex_);
+    CHECK_AND_RETURN_RET_LOG(configuredUri_ != "", "", "Configured uri is null");
     std::string uri = configuredUri_;
     return uri.substr(uri.find_last_of("/") + 1);
 }
