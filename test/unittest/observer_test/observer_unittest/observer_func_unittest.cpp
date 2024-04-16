@@ -17,7 +17,6 @@
 #include <string>
 #include "incall_observer.h"
 #include <cstdlib>
-#include <string>
 
 using namespace std;
 using namespace testing::ext;
@@ -66,9 +65,6 @@ void InCallObserverInnerUnitTest::TearDownTestCase(void) {}
 void InCallObserverInnerUnitTest::SetUp(void)
 {
     std::cout << "[SetUp]: SetUp!!!, test: ";
-    const ::testing::TestInfo *testInfo_ = ::testing::UnitTest::GetInstance()->current_test_info();
-    std::string testName = testInfo_->name();
-    std::cout << testName << std::endl;
 }
 
 void InCallObserverInnerUnitTest::TearDown(void)
