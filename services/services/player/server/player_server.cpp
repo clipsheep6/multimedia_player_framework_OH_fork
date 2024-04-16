@@ -1330,7 +1330,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
-        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+        auto errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
         newInfo.PutIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errorCode);
         newInfo.PutStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), errorMsg);
         playerCb_->OnInfo(type, extra, newInfo);
