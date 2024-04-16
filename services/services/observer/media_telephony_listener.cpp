@@ -39,15 +39,19 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
+    (void)phoneNumber;
     MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
     // skip no sim card CALL_STATUS_UNKNOWN
-    if (callState == (int32_t)TelCallState::CALL_STATUS_ACTIVE ||
-        callState == (int32_t)TelCallState::CALL_STATUS_DIALING ||
-        callState == (int32_t)TelCallState::CALL_STATUS_INCOMING ||
-        callState == (int32_t)TelCallState::CALL_STATUS_HOLDING ||
-        callState == (int32_t)TelCallState::CALL_STATUS_WAITING) {
+    if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ALERTING) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DIALING) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_INCOMING) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_HOLDING) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_WAITING)) {
         InCallObserver::GetInstance().OnCallStateUpdated(true);
-    } else if (callState == (int32_t)TelCallState::CALL_STATUS_DISCONNECTED) {
+    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED) ||
+               callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTING)) {
         InCallObserver::GetInstance().OnCallStateUpdated(false);
     }
 }
@@ -74,6 +78,8 @@ void MediaTelephonyListener::OnCellInfoUpdated(int32_t slotId,
 void MediaTelephonyListener::OnSimStateUpdated(int32_t slotId, OHOS::Telephony::CardType type,
     OHOS::Telephony::SimState state, OHOS::Telephony::LockReason reason)
 {
+    (void)type;
+    (void)reason;
     MEDIA_LOGI("OnSimStateUpdated slotId = %{public}d, simState =  %{public}d", slotId, state);
 }
 

@@ -29,7 +29,6 @@ config("media_service_config") {
     "-FS",
     "-O2",
     "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
@@ -170,10 +169,12 @@ ohos_shared_library("media_service") {
     ]
   }
 
-  sources += [
-    "observer/incall_observer.cpp",
-    "observer/media_telephony_listener.cpp",
-  ]
+  if (multimedia_player_framework_support_screen_capture_stopbycall) {
+    sources += [
+      "observer/incall_observer.cpp",
+      "observer/media_telephony_listener.cpp",
+    ]
+  }
 
   configs = [
     ":media_service_config",

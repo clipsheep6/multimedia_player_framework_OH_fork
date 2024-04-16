@@ -75,7 +75,10 @@
           "config_policy",
           "power_manager",
           "memmgr",
-          "common_event_service"
+          "common_event_service",
+          "call_manager",
+          "core_service",
+          "state_registry"
         ],
         "third_party": [
           "ffmpeg",
