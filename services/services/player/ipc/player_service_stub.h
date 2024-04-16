@@ -46,6 +46,7 @@ public:
     int32_t Prepare() override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
+    int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
@@ -100,6 +101,7 @@ private:
     int32_t AddSubFdSource(MessageParcel &data, MessageParcel &reply);
     int32_t Play(MessageParcel &data, MessageParcel &reply);
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
+    int32_t SetRenderFirstFrame(MessageParcel &data, MessageParcel &reply);
     int32_t PrepareAsync(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);
     int32_t Stop(MessageParcel &data, MessageParcel &reply);
