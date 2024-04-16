@@ -64,7 +64,9 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_NOT_FIND_CONTAINER, "not find a demuxer"},
     {MSERR_EXTEND_START, "extend start error code"},
     {MSERR_AUD_INTERRUPT, "audio interrupted"},
-    {MSERR_USER_NO_PERMISSION, "user no permission"}
+    {MSERR_USER_NO_PERMISSION, "user no permission"},
+    {MSERR_DATA_SOURCE_ERROR_UNKNOWN, "media data source error unknow"},
+    {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -166,6 +168,8 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_NETWORK_TIMEOUT,                     MSERR_EXT_API9_TIMEOUT},
     {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_API9_UNSUPPORT_FORMAT},
     {MSERR_UNKNOWN,                             MSERR_EXT_API9_IO},
+    {MSERR_DATA_SOURCE_IO_ERROR,                MSERR_EXT_API9_IO},
+    {MSERR_DATA_SOURCE_ERROR_UNKNOWN,           MSERR_EXT_API9_IO},
     {MSERR_AUD_INTERRUPT,                       MSERR_EXT_API9_AUDIO_INTERRUPTED},
     {MSERR_USER_NO_PERMISSION,                  MSERR_EXT_API9_NO_PERMISSION}
 };
