@@ -56,6 +56,7 @@ ohos_unittest("incallobserver_unit_test") {
     "core_service:tel_core_service_api",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "init:libbegetutil",
     "player_framework:media_client",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
