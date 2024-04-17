@@ -157,6 +157,8 @@ typedef enum AVPlayerOnInfoType {
      * {@link OH_AVPlayerOnInfo} is the same as {@OH_AudioStream_DeviceChangeReason} in audio framework.
      */
     AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE = 17,
+
+    AV_INFO_TYPE_DRM_INFO_UPDATED = 18,
 } AVPlayerOnInfoType;
 
 /**
@@ -192,8 +194,8 @@ typedef void (*OH_AVPlayerOnError)(OH_AVPlayer *player, int32_t errorCode, const
  * @version 1.0
  */
 typedef struct AVPlayerCallback {
-    OH_AVPlayerOnInfo onInfo;
-    OH_AVPlayerOnError onError;
+    OH_AVPlayerOnInfo onInfo = nullptr;
+    OH_AVPlayerOnError onError = nullptr;
 } AVPlayerCallback;
 
 

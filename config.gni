@@ -165,6 +165,7 @@ MEDIA_PLAYER_HISTREAMER = "//foundation/multimedia/media_foundation"
 MEDIA_PLAYER_C_UTILS = "//commonlibrary/c_utils"
 MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
 MEDIA_PLAYER_GRAPHIC_SURFACE = "//foundation/graphic/graphic_surface"
+MEDIA_DRM_ROOT_DIR = "//foundation/multimedia/drm_framework"
 
 # Fuzz test output path
 MODULE_OUTPUT_PATH = "player_framework/player_framework"

@@ -19,14 +19,18 @@
 #include "native_player_magic.h"
 #include "native_window.h"
 #include "avplayer.h"
-
+#include <securec.h>
+#ifdef SUPPORT_DRM
+#include "foundation/multimedia/drm_framework/interfaces/kits/c/drm_capi/common/native_drm_object.h"
+#endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeAVPlayer"};
     constexpr uint32_t STATE_MAP_LENGTH = 9;
-    constexpr uint32_t INFO_TYPE_LENGTH = 18;
+    constexpr uint32_t INFO_TYPE_LENGTH = 19;
 }
 
 using namespace OHOS::Media;
+using namespace OHOS::DrmStandard;
 class NativeAVPlayerCallback;
 
 typedef struct StateConvert {
@@ -70,6 +74,7 @@ static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_TRACK_INFO_UPDATE, AV_INFO_TYPE_TRACK_INFO_UPDATE },
     { INFO_TYPE_SUBTITLE_UPDATE, AV_INFO_TYPE_SUBTITLE_UPDATE },
     { INFO_TYPE_AUDIO_DEVICE_CHANGE, AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE},
+    { INFO_TYPE_DRM_INFO_UPDATED, AV_INFO_TYPE_DRM_INFO_UPDATED},
 };
 
 struct PlayerObject : public OH_AVPlayer {
@@ -79,19 +84,75 @@ struct PlayerObject : public OH_AVPlayer {
 
     const std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<NativeAVPlayerCallback> callback_ = nullptr;
+    std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
 };
 
+class DrmSystemInfoCallback {
+public:
+    virtual ~DrmSystemInfoCallback() = default;
 
-class NativeAVPlayerCallback : public PlayerCallback {
+    virtual int32_t SetDrmSystemInfoCallback(Player_MediaKeySystemInfoCallback drmSystemInfoCallback) = 0;
+#ifdef SUPPORT_DRM
+    virtual int32_t GetDrmSystemInfos(const Format &infoBody,
+        DRM_MediaKeySystemInfo *mediaKeySystemInfo, struct PlayerObject *playerObj) = 0;
+#endif
+    virtual int32_t SetPlayCallback(AVPlayerCallback callback) = 0;
+};
+
+class NativeAVPlayerCallback : public PlayerCallback, public DrmSystemInfoCallback {
 public:
     NativeAVPlayerCallback(OH_AVPlayer *player, AVPlayerCallback callback)
         : player_(player), callback_(callback) {}
-    virtual ~NativeAVPlayerCallback() = default;
+#ifdef SUPPORT_DRM
+    int32_t GetDrmSystemInfos(const Format &infoBody,
+        DRM_MediaKeySystemInfo *mediaKeySystemInfo, struct PlayerObject *playerObj) override
+    {
+        if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR))) {
+            MEDIA_LOGW("there's no drminfo-update drm_info_addr key");
+            return AV_ERR_INVALID_VAL;
+        }
+        if (!infoBody.ContainKey(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT))) {
+            MEDIA_LOGW("there's no drminfo-update drm_info_count key");
+            return AV_ERR_INVALID_VAL;
+        }
+        uint8_t *drmInfoAddr = nullptr;
+        size_t size  = 0;
+        int32_t infoCount = 0;
+        infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_DRM_INFO_ADDR), &drmInfoAddr, size);
+        CHECK_AND_RETURN_RET_LOG(drmInfoAddr != nullptr && size > 0, AV_ERR_INVALID_VAL, "get drminfo buffer failed");
+        infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT), infoCount);
+        CHECK_AND_RETURN_RET_LOG(infoCount > 0, AV_ERR_INVALID_VAL, "get drminfo count is illegal");
+        DrmInfoItem *drmInfos = reinterpret_cast<DrmInfoItem*>(drmInfoAddr);
+        CHECK_AND_RETURN_RET_LOG(drmInfos != nullptr, AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
+        for (int32_t i = 0; i < infoCount; i++) {
+            DrmInfoItem temp = drmInfos[i];
+            std::stringstream ssConverter;
+            std::string uuid;
+            for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
+                ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
+                uuid = ssConverter.str();
+            }
+            std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
+            playerObj->localDrmInfos_.insert({ uuid, pssh });
+        }
+        int index = 0;
+        for (auto item : playerObj->localDrmInfos_) {
+            int ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].uuid,
+                item.first.size(), item.first.c_str(), item.first.size());
+            int err = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
+                item.second.data(), item.second.size());
+            CHECK_AND_RETURN_RET_LOG((err == 0 && ret == 0), AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
+            mediaKeySystemInfo->psshInfo[index++].dataLen = item.second.size();
+        }
+        mediaKeySystemInfo->psshCount = index;
+        return AV_ERR_OK;
+    }
+#endif
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        if (type == INFO_TYPE_STATE_CHANGE) {
+        if (type == INFO_TYPE_STATE_CHANGE && callback_.onInfo != nullptr) {
             PlayerStates state = static_cast<PlayerStates>(extra);
             player_->state_ = state;
             for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
@@ -101,6 +162,16 @@ public:
                     return;
                 }
             }
+        }
+        if (type == INFO_TYPE_DRM_INFO_UPDATED && player_ != nullptr) {
+#ifdef SUPPORT_DRM
+            struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player_);
+            DRM_MediaKeySystemInfo mediaKeySystemInfo;
+            GetDrmSystemInfos(infoBody, &mediaKeySystemInfo, playerObj);
+            if (drmsysteminfocallback_ != nullptr) {
+                drmsysteminfocallback_(player_, &mediaKeySystemInfo);
+            }
+#endif
         }
 
         if (player_ != nullptr && callback_.onInfo != nullptr) {
@@ -123,9 +194,24 @@ public:
         }
     }
 
+    int32_t SetDrmSystemInfoCallback(Player_MediaKeySystemInfoCallback drmSystemInfoCallback) override
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        drmsysteminfocallback_ = drmSystemInfoCallback;
+        return AV_ERR_OK;
+    }
+
+    int32_t SetPlayCallback(AVPlayerCallback callback) override
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callback_ = callback;
+        return AV_ERR_OK;
+    }
+
 private:
     struct OH_AVPlayer *player_;
     struct AVPlayerCallback callback_;
+    Player_MediaKeySystemInfoCallback drmsysteminfocallback_ = nullptr;
     std::mutex mutex_;
 };
 
@@ -399,7 +485,11 @@ OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     CHECK_AND_RETURN_RET_LOG(callback.onInfo != nullptr, AV_ERR_INVALID_VAL, "onInfo is null");
     CHECK_AND_RETURN_RET_LOG(callback.onError != nullptr, AV_ERR_INVALID_VAL, "onError is null");
-    playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, callback);
+    if (playerObj->callback_ == nullptr) {
+        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, callback);
+    } else {
+        playerObj->callback_->SetPlayCallback(callback);
+    }
     int32_t ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetPlayerCallback failed");
     return AV_ERR_OK;
@@ -432,5 +522,79 @@ OH_AVErrCode OH_AVPlayer_GetCurrentTrack(OH_AVPlayer *player, int32_t trackType,
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->GetCurrentTrack(trackType, *index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player GetCurrentTrack failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetMediaKeySystemInfoCallback(OH_AVPlayer *player,
+    Player_MediaKeySystemInfoCallback callback)
+{
+#ifdef SUPPORT_DRM
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "MediaKeySystemInfoCallback is null");
+    
+    if (playerObj->callback_ == nullptr) {
+        static AVPlayerCallback playCallback = { nullptr, nullptr };
+        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, playCallback);
+        int32_t ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetDrmSystemInfoCallback failed");
+        ret = playerObj->callback_->SetDrmSystemInfoCallback(callback);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetDrmSystemInfoCallback failed");
+    } else {
+        int32_t ret = playerObj->callback_->SetDrmSystemInfoCallback(callback);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetDrmSystemInfoCallback failed");
+    }
+#else
+    (void)player;
+    (void)callback;
+#endif
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_GetMediaKeySystemInfo(OH_AVPlayer *player, DRM_MediaKeySystemInfo *mediaKeySystemInfo)
+{
+#ifdef SUPPORT_DRM
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(!playerObj->localDrmInfos_.empty(), AV_ERR_INVALID_VAL, "localDrmInfos_ is null");
+    mediaKeySystemInfo->psshCount = playerObj->localDrmInfos_.size();
+    int index = 0;
+    for (auto item : playerObj->localDrmInfos_) {
+        int ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].uuid, item.first.size(),
+            item.first.c_str(), item.first.size());
+        CHECK_AND_RETURN_RET_LOG(ret ==0, AV_ERR_INVALID_VAL, "no memory");
+        ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
+            item.second.data(), item.second.size());
+        CHECK_AND_RETURN_RET_LOG(ret ==0, AV_ERR_INVALID_VAL, "no memory");
+        mediaKeySystemInfo->psshInfo[index++].dataLen = item.second.size();
+    }
+#else
+    (void)player;
+    (void)mediaKeySystemInfo;
+#endif
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetDecryptionConfig(OH_AVPlayer *player, MediaKeySession *mediaKeySession,
+    bool secureVideoPath)
+{
+#ifdef SUPPORT_DRM
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    struct MediaKeySessionObject *sessionObject = reinterpret_cast<MediaKeySessionObject *>(mediaKeySession);
+    CHECK_AND_RETURN_RET_LOG(sessionObject != nullptr, AV_ERR_INVALID_VAL, "sessionObject is null");
+    CHECK_AND_RETURN_RET_LOG(sessionObject->sessionImpl_ != nullptr, AV_ERR_INVALID_VAL, "sessionObject is null");
+    int32_t ret =
+        playerObj->player_->SetDecryptConfig(sessionObject->sessionImpl_->GetMediaKeySessionServiceProxy(),
+            secureVideoPath);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetDecryptConfig failed");
+#else
+    (void)player;
+    (void)mediaKeySession;
+    (void)secureVideoPath;
+#endif
     return AV_ERR_OK;
 }
