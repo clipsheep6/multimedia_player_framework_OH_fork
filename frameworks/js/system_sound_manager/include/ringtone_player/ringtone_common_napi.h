@@ -33,12 +33,14 @@
 
 namespace OHOS {
 namespace Media {
+const int32_t NAPI_ERR_PERMISSION_DENIED = 202;
 const int32_t  NAPI_ERR_INPUT_INVALID = 401;
 const int32_t  NAPI_ERR_INVALID_PARAM = 6800101;
 const int32_t  NAPI_ERR_NO_MEMORY = 6800102;
 const int32_t  NAPI_ERR_UNSUPPORTED = 6800104;
 const int32_t  NAPI_ERR_SYSTEM = 6800301;
 
+const std::string NAPI_ERROR_PERMISSION_DENIED_INFO = "not system app";
 const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter type or number mismatch";
 const std::string NAPI_ERR_INVALID_PARAM_INFO = "invalid parameter";
 const std::string NAPI_ERR_NO_MEMORY_INFO = "allocate memory failed";

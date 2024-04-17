@@ -374,6 +374,113 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
     return systemToneUri;
 }
 
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(const shared_ptr<Context> &context, RingtoneType ringtoneType)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
+
+    //向下调用inner接口， 暂无接口， 先用log代替
+//     ringtonePlayerMap_[ringtoneType] = GetDefaultRingtoneAttrs();
+     MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    if (defaultRingtoneAttrsMap_[ringtoneType] == nullptr) {
+        MEDIA_LOGI("The defaultRingtoneAttrs is empty.");
+    }
+    return defaultRingtoneAttrsMap_[ringtoneType] ;
+}
+
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
+    RingtoneType ringtoneType)
+{
+    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return toneAttrsArray_;
+}
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
+    SystemToneType systemToneType)
+{
+    MEDIA_LOGI("Get defaultSystemToneAttrs success");
+    if (defaultSystemToneAttrsMap_[systemToneType] == nullptr) {
+        MEDIA_LOGI("The defaultSystemToneAttrs is empty.");
+    }
+    return defaultSystemToneAttrsMap_[systemToneType] ;
+}
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
+    SystemToneType systemToneType)
+{
+    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return toneAttrsArray_;
+}
+int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    std::string key = "ringtone_for_sim_card_0";//与鸿蒙联调， 先写ringtone的key,卡一的通话铃声
+
+    MEDIA_LOGI("SetAlarmToneUri:  uri： %{public}s", uri.c_str());
+    int32_t result = WriteUriToDatabase(key, uri);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_OPERATION,
+        "Failed to write alarmTone uri to database: result %{public}d", result);
+    return result;
+}
+
+std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)
+{
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    std::string key = "ringtone_for_sim_card_0";//与鸿蒙联调， 先写ringtone的key,卡一的通话铃声
+    std::string alarmToneUri = GetUriFromDatabase(key);
+    if (alarmToneUri == "") {
+        MEDIA_LOGI("The current alarm tone uri is empty.");
+        return nullptr;
+    }
+    MEDIA_LOGI("GetAlarmToneUri: key [%{public}s], alarmToneUri [%{public}s]", key.c_str(), alarmToneUri.c_str());
+    return alarmToneUri;
+}
+
+std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return defaultAlarmAttrs_;
+}
+std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context)
+{
+    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return toneAttrsArray_;
+}
+int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return MSERR_OK;
+}
+int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return MSERR_OK;
+}
+std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+    const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return nullptr;
+}
+std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
+    const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return nullptr;
+}
+std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
+    const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return nullptr;
+}
+int32_t SystemSoundManagerImpl::RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
+{
+    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    return MSERR_OK;
+}
+
 int32_t SystemSoundManagerImpl::SetRingerMode(const AudioStandard::AudioRingerMode &ringerMode)
 {
     ringerMode_.store(ringerMode);
