@@ -842,6 +842,9 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
         MEDIA_LOG_E("SetPlaybackSpeed syncManager set audio speed error.");
         return MSERR_UNKNOWN;
     }
+    if (demuxer_ != nullptr) {
+        demuxer_->SetSpeed(speed);
+    }
     playbackRateMode_ = mode;
     Format format;
     callbackLooper_.OnInfo(INFO_TYPE_SPEEDDONE, mode, format);
@@ -1114,6 +1117,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         ret = Status::ERROR_INVALID_DATA;
     }
     SetBundleName(bundleName_);
+    demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());
     pipeline_->AddHeadFilters({demuxer_});
     return ret;
 }
