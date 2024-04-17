@@ -1073,6 +1073,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_BITRATE_COLLECT: {
+            HandleBitRatesCollectEvent(event);
+            break;
+        }
         default:
             break;
     }
@@ -1579,5 +1583,17 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif
+
+void HiPlayerImpl::HandleBitRatesCollectEvent(const Event& event)
+{
+    std::vector<uint32_t> *vct = AnyCast<std::vector<uint32_t> *>(event.param);
+    if (vct && vct->size() > 0) {
+        uint8_t* data = static_cast<uint8_t *>(static_cast<void *>(vct->data()));
+        size_t dataLen = vct->size() * sizeof(uint32_t);
+        Format bitRateFormat;
+        (void)bitRateFormat.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE), data, dataLen);
+        callbackLooper_.OnInfo(INFO_TYPE_BITRATE_COLLECT, 0, bitRateFormat);
+    }
+}
 }  // namespace Media
 }  // namespace OHOS

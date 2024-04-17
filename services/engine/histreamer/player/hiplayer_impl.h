@@ -119,6 +119,7 @@ private:
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
     void NotifyPositionUpdate();
+    void HandleBitRatesCollectEvent(const Event& event);
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     void DoInitializeForHttp();
