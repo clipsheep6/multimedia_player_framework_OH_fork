@@ -1154,6 +1154,70 @@ HWTEST_F(PlayerUnitTest, Player_GetAudioTrackInfo_001, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test SelectTrack and DeselectTrack API
+ * @tc.number: Player_SelectTrack_001
+ * @tc.desc  : Test Player SelectTrack and DeselectTrack
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_001, TestSize.Level0)
+{
+    bool trackChange = false;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    sleep(waitsecond);
+    trackChange = false;
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(1, trackChange));
+    sleep(waitsecond);
+    trackChange = false;
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2, trackChange));
+    sleep(waitsecond);
+    trackChange = false;
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(1, trackChange));
+    sleep(waitsecond);
+    trackChange = false;
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(1, trackChange));
+    sleep(waitsecond);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test SelectTrack API
+ * @tc.number: Player_SelectTrack_002
+ * @tc.desc  : Test Player SelectTrack invalid trackId
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_002, TestSize.Level0)
+{
+    bool trackChange = false;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    sleep(waitsecond);
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2, trackChange));
+    sleep(waitsecond);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test DeselectTrack API
+ * @tc.number: Player_DeselectTrack_001
+ * @tc.desc  : Test Player DeselectTrack invalid trackId
+ */
+HWTEST_F(PlayerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
+{
+    bool trackChange = false;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE2));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    sleep(waitsecond);
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(2, trackChange));
+    sleep(waitsecond);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
  * @tc.name  : Test GetVideoHeight API
  * @tc.number: Player_GetVideoHeight_001
  * @tc.desc  : Test Player GetVideoHeight
