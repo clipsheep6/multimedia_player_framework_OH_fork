@@ -226,7 +226,7 @@ bool SoundPool::CheckVolumeVaild(float *leftVol, float *rightVol)
     }
     if (*leftVol != *rightVol) {
         MEDIA_LOGI("left volume %{public}f set not eq the right volume %{public}f ,use the left volume",
-                       *leftVol, *rightVol);
+            *leftVol, *rightVol);
         *rightVol = *leftVol;
     }
     return true;

@@ -34,11 +34,11 @@ namespace Media {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
 static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
-std::atomic<int32_t> activeSessionId(-1);
+std::atomic<int32_t> activeSessionId_(-1);
 
-// As in the ScreenCaptureServer destructor function mutexGlobal is required to update serverMap
-// MAKE SURE THAT when mutexGlobal is been holding MUST NOT trigger ScreenCaptureServer destructor to be called
-std::mutex mutexGlobal;
+// As in the ScreenCaptureServer destructor function mutexGlobal_ is required to update serverMap
+// MAKE SURE THAT when mutexGlobal_ is been holding MUST NOT trigger ScreenCaptureServer destructor to be called
+std::mutex mutexGlobal_;
 
 std::shared_ptr<OHOS::Media::ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id)
 {
@@ -94,10 +94,10 @@ void NotificationSubscriber::OnResponse(int32_t notificationId,
     MEDIA_LOGI("NotificationSubscriber OnResponse notificationId : %{public}d, ButtonName : %{public}s ",
         notificationId, (buttonOption->GetButtonName()).c_str());
 
-    // To avoid deadlock: first release mutexGlobal, then be destructed
+    // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<OHOS::Media::ScreenCaptureServer> server;
     {
-        std::unique_lock<std::mutex> lock(mutexGlobal);
+        std::unique_lock<std::mutex> lock(mutexGlobal_);
         server = GetScreenCaptureServerByIdWithLock(notificationId);
     }
     if (server == nullptr) {
@@ -127,19 +127,19 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     int32_t countForUid = 0;
     int32_t newSessionId = 0;
 
-    // To avoid deadlock: first release mutexGlobal, then be destructed
+    // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> server;
     for (int32_t i = 0; i < MAX_SESSION_ID; i++) {
-        // To avoid deadlock: first release mutexGlobal, then be destructed
+        // To avoid deadlock: first release mutexGlobal_, then be destructed
         {
-            std::unique_lock<std::mutex> lock(mutexGlobal);
+            std::unique_lock<std::mutex> lock(mutexGlobal_);
             server = GetScreenCaptureServerByIdWithLock(newSessionId);
         }
         if (server != nullptr) {
             newSessionId++;
             countForUid += (server->appInfo_.appUid == serverTemp->appInfo_.appUid) ? 1 : 0;
-            // To avoid deadlock: first release mutexGlobal, then be destructed
-            // Do this without holding mutexGlobal to avoid dead lock when set nullptr trigger server destruct
+            // To avoid deadlock: first release mutexGlobal_, then be destructed
+            // Do this without holding mutexGlobal_ to avoid dead lock when set nullptr trigger server destruct
             server = nullptr;
             continue;
         }
@@ -149,7 +149,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
             return nullptr;
         }
         {
-            std::unique_lock<std::mutex> lock(mutexGlobal);
+            std::unique_lock<std::mutex> lock(mutexGlobal_);
             serverMap.insert(std::make_pair(newSessionId, serverTemp));
             MEDIA_LOGI("ScreenCaptureServer::Create newSessionId: %{public}d, serverMap size:%{public}zu",
                 newSessionId, serverMap.size());
@@ -170,10 +170,10 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
 {
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
 
-    // To avoid deadlock: first release mutexGlobal, then be destructed
+    // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> server;
     {
-        std::lock_guard<std::mutex> lock(mutexGlobal);
+        std::lock_guard<std::mutex> lock(mutexGlobal_);
         server = GetScreenCaptureServerByIdWithLock(sessionId);
     }
     if (server == nullptr) {
@@ -181,12 +181,12 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         return MSERR_UNKNOWN;
     }
 
-    // To avoid deadlock: first release mutexGlobal, then be destructed
+    // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> currentServer;
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
-        std::lock_guard<std::mutex> lock(mutexGlobal);
-        if (activeSessionId.load() >= 0) {
-            currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId.load());
+        std::lock_guard<std::mutex> lock(mutexGlobal_);
+        if (activeSessionId_.load() >= 0) {
+            currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
             if (currentServer != nullptr) {
                 MEDIA_LOGW("ReportAVScreenCaptureUserChoice uid(%{public}d) is interrupted by uid(%{public}d)",
                     currentServer->appInfo_.appUid, server->appInfo_.appUid);
@@ -194,11 +194,11 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
                     AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
             }
         }
-        activeSessionId.store(SESSION_ID_INVALID);
+        activeSessionId_.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "ReportAVScreenCaptureUserChoice user choice is true but start failed");
-        activeSessionId.store(sessionId);
+        activeSessionId_.store(sessionId);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
@@ -1346,7 +1346,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
 
 int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
 {
-    int32_t size = captureConfig_.videoInfo.videoCapInfo.taskIDs.size();
+    int32_t size = static_cast<int32_t>(captureConfig_.videoInfo.videoCapInfo.taskIDs.size());
     std::list<int32_t> taskIDListTemp = captureConfig_.videoInfo.videoCapInfo.taskIDs;
     for (int32_t i = 0; i < size; i++) {
         int32_t taskId = taskIDListTemp.front();
@@ -1594,10 +1594,10 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     }
     BehaviorEventWriteForScreenCapture("stop", "AVScreenCapture", appInfo_.appUid, appInfo_.appPid);
 
-    MEDIA_LOGI("StopScreenCaptureInner sessionId:%{public}d, activeSessionId:%{public}d", sessionId_,
-        activeSessionId.load());
-    if (sessionId_ == activeSessionId.load()) {
-        activeSessionId.store(SESSION_ID_INVALID);
+    MEDIA_LOGI("StopScreenCaptureInner sessionId:%{public}d, activeSessionId_:%{public}d", sessionId_,
+        activeSessionId_.load());
+    if (sessionId_ == activeSessionId_.load()) {
+        activeSessionId_.store(SESSION_ID_INVALID);
     }
 }
 
@@ -1631,7 +1631,7 @@ void ScreenCaptureServer::ReleaseInner()
             FAKE_POINTER(this), sessionId);
     }
     {
-        std::lock_guard<std::mutex> lock(mutexGlobal);
+        std::lock_guard<std::mutex> lock(mutexGlobal_);
         serverMap.erase(sessionId);
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));

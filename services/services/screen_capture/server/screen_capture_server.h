@@ -262,8 +262,8 @@ private:
     std::string url_;
     OutputFormatType fileFormat_;
     int32_t outputFd_ = -1;
-    int32_t audioSourceId_;
-    int32_t videoSourceId_;
+    int32_t audioSourceId_ = 0;
+    int32_t videoSourceId_ = 0;
 
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);

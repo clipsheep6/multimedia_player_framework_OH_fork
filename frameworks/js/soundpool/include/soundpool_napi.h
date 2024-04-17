@@ -172,7 +172,7 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
     int32_t priority_ = 0;
     float leftVolume_ = 0.0f;
     float rightVolume_ = 0.0f;
-    AudioStandard::AudioRendererRate renderRate_;
+    AudioStandard::AudioRendererRate renderRate_ = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
 };
 } // namespace Media
 } // namespace OHOS

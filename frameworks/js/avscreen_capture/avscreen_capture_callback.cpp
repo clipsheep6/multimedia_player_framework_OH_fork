@@ -121,7 +121,9 @@ void AVScreenCaptureCallback::OnJsErrorCallBack(AVScreenCaptureJsCallback *jsCb)
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
+        MEDIA_LOGD("OnJsErrorCallBack uv_queue_work_with_qos");
+    }, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         if (work->data == nullptr) {
@@ -192,7 +194,9 @@ void AVScreenCaptureCallback::OnJsStateChangeCallBack(AVScreenCaptureJsCallback 
     };
 
     work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {
+        MEDIA_LOGD("OnJsStateChangeCallBack uv_queue_work_with_qos");
+    }, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         AVScreenCaptureJsCallback *event = reinterpret_cast<AVScreenCaptureJsCallback *>(work->data);

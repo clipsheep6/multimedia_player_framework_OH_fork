@@ -51,7 +51,7 @@ private:
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
-    DataType dataType_;
+    DataType dataType_ = DataType::INVAILD;
     bool isPrivacyAuthorityEnabled_ = false;
 };
 } // namespace Media

@@ -139,7 +139,7 @@ int32_t CacheBuffer::ReCombineCacheData()
     size_t bufferSize;
     audioRenderer_->GetBufferSize(bufferSize);
     // Prevent data from crossing boundaries, ensure recombine data largest.
-    size_t reCombineCacheDataSize = (cacheDataTotalSize_ + bufferSize - 1) / bufferSize;
+    unsigned long reCombineCacheDataSize = (cacheDataTotalSize_ + bufferSize - 1) / bufferSize;
     std::shared_ptr<AudioBufferEntry> preAudioBuffer = cacheData_.front();
     size_t preAudioBufferIndex = 0;
     for (size_t reCombineCacheDataNum = 0; reCombineCacheDataNum < reCombineCacheDataSize; reCombineCacheDataNum++) {

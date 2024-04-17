@@ -89,7 +89,11 @@ napi_value SoundPoolNapi::Constructor(napi_env env, napi_callback_info info)
 
     soundPoolNapi->env_ = env;
     soundPoolNapi->soundPool_ = SoundPoolFactory::CreateSoundPool(maxStreams, rendererInfo);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi->soundPool_ != nullptr, result, "failed to CreateSoundPool");
+    if (soundPoolNapi->soundPool_ == nullptr) {
+        delete soundPoolNapi;
+        MEDIA_LOGE("failed to CreateSoundPool");
+        return result;
+    }
 
     if (soundPoolNapi->callbackNapi_ == nullptr && soundPoolNapi->soundPool_ != nullptr) {
         soundPoolNapi->callbackNapi_ = std::make_shared<SoundPoolCallBackNapi>(env);
@@ -150,8 +154,9 @@ napi_value SoundPoolNapi::JsCreateSoundPool(napi_env env, napi_callback_info inf
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsCreateSoundPool", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        MEDIA_LOGD("JsCreateSoundPool napi_create_async_work");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
@@ -198,8 +203,9 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
             MEDIA_LOGI("The js thread of load finishes execution and returns, soundId: %{public}d", soundId);
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsLoad napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     }
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -243,8 +249,9 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
             MEDIA_LOGI("The js thread of play finishes execution and returns, streamId: %{public}d", streamId);
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsPlay napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     }
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -287,8 +294,9 @@ napi_value SoundPoolNapi::JsStop(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsStop napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
@@ -335,8 +343,9 @@ napi_value SoundPoolNapi::JsSetLoop(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsSetLoop napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
@@ -384,8 +393,9 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsSetPriority napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
@@ -424,8 +434,9 @@ napi_value SoundPoolNapi::JsSetRate(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsSetRate napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
@@ -465,8 +476,9 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsSetVolume napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
@@ -511,8 +523,9 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     } else {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+            MEDIA_LOGD("JsUnload napi_create_async_work");
+        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     }
     asyncCtx.release();
