@@ -42,17 +42,20 @@ namespace OHOS {
 namespace Media {
 using namespace Pipeline;
 using namespace OHOS::Media::Plugins;
+using namespace OHOS::HiviewDFX;
 const std::string BUNDLE_NAME_FIRST = "com.hua";
 const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
 public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl)
     {
+        MEDIA_LOG_I("PlayerEventReceiver ctor called.");
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
     void OnEvent(const Event &event)
     {
+        MEDIA_LOG_I("PlayerEventReceiver OnEvent.");
         hiPlayerImpl_->OnEvent(event);
     }
 
@@ -64,11 +67,13 @@ class PlayerFilterCallback : public FilterCallback {
 public:
     explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
     {
+        MEDIA_LOG_I("PlayerFilterCallback ctor called.");
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
     Status OnCallback(const std::shared_ptr<Filter>& filter, FilterCallBackCommand cmd, StreamType outType)
     {
+        MEDIA_LOG_I("PlayerFilterCallback OnCallback.");
         return hiPlayerImpl_->OnCallback(filter, cmd, outType);
     }
 
@@ -76,6 +81,7 @@ private:
     HiPlayerImpl* hiPlayerImpl_;
 };
 
+HiviewDFX::HiTraceId traceId;
 HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
@@ -85,16 +91,22 @@ HiPlayerImpl::HiPlayerImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, 
     syncManager_ = std::make_shared<MediaSyncManager>();
     callbackLooper_.SetPlayEngine(this);
     bundleName_ = GetClientBundleName(appUid);
+    traceId = HiTraceChain::Begin("hiPlayerImpl", HITRACE_FLAG_DEFAULT);
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    meta->SetData(Tag::PLAYER_NAME, "video_hw_decoder#player");
+    MediaChainManager::AddInfo(meta);
 }
 
 HiPlayerImpl::~HiPlayerImpl()
 {
     MEDIA_LOG_I("~HiPlayerImpl dtor called.");
     ReleaseInner();
+    HiTraceChain::End(traceId);
 }
 
 void HiPlayerImpl::ReleaseInner()
 {
+    MediaTrace trace("HiPlayerImpl::ReleaseInner");
     pipeline_->Stop();
     audioSink_.reset();
 #ifdef SUPPORT_VIDEO
@@ -189,6 +201,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 
 int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
+    MediaTrace trace("HiPlayerImpl::SetMediaSource.");
     MEDIA_LOG_I("SetMediaSource entered media source stream");
     if (mediaSource == nullptr) {
         return MSERR_INVALID_VAL;
@@ -249,6 +262,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
     if (dataSrc_ != nullptr) {
+        MEDIA_LOG_I("DoSetSource dataSrc_");
         ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
     } else {
         if (!header_.empty()) {
@@ -305,6 +319,7 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 void HiPlayerImpl::DoInitializeForHttp()
 {
     if (!isNetWorkPlay_) {
+        MEDIA_LOG_I("DoInitializeForHttp failed, is not network play");
         return;
     }
     std::vector<uint32_t> vBitRates;
@@ -330,6 +345,7 @@ int32_t HiPlayerImpl::Play()
     MEDIA_LOG_I("Play entered.");
     int32_t ret = MSERR_INVALID_VAL;
     callbackLooper_.StartReportMediaProgress(100); // 100 ms
+    MEDIA_LOG_I("Current pipeline state is %{public}d", static_cast<uint32_t>(pipelineStates_));
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
         ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
@@ -506,6 +522,8 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 
 int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
+    MediaTrace trace("HiPlayerImpl::Seek.");
+    MEDIA_LOG_I("Seek.");
     return TransStatus(Seek(mSeconds, mode, true));
 }
 
@@ -852,6 +870,7 @@ int32_t HiPlayerImpl::GetPlaybackSpeed(PlaybackRateMode& mode)
 
 bool HiPlayerImpl::IsVideoMime(const std::string& mime)
 {
+    MEDIA_LOG_I("video mime type is : %{public}s", mime.c_str());
     return mime.find("video/") == 0;
 }
 
@@ -986,6 +1005,7 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 
 void HiPlayerImpl::OnEvent(const Event &event)
 {
+    MEDIA_LOG_I("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_IS_LIVE_STREAM: {
             HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
@@ -1034,10 +1054,12 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
     }
     OnEventSub(event);
+    MEDIA_LOG_I("OnEvent out.");
 }
 
 void HiPlayerImpl::OnEventSub(const Event &event)
 {
+    MEDIA_LOG_I("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_AUDIO_DEVICE_CHANGE : {
             NotifyAudioDeviceChange(event);
@@ -1064,6 +1086,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 {
+    MEDIA_LOG_I("HandleInitialPlayingStateChange");
     if (!isInitialPlay_) {
         return;
     }
@@ -1086,6 +1109,7 @@ void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
 
 Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 {
+    MediaTrace trace("HiPlayerImpl::DoSetSource");
     ResetIfSourceExisted();
     demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
         FilterType::FILTERTYPE_DEMUXER);
@@ -1162,6 +1186,7 @@ void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 
 void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 {
+    MEDIA_LOG_I("NotifyBufferingEnd");
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
@@ -1169,6 +1194,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 
 void HiPlayerImpl::HandleCompleteEvent(const Event& event)
 {
+    MEDIA_LOG_I("HandleCompleteEvent");
     for (std::pair<std::string, bool>& item: completeState_) {
         if (item.first == event.srcFilter) {
             MEDIA_LOG_I("one eos event received " PUBLIC_LOG_S, item.first.c_str());
@@ -1275,6 +1301,7 @@ void HiPlayerImpl::HandleResolutionChangeEvent(const Event& event)
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
 {
+    MEDIA_LOG_I("UpdateStateNoLock");
     if (pipelineStates_ == newState) {
         return;
     }
@@ -1325,6 +1352,7 @@ void HiPlayerImpl::NotifyBufferingUpdate(const std::string_view& type, int32_t p
 {
     Format format;
     format.PutIntValue(std::string(type), param);
+    MEDIA_LOG_I("NotifyBufferingUpdate param " PUBLIC_LOG_D32, param);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, durationMs_.load(), format);
 }
 
@@ -1356,6 +1384,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
 
 void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 {
+    MEDIA_LOG_I("NotifyAudioInterrupt");
     Format format;
     auto interruptEvent = AnyCast<AudioStandard::InterruptEvent>(event.param);
     int32_t hintType = interruptEvent.hintType;
@@ -1389,6 +1418,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
 
 void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
 {
+    MEDIA_LOG_I("NotifyAudioDeviceChange");
     auto [deviceInfo, reason] = AnyCast<std::pair<AudioStandard::DeviceInfo,
         AudioStandard::AudioStreamDeviceChangeReason>>(event.param);
     Format format;
@@ -1452,7 +1482,7 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
 
 Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd, StreamType outType)
 {
-    MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, ");
+    MEDIA_LOG_I("HiPlayerImpl::OnCallback filter, outType: %{public}d", outType);
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case StreamType::STREAMTYPE_RAW_AUDIO:

@@ -87,6 +87,7 @@ ohos_static_library("media_engine_histreamer_player") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
+    "hitrace:libhitracechain"
   ]
 
   subsystem_name = "multimedia"

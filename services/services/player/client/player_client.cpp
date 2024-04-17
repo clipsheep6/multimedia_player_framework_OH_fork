@@ -81,6 +81,7 @@ void PlayerClient::MediaServerDied()
 
 int32_t PlayerClient::SetSource(const std::string &url)
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetSource url in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetSource(url);
@@ -88,6 +89,7 @@ int32_t PlayerClient::SetSource(const std::string &url)
 
 int32_t PlayerClient::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetSource dataSrc in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_NO_MEMORY, "data source is nullptr");
@@ -102,6 +104,7 @@ int32_t PlayerClient::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
 
 int32_t PlayerClient::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetSource in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetSource(fd, offset, size);
@@ -131,6 +134,7 @@ int32_t PlayerClient::AddSubSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerClient::Play()
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Play in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     (void)EnableMonitor();
@@ -146,6 +150,7 @@ int32_t PlayerClient::Prepare()
 
 int32_t PlayerClient::PrepareAsync()
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->PrepareAsync();
@@ -153,6 +158,7 @@ int32_t PlayerClient::PrepareAsync()
 
 int32_t PlayerClient::Pause()
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return DisableWhenOK(playerProxy_->Pause());
@@ -204,6 +210,7 @@ int32_t PlayerClient::SetVolume(float leftVolume, float rightVolume)
 
 int32_t PlayerClient::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
+     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Seek in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->Seek(mSeconds, mode);
@@ -260,6 +267,7 @@ int32_t PlayerClient::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " SetMediaSource in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");

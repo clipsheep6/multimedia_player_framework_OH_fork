@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "hitrace/tracechain.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
@@ -24,6 +25,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
+
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
     MEDIA_LOGD("PlayerImpl: CreatePlayer in");
