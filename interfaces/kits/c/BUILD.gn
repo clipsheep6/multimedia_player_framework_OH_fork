@@ -69,7 +69,6 @@ ohos_shared_library("native_avscreen_capture") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [ "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/screencapture/native_avscreen_capture.cpp" ]
