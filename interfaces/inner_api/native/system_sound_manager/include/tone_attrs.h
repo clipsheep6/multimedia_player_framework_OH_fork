@@ -36,7 +36,7 @@ constexpr int32_t TONE_CATEGORY_ALARM = 8;
 class ToneAttrs {
 public:
     ToneAttrs(std::string title, std::string fileName,
-        std::string url, ToneCustomizedType custType, int32_t category) : title_(title), fileName_(fileName), uri_(uri), custType_(custType) ,category_(category) {}
+        std::string uri, ToneCustomizedType custType, int32_t category) : title_(title), fileName_(fileName), uri_(uri), custType_(custType) ,category_(category) {}
     virtual ~ToneAttrs() = default;
     /**
      * @brief Returns the title of the tone attrs.
