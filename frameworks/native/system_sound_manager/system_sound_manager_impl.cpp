@@ -416,7 +416,7 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     std::lock_guard<std::mutex> lock(uriMutex_);
     std::string key = "ringtone_for_sim_card_0";//与鸿蒙联调， 先写ringtone的key,卡一的通话铃声
 
-    MEDIA_LOGI("SetAlarmToneUri:  uri： %{public}s", uri.c_str());
+    MEDIA_LOGI("SetAlarmToneUri:  uri: %{public}s", uri.c_str());
     int32_t result = WriteUriToDatabase(key, uri);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_OPERATION,
         "Failed to write alarmTone uri to database: result %{public}d", result);
