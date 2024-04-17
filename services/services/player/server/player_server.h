@@ -22,6 +22,8 @@
 #include "uri_helper.h"
 #include "player_server_task_mgr.h"
 #include "audio_effect.h"
+#include "account_subscriber.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -120,6 +122,10 @@ public:
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
+    void OnCommonEventReceived(const std::string &event);
+    uint32_t GetUserId();
+    std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
+
 protected:
     class BaseState;
     class IdleState;
@@ -138,6 +144,7 @@ protected:
     std::shared_ptr<PausedState> pausedState_;
     std::shared_ptr<StoppedState> stoppedState_;
     std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
+    std::shared_ptr<CommonEventReceiver> commonEventReceiver_ = nullptr;
 
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
@@ -204,6 +211,7 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::atomic<bool> inReleasing_ = false;
+    int32_t userId_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

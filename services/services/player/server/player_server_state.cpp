@@ -17,6 +17,8 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_dfx.h"
+#include "account_subscriber.h"
+#include "os_account_manager.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerState"};
@@ -294,6 +296,25 @@ void PlayerServer::PlayingState::HandlePlaybackComplete(int32_t extra)
 void PlayerServer::PlayingState::HandleEos()
 {
     server_.HandleEos();
+}
+
+void PlayerServer::PlayingState::StateEnter()
+{
+    int32_t userId = server_.GetUserId();
+    bool isForeground = true;
+    AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
+    if (!isForeground) {
+        server_.Pause();
+        return;
+    }
+    std::shared_ptr<CommonEventReceiver> receiver = server_.GetCommonEventReceiver();
+    AccountSubscriber::GetInstance()->RegisterCommonEventReceiver(server_.GetUserId(), receiver);
+}
+
+void PlayerServer::PlayingState::StateExit()
+{
+    std::shared_ptr<CommonEventReceiver> receiver = server_.GetCommonEventReceiver();
+    AccountSubscriber::GetInstance()->UnregisterCommonEventReceiver(server_.GetUserId(), receiver);
 }
 
 int32_t PlayerServer::PausedState::Play()

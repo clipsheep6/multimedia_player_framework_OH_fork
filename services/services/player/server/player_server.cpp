@@ -29,6 +29,7 @@
 #include "parameter.h"
 #include "concurrent_task_client.h"
 #include "qos.h"
+#include "player_server_event_receiver.h"
 
 using namespace OHOS::QOS;
 
@@ -129,6 +130,10 @@ int32_t PlayerServer::Init()
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{public}u", appUid_, appPid_, appTokenId_);
 
     PlayerServerStateMachine::Init(idleState_);
+
+    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appUid_, userId_);
+    std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
+    commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
     return MSERR_OK;
 }
 
@@ -1440,6 +1445,32 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
 {
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
+}
+
+void PlayerServer::OnCommonEventReceived(const std::string &event)
+{
+    MEDIA_LOGI("instance: 0x%{public}06" PRIXPTR " receive event %{public}s",
+            FAKE_POINTER(this), event.c_str());
+    if (event == EventFwk::CommonEventSupport::COMMON_EVENT_USER_BACKGROUND) {
+        std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
+        auto pauseTask = std::make_shared<TaskHandler<void>>([server]() {
+            std::shared_ptr<PlayerServer> spServer = server.lock();
+            if (spServer != nullptr) {
+                (void)spServer->Pause();
+            }
+        });
+        taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "receiveccommonevent");
+    }
+}
+
+uint32_t PlayerServer::GetUserId()
+{
+    return userId_;
+}
+
+std::shared_ptr<CommonEventReceiver> PlayerServer::GetCommonEventReceiver()
+{
+    return commonEventReceiver_;
 }
 } // namespace Media
 } // namespace OHOS

@@ -112,6 +112,8 @@ protected:
     void HandleStateChange(int32_t newState) override;
     void HandlePlaybackComplete(int32_t extra) override;
     void HandleEos() override;
+    void StateEnter() override;
+    void StateExit() override;
 };
 
 class PlayerServer::PausedState : public PlayerServer::BaseState {
