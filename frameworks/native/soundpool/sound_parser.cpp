@@ -278,6 +278,13 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
         MEDIA_LOGI("audio raw data, return.");
         CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
         audioDec_->ReleaseOutputBuffer(index);
+        if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || flag == AVCODEC_BUFFER_FLAG_EOS) {
+            decodeShouldCompleted_ = true;
+            audioDec_->Stop();
+            audioDec_->Release();
+            CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain audio demuxer.");
+            demuxer_.reset();
+        }
         return;
     }
     if (buffer != nullptr && !decodeShouldCompleted_) {
@@ -288,6 +295,11 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
             CHECK_AND_RETURN_LOG(callback_ != nullptr, "sound decode:soundpool callback invalid.");
             callback_->OnLoadCompleted(soundID_);
+            CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
+            audioDec_->Stop();
+            audioDec_->Release();
+            CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain audio demuxer.");
+            demuxer_.reset();
             return;
         }
         int32_t size = info.size;
