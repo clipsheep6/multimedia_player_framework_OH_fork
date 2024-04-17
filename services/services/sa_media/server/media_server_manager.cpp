@@ -250,11 +250,6 @@ sptr<IRemoteObject> MediaServerManager::CreateRecorderProfilesStubObject()
 #ifdef SUPPORT_METADATA
 sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
 {
-    constexpr uint32_t metadataHelperNumMax = 32;
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperStubMap_.size() < metadataHelperNumMax,
-        nullptr, "The number of avmetadatahelper services(%{public}zu) has reached the upper limit."
-        "Please release the applied resources.", avMetadataHelperStubMap_.size());
-
     sptr<AVMetadataHelperServiceStub> avMetadataHelperStub = AVMetadataHelperServiceStub::Create();
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperStub != nullptr, nullptr,
         "failed to create AVMetadataHelperServiceStub");
