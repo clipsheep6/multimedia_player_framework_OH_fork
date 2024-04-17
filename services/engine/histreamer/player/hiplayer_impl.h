@@ -73,6 +73,8 @@ public:
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
 
+    int32_t SelectTrack(int32_t trackId)  override;
+    int32_t DeselectTrack(int32_t trackId)  override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetVideoWidth() override;
@@ -206,6 +208,7 @@ private:
     bool preferHDR_ = false;
     bool isInCompleted_ {false};
     std::string playerId_;
+    uint32_t currentAudioTrackId_ = -1;
 };
 } // namespace Media
 } // namespace OHOS
