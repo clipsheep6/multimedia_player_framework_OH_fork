@@ -328,6 +328,47 @@ int32_t RecorderServiceProxy::SetDataSource(DataSourceType dataType, int32_t &so
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    bool ret = userCustomInfo.ToParcel(data);
+    if (!ret) {
+        MEDIA_LOGE("userCustomInfo ToParcel failed");
+    }
+    int error = Remote()->SendRequest(SET_USER_CUSTOM_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetUserCustomInfo failed, error: %{public}d", error);
+
+    sourceId = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetGenre(int32_t sourceId, std::string &genre)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteString(genre);
+    int error = Remote()->SendRequest(SET_GENRE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetGenre failed, error: %{public}d", error);
+
+    sourceId = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetMaxDuration(int32_t duration)
 {
     MessageParcel data;

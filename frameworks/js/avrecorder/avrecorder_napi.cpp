@@ -1308,7 +1308,7 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
         config->withAudio = true;
         MEDIA_LOGI("audioSource Type %{public}d!", audioSource);
     }
-    
+
     ret = AVRecorderNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource, getValue);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVRecorderSignError(ret, "getvideoSourceType", "videoSourceType"), ret));
@@ -1445,15 +1445,16 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
         (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
 
-    napi_value geoLocation = nullptr;
-    napi_get_named_property(env, args, "location", &geoLocation);
-    double tempLatitude = 0;
-    double tempLongitude = 0;
-    (void)CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude);
-    (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
-    config->location.latitude = static_cast<float>(tempLatitude);
-    config->location.longitude = static_cast<float>(tempLongitude);
+    if (CommonNapi::CheckhasNamedProperty(env, args, "location")) {
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
+    }
 
+    if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
+        ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, args);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
+    }
     return MSERR_OK;
 }
 
@@ -1492,6 +1493,68 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
     return MSERR_OK;
 }
 
+int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
+    napi_value args)
+{
+    napi_value metadata = nullptr;
+    if (napi_get_named_property(env, args, "metadata", &metadata) != napi_ok) {
+        return MSERR_INVALID_VAL;
+    }
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, metadata, &valueType) != napi_ok || valueType != napi_object) {
+        if (valueType == napi_undefined) {
+            return MSERR_OK;
+        }
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata");
+        return MSERR_INVALID_VAL;
+    }
+
+    AVMetadata &avMetadata = asyncCtx->config_->metadata;
+
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "location")) {
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
+    }
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
+        avMetadata.genre = CommonNapi::GetPropertyString(env, metadata, "genre");
+    }
+    std::string strRotation = CommonNapi::GetPropertyString(env, metadata, "videoOrientation");
+    if (strRotation == "0" || strRotation == "90" || strRotation == "180" || strRotation == "270") {
+        asyncCtx->config_->rotation = std::stoi(strRotation);
+        MEDIA_LOGI("rotation: %{public}d", asyncCtx->config_->rotation);
+    } else if (strRotation != "") {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "not support rotation", "videoOrientation");
+        return MSERR_INVALID_VAL;
+    }
+    // get customInfo
+    if (CommonNapi::CheckhasNamedProperty(env, metadata, "customInfo")) {
+        CHECK_AND_RETURN_RET(
+            CommonNapi::GetPropertyRecord(env, metadata, avMetadata.customInfo, "customInfo") == napi_ok,
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetCustomInfo", "customInfo"), MSERR_INVALID_VAL));
+    }
+    return MSERR_OK;
+}
+
+bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+{
+    napi_value geoLocation = nullptr;
+    napi_valuetype valueType = napi_undefined;
+    CHECK_AND_RETURN_RET(napi_get_named_property(env, args, "location", &geoLocation) == napi_ok, false);
+    napi_status status = napi_typeof(env, geoLocation, &valueType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+    CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, true, "location undefined");
+    userLocation &location = asyncCtx->config_->metadata.location;
+
+    double tempLatitude = 0;
+    double tempLongitude = 0;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude), false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude), false);
+    location.latitude = static_cast<float>(tempLatitude);
+    location.longitude = static_cast<float>(tempLongitude);
+    asyncCtx->config_->withLocation = true;
+    return true;
+}
+
 RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 {
     int32_t ret;
@@ -1513,7 +1576,7 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetAudioEncodingBitRate(audioSourceID_, profile.audioBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncodingBitRate", "audioBitrate"));
     }
-    
+
     if (config->withVideo) {
         ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncoder", "videoCodecFormat"));
@@ -1561,10 +1624,20 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
     RetInfo retInfo = SetProfile(config);
     CHECK_AND_RETURN_RET_LOG(retInfo.first == MSERR_OK, retInfo, "Fail to set videoBitrate");
 
-    recorder_->SetLocation(config->location.latitude, config->location.longitude);
+    if (config->withLocation) {
+        recorder_->SetLocation(config->metadata.location.latitude, config->metadata.location.longitude);
+    }
 
     if (config->withVideo) {
         recorder_->SetOrientationHint(config->rotation);
+        if (!config->metadata.genre.empty()) {
+            ret = recorder_->SetGenre(videoSourceID_, config->metadata.genre);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetGenre", "Genre"));
+        }
+        if (!config->metadata.customInfo.Empty()) {
+            ret = recorder_->SetUserCustomInfo(videoSourceID_, config->metadata.customInfo);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
+        }
     }
 
     ret = MSERR_INVALID_VAL;
@@ -2005,7 +2078,5 @@ napi_status MediaJsEncoderInfo::GetVideoEncoderInfo(
     CHECK_AND_RETURN_RET(status == napi_ok, napi_generic_failure);
     return napi_ok;
 }
-
-
 } // namespace Media
 } // namespace OHOS

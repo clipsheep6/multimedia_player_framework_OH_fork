@@ -80,6 +80,8 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_MAX_FILE_SIZE] = &RecorderServiceStub::SetMaxFileSize;
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
     recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
+    recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;
+    recFuncs_[SET_GENRE] = &RecorderServiceStub::SetGenre;
     recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
     recFuncs_[START] = &RecorderServiceStub::Start;
     recFuncs_[PAUSE] = &RecorderServiceStub::Pause;
@@ -270,6 +272,18 @@ int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sou
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetDataSource(dataType, sourceId);
+}
+
+int32_t RecorderServiceStub::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetUserCustomInfo(sourceId, userCustomInfo);
+}
+
+int32_t RecorderServiceStub::SetGenre(int32_t sourceId, std::string &genre)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetGenre(sourceId, genre);
 }
 
 int32_t RecorderServiceStub::SetMaxDuration(int32_t duration)
@@ -606,6 +620,28 @@ int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParc
     (void)reply;
     int32_t rotation = data.ReadInt32();
     return SetOrientationHint(rotation);
+}
+
+int32_t RecorderServiceStub::SetUserCustomInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    Meta userCustomInfo;
+    int32_t sourceId = data.ReadInt32();
+    bool ret = userCustomInfo.FromParcel(data);
+    if (!ret) {
+        MEDIA_LOGE("userCustomInfo FromParcel failed");
+    }
+    reply.WriteInt32(SetUserCustomInfo(sourceId, userCustomInfo));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetGenre(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    int32_t sourceId = data.ReadInt32();
+    std::string genre = data.ReadString();
+    reply.WriteInt32(SetGenre(sourceId, genre));
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::Prepare(MessageParcel &data, MessageParcel &reply)

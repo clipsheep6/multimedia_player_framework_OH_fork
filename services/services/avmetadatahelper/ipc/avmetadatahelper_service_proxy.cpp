@@ -143,6 +143,38 @@ std::string AVMetadataHelperServiceProxy::ResolveMetadata(int32_t key)
     return reply.ReadString();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    std::shared_ptr<Meta> metadata = std::make_shared<Meta>();
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, metadata, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(GET_AVMETADATA, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, metadata,
+        "GetAVMetadata failed, error: %{public}d", error);
+
+    bool ret = true;
+    std::string key = reply.ReadString();
+    if (key.compare("customInfo") == 0) {
+        ret &= customInfo->FromParcel(reply);
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "customInfo FromParcel failed");
+
+    key = reply.ReadString();
+    if (key.compare("AVMetadata") == 0) {
+        ret &= metadata->FromParcel(reply);
+    }
+    CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "metadata FromParcel failed");
+
+    metadata->SetData("customInfo", customInfo);
+    return metadata;
+}
+
 std::unordered_map<int32_t, std::string> AVMetadataHelperServiceProxy::ResolveMetadataMap()
 {
     MessageParcel data;

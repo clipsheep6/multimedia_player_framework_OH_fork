@@ -85,6 +85,7 @@ private:
     void ConfigureVideoEncoderFormat(const RecorderParam &recParam);
     void ConfigureVideoEnableTemporalScale(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
+    void ConfigureRotation(const RecorderParam &recParam);
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
@@ -113,6 +114,7 @@ private:
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> muxerFormat_ = std::make_shared<Meta>();
+    std::shared_ptr<Meta> userMeta_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
     std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
