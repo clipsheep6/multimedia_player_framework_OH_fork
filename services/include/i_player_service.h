@@ -112,7 +112,11 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetRenderFirstFrame(bool display) = 0;
+    virtual int32_t SetRenderFirstFrame(bool display)
+    {
+        (void)display;
+        return 0;
+    }
 
     /**
      * @brief Prepares the playback environment and buffers media data asynchronous.
