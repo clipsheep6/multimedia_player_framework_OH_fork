@@ -308,7 +308,7 @@ void PlayerServer::PlayingState::StateEnter()
         return;
     }
     std::shared_ptr<CommonEventReceiver> receiver = server_.GetCommonEventReceiver();
-    AccountSubscriber::GetInstance()->RegisterCommonEventReceiver(server_.GetUserId(), receiver);
+    AccountSubscriber::GetInstance()->RegisterCommonEventReceiver(userId, receiver);
 }
 
 void PlayerServer::PlayingState::StateExit()
