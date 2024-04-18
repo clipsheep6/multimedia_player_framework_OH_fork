@@ -88,6 +88,43 @@ void PlayerUnitTest::PlayFunTest(const std::string &protocol)
     }
 }
 
+void PlayerUnitTest::NoRunPlayFunTest(const std::string &protocol)
+{
+    int32_t duration = 0;
+    if (player_ != nullptr) {
+        EXPECT_NQ(MSERR_OK, player_->GetDuration(duration));
+        EXPECT_NQ(MSERR_OK, player_->Play());
+        EXPECT_FALSE(player_->IsPlaying());
+        EXPECT_NQ(MSERR_OK, player_->GetDuration(duration));
+        EXPECT_NQ(MSERR_OK, player_->Pause());
+        int32_t time;
+        EXPECT_NQ(MSERR_OK, player_->GetCurrentTime(time));
+        std::vector<Format> videoTrack;
+        std::vector<Format> audioTrack;
+        EXPECT_NQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+        EXPECT_NQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+        PlaybackRateMode mode;
+        player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+        player_->GetPlaybackSpeed(mode);
+        EXPECT_NQ(MSERR_OK, player_->SetLooping(true));
+        EXPECT_NQ(true, player_->IsLooping());
+        EXPECT_NQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+        EXPECT_NQ(MSERR_OK, player_->Play());
+        sleep(PLAYING_TIME_2_SEC);
+        if (protocol == PlayerTestParam::HLS_PLAY) {
+            EXPECT_NQ(MSERR_OK, player_->SelectBitRate(200000));  // 200000:bitrate
+            sleep(PLAYING_TIME_2_SEC);
+        }
+        EXPECT_NQ(MSERR_OK, player_->SetLooping(false));
+        EXPECT_EQ(false, player_->IsLooping());
+        EXPECT_NQ(MSERR_OK, player_->SetVolume(1, 1));
+        EXPECT_NQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+        EXPECT_NQ(MSERR_OK, player_->Stop());
+        EXPECT_NQ(MSERR_OK, player_->Reset());
+    }
+}
+
+
 void PlayerUnitTest::GetSetParaFunTest()
 {
     if (player_ != nullptr) {
@@ -344,6 +381,24 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_008, TestSize.Level2)
 {
     int32_t invliadFd = 256; // invliad fd
     EXPECT_NE(MSERR_OK, player_->SetSource(invliadFd, 0, 0));
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_009
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    int32_t ret = player_->PrepareAsync();
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "AVC_Baseline@L1.2_81.0Kbps_320x240.mp4"));
+    if (ret == MSERR_OK) {
+        PlayFunTest(LOCAL_PLAY);
+    }
 }
 
 /**
@@ -840,6 +895,24 @@ HWTEST_F(PlayerUnitTest, Player_Play_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_NE(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test Player Play API
+ * @tc.number: Player_Play_005
+ * @tc.desc  : Test Player is killed Play
+ */
+HWTEST_F(PlayerUnitTest, Player_Play_004, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    int32_t ret = player_->PrepareAsync();
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    if (ret == MSERR_OK) {
+        NoRunPlayFunTest(LOCAL_PLAY);
+    }
 }
 
 /**
@@ -2499,5 +2572,243 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(SPEED_FORWARD_1_50_X, mode);
 }
+
+/**
+ * @tc.name  : Test Player API
+ * @tc.number: Player_SetSurface_004
+ * @tc.desc  : Test Player SetSurface->SetSurface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_004, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    int32_t ret = player_->PrepareAsync();
+    if (ret == MSERR_OK) {
+        PlayFunTest(LOCAL_PLAY);
+    }
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_001
+ * @tc.desc  : Test Player AddSubSource state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(SUBTITLE_0_SEC, player_->GetSubtitleText());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_002
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_5_SEC, player_->GetSubtitleText());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
+    EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText());
+    int duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_10_SEC, player_->GetSubtitleText());
+    sleep(PLAYING_TIME_1_SEC);
+    EXPECT_EQ("", player_->GetSubtitleText());
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_003
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
+    sleep(PLAYING_TIME_1_SEC);
+    EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText());
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_004
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText());
+    sleep(PLAYING_TIME_1_SEC);
+    std::string text = player_->GetSubtitleText();
+    EXPECT_EQ((SUBTITLE_6_SEC == text), true);
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_005
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    sleep(PLAYING_TIME_1_SEC);
+    std::string text = player_->GetSubtitleText();
+    EXPECT_EQ((SUBTITLE_3_SEC == text || SUBTITLE_4_SEC == text), true);
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText());
+}
+
+/**
+ * @tc.name  : Test PlayerServer Stop
+ * @tc.number: PlayerServer_Stop_001
+ * @tc.desc  : Test PlayerServer Stop on different status
+ */
+HWTEST_F(PlayerUnitTest, PlayerServer_Stop_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test PlayerServer Stop
+ * @tc.number: PlayerServer_Stop_002
+ * @tc.desc  : Test PlayerServer Stop on different status
+ */
+HWTEST_F(PlayerUnitTest, PlayerServer_Stop_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test PlayerServer Stop
+ * @tc.number: PlayerServer_Stop_003
+ * @tc.desc  : Test PlayerServer Stop on different status
+ */
+HWTEST_F(PlayerUnitTest, PlayerServer_Stop_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    int32_t duration = 0;
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+    EXPECT_TRUE(player_->IsPlaying());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test PlayerServer Stop
+ * @tc.number: PlayerServer_Stop_004
+ * @tc.desc  : Test PlayerServer Stop on different status
+ */
+HWTEST_F(PlayerUnitTest, PlayerServer_Stop_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
+/**
+ * @tc.name  : Test PlayerServer Stop
+ * @tc.number: PlayerServer_Stop_005
+ * @tc.desc  : Test PlayerServer Stop on different status
+ */
+HWTEST_F(PlayerUnitTest, PlayerServer_Stop_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+}
+
 } // namespace Media
 } // namespace OHOS
