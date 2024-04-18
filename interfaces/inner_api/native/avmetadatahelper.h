@@ -20,8 +20,10 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "buffer/avsharedmemory.h"
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "media_data_source.h"
 #include "nocopyable.h"
 #include "pixel_map.h"
@@ -85,6 +87,34 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {37,    "videoWidth"},
     {38,    "videoOrientation"},
     {39,    "hdrType"},
+};
+
+/**
+ * support metadata parameters
+*/
+static const std::vector<std::string> g_Metadata = {
+    "album",
+    "albumArtist",
+    "artist",
+    "author",
+    "dateTime",
+    "dateTimeFormat",
+    "composer",
+    "duration",
+    "genre",
+    "hasAudio",
+    "hasVideo",
+    "mimeType",
+    "trackCount",
+    "sampleRate",
+    "title",
+    "videoHeight",
+    "videoWidth",
+    "videoOrientation",
+    "hdrType",
+    "latitude",
+    "longitude",
+    "customInfo",
 };
 
 enum HdrType : int32_t {
@@ -207,6 +237,21 @@ enum AVMetadataCode : int32_t {
      * is HDR or not.
      */
     AV_KEY_VIDEO_IS_HDR_VIVID = 39,
+
+    /**
+     * The metadata key to retrieve the information about the location longitude
+    */
+    AV_KEY_LOCATION_LONGITUDE = 40,
+
+    /**
+     * The metadata key to retrieve the information about the location latitude
+    */
+    AV_KEY_LOCATION_LATITUDE = 41,
+
+    /**
+     * Custom parameter key-value map
+    */
+    AV_KEY_CUSTOMINFO = 42,
 };
 
 /**
@@ -363,6 +408,13 @@ public:
      * frame cannot be fetched.
      */
     virtual std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) = 0;
+
+    /**
+     * all meta data.
+     * This method must be called after the SetSource.
+     * @return Returns the meta data values on success; nullptr on failure.
+     */
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
 
     /**
      * Release the internel resource. After this method called, the avmetadatahelper instance

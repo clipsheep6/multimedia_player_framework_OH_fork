@@ -33,6 +33,7 @@ public:
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual std::string ResolveMetadata(int32_t key) = 0;
     virtual std::unordered_map<int32_t, std::string> ResolveMetadataMap() = 0;
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
     virtual std::shared_ptr<AVSharedMemory> FetchArtPicture() = 0;
     virtual std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
@@ -57,6 +58,7 @@ public:
         SET_CALLBACK,
         SET_LISTENER_OBJ,
         MAX_IPC_ID,
+        GET_AVMETADATA,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");

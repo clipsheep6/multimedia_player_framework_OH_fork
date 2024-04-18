@@ -42,6 +42,8 @@ public:
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) override;
     int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) override;
+    int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) override;
+    int32_t SetGenre(int32_t sourceId, std::string &genre) override;
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
