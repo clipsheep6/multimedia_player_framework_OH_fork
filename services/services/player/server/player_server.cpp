@@ -1463,7 +1463,7 @@ void PlayerServer::OnCommonEventReceived(const std::string &event)
     }
 }
 
-int32_t PlayerServer::GetUserId()
+uint32_t PlayerServer::GetUserId()
 {
     return userId_;
 }
