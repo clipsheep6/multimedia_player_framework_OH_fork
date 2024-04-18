@@ -35,8 +35,8 @@ public:
     explicit AccountSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~AccountSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &eventData) override;
-    void RegisterCommonEventReceiver(uint32_t userId, const std::shared_ptr<CommonEventReceiver> &receiver);
-    void UnregisterCommonEventReceiver(uint32_t userId, const std::shared_ptr<CommonEventReceiver> &receiver);
+    void RegisterCommonEventReceiver(int32_t userId, const std::shared_ptr<CommonEventReceiver> &receiver);
+    void UnregisterCommonEventReceiver(int32_t userId, const std::shared_ptr<CommonEventReceiver> &receiver);
 
     static std::shared_ptr<AccountSubscriber> GetInstance();
 private:
@@ -44,7 +44,7 @@ private:
 
     static std::shared_ptr<AccountSubscriber> instance_;
     std::mutex userMutex_;
-    std::map<uint32_t, std::vector<std::shared_ptr<CommonEventReceiver>>> userMap_;
+    std::map<int32_t, std::vector<std::shared_ptr<CommonEventReceiver>>> userMap_;
 };
 } // namespace Media
 } // namespace OHOS

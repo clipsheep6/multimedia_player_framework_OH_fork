@@ -54,7 +54,7 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 {
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
-    uint32_t userId = eventData.GetCode();
+    int32_t userId = eventData.GetCode();
     MEDIA_LOGI("receive action %{public}s, userId %{public}d", action.c_str(), userId);
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_BACKGROUND) {
         std::lock_guard<std::mutex> lock(userMutex_);
@@ -72,7 +72,7 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     }
 }
 
-void AccountSubscriber::RegisterCommonEventReceiver(uint32_t userId,
+void AccountSubscriber::RegisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
     MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
@@ -100,7 +100,7 @@ void AccountSubscriber::RegisterCommonEventReceiver(uint32_t userId,
     mapIt->second.push_back(receiver);
 }
 
-void AccountSubscriber::UnregisterCommonEventReceiver(uint32_t userId,
+void AccountSubscriber::UnregisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
     MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
@@ -122,7 +122,8 @@ void AccountSubscriber::UnregisterCommonEventReceiver(uint32_t userId,
     mapIt->second.erase(receiverIt);
     if (mapIt->second.empty()) {
         userMap_.erase(mapIt);
-        MEDIA_LOGI("remove userId %{public}d, map size %{public}d", userId, userMap_.size());
+        MEDIA_LOGI("remove userId %{public}d, map size %{public}u", userId,
+            static_cast<int32_t>(userMap_.size()));
     }
     if (userMap_.empty()) {
         EventFwk::CommonEventManager::NewUnSubscribeCommonEvent(instance_);

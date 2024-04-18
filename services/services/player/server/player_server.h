@@ -123,7 +123,7 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
     void OnCommonEventReceived(const std::string &event);
-    uint32_t GetUserId();
+    int32_t GetUserId();
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
 
 protected:
