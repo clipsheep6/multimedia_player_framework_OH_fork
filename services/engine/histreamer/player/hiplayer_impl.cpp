@@ -45,8 +45,6 @@ namespace OHOS {
 namespace Media {
 using namespace Pipeline;
 using namespace OHOS::Media::Plugins;
-const std::string BUNDLE_NAME_FIRST = "com.hua";
-const std::string BUNDLE_NAME_SECOND = "wei.hmos.photos";
 class PlayerEventReceiver : public EventReceiver {
 public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
@@ -384,13 +382,8 @@ int32_t HiPlayerImpl::Pause()
         audioSink_->SetVolumeWithRamp(MIN_MEDIA_VOLUME, FADE_OUT_LATENCY);
     }
     Status ret = Status::OK;
-    if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
-        syncManager_->Pause();
-        ret = pipeline_->Pause();
-    } else {
-        ret = pipeline_->Pause();
-        syncManager_->Pause();
-    }
+    syncManager_->Pause();
+    ret = pipeline_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -1128,13 +1121,8 @@ Status HiPlayerImpl::Resume()
 {
     MediaTrace trace("HiPlayerImpl::Resume");
     Status ret = Status::OK;
-    if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
-        ret = pipeline_->Resume();
-        syncManager_->Resume();
-    } else {
-        syncManager_->Resume();
-        ret = pipeline_->Resume();
-    }
+    ret = pipeline_->Resume();
+    syncManager_->Resume();
     if (audioSink_ != nullptr) {
         audioSink_->Resume();
     }
@@ -1369,13 +1357,8 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
         if (hintType == OHOS::AudioStandard::INTERRUPT_HINT_PAUSE
             || hintType == OHOS::AudioStandard::INTERRUPT_HINT_STOP) {
             Status ret = Status::OK;
-            if (bundleName_ == (BUNDLE_NAME_FIRST + BUNDLE_NAME_SECOND)) {
-                syncManager_->Pause();
-                ret = pipeline_->Pause();
-            } else {
-                ret = pipeline_->Pause();
-                syncManager_->Pause();
-            }
+            syncManager_->Pause();
+            ret = pipeline_->Pause();
             if (audioSink_ != nullptr) {
                 audioSink_->Pause();
             }
