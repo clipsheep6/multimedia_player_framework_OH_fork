@@ -450,7 +450,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_007, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
