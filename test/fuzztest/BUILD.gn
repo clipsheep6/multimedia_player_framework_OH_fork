@@ -28,6 +28,7 @@ group("fuzztest") {
     "player_fuzztest/playerservicestub_fuzzer:PlayerServiceStubFuzzTest",
     "player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
     "player_fuzztest/playerstub_fuzzer:PlayerStubFuzzTest",
+    "recorder_fuzztest/recorderservicestub_fuzzer:RecorderServiceStubFuzzTest",
     "recorder_fuzztest/recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
     "recorder_fuzztest/recordersetaudiochannelsnum_fuzzer:RecorderSetAudioChannelsNumFuzzTest",
     "recorder_fuzztest/recordersetaudioencoder_fuzzer:RecorderSetAudioEncoderFuzzTest",

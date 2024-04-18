@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,36 +13,34 @@
  * limitations under the License.
  */
 
-#include "playerstub_fuzzer.h"
+#include "recorderservicestub_fuzzer.h"
+#include <cmath>
+#include <iostream>
+#include "string_ex.h"
+#include "directory_ex.h"
 #include <unistd.h>
-#include "stub_common.h"
 #include "media_server.h"
 #include "media_parcel.h"
-#include "i_standard_player_service.h"
+#include "i_standard_recorder_service.h"
+#include "stub_common.h"
+
+using namespace std;
+using namespace OHOS;
+using namespace Media;
 
 namespace OHOS {
 namespace Media {
-bool FuzzPlayerStub(uint8_t *data, size_t size)
+RecorderServiceStubFuzzer::RecorderServiceStubFuzzer()
 {
-    if (data == nullptr || size < sizeof(int64_t)) {
-        return true;
-    }
-    sptr<PlayerServiceProxyFuzzer> playerProxy = PlayerServiceProxyFuzzer::Create();
-    if (playerProxy == nullptr) {
-        return false;
-    }
-    for (uint32_t codeId = 0; codeId < PlayerServiceProxyFuzzer::MAX_IPC_ID; codeId++) {
-        if (codeId != PlayerServiceProxyFuzzer::DESTROY) {
-            playerProxy->SendRequest(codeId, data, size, true);
-        }
-    }
-    playerProxy->SendRequest(PlayerServiceProxyFuzzer::DESTROY, data, size, false);
-    return true;
+}
+
+RecorderServiceStubFuzzer::~RecorderServiceStubFuzzer()
+{
 }
 
 const int32_t SYSTEM_ABILITY_ID = 3002;
 const bool RUN_ON_CREATE = false;
-bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
+bool RecorderServiceStubFuzzer::FuzzRecorderOnRemoteRequest(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
@@ -50,32 +48,47 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
     std::shared_ptr<MediaServer> mediaServer =
         std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
     sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
-    sptr<IRemoteObject> player = mediaServer->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listener);
-    if (player == nullptr) {
+    sptr<IRemoteObject> recorder = mediaServer->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, listener);
+    if (recorder == nullptr) {
         return false;
     }
 
-    sptr<IRemoteStub<IStandardPlayerService>> playerStub = iface_cast<IRemoteStub<IStandardPlayerService>>(player);
-    if (playerStub == nullptr) {
+    sptr<IRemoteStub<IStandardRecorderService>> recorderStub =
+        iface_cast<IRemoteStub<IStandardRecorderService>>(recorder);
+    if (recorderStub == nullptr) {
         return false;
     }
 
+    const int maxIpcNum = 50;
     bool isWirteToken = size >0 && data[0] % 9 != 0;
-    for (uint32_t code = 0; code <= PlayerServiceProxyFuzzer::MAX_IPC_ID; code++) {
+    for (uint32_t code = 0; code <= maxIpcNum; code++) {
         MessageParcel msg;
         if (isWirteToken) {
-            msg.WriteInterfaceToken(playerStub->GetDescriptor());
+            msg.WriteInterfaceToken(recorderStub->GetDescriptor());
         }
         msg.WriteBuffer(data, size);
         msg.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
-        playerStub->OnRemoteRequest(code, msg, reply, option);
+        recorderStub->OnRemoteRequest(code, msg, reply, option);
     }
 
     return true;
 }
+}
+
+bool FuzzTestRecorderOnRemoteRequest(uint8_t *data, size_t size)
+{
+    if (data == nullptr) {
+        return true;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return true;
+    }
+    RecorderServiceStubFuzzer testRecorder;
+    return testRecorder.FuzzRecorderOnRemoteRequest(data, size);
 }
 }
 
@@ -83,7 +96,6 @@ bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzPlayerStub(data, size);
-    OHOS::Media::FuzzPlayerStubLocal(data, size);
+    OHOS::FuzzTestRecorderOnRemoteRequest(data, size);
     return 0;
 }

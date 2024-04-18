@@ -61,9 +61,12 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
         return false;
     }
 
-    for (uint32_t code = 0; code < AVMetadataServiceProxyFuzzer::MAX_IPC_ID; code++) {
+    bool isWirteToken = size >0 && data[0] % 9 != 0;
+    for (uint32_t code = 0; code <= AVMetadataServiceProxyFuzzer::MAX_IPC_ID; code++) {
         MessageParcel msg;
-        msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
+        if (isWirteToken) {
+            msg.WriteInterfaceToken(avmetadataStub->GetDescriptor());
+        }
         msg.WriteBuffer(data, size);
         msg.RewindRead(0);
         MessageParcel reply;
