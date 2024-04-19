@@ -23,17 +23,17 @@ namespace OHOS {
 namespace Media {
 struct AudioHapticPlayerInfo {
     std::string audioUri_;
-    std::string hapticUri_;
+    HapticSource hapticSource_;
     AudioLatencyMode latencyMode_;
     AudioStandard::StreamUsage streamUsage_;
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer_;
 
     AudioHapticPlayerInfo() {};
-    AudioHapticPlayerInfo(const std::string &audioUri, const std::string &hapticUri,
+    AudioHapticPlayerInfo(const std::string &audioUri, const HapticSource &hapticSource,
         const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
         const std::shared_ptr<AudioHapticPlayer> &audioHapticPlayer)
         : audioUri_(audioUri),
-          hapticUri_(hapticUri),
+          hapticSource_(hapticSource),
           latencyMode_(latencyMode),
           streamUsage_(streamUsage),
           audioHapticPlayer_(audioHapticPlayer) {};
@@ -46,6 +46,8 @@ public:
 
     int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) override;
 
+    int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) override;
+
     int32_t UnregisterSource(const int32_t &sourceID) override;
 
     int32_t SetAudioLatencyMode(const int32_t &sourceID, const AudioLatencyMode &latencyMode) override;
@@ -56,7 +58,7 @@ public:
         const AudioHapticPlayerOptions &audioHapticPlayerOptions) override;
 
 private:
-    bool CheckAudioLatencyMode(const AudioLatencyMode &latencyMode);
+    bool CheckAudioLatencyMode(const int32_t &sourceID, const AudioLatencyMode &latencyMode);
     bool CheckAudioStreamUsage(const AudioStandard::StreamUsage &streamUsage);
 
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayerInfo>> audioHapticPlayerMap_;

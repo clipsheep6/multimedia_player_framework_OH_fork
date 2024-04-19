@@ -32,12 +32,15 @@ ohos_unittest("audio_haptic_unit_test") {
   sources = [ "audio_haptic_unit_test.cpp" ]
 
   deps = [
-    "./../../../interfaces/inner_api/native:media_client",
     "./../../../frameworks/native/audio_haptic:audio_haptic",
     "./../../../frameworks/native/soundpool:soundpool_client",
+    "./../../../interfaces/inner_api/native:media_client",
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
     "audio_framework:audio_client",
     "graphic_surface:surface",
     "hilog:libhilog",

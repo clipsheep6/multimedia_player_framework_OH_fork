@@ -22,17 +22,51 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
-const std::string AUDIO_TEST_URI = "data/test/ringtone.ogg";
-const std::string HAPTIC_TEST_URI = "data/test/ringtone.json";
+using namespace Security::AccessToken;
+using namespace AccessToken::AccessTokenID;
+namespace {
+PermissionStateFull g_infoManagerTestState = {
+    .grantFlags = {1},
+    .grantStatus = {PermissionState::PERMISSION_GRANTED},
+    .isGeneral = true,
+    .permissionName = "ohos.permission.VIBRATE",
+    .resDeviceID = {"local"}
+};
+
+HapPolicyParams g_infoManagerTestPolicyPrams = {
+    .apl = APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {g_infoManagerTestPermDef},
+    .permStateList = {g_infoManagerTestState}
+};
+
+HapInfoParams g_infoManagerTestInfoParms = {
+    .bundleName = "vibratoragent_test",
+    .userID = 1,
+    .instIndex = 0,
+    .appIDDesc = "vibratorAgentTest"
+};
+} // namesapce
+const std::string AUDIO_TEST_URI = "ringtone.ogg";
+const std::string HAPTIC_TEST_URI = "ringtone.json";
 
 std::shared_ptr<AudioHapticManager> AudioHapticUnitTest::g_audioHapticManager = nullptr;
-int32_t AudioHapticUnitTest::g_sourceId = -1;
 std::shared_ptr<AudioHapticPlayer> AudioHapticUnitTest::g_audioHapticPlayer = nullptr;
+int32_t AudioHapticUnitTest::g_sourceId = -1;
+
+std::shared_ptr<AudioHapticPlayer> AudioHapticUnitTest::g_effectAudioHapticPlayer = nullptr;
+int32_t AudioHapticUnitTest::g_effectSourceId = -1;
+AccessTokenID AudioHapticUnitTest::tokenID_ = 0;
 
 void AudioHapticUnitTest::SetUpTestCase(void)
 {
-    g_audioHapticManager = AudioHapticManagerFactory::CreateAudioHapticManager();
+    AccessTokenIDEx tokenIdEx = {0};
+    tokenIdEx = AccessTokenKit::AllocHapToken(g_infoManagerTestInfoParms, g_infoManagerTestPolicyPrams);
+    tokenID_ = tokenIdEx.tokenIdExStruct.tokenID;
+    ASSERT_NE(0, tokenID_);
+    ASSERT_EQ(0, SetSelfTokenID(tokenID_));
 
+    g_audioHapticManager = AudioHapticManagerFactory::CreateAudioHapticManager();
     g_sourceId = g_audioHapticManager->RegisterSource(AUDIO_TEST_URI, HAPTIC_TEST_URI);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -45,7 +79,13 @@ void AudioHapticUnitTest::SetUpTestCase(void)
     g_audioHapticPlayer = g_audioHapticManager->CreatePlayer(g_sourceId, options);
 }
 
-void AudioHapticUnitTest::TearDownTestCase(void) {}
+void AudioHapticUnitTest::TearDownTestCase(void)
+{
+    int32_t ret = AccessTokenKit::DeleteToken(tokenID_);
+    if (tokenID_ != 0) {
+        ASSERT_EQ(RET_SUCCESS, ret);
+    }
+}
 
 void AudioHapticUnitTest::SetUp(void) {}
 
@@ -645,6 +685,54 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_Release_001, TestSize.Level1)
     AudioHapticUnitTest::g_audioHapticPlayer->Stop();
 
     result = AudioHapticUnitTest::g_audioHapticPlayer->Release();
+    EXPECT_EQ(MSERR_OK, result);
+}
+
+/**
+ * @tc.name  : Test AudioHapticPlayer effectId API
+ * @tc.number: AudioHapticPlayer_effectIdSource_001
+ * @tc.desc  : Test AudioHapticPlayer effectId interface
+ */
+HWTEST_F(AudioHapticUnitTest, AudioHapticManager_effectIdSource_001, TestSize.Level1)
+{
+    EXPECT_NE(AudioHapticUnitTest::g_audioHapticManager, nullptr);
+
+    g_effectSourceId = g_audioHapticManager->RegisterSource(AUDIO_TEST_URI, "haptic.clock.timer");
+    EXPECT_NE(-1, g_effectSourceId);
+    AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_FAST;
+    g_audioHapticManager->SetAudioLatencyMode(g_effectSourceId, latencyMode);
+    AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION;
+    g_audioHapticManager->SetStreamUsage(g_effectSourceId, streamUsage);
+    AudioHapticPlayerOptions options;
+    options.muteAudio = false;
+    options.muteHaptics = false;
+    g_effectAudioHapticPlayer = g_audioHapticManager->CreatePlayer(g_effectSourceId, options);
+    EXPECT_NE(nullptr, g_effectAudioHapticPlayer);
+
+    int32_t result = g_effectAudioHapticPlayer->Prepare();
+    EXPECT_EQ(MSERR_OK, result);
+
+    g_effectAudioHapticPlayer->SetVolume(1.0);
+    g_effectAudioHapticPlayer->SetHapticIntensity(100.0);
+    result = g_effectAudioHapticPlayer->Start();
+    EXPECT_EQ(MSERR_OK, result);
+
+    sleep(1);
+    result = g_effectAudioHapticPlayer->SetVolume(0.5);
+    result = g_effectAudioHapticPlayer->SetHapticIntensity(50.0);
+    result = g_effectAudioHapticPlayer->Start();
+    EXPECT_EQ(MSERR_OK, result);
+
+    sleep(1);
+    result = g_effectAudioHapticPlayer->SetVolume(0.1);
+    result = g_effectAudioHapticPlayer->SetHapticIntensity(10.0);
+    result = g_effectAudioHapticPlayer->Start();
+    EXPECT_EQ(MSERR_OK, result);
+
+    sleep(1);
+    result = g_effectAudioHapticPlayer->Stop();
+    EXPECT_EQ(MSERR_OK, result);
+    result = g_effectAudioHapticPlayer->Release();
     EXPECT_EQ(MSERR_OK, result);
 }
 } // namespace Media
