@@ -232,7 +232,7 @@ void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &info
 {
     HandleSeekDoneInfo(type);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
-    if (type == INFO_TYPE_SEEKDONE || type == INFO_TYPE_POSITION_UPDATE) {
+    if (type == INFO_TYPE_SEEKDONE) {
         if (!isSeeking_) {
             callback_->OnInfo(type, extra, infoBody);
         } else {
