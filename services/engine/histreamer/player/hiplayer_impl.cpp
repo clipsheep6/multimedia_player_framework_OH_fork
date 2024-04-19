@@ -861,6 +861,61 @@ bool HiPlayerImpl::IsVideoMime(const std::string& mime)
     return mime.find("video/") == 0;
 }
 
+int32_t HiPlayerImpl::SelectTrack(int32_t trackId)
+{
+    MEDIA_LOG_I("SelectTrack begin trackId is " PUBLIC_LOG_D32, trackId);
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    std::string mime;
+    if (trackId < 0 || trackId > metaInfo.size()) {
+        MEDIA_LOG_E("SelectTrack trackId error", trackId);
+        return MSERR_UNKNOWN;
+    }
+    if (!(metaInfo[trackId]->GetData(Tag::MIME_TYPE, mime)) || mime.find("audio/") != 0) {
+        MEDIA_LOG_E("SelectTrack trackId " PUBLIC_LOG_D32 " not support", trackId);
+        return MSERR_UNKNOWN;
+    }
+    if (Status::OK != demuxer_->SelectTrack(trackId)) {
+        MEDIA_LOG_E("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
+        return MSERR_UNKNOWN;
+    }
+    if (Status::OK != audioDecoder_->ChangePlugin(metaInfo[trackId])) {
+        MEDIA_LOG_E("SelectTrack audioDecoder change plugin error");
+        return MSERR_UNKNOWN;
+    }
+    if (Status::OK != audioSink_->ChangeTrack(metaInfo[trackId])) {
+        MEDIA_LOG_E("SelectTrack audioSink change track error");
+        return MSERR_UNKNOWN;
+    }
+    Format audioTrackInfo {};
+    audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackId));
+    audioTrackInfo.PutIntValue("track_is_select", static_cast<int32_t>(trackId));
+    callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
+    currentAudioTrackId_ = trackId;
+    return MSERR_OK;
+}
+
+int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
+{
+    MEDIA_LOG_I("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
+    FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
+        (int32_t)(Status::ERROR_INVALID_PARAMETER), "DeselectTrack trackId invalid");
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    std::string mime;
+    int32_t defaultAudioTrackId = -1;
+    for (size_t trackIndex = metaInfo.size() - 1; trackIndex >= 0; trackIndex--) {
+        auto trackInfo = metaInfo[trackIndex];
+        if (!(trackInfo->GetData(Tag::MIME_TYPE, mime))) {
+            MEDIA_LOG_W("Get MIME fail");
+            continue;
+        }
+        if (mime.find("audio/") == 0) {
+            defaultAudioTrackId = trackIndex;
+            break;
+        }
+    }
+    return SelectTrack(defaultAudioTrackId);
+}
+
 int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
 {
     MEDIA_LOG_I("GetVideoTrackInfo entered.");
