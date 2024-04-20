@@ -54,20 +54,25 @@ struct AudioHapticPlayerOptions {
     bool muteHaptics;
 };
 
+struct HapticSource {
+    std::string hapticUri = "";
+    std::string effectId = "";
+};
+
 struct AudioHapticPlayerParam {
     AudioHapticPlayerOptions options;
     std::string audioUri;
-    std::string hapticUri;
+    HapticSource hapticSource;
     AudioLatencyMode latencyMode;
     AudioStandard::StreamUsage streamUsage;
 
     AudioHapticPlayerParam() {};
     AudioHapticPlayerParam(const AudioHapticPlayerOptions &options,
-        const std::string &audioUri, const std::string &hapticUri,
+        const std::string &audioUri, const HapticSource &hapticSource,
         const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
         : options(options),
           audioUri(audioUri),
-          hapticUri(hapticUri),
+          hapticSource(hapticSource),
           latencyMode(latencyMode),
           streamUsage(streamUsage) {};
 };
@@ -89,6 +94,8 @@ public:
     virtual int32_t Release() = 0;
 
     virtual int32_t SetVolume(float volume) = 0;
+
+    virtual int32_t SetHapticIntensity(float intensity) = 0;
 
     virtual int32_t SetLoop(bool loop) = 0;
 

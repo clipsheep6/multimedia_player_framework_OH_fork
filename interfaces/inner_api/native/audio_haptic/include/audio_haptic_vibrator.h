@@ -29,10 +29,11 @@ public:
 
     static std::shared_ptr<AudioHapticVibrator> CreateAudioHapticVibrator(AudioHapticPlayer &audioHapticPlayer);
 
-    virtual int32_t PreLoad(const std::string &hapticUri, const AudioStandard::StreamUsage &streamUsage) = 0;
+    virtual int32_t PreLoad(const HapticSource &hapticSource, const AudioStandard::StreamUsage &streamUsage) = 0;
     virtual int32_t Release() = 0;
     virtual void ResetStopState() = 0;
     virtual int32_t StartVibrate(const AudioLatencyMode &latencyMode) = 0;
+    virtual int32_t SetHapticIntensity(float intensity) = 0;
     virtual int32_t StopVibrate() = 0;
     virtual int32_t GetDelayTime() = 0;
 
