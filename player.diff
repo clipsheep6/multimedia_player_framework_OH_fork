@@ -1,0 +1,463 @@
+From 319abc64145f2c78aae76778d381bac2303a4ef3 Mon Sep 17 00:00:00 2001
+From: z00562947 <z00562947@notesmail.huawei.com/>
+Date: Sat, 23 Mar 2024 19:16:52 +0800
+Subject: [PATCH] =?UTF-8?q?TicketNo:=20DTS2024030906146=20Description:=20?=
+ =?UTF-8?q?=E7=B2=BE=E5=87=86seek=E5=AE=8C=E6=95=B4=E5=8A=9F=E8=83=BD=20Te?=
+ =?UTF-8?q?am:EMUI=20Feature=20or=20Bugfix:Bugfix=20Binary=20Source:=20syn?=
+ =?UTF-8?q?c=20from=20gitee=20PrivateCode(Yes/No):No?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: Ia28e9b1c63b20eca5172eb8acd3f0190be8a0389
+---
+ services/engine/histreamer/player/BUILD.gn    |   1 +
+ .../player/hiplayer_callback_looper.cpp       |   4 +-
+ .../histreamer/player/hiplayer_impl.cpp       |  26 ++-
+ .../engine/histreamer/player/hiplayer_impl.h  |   3 +
+ .../engine/histreamer/player/seek_agent.cpp   | 212 ++++++++++++++++++
+ .../engine/histreamer/player/seek_agent.h     |  91 ++++++++
+ 6 files changed, 332 insertions(+), 5 deletions(-)
+ create mode 100644 services/engine/histreamer/player/seek_agent.cpp
+ create mode 100644 services/engine/histreamer/player/seek_agent.h
+
+diff --git a/services/engine/histreamer/player/BUILD.gn b/services/engine/histreamer/player/BUILD.gn
+index 2c469470a..30aff40bb 100644
+--- a/services/engine/histreamer/player/BUILD.gn
++++ b/services/engine/histreamer/player/BUILD.gn
+@@ -57,6 +57,7 @@ ohos_static_library("media_engine_histreamer_player") {
+   sources = [
+     "hiplayer_callback_looper.cpp",
+     "hiplayer_impl.cpp",
++    "seek_agent.cpp",
+   ]
+ 
+   configs = [
+diff --git a/services/engine/histreamer/player/hiplayer_callback_looper.cpp b/services/engine/histreamer/player/hiplayer_callback_looper.cpp
+index 5d70e1cbc..74584fa2a 100755
+--- a/services/engine/histreamer/player/hiplayer_callback_looper.cpp
++++ b/services/engine/histreamer/player/hiplayer_callback_looper.cpp
+@@ -107,7 +107,7 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
+         Format format;
+         int32_t currentPositionMs;
+         if (playerEngine_->GetDuration(currentPositionMs) == 0) {
+-            MEDIA_LOG_DD("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
++            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS completed position updated: " PUBLIC_LOG_D32, currentPositionMs);
+             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
+         } else {
+             MEDIA_LOG_W("get player engine current time error");
+@@ -123,7 +123,7 @@ void HiPlayerCallbackLooper::DoReportMediaProgress()
+         Format format;
+         int32_t currentPositionMs;
+         if (playerEngine_->GetCurrentTime(currentPositionMs) == 0) {
+-            MEDIA_LOG_DD("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
++            MEDIA_LOG_D("EVENT_AUDIO_PROGRESS position updated: " PUBLIC_LOG_D32, currentPositionMs);
+             obs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentPositionMs, format);
+         } else {
+             MEDIA_LOG_W("get player engine current time error");
+diff --git a/services/engine/histreamer/player/hiplayer_impl.cpp b/services/engine/histreamer/player/hiplayer_impl.cpp
+index 503460ca2..2c7092037 100644
+--- a/services/engine/histreamer/player/hiplayer_impl.cpp
++++ b/services/engine/histreamer/player/hiplayer_impl.cpp
+@@ -525,9 +525,26 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
+ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
+ {
+     MEDIA_LOG_I("doSeek.");
++    int64_t seekTimeUs = 0;
++    if (!Plugins::Us2HstTime(seekPos, seekTimeUs)) { // ms to us
++        MEDIA_LOG_E("Invalid seekPos: %{public}" PRId64, seekPos);
++        return Status::ERROR_INVALID_PARAMETER;
++    }
+     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+-        MEDIA_LOG_I("doSeek change state SEEK_PREVIOUS_SYNC.");
+-        mode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
++        MEDIA_LOG_I("doSeek SEEK_CLOSEST.");
++        if (videoDecoder_ != nullptr) {
++            videoDecoder_->SetSeekTime(seekTimeUs);
++        }
++        seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
++        auto res = seekAgent_->Seek(seekPos);
++        MEDIA_LOG_I("seekAgent_ Seek end");
++        if (res != Status::OK) {
++            MEDIA_LOG_E("Seek closest failed.");
++        } else {
++            syncManager_->Seek(seekTimeUs);
++        }
++        seekAgent_.reset();
++        return res;
+     }
+     int64_t realSeekTime = seekPos;
+     auto seekMode = Transform2SeekMode(mode);
+@@ -538,7 +555,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
+         rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
+     }
+     if (rtv == Status::OK) {
+-        syncManager_->Seek(Plugins::HstTime2Us(realSeekTime));
++        syncManager_->Seek(seekTimeUs);
+     }
+     return rtv;
+ }
+@@ -657,6 +674,7 @@ int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
+     }
+     FALSE_RETURN_V(syncManager_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER));
+     currentPositionMs = Plugins::HstTime2Us(syncManager_->GetMediaTimeNow());
++    MEDIA_LOG_I("GetCurrentTime currentPositionMs: " PUBLIC_LOG_D32, currentPositionMs);
+     if (currentPositionMs < 0) {
+         currentPositionMs = 0;
+     }
+@@ -1257,6 +1275,7 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
+                 return !syncManager_->InSeeking();
+             });
+     }
++    MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
+     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
+     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
+ }
+@@ -1320,6 +1339,7 @@ void HiPlayerImpl::NotifyPositionUpdate()
+ {
+     int32_t currentPosMs = 0;
+     GetCurrentTime(currentPosMs);
++    MEDIA_LOG_D("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
+     Format format;
+     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
+ }
+diff --git a/services/engine/histreamer/player/hiplayer_impl.h b/services/engine/histreamer/player/hiplayer_impl.h
+index bc256e199..ce9c53c72 100644
+--- a/services/engine/histreamer/player/hiplayer_impl.h
++++ b/services/engine/histreamer/player/hiplayer_impl.h
+@@ -31,6 +31,7 @@
+ #include "i_player_engine.h"
+ #include "media_sync_manager.h"
+ #include "pipeline/pipeline.h"
++#include "seek_agent.h"
+ #ifdef SUPPORT_VIDEO
+ #include "decoder_surface_filter.h"
+ #endif
+@@ -183,6 +184,8 @@ private:
+     int32_t rotation90 = 90;
+     int32_t rotation270 = 270;
+ 
++    std::shared_ptr<SeekAgent> seekAgent_;
++
+     std::mutex drmMutex_;
+     std::condition_variable drmConfigCond_;
+     bool isDrmProtected_ = false;
+diff --git a/services/engine/histreamer/player/seek_agent.cpp b/services/engine/histreamer/player/seek_agent.cpp
+new file mode 100644
+index 000000000..31a980637
+--- /dev/null
++++ b/services/engine/histreamer/player/seek_agent.cpp
+@@ -0,0 +1,212 @@
++/*
++ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#define HST_LOG_TAG "SeekAgent"
++
++#include "seek_agent.h"
++#include "common/log.h"
++#include "meta/media_types.h"
++#include "meta/meta.h"
++
++namespace OHOS {
++namespace Media {
++
++AudioBufferFilledListener::AudioBufferFilledListener(std::shared_ptr<SeekAgent> seekAgent,
++    sptr<AVBufferQueueProducer> producer, int32_t trackId)
++    : seekAgent_(seekAgent), producer_(producer), trackId_(trackId)
++{
++    MEDIA_LOG_I("AudioBufferFilledListener ctor called.");
++}
++
++void AudioBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer)
++{
++    if (auto agent = seekAgent_.lock()) {
++        agent->OnAudioBufferFilled(buffer, producer_, trackId_);
++    } else {
++        MEDIA_LOG_E("Invalid agent instance.");
++    }
++}
++
++VideoBufferFilledListener::VideoBufferFilledListener(std::shared_ptr<SeekAgent> seekAgent,
++    sptr<AVBufferQueueProducer> producer, int32_t trackId)
++    : seekAgent_(seekAgent), producer_(producer), trackId_(trackId)
++{
++    MEDIA_LOG_I("VideoBufferFilledListener ctor called.");
++}
++
++void VideoBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer)
++{
++    if (auto agent = seekAgent_.lock()) {
++        agent->OnVideoBufferFilled(buffer, producer_, trackId_);
++    } else {
++        MEDIA_LOG_E("Invalid agent instance.");
++    }
++}
++
++SeekAgent::SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer)
++    : demuxer_(demuxer), isAudioTargetArrived_(false), isVideoTargetArrived_(false),
++    seekTargetPos_(-1), isSeeking_(false)
++{
++    MEDIA_LOG_I("SeekAgent ctor called.");
++}
++
++SeekAgent::~SeekAgent()
++{
++    MEDIA_LOG_I("~SeekAgent dtor called.");
++}
++
++Status SeekAgent::Seek(int64_t seekPos)
++{
++    MEDIA_LOG_I("Seek start, seekPos: %{public}" PRId64, seekPos);
++    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
++    seekTargetPos_ = seekPos;
++    int64_t realSeekTime = seekPos;
++    auto st = demuxer_->SeekTo(seekPos, Plugins::SeekMode::SEEK_CLOSEST_INNER, realSeekTime);
++    FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "Seekto error.");
++ 
++    isSeeking_ = true;
++    st = SetBufferFilledListener();
++    FALSE_RETURN_V_MSG_E(st == Status::OK, Status::ERROR_INVALID_OPERATION, "SetBufferFilledListener failed.");
++
++    MEDIA_LOG_I("demuxer_ realSeekTime: %{public}" PRId64 "ns", realSeekTime);
++    demuxer_->PrepareBeforeStart();
++    demuxer_->ResumeForSeek();
++    MEDIA_LOG_I("ResumeForSeek end");
++    {
++        AutoLock lock(targetArrivedLock_);
++        isAudioTargetArrived_ = false;
++        isVideoTargetArrived_ = false;
++        targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
++        MEDIA_LOG_I("Wait end");
++    }
++    MEDIA_LOG_I("Start PauseForSeek");
++    demuxer_->PauseForSeek();
++    st = RemoveBufferFilledListener();
++    return st;
++}
++
++Status SeekAgent::SetBufferFilledListener()
++{
++    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
++    producerMap_ = demuxer_->GetBufferQueueProducerMap();
++    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
++
++    auto trackInfo = demuxer_->GetStreamMetaInfo();
++    uint32_t videoTrackId = -1;
++    std::vector<uint32_t> audioTrackIds;
++    for (uint32_t index = 0; index < trackInfo.size(); index++) {
++        auto trackMeta = trackInfo[index];
++        std::string mimeType;
++        if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
++            MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
++            videoTrackId = index;
++            continue;
++        }
++        if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("audio") == 0) {
++            MEDIA_LOG_I("Find audio trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
++            audioTrackIds.push_back(index);
++        }
++    }
++
++    auto it = producerMap_.begin();
++    while (it != producerMap_.end()) {
++        if (it->second == nullptr) {
++            it++;
++            continue;
++        }
++        if (std::find(audioTrackIds.begin(), audioTrackIds.end(), it->first) != audioTrackIds.end()) {
++            sptr<IBrokerListener> audioListener
++                = new AudioBufferFilledListener(shared_from_this(), it->second, it->first);
++            MEDIA_LOG_I("Add Listener audio id : %{public}d", it->first);
++            it->second->SetBufferFilledListener(audioListener);
++            listenerMap_.insert({it->first, audioListener});
++            it++;
++            continue;
++        }
++        if (it->first == videoTrackId) {
++            sptr<IBrokerListener> videoListener
++                = new VideoBufferFilledListener(shared_from_this(), it->second, it->first);
++            MEDIA_LOG_I("Add Listener video id : %{public}d", it->first);
++            it->second->SetBufferFilledListener(videoListener);
++            listenerMap_.insert({it->first, videoListener});
++        }
++        it++;
++    }
++    return Status::OK;
++}
++
++Status SeekAgent::RemoveBufferFilledListener()
++{
++    auto it = listenerMap_.begin();
++    while (it != listenerMap_.end()) {
++        auto iterator = producerMap_.find(it->first);
++        if (iterator == producerMap_.end()) {
++            it++;
++            continue;
++        }
++        auto producer = iterator->second;
++        if (producer == nullptr) {
++            it++;
++            continue;
++        }
++        if (it->second == nullptr) {
++            it++;
++            continue;
++        }
++        producer->RemoveBufferFilledListener(it->second);
++        it++;
++    }
++    return Status::OK;
++}
++
++Status SeekAgent::OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
++    sptr<AVBufferQueueProducer> producer, int32_t trackId)
++{
++    MEDIA_LOG_D("OnAudioBufferFilled, pts: %{public}" PRId64, buffer->pts_);
++    if (buffer->pts_ >= seekTargetPos_ * MS_TO_US || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
++        {
++            AutoLock lock(targetArrivedLock_);
++            isAudioTargetArrived_ = true;
++        }
++        MEDIA_LOG_I("audio arrive target.");
++        demuxer_->PauseTaskByTrackId(trackId);
++        targetArrivedCond_.NotifyAll();
++
++        producer->ReturnBuffer(buffer, false);
++        return Status::OK;
++    }
++    MEDIA_LOG_D("OnAudioBufferFilled, ReturnBuffer");
++    producer->ReturnBuffer(buffer, false);
++    return Status::OK;
++}
++
++Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
++    sptr<AVBufferQueueProducer> producer, int32_t trackId)
++{
++    MEDIA_LOG_I("OnVideoBufferFilled, pts: %{public}" PRId64, buffer->pts_);
++    if (buffer->pts_ >= seekTargetPos_ * MS_TO_US || (buffer->flag_ & (uint32_t)(AVBufferFlag::EOS))) {
++        {
++            AutoLock lock(targetArrivedLock_);
++            isVideoTargetArrived_ = true;
++        }
++        MEDIA_LOG_I("video arrive target");
++        demuxer_->PauseTaskByTrackId(trackId);
++        targetArrivedCond_.NotifyAll();
++    }
++    producer->ReturnBuffer(buffer, true);
++    return Status::OK;
++}
++}  // namespace Media
++}  // namespace OHOS
+\ No newline at end of file
+diff --git a/services/engine/histreamer/player/seek_agent.h b/services/engine/histreamer/player/seek_agent.h
+new file mode 100644
+index 000000000..f6ad78ac2
+--- /dev/null
++++ b/services/engine/histreamer/player/seek_agent.h
+@@ -0,0 +1,91 @@
++ /*
++ * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef SEEK_AGENT_H
++#define SEEK_AGENT_H
++
++#include <memory>
++#include <unordered_map>
++#include "common/status.h"
++#include "avbuffer_queue_define.h"
++#include "osal/task/condition_variable.h"
++#include "osal/task/mutex.h"
++#include "iremote_stub.h"
++#include "demuxer_filter.h"
++
++namespace OHOS {
++namespace Media {
++class HiPlayerImpl;
++
++class SeekAgent : public std::enable_shared_from_this<SeekAgent> {
++public:
++    explicit SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer);
++    ~SeekAgent();
++
++    Status Seek(int64_t seekPos);
++    Status OnAudioBufferFilled(std::shared_ptr<AVBuffer>& buffer,
++        sptr<AVBufferQueueProducer> producer, int32_t trackId);
++    Status OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
++        sptr<AVBufferQueueProducer> producer, int32_t trackId);
++
++private:
++    Status SetBufferFilledListener();
++    Status RemoveBufferFilledListener();
++
++    std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
++    Mutex targetArrivedLock_;
++    ConditionVariable targetArrivedCond_;
++    bool isAudioTargetArrived_{false};
++    bool isVideoTargetArrived_{false};
++
++    int64_t seekTargetPos_{-1};
++    std::atomic<bool> isSeeking_{false};
++    std::map<uint32_t, sptr<AVBufferQueueProducer>> producerMap_;
++    std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
++
++    static constexpr uint32_t WAIT_MAX_MS = 2000;
++    static constexpr uint32_t MS_TO_US = 1000;
++};
++
++class AudioBufferFilledListener : public IRemoteStub<IBrokerListener> {
++public:
++    AudioBufferFilledListener(std::shared_ptr<SeekAgent> seekAgent,
++        sptr<AVBufferQueueProducer> producer, int32_t trackId);
++    ~AudioBufferFilledListener() = default;
++
++    void OnBufferFilled(std::shared_ptr<AVBuffer>& buffer);
++
++private:
++    std::weak_ptr<SeekAgent> seekAgent_;
++    sptr<AVBufferQueueProducer> producer_;
++    int32_t trackId_;
++};
++
++class VideoBufferFilledListener : public IRemoteStub<IBrokerListener> {
++public:
++    VideoBufferFilledListener(std::shared_ptr<SeekAgent> seekAgent,
++        sptr<AVBufferQueueProducer> producer, int32_t trackId);
++    ~VideoBufferFilledListener() = default;
++
++    void OnBufferFilled(std::shared_ptr<AVBuffer>& buffer);
++
++private:
++    std::weak_ptr<SeekAgent> seekAgent_;
++    sptr<AVBufferQueueProducer> producer_;
++    int32_t trackId_;
++};
++} // namespace Media
++} // namespace OHOS
++#endif // SEEK_AGENT_H
+\ No newline at end of file
+-- 
+2.40.1.huawei

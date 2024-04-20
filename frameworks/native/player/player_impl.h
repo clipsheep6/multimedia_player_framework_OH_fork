@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Media {
+static const int32_t INT32_MIN = -2147483648; // int32_t min value
 class PlayerImpl : public Player, public NoCopyable, public std::enable_shared_from_this<PlayerImpl> {
 public:
     PlayerImpl();
@@ -75,9 +76,9 @@ private:
     void ResetSeekVariables();
     void HandleSeekDoneInfo(PlayerOnInfoType type);
     std::recursive_mutex recMutex_;
-    int32_t mCurrentPosition = -1;
+    int32_t mCurrentPosition = INT32_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    int32_t mSeekPosition = -1;
+    int32_t mSeekPosition = INT32_MIN;
     PlayerSeekMode mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     std::atomic<bool> isSeeking_{false};
     std::shared_ptr<PlayerCallback> callback_;
