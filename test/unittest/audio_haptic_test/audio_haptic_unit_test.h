@@ -20,9 +20,15 @@
 
 #include "audio_haptic_manager.h"
 #include "audio_haptic_player.h"
+#include "accesstoken_kit.h"
+#include "nativetiken_kit.h"
+#include "token_setproc.h"
 
 namespace OHOS {
 namespace Media {
+using namespace Security::AccessToken;
+using namespace AccessToken::AccessTokenID;
+
 class AudioHapticUnitTest : public testing::Test {
 public:
     // SetUpTestCase: Called before all test cases
@@ -36,7 +42,10 @@ public:
 
     static std::shared_ptr<AudioHapticManager> g_audioHapticManager;
     static int32_t g_sourceId;
+    static int32_t g_effectSourceId;
     static std::shared_ptr<AudioHapticPlayer> g_audioHapticPlayer;
+    static std::shared_ptr<AudioHapticPlayer> g_effectAudioHapticPlayer;
+    static AccessTokenID tokenID_;
 };
 } // namespace Media
 } // namespace OHOS

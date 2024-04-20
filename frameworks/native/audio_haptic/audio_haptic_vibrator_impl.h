@@ -33,12 +33,14 @@ public:
     explicit AudioHapticVibratorImpl(AudioHapticPlayer &audioHapticPlayer);
     ~AudioHapticVibratorImpl();
 
-    int32_t PreLoad(const std::string &hapticUri, const AudioStandard::StreamUsage &streamUsage) override;
+    int32_t PreLoad(const HapticSource &hapticSource, const AudioStandard::StreamUsage &streamUsage) override;
+    int32_t SetHapticIntensity(float intensity) override;
     int32_t Release() override;
     void ResetStopState() override;
     int32_t StartVibrate(const AudioLatencyMode &latencyMode) override;
     int32_t StopVibrate() override;
     int32_t GetDelayTime() override;
+    void SetIsSupportEffectId(bool isSupport);
 
 private:
     int32_t StartVibrateForSoundPool();
@@ -51,6 +53,9 @@ private:
     std::shared_ptr<VibratorFileDescription> vibratorFD_ = nullptr;
     std::shared_ptr<VibratorPackage> vibratorPkg_ = nullptr;
     std::condition_variable vibrateCV_;
+    float vibrateIntensity_ = 1.0f;
+    bool isSupportEffectId_ = false;
+    HapticSource hapticSource_;
 #endif
     std::mutex vibrateMutex_;
     AudioStandard::StreamUsage streamUsage_ = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;

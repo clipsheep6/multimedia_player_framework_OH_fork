@@ -31,6 +31,8 @@ public:
 
     virtual int32_t RegisterSource(const std::string &audioUri, const std::string &hapticUri) = 0;
 
+    virtual int32_t RegisterSourceWithEffectId(const std::string &audioUri, const std::string &effectId) = 0;
+
     virtual int32_t UnregisterSource(const int32_t &sourceID) = 0;
 
     virtual int32_t SetAudioLatencyMode(const int32_t &sourceID, const AudioLatencyMode &latencyMode) = 0;
