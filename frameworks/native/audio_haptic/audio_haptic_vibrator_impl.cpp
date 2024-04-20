@@ -76,9 +76,16 @@ std::shared_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibra
     return audioHapticVibrator;
 }
 
-int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri, const AudioStandard::StreamUsage &streamUsage)
+void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 {
-    MEDIA_LOGI("PreLoad vibrator: hapticUri [%{public}s], streamUsage [%{public}d]", hapticUri.c_str(), streamUsage);
+    isSupportEffectId_ = isSupport;
+}
+
+int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
+    const AudioStandard::StreamUsage &streamUsage)
+{
+    MEDIA_LOGI("PreLoad hapticUri [%{public}s], streamUsage [%{public}d]",
+        hapticSource.hapticUri.c_str(), streamUsage);
     streamUsage_ = streamUsage;
 #ifdef SUPPORT_VIBRATOR
     auto iterator = USAGE_MAP.find(streamUsage_);
@@ -88,8 +95,20 @@ int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri, const Aud
         MEDIA_LOGW("Invalid stream usage! Use the default usage (USAGE_MEDIA).");
         vibratorUsage_ = VibratorUsage::USAGE_MEDIA;
     }
+    hapticSource_ = hapticSource;
+    if (hapticSource.hapticUri == "") {
+        bool state = false;
+        if (Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &state) == 0) {
+            SetIsSupportEffectId(true);
+            MEDIA_LOGW("only for effectId source.");
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGW("the effectId not support.");
+            return MSERR_UNSUPPORT_FILE;
+        }
+    }
 
-    int32_t fd = open(hapticUri.c_str(), O_RDONLY);
+    int32_t fd = open(hapticSource.hapticUri.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.
         return MSERR_OPEN_FILE_FAILED;
@@ -111,6 +130,16 @@ int32_t AudioHapticVibratorImpl::PreLoad(const std::string &hapticUri, const Aud
         MEDIA_LOGE("PreProcess: %{public}d", result);
         return MSERR_UNSUPPORT_FILE;
     }
+#endif
+    return MSERR_OK;
+}
+
+int32_t AudioHapticVibratorImpl::SetHapticIntensity(float intensity)
+{
+    MEDIA_LOGI("SetHapticIntensity for clock %{public}f", intensity);
+    std::lock_guard<std::mutex> lock(vibrateMutex_);
+#ifdef SUPPORT_VIBRATOR
+    vibrateIntensity_ = intensity;
 #endif
     return MSERR_OK;
 }
@@ -145,13 +174,23 @@ void AudioHapticVibratorImpl::ResetStopState()
 int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMode)
 {
     MEDIA_LOGD("StartVibrate: for latency mode %{public}d", latencyMode);
+    int32_t result = MSERR_OK;
+#ifdef SUPPORT_VIBRATOR
     if (latencyMode == AUDIO_LATENCY_MODE_NORMAL) {
         return StartVibrateForAVPlayer();
     } else if (latencyMode == AUDIO_LATENCY_MODE_FAST) {
-        return StartVibrateForSoundPool();
+        if (isSupportEffectId_) {
+            (void)Sensors::SetUsage(vibratorUsage_);
+            result = Sensors::PlayPrimitiveEffect(hapticSource_.effectId.c_str(), vibrateIntensity_);
+            MEDIA_LOGD("StartVibrate effectId: %{public}s, result: %{public}d", hapticSource_.effectId.c_str(), result);
+        } else {
+            return StartVibrateForSoundPool();
+        }
     } else {
         return MSERR_INVALID_OPERATION;
     }
+#endif
+    return result;
 }
 
 int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
