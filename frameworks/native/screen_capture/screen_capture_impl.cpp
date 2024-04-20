@@ -73,6 +73,7 @@ int32_t ScreenCaptureImpl::Release()
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_NO_MEMORY,
         "screen capture service does not exist..");
     screenCaptureService_->Release();
+    MEDIA_LOGD("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "Release end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
@@ -152,6 +153,7 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
             MEDIA_LOGI("invaild type");
             return MSERR_INVALID_VAL;
     }
+    MEDIA_LOGD("InitScreenCapture: 0x%{public}06" PRIXPTR "Init end.", FAKE_POINTER(this));
     return ret;
 }
 
@@ -160,6 +162,13 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
     // For original stream:
     // 1. Any of innerCapInfo/videoCapInfo should be not invalid and should not be both ignored
     // 2. micCapInfo should not be invalid
+    MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR
+        "InitOriginalStream start, innerCapInfo.audioSampleRate:%{public}d, innerCapInfo.audioChannels::%{public}d, "
+        "micCapInfo.audioSampleRate:%{public}d, micCapInfo.audioChannels:%{public}d, "
+        "videoCapInfo.videoFrameWidth:%{public}d, videoCapInfo.videoFrameHeight:%{public}d.", FAKE_POINTER(this),
+        config.audioInfo.innerCapInfo.audioSampleRate, config.audioInfo.innerCapInfo.audioChannels,
+        config.audioInfo.micCapInfo.audioSampleRate, config.audioInfo.micCapInfo.audioChannels,
+        config.videoInfo.videoCapInfo.videoFrameWidth, config.videoInfo.videoCapInfo.videoFrameHeight);
     int32_t ret = MSERR_OK;
     bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
     bool isVideoCapInfoIgnored = IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo);
@@ -177,6 +186,7 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
         ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
+    MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitOriginalStream end.", FAKE_POINTER(this));
     return ret;
 }
 
@@ -185,6 +195,17 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     // For capture file:
     // 1. All of innerCapInfo/videoCapInfo/audioEncInfo/videoEncInfo should be be valid
     // 2. micCapInfo should not be invalid
+    MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitCaptureFile start, url:%{public}s, "
+        "videoEncInfo.audioBitrate:%{public}d, videoEncInfo.audioCodecformat:%{public}d, "
+        "innerCapInfo.audioSampleRate:%{public}d, innerCapInfo.audioChannels::%{public}d, "
+        "micCapInfo.audioSampleRate:%{public}d, micCapInfo.audioChannels:%{public}d, "
+        "videoCapInfo.displayId:%{public}lld, videoCapInfo.taskIDs.size:%{public}d, "
+        "videoCapInfo.videoSource:%{public}d.", FAKE_POINTER(this), config.recorderInfo.url.c_str(),
+        config.audioInfo.audioEncInfo.audioBitrate, config.audioInfo.audioEncInfo.audioCodecformat,
+        config.audioInfo.innerCapInfo.audioSampleRate, config.audioInfo.innerCapInfo.audioChannels,
+        config.audioInfo.micCapInfo.audioSampleRate, config.audioInfo.micCapInfo.audioChannels,
+        config.videoInfo.videoCapInfo.displayId, config.videoInfo.videoCapInfo.taskIDs.size(),
+        config.videoInfo.videoCapInfo.videoSource);
     int32_t ret = MSERR_OK;
     ret = screenCaptureService_->SetRecorderInfo(config.recorderInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRecorderInfo failed");
@@ -312,6 +333,7 @@ sptr<OHOS::SurfaceBuffer> ScreenCaptureImpl::AcquireVideoBuffer(int32_t &fence, 
         MEDIA_LOGE("AcquireVideoBuffer get failed");
         return nullptr;
     }
+    MEDIA_LOGD("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "AcquireVideoBuffer end.", FAKE_POINTER(this));
     return surfacebuffer;
 }
 
