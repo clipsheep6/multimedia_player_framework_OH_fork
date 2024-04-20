@@ -72,8 +72,7 @@ AudioHapticPlayerImpl::AudioHapticPlayerImpl()
     : latencyMode_(AUDIO_LATENCY_MODE_NORMAL),
       muteAudio_(false),
       muteHaptic_(false),
-      audioUri_(""),
-      hapticUri_("")
+      audioUri_("")
 {
 }
 
@@ -90,7 +89,7 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
     muteAudio_ = param.options.muteAudio;
     muteHaptic_ = param.options.muteHaptics;
     audioUri_ = param.audioUri;
-    hapticUri_ = param.hapticUri;
+    hapticSource_ = param.hapticSource;
     latencyMode_ = param.latencyMode;
     streamUsage_ = param.streamUsage;
 }
@@ -132,8 +131,7 @@ int32_t AudioHapticPlayerImpl::Prepare()
 
     CHECK_AND_RETURN_RET_LOG(audioHapticVibrator_ != nullptr, MSERR_INVALID_OPERATION,
         "Audio haptic vibrator is nullptr");
-    CHECK_AND_RETURN_RET_LOG(hapticUri_ != "", MSERR_OPEN_FILE_FAILED, "Invalid val: haptic uri is empty");
-    result = audioHapticVibrator_->PreLoad(hapticUri_, streamUsage_);
+    result = audioHapticVibrator_->PreLoad(hapticSource_, streamUsage_);
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "Failed to load vobration file");
 
     playerState_ = AudioHapticPlayerState::STATE_PREPARED;
@@ -253,6 +251,18 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     }
 
     return result;
+}
+
+int32_t AudioHapticPlayerImpl::SetHapticIntensity(float intensity)
+{
+    MEDIA_LOGI("AudioHapticPlayerImpl::SetHapticIntensity %{public}f", intensity);
+    if (intensity < 1.0f || intensity > 100.0f) {
+        MEDIA_LOGE("SetHapticIntensity: the intensity value is invalid.");
+        return MSERR_INVALID_VAL;
+    }
+
+    std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
+    return audioHapticVibrator_->SetHapticIntensity(intensity);
 }
 
 int32_t AudioHapticPlayerImpl::SetLoop(bool loop)
