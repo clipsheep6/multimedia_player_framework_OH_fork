@@ -1456,6 +1456,7 @@ void PlayerServer::OnCommonEventReceived(const std::string &event)
         auto pauseTask = std::make_shared<TaskHandler<void>>([server]() {
             std::shared_ptr<PlayerServer> spServer = server.lock();
             if (spServer != nullptr) {
+                spServer->taskMgr_.MarkTaskDone("receiveccommonevent done");
                 (void)spServer->Pause();
             }
         });
