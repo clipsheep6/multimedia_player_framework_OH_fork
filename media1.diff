@@ -1,0 +1,331 @@
+From 69e00cb4a24cc38f981074d8d1068cee2666ce06 Mon Sep 17 00:00:00 2001
+From: z00562947 <z00562947@notesmail.huawei.com/>
+Date: Mon, 8 Apr 2024 10:41:45 +0800
+Subject: [PATCH] TicketNo: DTS2024040309005 Description:fix seek bug Team:EMUI
+ Feature or Bugfix:Bugfix Binary Source: sync from gitee
+ PrivateCode(Yes/No):No
+
+Change-Id: I3ec3d547682dbc61064c267f4b33a1223b0dcbdc
+---
+ frameworks/js/avplayer/avplayer_callback.cpp  | 35 ++++----
+ frameworks/js/avplayer/avplayer_callback.h    |  1 -
+ frameworks/js/avplayer/avplayer_napi.cpp      |  3 -
+ frameworks/native/player/player_impl.cpp      | 85 ++++++++++++++++++-
+ frameworks/native/player/player_impl.h        | 26 +++++-
+ .../player/hiplayer_callback_looper.cpp       |  2 +
+ .../services/player/server/player_server.cpp  |  1 +
+ 7 files changed, 126 insertions(+), 27 deletions(-)
+
+diff --git a/frameworks/js/avplayer/avplayer_callback.cpp b/frameworks/js/avplayer/avplayer_callback.cpp
+index 8fd3ed849..70cd0f0a2 100644
+--- a/frameworks/js/avplayer/avplayer_callback.cpp
++++ b/frameworks/js/avplayer/avplayer_callback.cpp
+@@ -710,22 +710,20 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
+     (void)infoBody;
+     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+     int32_t currentPositon = extra;
+-    seekNum_--;
+-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d, seek: %{public}d",
+-        FAKE_POINTER(this), currentPositon, seekNum_.load());
++    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
++        FAKE_POINTER(this), currentPositon);
+     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
+         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
+         return;
+     }
+-    if (seekNum_ == 0) {
+-        NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+ 
+-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
+-        cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
+-        cb->value = currentPositon;
+-        NapiCallback::CompleteCallback(env_, cb);
+-    }
++    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
++    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
++
++    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
++    cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
++    cb->value = currentPositon;
++    NapiCallback::CompleteCallback(env_, cb);
+ }
+ 
+ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
+@@ -783,15 +781,14 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
+         MEDIA_LOGD("can not find timeupdate callback!");
+         return;
+     }
+-    if (seekNum_ == 0) {
+-        NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+ 
+-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
+-        cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
+-        cb->value = position;
+-        NapiCallback::CompleteCallback(env_, cb);
+-    }
++    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
++    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
++
++    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
++    cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
++    cb->value = position;
++    NapiCallback::CompleteCallback(env_, cb);
+ }
+ 
+ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
+diff --git a/frameworks/js/avplayer/avplayer_callback.h b/frameworks/js/avplayer/avplayer_callback.h
+index 7c8a15369..ad8da4884 100644
+--- a/frameworks/js/avplayer/avplayer_callback.h
++++ b/frameworks/js/avplayer/avplayer_callback.h
+@@ -54,7 +54,6 @@ public:
+     void Pause();
+     void Release();
+ 
+-    std::atomic<uint32_t> seekNum_ = 0;
+     std::atomic<bool> isSetVolume_ = false;
+ private:
+     void OnStartRenderFrameCb() const;
+diff --git a/frameworks/js/avplayer/avplayer_napi.cpp b/frameworks/js/avplayer/avplayer_napi.cpp
+index bf161ca55..2e9e6ef00 100644
+--- a/frameworks/js/avplayer/avplayer_napi.cpp
++++ b/frameworks/js/avplayer/avplayer_napi.cpp
+@@ -521,7 +521,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
+         MEDIA_LOGI("0x%{public}06" PRIXPTR " Reset Task Out", FAKE_POINTER(this));
+         return TaskRet(MSERR_EXT_API9_OK, "Success");
+     });
+-    playerCb_->seekNum_ = 0;
+     (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+     return task;
+ }
+@@ -617,7 +616,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
+         });
+ 
+         isReleased_.store(true);
+-        playerCb_->seekNum_ = 0;
+         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+         if (taskQue_->IsTaskExecuting()) {
+             MEDIA_LOGW("0x%{public}06" PRIXPTR " Cancel Executing Task, ReleaseTask Report Error", FAKE_POINTER(this));
+@@ -712,7 +710,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
+             (void)jsPlayer->player_->Seek(time, jsPlayer->TransferSeekMode(mode));
+         }
+     });
+-    jsPlayer->playerCb_->seekNum_++;
+     (void)jsPlayer->taskQue_->EnqueueTask(task);
+     return result;
+ }
+diff --git a/frameworks/native/player/player_impl.cpp b/frameworks/native/player/player_impl.cpp
+index 2459544eb..4f03c1099 100644
+--- a/frameworks/native/player/player_impl.cpp
++++ b/frameworks/native/player/player_impl.cpp
+@@ -47,6 +47,7 @@ int32_t PlayerImpl::Init()
+ PlayerImpl::PlayerImpl()
+ {
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
++    ResetSeekVariables();
+ }
+ 
+ PlayerImpl::~PlayerImpl()
+@@ -134,9 +135,19 @@ int32_t PlayerImpl::Reset()
+ {
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
++    ResetSeekVariables();
+     return playerService_->Reset();
+ }
+ 
++void PlayerImpl::ResetSeekVariables()
++{
++    mCurrentPosition = -1;
++    mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
++    mSeekPosition = -1;
++    mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
++    isSeeking_ = false;
++}
++
+ int32_t PlayerImpl::Release()
+ {
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
+@@ -167,10 +178,57 @@ int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
+ 
+ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
+ {
+-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
++    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
+         FAKE_POINTER(this), mSeconds, mode);
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+-    return playerService_->Seek(mSeconds, mode);
++
++    std::unique_lock<std::recursive_mutex> lock(recMutex_);
++    mCurrentPosition = mSeconds;
++    mCurrentSeekMode = mode;
++    if ((mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) && !isSeeking_) {
++        MEDIA_LOGI("Start seek once.");
++        isSeeking_ = true;
++        mSeekPosition = mSeconds;
++        mSeekMode = mode;
++        return playerService_->Seek(mSeconds, mode);
++    } else {
++        MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
++    }
++    MEDIA_LOGI("Seeking task end. %{public}d ms, mode is %{public}d", mSeconds, mode);
++    return MSERR_OK;
++}
++
++void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
++{
++    if (type == INFO_TYPE_SEEKDONE) {
++        CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
++        std::unique_lock<std::recursive_mutex> lock(recMutex_);
++        if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
++            MEDIA_LOGI("Start seek again (%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
++            mSeekPosition = mCurrentPosition;
++            mSeekMode = mCurrentSeekMode;
++            playerService_->Seek(mCurrentPosition, mCurrentSeekMode);
++        } else {
++            MEDIA_LOGI("All seeks complete - return to regularly scheduled program");
++            ResetSeekVariables();
++        }
++        MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
++    }
++}
++
++void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
++{
++    HandleSeekDoneInfo(type);
++    CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
++    if (type == INFO_TYPE_SEEKDONE || type == INFO_TYPE_POSITION_UPDATE) {
++        if (!isSeeking_) {
++            callback_->OnInfo(type, extra, infoBody);
++        } else {
++            MEDIA_LOGD("Is seeking to (%{public}d, %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
++        }
++    } else {
++        callback_->OnInfo(type, extra, infoBody);
++    }
+ }
+ 
+ int32_t PlayerImpl::GetCurrentTime(int32_t &currentTime)
+@@ -290,7 +348,9 @@ int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cal
+     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayerCallback in", FAKE_POINTER(this));
+     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
+-    return playerService_->SetPlayerCallback(callback);
++    callback_ = callback;
++    std::shared_ptr<PlayerCallback> playerCb = std::make_shared<PlayerImplCallback>(callback, shared_from_this());
++    return playerService_->SetPlayerCallback(playerCb);
+ }
+ 
+ int32_t PlayerImpl::SetParameter(const Format &param)
+@@ -337,5 +397,24 @@ int32_t PlayerImpl::SetDecryptConfig(const sptr<DrmStandard::IMediaKeySessionSer
+ #endif
+ }
+ 
++PlayerImplCallback::PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb, std::shared_ptr<PlayerImpl> player)
++{
++    playerCb_ = playerCb;
++    player_ = player;
++}
++
++void PlayerImplCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
++{
++    auto player = player_.lock();
++    CHECK_AND_RETURN_LOG(player != nullptr, "player does not exist..");
++    player->OnInfo(type, extra, infoBody);
++}
++
++void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
++{
++    CHECK_AND_RETURN_LOG(playerCb_ != nullptr, "playerCb_ does not exist..");
++    playerCb_->OnError(errorCode, errorMsg);
++}
++
+ } // namespace Media
+ } // namespace OHOS
+diff --git a/frameworks/native/player/player_impl.h b/frameworks/native/player/player_impl.h
+index a35160181..589778917 100755
+--- a/frameworks/native/player/player_impl.h
++++ b/frameworks/native/player/player_impl.h
+@@ -18,11 +18,12 @@
+ 
+ #include "player.h"
+ #include "nocopyable.h"
++#include "osal/task/autolock.h"
+ #include "i_player_service.h"
+ 
+ namespace OHOS {
+ namespace Media {
+-class PlayerImpl : public Player, public NoCopyable {
++class PlayerImpl : public Player, public NoCopyable, public std::enable_shared_from_this<PlayerImpl> {
+ public:
+     PlayerImpl();
+     ~PlayerImpl();
+@@ -67,10 +68,33 @@ public:
+         bool svp) override;
+     int32_t SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy) override;
+     int32_t Init();
++    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+ private:
++    void ResetSeekVariables();
++    void HandleSeekDoneInfo(PlayerOnInfoType type);
++    std::recursive_mutex recMutex_;
++    int32_t mCurrentPosition = -1;
++    PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
++    int32_t mSeekPosition = -1;
++    PlayerSeekMode mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
++    std::atomic<bool> isSeeking_{false};
++    std::shared_ptr<PlayerCallback> callback_;
++
+     std::shared_ptr<IPlayerService> playerService_ = nullptr;
+     sptr<Surface> surface_ = nullptr;
+ };
++
++class PlayerImplCallback : public PlayerCallback {
++public:
++    PlayerImplCallback(const std::shared_ptr<PlayerCallback> playerCb, std::shared_ptr<PlayerImpl> player);
++    ~PlayerImplCallback() = default;
++
++    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
++    void OnError(int32_t errorCode, const std::string &errorMsg);
++private:
++    std::shared_ptr<PlayerCallback> playerCb_;
++    std::weak_ptr<PlayerImpl> player_;
++};
+ } // namespace Media
+ } // namespace OHOS
+ #endif // PLAYER_IMPL_H
+diff --git a/services/engine/histreamer/player/hiplayer_callback_looper.cpp b/services/engine/histreamer/player/hiplayer_callback_looper.cpp
+index f34d30851..cc091dbb7 100755
+--- a/services/engine/histreamer/player/hiplayer_callback_looper.cpp
++++ b/services/engine/histreamer/player/hiplayer_callback_looper.cpp
+@@ -75,6 +75,7 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine)
+ 
+ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
+ {
++    MEDIA_LOG_I("StartReportMediaProgress");
+     reportProgressIntervalMs_ = updateIntervalMs;
+     if (reportMediaProgress_) { // already set
+         return;
+@@ -90,6 +91,7 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
+ 
+ void HiPlayerCallbackLooper::StopReportMediaProgress()
+ {
++    MEDIA_LOG_I("StopReportMediaProgress");
+     reportMediaProgress_ = false;
+ }
+ 
+diff --git a/services/services/player/server/player_server.cpp b/services/services/player/server/player_server.cpp
+index 652915736..9203535fe 100755
+--- a/services/services/player/server/player_server.cpp
++++ b/services/services/player/server/player_server.cpp
+@@ -715,6 +715,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
+     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
+     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
+ 
++    MEDIA_LOGI("Queue seekTask end, position %{public}d, seek mode is %{public}d", mSeconds, mode);
+     return MSERR_OK;
+ }
+ 
+-- 
+2.40.1.huawei.3

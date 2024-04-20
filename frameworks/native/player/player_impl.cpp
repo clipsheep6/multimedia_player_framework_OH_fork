@@ -62,9 +62,9 @@ PlayerImpl::~PlayerImpl()
 
 void PlayerImpl::ResetSeekVariables()
 {
-    mCurrentPosition = -1;
+    mCurrentPosition = INT32_MIN;
     mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
-    mSeekPosition = -1;
+    mSeekPosition = INT32_MIN;
     mSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     isSeeking_ = false;
 }
