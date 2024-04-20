@@ -169,6 +169,29 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     return (int32_t)ret;
 }
 
+int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
+{
+    MEDIA_LOG_I("SetAudioDataSource enter.");
+    sourceId = INVALID_SOURCE_ID;
+    auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
+    audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
+        ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
+    if (audioDataSourceFilter_ == nullptr) {
+        MEDIA_LOG_E("HiRecorderImpl::audioDataSourceFilter_ == nullptr");
+    }
+    audioDataSourceFilter_->SetAudioDataSource(audioSource);
+    Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
+    if (ret == Status::OK) {
+        MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource success.", avRecorderTag_.c_str());
+        audioCount_++;
+        audioSourceId_ = tempSourceId;
+        sourceId = static_cast<int32_t>(audioSourceId_);
+        OnStateChanged(StateId::RECORDING_SETTING);
+    }
+    return (int32_t)ret;
+}
+
 int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 {
     MEDIA_LOG_I(PUBLIC_LOG_S "SetOutputFormat enter. " PUBLIC_LOG_D32, avRecorderTag_.c_str(),
@@ -249,6 +272,14 @@ int32_t HiRecorderImpl::Prepare()
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         CapturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
         audioCaptureFilter_->SetAudioCaptureChangeCallback(CapturerInfoChangeCallback_);
+    }
+    if (audioDataSourceFilter_) {
+        audioEncFormat_->Set<Tag::APP_TOKEN_ID>(appTokenId_);
+        audioEncFormat_->Set<Tag::APP_UID>(appUid_);
+        audioEncFormat_->Set<Tag::APP_PID>(appPid_);
+        audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
+        audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
+        audioDataSourceFilter_->Init(recorderEventReceiver_, recorderCallback_);
     }
     if (videoEncoderFilter_) {
         if (videoSourceIsRGBA_) {

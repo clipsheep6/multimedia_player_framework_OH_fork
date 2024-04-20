@@ -48,6 +48,7 @@ public:
     void SetIsMuted(bool isMuted);
     int32_t CaptureAudio();
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
+    int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
 
 protected:

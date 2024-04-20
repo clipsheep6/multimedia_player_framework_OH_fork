@@ -206,6 +206,18 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
     return MSERR_OK;
 }
 
+int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
+{
+    using namespace std::chrono_literals;
+    std::unique_lock<std::mutex> lock(bufferMutex_);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "GetBufferSize failed, not running");
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr && audioCapturer_->GetBufferSize(size) >= 0,
+        MSERR_NO_MEMORY, "CaptureAudio GetBufferSize failed");
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " GetBufferSize Buffer E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    return MSERR_OK;
+}
+
 int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
 {
     using namespace std::chrono_literals;

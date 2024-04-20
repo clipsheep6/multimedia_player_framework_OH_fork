@@ -70,6 +70,7 @@ public:
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
+    int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId) override;
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) override;
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) override;
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;

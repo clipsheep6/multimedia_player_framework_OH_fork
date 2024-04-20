@@ -20,6 +20,7 @@
 #include "recorder.h"
 #include "refbase.h"
 #include "surface.h"
+#include "media_data_source.h"
 
 namespace OHOS {
 namespace Media {
@@ -162,6 +163,25 @@ public:
      * @version 1.0
      */
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
+
+    /**
+     * @brief Sets the audio data source for recording.
+     *
+     * If this function is not called, the output file does not contain the audio track.
+     *
+     * @param source Indicates the audio source type. For details, see {@link AudioSourceType}.
+     * @param sourceId Indicates the audio source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 12.0
+     * @version 12.0
+     */
+    virtual int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
+    {
+        (void)audioSource;
+        (void)sourceId;
+        return 0;
+    };
 
     /**
      * @brief Sets an audio encoder for recording.

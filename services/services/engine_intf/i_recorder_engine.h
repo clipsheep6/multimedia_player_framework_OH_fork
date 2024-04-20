@@ -23,6 +23,7 @@
 #include "nocopyable.h"
 #include "recorder.h"
 #include "recorder_param.h"
+#include "media_data_source.h"
 
 namespace OHOS {
 class Surface;
@@ -91,6 +92,19 @@ public:
      * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
+
+    /**
+     * Sets the audio data source for recording. The sourceId can be used to identify the audio data source
+     * when configure the audio track's any properties. When the setting is failed, the sourceId is -1.
+     * This interface must be called before SetOutputFormat.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
+    {
+        (void)audioSource;
+        (void)sourceId;
+        return 0;
+    };
 
     /**
      * Sets the output file format. The function must be called after SetVideoSource or SetAudioSource, and before

@@ -49,6 +49,7 @@
 #include "notification_constant.h"
 #include "notification_slot.h"
 #include "incall_observer.h"
+#include "media_data_source.h"
 
 namespace OHOS {
 namespace Media {
@@ -56,6 +57,8 @@ using namespace Rosen;
 using namespace AudioStandard;
 using namespace OHOS::Notification;
 using OHOS::Security::AccessToken::PrivacyKit;
+
+class ScreenCaptureServer;
 
 class NotificationSubscriber : public OHOS::Notification::NotificationLocalLiveViewSubscriber {
 public:
@@ -132,7 +135,6 @@ private:
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
 };
 
-class ScreenCaptureServer;
 class ScreenCaptureObserverCallBack : public InCallObserverCallBack {
 public:
     explicit ScreenCaptureObserverCallBack(std::weak_ptr<ScreenCaptureServer> screenCaptureServer);
@@ -141,6 +143,21 @@ public:
 
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+};
+
+class AudioDataSource : public IAudioDataSource {
+public:
+    AudioDataSource(AudioCaptureSourceType type, ScreenCaptureServer* screenCaptureServer) : type_(type),
+        screenCaptureServer_(screenCaptureServer) {}
+
+    int32_t ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
+    int32_t GetSize(int64_t &size) override;
+
+private:
+    void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
+
+    AudioCaptureSourceType type_;
+    ScreenCaptureServer* screenCaptureServer_;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
@@ -177,6 +194,12 @@ public:
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     void UpdateMicrophoneEnabled();
+
+    int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer, AudioCaptureSourceType type);
+    int32_t ReleaseAudioBufferMix(AudioCaptureSourceType type);
+    int32_t GetInnerAudioCaptureBufferSize(size_t &size);
+    int32_t GetMicAudioCaptureBufferSize(size_t &size);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -264,7 +287,7 @@ private:
     int32_t outputFd_ = -1;
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
-
+    std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

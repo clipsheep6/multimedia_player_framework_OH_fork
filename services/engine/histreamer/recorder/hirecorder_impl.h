@@ -24,6 +24,7 @@
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"
 #include "audio_capture_filter.h"
+#include "audio_data_source_filter.h"
 #include "audio_encoder_filter.h"
 #include "media_errors.h"
 #include "muxer_filter.h"
@@ -56,6 +57,7 @@ public:
     int32_t Init();
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId);
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId);
+    int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId);
     int32_t SetOutputFormat(OutputFormatType format);
     int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs);
     int32_t Configure(int32_t sourceId, const RecorderParam &recParam);
@@ -101,6 +103,7 @@ private:
 
     std::shared_ptr<Pipeline::Pipeline> pipeline_;
     std::shared_ptr<Pipeline::AudioCaptureFilter> audioCaptureFilter_;
+    std::shared_ptr<Pipeline::AudioDataSourceFilter> audioDataSourceFilter_;
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
