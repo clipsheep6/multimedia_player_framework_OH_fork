@@ -63,7 +63,7 @@ int32_t AudioHapticManagerImpl::RegisterSourceWithEffectId(const std::string &au
 {
     std::lock_guard<std::mutex> lock(audioHapticManagerMutex_);
     if (effectId == "") {
-        MEDIA_LOGE("RegisterSourceWithEffectId failed for effectId: %{public}s", effectId.c_str());
+        MEDIA_LOGE("RegisterSourceWithEffectId failed. The effectId is empty!");
         return -1;
     }
     if (curPlayerCount_ >= MAX_PLAYER_NUM) {
@@ -79,7 +79,8 @@ int32_t AudioHapticManagerImpl::RegisterSourceWithEffectId(const std::string &au
     audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUri, sourceUri,
         AUDIO_LATENCY_MODE_FAST, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION, nullptr);
     curPlayerCount_ += 1;
-    MEDIA_LOGI("Finish to register source with effectId: %{public}s, sourceID: %{public}d", effectId.c_str(), sourceId);
+    MEDIA_LOGI("Finish to RegisterSourceWithEffectId. effectId: %{public}s, sourceId: %{public}d",
+        effectId.c_str(), sourceId);
     return sourceId;
 }
 
