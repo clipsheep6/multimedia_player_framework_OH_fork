@@ -243,6 +243,7 @@ private:
     void UpdateLiveViewContent();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
+    void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
 
 private:
     std::mutex mutex_;
