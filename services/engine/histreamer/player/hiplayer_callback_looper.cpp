@@ -69,7 +69,8 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string pl
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     playerEngine_ = engine;
-    task_ = std::make_unique<Task>("callbackThread", "", TaskType::GLOBAL, OHOS::Media::TaskPriority::NORMAL, false);
+    task_ = std::make_unique<Task>("callbackThread", playerId, TaskType::GLOBAL,
+        OHOS::Media::TaskPriority::NORMAL, false);
 }
 
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)

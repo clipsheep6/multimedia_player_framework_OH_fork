@@ -88,8 +88,8 @@ int32_t HiRecorderImpl::Init()
     MEDIA_LOG_I(PUBLIC_LOG_S "Init enter.", avRecorderTag_.c_str());
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
-    playerId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
-    pipeline_->Init(recorderEventReceiver_, recorderCallback_, playerId_);
+    recorderId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
+    pipeline_->Init(recorderEventReceiver_, recorderCallback_, recorderId_);
     return (int32_t)Status::OK;
 }
 
