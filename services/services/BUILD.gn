@@ -212,6 +212,7 @@ ohos_shared_library("media_service") {
     "os_account:os_account_innerkits",
     "qos_manager:concurrent_task_client",
     "qos_manager:qos",
+    "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "state_registry:tel_state_registry_api",
   ]

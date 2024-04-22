@@ -26,6 +26,8 @@
 #include "media_dfx.h"
 #include "scope_guard.h"
 #include "screen_capture_listener_proxy.h"
+#include "res_type.h"
+#include "res_sched_client.h"
 
 using OHOS::Rosen::DMError;
 
@@ -814,6 +816,14 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
     return ret;
 }
 
+void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload)
+{
+    payload["uid"] = std::to_string(appInfo_.appUid);
+    payload["pid"] = std::to_string(appInfo_.appPid);
+    uint32_t type = ResourceSchedule::ResType::RES_TYPE_REPORT_SCREEN_CAPTURE;
+    ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
+}
+
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture start, isSuccess:%{public}s, "
@@ -835,7 +845,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         if (!UpdatePrivacyUsingPermissionState(START_VIDEO)) {
             MEDIA_LOGE("UpdatePrivacyUsingPermissionState START failed, dataType:%{public}d", captureConfig_.dataType);
         }
-        BehaviorEventWriteForScreenCapture("start", "AVScreenCapture", appInfo_.appUid, appInfo_.appPid);
+        std::unordered_map<std::string, std::string> payload;
+        int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
+        ResSchedReportData(value, payload);
         captureState_ = AVScreenCaptureState::STARTED;
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     } else {
@@ -1777,8 +1789,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     if (!UpdatePrivacyUsingPermissionState(STOP_VIDEO)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     }
-    BehaviorEventWriteForScreenCapture("stop", "AVScreenCapture", appInfo_.appUid, appInfo_.appPid);
-
+    std::unordered_map<std::string, std::string> payload;
+    int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
+    ResSchedReportData(value, payload);
     MEDIA_LOGI("StopScreenCaptureInner sessionId:%{public}d, activeSessionId_:%{public}d", sessionId_,
         activeSessionId_.load());
     if (sessionId_ == activeSessionId_.load()) {
