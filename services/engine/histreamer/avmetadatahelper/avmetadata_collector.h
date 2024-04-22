@@ -69,6 +69,7 @@ public:
     ~AVMetaDataCollector();
 
     std::unordered_map<int32_t, std::string> ExtractMetadata();
+    std::shared_ptr<Meta> GetAVMetadata();
     std::string ExtractMetadata(int32_t key);
     std::shared_ptr<AVSharedMemory> GetArtPicture();
     void Reset();
@@ -78,6 +79,8 @@ private:
     std::shared_ptr<MediaDemuxer> mediaDemuxer_;
     std::unordered_map<int32_t, std::string> collectedMeta_ = {};
     std::shared_ptr<AVSharedMemory> collectedArtPicture_;
+    std::shared_ptr<Meta> customInfo_;
+    std::shared_ptr<Meta> collectedAVMetaData_;
 
     std::unordered_map<int32_t, std::string> GetMetadata(
         const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -86,6 +89,8 @@ private:
     void FormatMimeType(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void FormatDateTime(Metadata &avmeta, const std::shared_ptr<Meta> &globalInfo);
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
+    bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
+        Metadata &avmeta, int32_t avKey, std::string innerKey) const;
 };
 }  // namespace Media
 }  // namespace OHOS

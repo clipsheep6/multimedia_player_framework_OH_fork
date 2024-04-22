@@ -55,6 +55,12 @@ public:
     virtual std::unordered_map<int32_t, std::string> ResolveMetadata() = 0;
 
     /**
+     * This method must be called after the SetSource.
+     *@return Returns metadata on success; nullptr on failure
+    */
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
+
+    /**
      * Fetch the album art picture associated with the data source. If there are
      * more than one pictures, the cover image will be returned preferably.
      * @return Returns the a chunk of shared memory containing a picture, which can be

@@ -44,6 +44,26 @@ std::string CommonNapi::GetStringArgument(napi_env env, napi_value value)
     return strValue;
 }
 
+std::string CommonNapi::GetCustomString(napi_env env, napi_value value)
+{
+    std::string strValue = "";
+    size_t bufLength = 0;
+    size_t custom_str_maxLength = 1001;
+    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
+    if (status == napi_ok && bufLength > 0 && bufLength < custom_str_maxLength) {
+        char *buffer = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
+        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
+        status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
+        if (status == napi_ok) {
+            MEDIA_LOGD("argument = %{public}s", buffer);
+            strValue = buffer;
+        }
+        free(buffer);
+        buffer = nullptr;
+    }
+    return strValue;
+}
+
 bool CommonNapi::CheckValueType(napi_env env, napi_value arg, napi_valuetype type)
 {
     napi_valuetype valueType = napi_undefined;
@@ -51,6 +71,13 @@ bool CommonNapi::CheckValueType(napi_env env, napi_value arg, napi_valuetype typ
         return true;
     }
     return false;
+}
+
+bool CommonNapi::CheckhasNamedProperty(napi_env env, napi_value arg, std::string type)
+{
+    bool exist = false;
+    napi_status napiStatus = napi_has_named_property(env, arg, type.c_str(), &exist);
+    return exist && (napiStatus == napi_ok);
 }
 
 bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result)
@@ -141,6 +168,57 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     }
 
     return GetStringArgument(env, item);
+}
+
+napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Meta &meta, std::string type)
+{
+    bool exist = false;
+    napi_value in = nullptr;
+    napi_valuetype valueType = napi_undefined;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return napi_invalid_arg;
+    }
+    if (napi_get_named_property(env, configObj, type.c_str(), &in) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return napi_invalid_arg;
+    }
+    status = napi_typeof(env, in, &valueType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+    CHECK_AND_RETURN_RET_LOG(valueType != napi_undefined, napi_ok, "PropertyRecord undefined");
+    CHECK_AND_RETURN_RET_LOG(valueType == napi_object, napi_invalid_arg, "invalid arguments");
+
+    napi_value dataList = nullptr;
+    uint32_t count = 0;
+    int32_t maxCount = 500;
+    status = napi_get_property_names(env, in, &dataList);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
+    status = napi_get_array_length(env, dataList, &count);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount, napi_invalid_arg, "get length failed or more than 500");
+
+    napi_value jsKey = nullptr;
+    napi_value jsValue = nullptr;
+    for (uint32_t i = 0; i < count; i++) {
+        status = napi_get_element(env, dataList, i, &jsKey);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get element Key failed");
+        status = napi_typeof(env, jsKey, &valueType);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+        CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "key not supported type");
+        std::string strKey = GetCustomString(env, jsKey);
+        CHECK_AND_RETURN_RET_LOG(strKey != "", napi_invalid_arg, "key not supported");
+
+        status = napi_get_named_property(env, in, strKey.c_str(), &jsValue);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property value failed");
+        status = napi_typeof(env, jsValue, &valueType);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
+
+        CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "value not supported type");
+        std::string sValue = GetCustomString(env, jsValue);
+        CHECK_AND_RETURN_RET_LOG(!sValue.empty(), napi_invalid_arg, "get value failed");
+        meta.SetData(strKey, sValue);
+    }
+    return napi_ok;
 }
 
 bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd)
@@ -312,6 +390,37 @@ napi_deferred CommonNapi::CreatePromise(napi_env env, napi_ref ref, napi_value &
         napi_create_promise(env, &deferred, &result);
     }
     return deferred;
+}
+
+bool CommonNapi::SetPropertyByValueType(napi_env env, napi_value &obj, std::shared_ptr<Meta> &meta, std::string key)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr && meta != nullptr, false);
+    CHECK_AND_RETURN_RET(meta->Find(key) != meta->end(), false);
+
+    bool ret = true;
+    AnyValueType type = meta->GetValueType(key);
+    if (type == AnyValueType::STRING) {
+        std::string sValue;
+        ret = meta->GetData(key, sValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyString(env, obj, key, sValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else if (type == AnyValueType::INT32_T) {
+        int32_t value;
+        ret = meta->GetData(key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyInt32(env, obj, key, value);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else if (type == AnyValueType::FLOAT) {
+        float dValue;
+        ret = meta->GetData(key, dValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "GetData failed, key %{public}s", key.c_str());
+        ret = CommonNapi::SetPropertyDouble(env, obj, key, dValue);
+        CHECK_AND_RETURN_RET_LOG(ret, ret, "SetPropertyString failed, key %{public}s", key.c_str());
+    } else {
+        MEDIA_LOGE("not supported value type");
+    }
+    return true;
 }
 
 bool CommonNapi::AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max)

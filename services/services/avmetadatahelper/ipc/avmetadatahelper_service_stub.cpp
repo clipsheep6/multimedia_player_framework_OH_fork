@@ -66,6 +66,7 @@ int32_t AVMetadataHelperServiceStub::Init()
     avMetadataHelperFuncs_[DESTROY] = &AVMetadataHelperServiceStub::DestroyStub;
     avMetadataHelperFuncs_[SET_CALLBACK] = &AVMetadataHelperServiceStub::SetHelperCallback;
     avMetadataHelperFuncs_[SET_LISTENER_OBJ] = &AVMetadataHelperServiceStub::SetListenerObject;
+    avMetadataHelperFuncs_[GET_AVMETADATA] = &AVMetadataHelperServiceStub::GetAVMetadata;
     return MSERR_OK;
 }
 
@@ -147,6 +148,13 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServiceStub::ResolveMet
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, {}, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->ResolveMetadata();
+}
+
+std::shared_ptr<Meta> AVMetadataHelperServiceStub::GetAVMetadata()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->GetAVMetadata();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchArtPicture()
@@ -240,6 +248,32 @@ int32_t AVMetadataHelperServiceStub::ResolveMetadataMap(MessageParcel &data, Mes
 
     reply.WriteInt32Vector(key);
     reply.WriteStringVector(dataStr);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    bool ret = true;
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    auto metadata = GetAVMetadata();
+    if (metadata == nullptr) {
+        MEDIA_LOGE("metadata is null");
+        metadata = std::make_shared<Meta>();
+    }
+
+    auto iter = metadata->Find("customInfo");
+    if (iter != metadata->end()) {
+        ret &= metadata->GetData("customInfo", customInfo);
+        ret &= reply.WriteString("customInfo");
+        ret &= customInfo->ToParcel(reply);
+    }
+    metadata->Remove("customInfo");
+    ret &= reply.WriteString("AVMetadata");
+    ret &= metadata->ToParcel(reply);
+    if (!ret) {
+        MEDIA_LOGE("GetAVMetadata ToParcel error");
+    }
     return MSERR_OK;
 }
 

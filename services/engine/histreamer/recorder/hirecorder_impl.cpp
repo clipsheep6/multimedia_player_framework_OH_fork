@@ -234,6 +234,8 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::OUT_FD:
         case RecorderPublicParamType::VID_ORIENTATION_HINT:
         case RecorderPublicParamType::GEO_LOCATION:
+        case RecorderPublicParamType::VID_GENRE_INFO:
+        case RecorderPublicParamType::VID_CUSTOM_INFO:
             ConfigureMuxer(recParam);
             break;
         default:
@@ -440,6 +442,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
+                    muxerFilter_->SetUserMeta(userMeta_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -453,6 +456,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
+                    muxerFilter_->SetUserMeta(userMeta_);
                     close(fd_);
                     fd_ = -1;
                 }
@@ -496,7 +500,7 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
 
     std::vector<MediaAVCodec::CapabilityData*> encoderCapData;
     Status ret = codecCapabilityAdapter_->GetAvailableEncoder(encoderCapData);
-    
+
     encoderInfo = ConvertEncoderInfo(encoderCapData);
     return (int32_t)ret;
 }
@@ -582,6 +586,7 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
         }
         case RecorderPublicParamType::VID_ENC_FMT: {
             videoEncFormat_ = std::make_shared<Meta>();
+            userMeta_ = std::make_shared<Meta>();
             ConfigureVideoEncoderFormat(recParam);
             break;
         }
@@ -647,6 +652,20 @@ bool HiRecorderImpl::CheckAudioSourceType(AudioSourceType sourceType)
     return false;
 }
 
+void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
+{
+    RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
+    if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_90);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_180) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_180);
+    } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
+    }
+}
+
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 {
     MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureMuxer enter", avRecorderTag_.c_str());
@@ -669,16 +688,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             break;
         }
         case RecorderPublicParamType::VID_ORIENTATION_HINT: {
-            RotationAngle rotationAngle = static_cast<const RotationAngle&>(recParam);
-            if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_0) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_0);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_90) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_90);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_180) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_180);
-            } else if (rotationAngle.rotation == Plugins::VideoRotation::VIDEO_ROTATION_270) {
-                muxerFormat_->Set<Tag::VIDEO_ROTATION>(Plugins::VideoRotation::VIDEO_ROTATION_270);
-            }
+            ConfigureRotation(recParam);
             if (muxerFilter_) {
                 muxerFilter_->SetParameter(muxerFormat_);
             }
@@ -688,6 +698,16 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             GeoLocation geoLocation = static_cast<const GeoLocation&>(recParam);
             muxerFormat_->Set<Tag::MEDIA_LATITUDE>(geoLocation.latitude);
             muxerFormat_->Set<Tag::MEDIA_LONGITUDE>(geoLocation.longitude);
+            break;
+        }
+        case RecorderPublicParamType::VID_CUSTOM_INFO: {
+            CustomInfo customInfo = static_cast<const CustomInfo&>(recParam);
+            userMeta_ = std::make_shared<Meta>(customInfo.userCustomInfo);
+            break;
+        }
+        case RecorderPublicParamType::VID_GENRE_INFO: {
+            GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
+            muxerFormat_->SetData("genre", genreInfo.genre);
             break;
         }
         default:
