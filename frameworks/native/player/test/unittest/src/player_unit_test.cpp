@@ -402,6 +402,28 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_010
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
+    ASSERT_EQ(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test Player SetSource API
+ * @tc.number: Player_SetSource_011
+ * @tc.desc  : Test Player SetSource interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
+    ASSERT_EQ(MSERR_OK, ret);
+}
+
+/**
  * @tc.name  : Test Player Local
  * @tc.number: Player_Local_001
  * @tc.desc  : Test Player Local source

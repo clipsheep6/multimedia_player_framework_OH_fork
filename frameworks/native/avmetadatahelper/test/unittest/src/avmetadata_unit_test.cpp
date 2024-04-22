@@ -341,6 +341,24 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0100, Function | MediumT
 }
 
 /**
+    * @tc.number    : FetchArtPicture_Format_MP3_0200
+    * @tc.name      : Get ArtPicture FROM H264_AAC.mp4
+    * @tc.desc      : Get ArtPicture FROM H264_AAC.mp4
+*/
+HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0200, Function | MediumTest | Level0)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    std::shared_ptr<AVSharedMemory> frame = helper->FetchArtPicture();
+    ASSERT_EQ(nullptr, frame);
+}
+
+/**
  * @tc.number    : FetchFrameAtTime_Resolution_0100
  * @tc.name      : Resolution 170x170
  * @tc.desc      : Get THUMBNAIL
