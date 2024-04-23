@@ -238,5 +238,12 @@ double __attribute__((visibility("default"))) TransformPlayRateToSpeed(const Pla
     }
     return SPEED_1_00_X;
 }
+
+bool __attribute__((visibility("default"))) IsEnableOptimizeDecode()
+{
+    char useOptimizeDecode[10] = {0}; // 10: system param usage
+    auto res = GetParameter("debug.media_service.optimize_decode", "1", useOptimizeDecode, sizeof(useOptimizeDecode));
+    return res == 1 && useOptimizeDecode[0] == '1';
+}
 }  // namespace Media
 }  // namespace OHOS
