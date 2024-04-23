@@ -35,6 +35,7 @@
             <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
             <option name="push" value="test_videofile/amr_nb_8ksr_7400kbr_1ch.amr -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_AAC_320x240.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/AAC_AACLC_drm.ts -> /data/test" src="res"/>
             <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
