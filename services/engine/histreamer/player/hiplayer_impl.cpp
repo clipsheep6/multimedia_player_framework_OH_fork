@@ -1297,26 +1297,6 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
     }
 }
 
-double HiPlayerImpl::ChangeModeToSpeed(const PlaybackRateMode &mode) const
-{
-    switch (mode) {
-        case SPEED_FORWARD_0_75_X:
-            return SPEED_0_75_X;
-        case SPEED_FORWARD_1_00_X:
-            return SPEED_1_00_X;
-        case SPEED_FORWARD_1_25_X:
-            return SPEED_1_25_X;
-        case SPEED_FORWARD_1_75_X:
-            return SPEED_1_75_X;
-        case SPEED_FORWARD_2_00_X:
-            return SPEED_2_00_X;
-        default:
-            MEDIA_LOG_W("unknown mode: " PUBLIC_LOG_D32 ", return default speed(SPEED_1_00_X)", mode);
-    }
-
-    return SPEED_1_00_X;
-}
-
 void HiPlayerImpl::NotifyBufferingUpdate(const std::string_view& type, int32_t param)
 {
     Format format;
