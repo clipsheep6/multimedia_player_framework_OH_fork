@@ -199,7 +199,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
         "videoEncInfo.audioBitrate:%{public}d, videoEncInfo.audioCodecformat:%{public}d, "
         "innerCapInfo.audioSampleRate:%{public}d, innerCapInfo.audioChannels::%{public}d, "
         "micCapInfo.audioSampleRate:%{public}d, micCapInfo.audioChannels:%{public}d, "
-        "videoCapInfo.displayId:%{public}lld, videoCapInfo.taskIDs.size:%{public}d, "
+        "videoCapInfo.displayId:%{public}" PRIu64 ", videoCapInfo.taskIDs.size:%{public}zu, "
         "videoCapInfo.videoSource:%{public}d.", FAKE_POINTER(this), config.recorderInfo.url.c_str(),
         config.audioInfo.audioEncInfo.audioBitrate, config.audioInfo.audioEncInfo.audioCodecformat,
         config.audioInfo.innerCapInfo.audioSampleRate, config.audioInfo.innerCapInfo.audioChannels,
