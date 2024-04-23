@@ -37,7 +37,7 @@ declare_args() {
   multimedia_player_framework_support_monitor = true
   use_memmgr_plugin = false
   if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_memmgr_plugin)) {
+      defined(global_parts_info.resourceschedule_memmgr_override)) {
     use_memmgr_plugin = true
   }
   use_memmgr = false
