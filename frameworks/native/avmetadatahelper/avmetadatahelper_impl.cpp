@@ -223,6 +223,14 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
     return avMetadataHelperService_->ResolveMetadata();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
+        "avmetadatahelper service does not exist.");
+
+    return avMetadataHelperService_->GetAVMetadata();
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,

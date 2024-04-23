@@ -48,6 +48,10 @@ public:
         std::unordered_map<int32_t, std::string> metadata;
         return metadata;
     }
+    std::shared_ptr<Meta> GetAVMetadata() override
+    {
+        return nullptr;
+    }
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override
     {
         return nullptr;
@@ -78,6 +82,7 @@ private:
     int32_t SetFdSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t ResolveMetadata(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t ResolveMetadataMap(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetAVMetadata(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t FetchArtPicture(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t FetchFrameAtTime(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Release(uint8_t *inputData, size_t size, bool isFuzz);

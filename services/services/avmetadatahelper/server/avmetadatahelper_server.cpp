@@ -208,6 +208,22 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata
     return result.Value();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperServer::GetAVMetadata()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("AVMetadataHelperServer::ResolveMetadata");
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, {}, "avMetadataHelperEngine_ is nullptr");
+    auto task = std::make_shared<TaskHandler<std::shared_ptr<Meta>>>([&, this] {
+        return avMetadataHelperEngine_->GetAVMetadata();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ChangeState(HelperStates::HELPER_CALL_DONE);
+    return result.Value();
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
 {
     std::lock_guard<std::mutex> lock(mutex_);

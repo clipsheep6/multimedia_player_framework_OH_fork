@@ -31,6 +31,7 @@ public:
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
+    std::shared_ptr<Meta> GetAVMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     void Release() override;
