@@ -19,6 +19,7 @@
 #include "sound_id_manager.h"
 
 namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundIDManager"};
     static const std::string THREAD_POOL_NAME = "SoundParserThreadPool";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }

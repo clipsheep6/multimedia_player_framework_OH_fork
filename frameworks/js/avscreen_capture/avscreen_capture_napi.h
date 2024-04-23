@@ -116,6 +116,7 @@ private:
     static VideoCodecFormat GetVideoCodecFormat(const int32_t &preset);
     static int32_t GetAudioInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     static int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
 
     AVScreenCaptureNapi();
     ~AVScreenCaptureNapi();

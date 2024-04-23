@@ -239,23 +239,27 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of ReportAVScreenCaptureUserChoice finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, AsyncJsReportAVScreenCaptureUserChoice,
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
+}
+
+void AVScreenCaptureNapi::AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void* data)
+{
+    AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
+    }
+    MEDIA_LOGI("The js thread of ReportAVScreenCaptureUserChoice finishes execution and returns");
 }
 
 napi_value AVScreenCaptureNapi::JsInit(napi_env env, napi_callback_info info)

@@ -18,6 +18,10 @@
 #include "soundpool_manager.h"
 #include "soundpool.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPool"};
+}
+
 namespace OHOS {
 namespace Media {
 std::shared_ptr<ISoundPool> SoundPoolFactory::CreateSoundPool(int maxStreams,

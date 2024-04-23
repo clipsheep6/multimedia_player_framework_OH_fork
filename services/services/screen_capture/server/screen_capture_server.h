@@ -254,14 +254,14 @@ private:
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
 
-    int32_t sessionId_;
-    int32_t notificationId_;
+    int32_t sessionId_ = 0;
+    int32_t notificationId_ = 0;
     std::string callingLabel_;
     std::string liveViewText_;
     std::atomic<int32_t> micCount_{0};
-    int32_t density_;
+    int32_t density_ = 0;
     int32_t capsuleVpSize_ = 18;
-    int32_t capsulePxSize_;
+    int32_t capsulePxSize_ = 0;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
@@ -284,7 +284,7 @@ private:
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
     std::string url_;
-    OutputFormatType fileFormat_;
+    OutputFormatType fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     int32_t outputFd_ = -1;
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
