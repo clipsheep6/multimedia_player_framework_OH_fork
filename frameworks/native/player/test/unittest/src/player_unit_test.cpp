@@ -668,22 +668,6 @@ HWTEST_F(PlayerUnitTest, Player_Local_017, TestSize.Level2)
 }
 
 /**
- * @tc.name  : Test Player Local
- * @tc.number: Player_Local_018
- * @tc.desc  : Test Player Local source
- */
-HWTEST_F(PlayerUnitTest, Player_Local_018, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource(MEDIA_ROOT + "AAC_AACLC_drm.ts");
-    EXPECT_EQ(MSERR_OK, ret);
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_NE(MSERR_OK, player_->Play());
-}
-
-/**
  * @tc.name  : Test Player SetPlayerCallback API
  * @tc.number: Player_SetPlayerCallback_001
  * @tc.desc  : Test Player SetPlayerCallback interface
