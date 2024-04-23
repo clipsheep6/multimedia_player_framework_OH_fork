@@ -18,6 +18,7 @@
 
 #include "avmetadatahelper.h"
 #include "buffer/avsharedmemory.h"
+#include "meta/meta.h"
 
 namespace OHOS {
 namespace Media {
@@ -129,6 +130,13 @@ public:
      * @return Returns the meta data values on success; empty hash map on failure.
      */
     virtual std::unordered_map<int32_t, std::string> ResolveMetadata() = 0;
+
+    /**
+     * get all avmetadata.
+     * This method must be called after the SetSource.
+     * @return Returns the meta data values on success; nullptr on failure.
+     */
+    virtual std::shared_ptr<Meta> GetAVMetadata() = 0;
 
     /**
      * Fetch a representative video frame near a given timestamp by considering the given

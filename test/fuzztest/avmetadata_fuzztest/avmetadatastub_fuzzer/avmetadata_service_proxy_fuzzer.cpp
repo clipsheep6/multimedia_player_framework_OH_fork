@@ -28,6 +28,7 @@ AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObj
     avmetaFuncs_[SET_FD_SOURCE] = &AVMetadataServiceProxyFuzzer::SetFdSource;
     avmetaFuncs_[RESOLVE_METADATA] = &AVMetadataServiceProxyFuzzer::ResolveMetadata;
     avmetaFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataServiceProxyFuzzer::ResolveMetadataMap;
+    avmetaFuncs_[GET_AVMETADATA] = &AVMetadataServiceProxyFuzzer::GetAVMetadata;
     avmetaFuncs_[FETCH_ART_PICTURE] = &AVMetadataServiceProxyFuzzer::FetchArtPicture;
     avmetaFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataServiceProxyFuzzer::FetchFrameAtTime;
     avmetaFuncs_[RELEASE] = &AVMetadataServiceProxyFuzzer::Release;
@@ -173,6 +174,23 @@ int32_t AVMetadataServiceProxyFuzzer::ResolveMetadataMap(uint8_t *inputData, siz
     bool token = data.WriteInterfaceToken(AVMetadataServiceProxyFuzzer::GetDescriptor());
     if (!token) {
         std::cout << "ResolveMetadataMap:Failed to write descriptor!" << std::endl;
+        return false;
+    }
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
+}
+
+int32_t AVMetadataServiceProxyFuzzer::GetAVMetadata(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageOption option;
+    MessageParcel reply;
+
+    bool token = data.WriteInterfaceToken(AVMetadataServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "GetAVMetadata:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));

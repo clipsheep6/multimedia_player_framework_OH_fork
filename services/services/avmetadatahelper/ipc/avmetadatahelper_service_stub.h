@@ -36,6 +36,7 @@ public:
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadataMap() override;
+    std::shared_ptr<Meta> GetAVMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
@@ -52,6 +53,7 @@ private:
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t ResolveMetadata(MessageParcel &data, MessageParcel &reply);
     int32_t ResolveMetadataMap(MessageParcel &data, MessageParcel &reply);
+    int32_t GetAVMetadata(MessageParcel &data, MessageParcel &reply);
     int32_t FetchArtPicture(MessageParcel &data, MessageParcel &reply);
     int32_t FetchFrameAtTime(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);

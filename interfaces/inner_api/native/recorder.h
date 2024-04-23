@@ -22,6 +22,7 @@
 #include <set>
 #include <parcel.h>
 #include "meta/format.h"
+#include "meta/meta.h"
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
@@ -368,6 +369,27 @@ public:
         muted = parcel.ReadBool();
     }
 };
+
+struct userLocation {
+    float latitude = 0.0f;
+    float longitude = 0.0f;
+};
+
+/**
+ * @brief same as AVMetadata
+ *
+ * @param videoOrientation {0, 90, 180, 270} default 0 default orientation is 0, same as AVRecorderConfig.rotation
+ * @param genre the metadata to retrieve the content type or genre of the data
+ * @param location geo location information from user
+ * @param customInfo Custom parameter key-value map from user
+*/
+struct AVMetadata {
+    std::string videoOrientation;
+    std::string genre;
+    userLocation location;
+    Meta customInfo;
+};
+
 /**
  * @brief Provides listeners for recording errors and information events.
  *
@@ -734,6 +756,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) = 0;
+
+    /**
+     * @brief Custom parameter
+     *
+     * @param userMeta The user Custom Parameters
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+    */
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0;
+
+    /**
+     * @brief Genre
+    */
+    virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
 
     /**
      * @brief Prepares for recording.

@@ -43,6 +43,8 @@ enum RecorderPublicParamType : uint32_t {
     VID_IS_HDR,
     VID_CAPTURERATE,
     VID_ENABLE_TEMPORAL_SCALE,
+    VID_CUSTOM_INFO,
+    VID_GENRE_INFO,
     VID_PUBLIC_PARAM_END,
     VID_ORIENTATION_HINT,
     // audio begin
@@ -177,6 +179,18 @@ struct OutFd : public RecorderParam {
 struct NextOutFd : public RecorderParam {
     explicit NextOutFd(int32_t nextOutFd) : RecorderParam(RecorderPublicParamType::NEXT_OUT_FD), fd(nextOutFd) {}
     int32_t fd;
+};
+
+struct CustomInfo : public RecorderParam {
+    explicit CustomInfo(Meta CustomInfo) : RecorderParam(RecorderPublicParamType::VID_CUSTOM_INFO),
+        userCustomInfo(CustomInfo) {}
+    Meta userCustomInfo;
+};
+
+struct GenreInfo : public RecorderParam {
+    explicit GenreInfo(std::string genreInfo) : RecorderParam(RecorderPublicParamType::VID_GENRE_INFO),
+        genre(genreInfo) {}
+    std::string genre;
 };
 } // namespace Media
 } // namespace OHOS

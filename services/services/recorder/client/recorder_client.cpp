@@ -218,6 +218,24 @@ int32_t RecorderClient::SetDataSource(DataSourceType dataType, int32_t &sourceId
     return recorderProxy_->SetDataSource(dataType, sourceId);
 }
 
+int32_t RecorderClient::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetUserCustomInfo sourceId(%{public}d)", sourceId);
+    return recorderProxy_->SetUserCustomInfo(sourceId, userCustomInfo);
+}
+
+int32_t RecorderClient::SetGenre(int32_t sourceId, std::string &genre)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetGenre sourceId(%{public}d)", sourceId);
+    return recorderProxy_->SetGenre(sourceId, genre);
+}
+
 int32_t RecorderClient::SetMaxDuration(int32_t duration)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -394,7 +412,7 @@ int32_t RecorderClient::GetLocation(Location &location)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
-    
+
     MEDIA_LOGD("GetLocation");
     return recorderProxy_->GetLocation(location);
 }
@@ -403,7 +421,7 @@ int32_t RecorderClient::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
-    
+
     MEDIA_LOGD("GetCurrentCapturerChangeInfo");
     return recorderProxy_->GetCurrentCapturerChangeInfo(changeInfo);
 }

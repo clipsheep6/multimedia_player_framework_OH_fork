@@ -51,6 +51,8 @@ public:
     int32_t SetAudioChannels(int32_t sourceId, int32_t num) override;
     int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) override;
     int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) override;
+    int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) override;
+    int32_t SetGenre(int32_t sourceId, std::string &genre) override;
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
@@ -104,6 +106,8 @@ private:
     int32_t SetMaxFileSize(MessageParcel &data, MessageParcel &reply);
     int32_t SetLocation(MessageParcel &data, MessageParcel &reply);
     int32_t SetOrientationHint(MessageParcel &data, MessageParcel &reply);
+    int32_t SetUserCustomInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t SetGenre(MessageParcel &data, MessageParcel &reply);
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t Start(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);

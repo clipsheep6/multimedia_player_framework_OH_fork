@@ -41,6 +41,8 @@ public:
     virtual int32_t SetAudioChannels(int32_t sourceId, int32_t num) = 0;
     virtual int32_t SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate) = 0;
     virtual int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) = 0;
+    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0;
+    virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
     virtual int32_t SetMaxDuration(int32_t duration) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
@@ -89,6 +91,8 @@ public:
         SET_MAX_FILE_SIZE,
         SET_LOCATION,
         SET_ORIENTATION_HINT,
+        SET_USER_CUSTOM_INFO,
+        SET_GENRE,
         PREPARE,
         START,
         PAUSE,

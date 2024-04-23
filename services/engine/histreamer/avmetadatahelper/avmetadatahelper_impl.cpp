@@ -125,6 +125,14 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
     return metadataCollector_->GetArtPicture();
 }
 
+std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
+{
+    MEDIA_LOGE("enter GetAVMetadata");
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return metadataCollector_->GetAVMetadata();
+}
+
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const OutputConfiguration &param)
 {
