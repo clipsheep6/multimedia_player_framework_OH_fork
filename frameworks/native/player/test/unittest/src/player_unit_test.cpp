@@ -3011,12 +3011,12 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_001, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_NE(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
     Format format;
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
 }
 
 /**
@@ -3032,8 +3032,8 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_002, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_NE(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
     Format format;
     int32_t contentType = 1;
     int32_t scaleType = 1;
@@ -3045,9 +3045,9 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_002, TestSize.Level0)
     format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
     format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
 }
 
 /**
@@ -3073,40 +3073,40 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
-    EXPECT_NE(MSERR_OK, player_->SetLooping(true));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
 
     formatNoScaleType.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
     formatNoScaleType.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
     formatNoScaleType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     formatNoScaleType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(formatNoScaleType));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoScaleType));
 
     formatNoContentType.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
     formatNoContentType.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
     formatNoContentType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     formatNoContentType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(formatNoContentType));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoContentType));
 
     formatNoStreamUsage.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
     formatNoStreamUsage.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
     formatNoStreamUsage.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     formatNoStreamUsage.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(formatNoStreamUsage));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoStreamUsage));
 
     formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
     formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(formatNoStreamUsageAndContentType));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoStreamUsageAndContentType));
 
     formatNoInterruptMode.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
     formatNoInterruptMode.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
     formatNoInterruptMode.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
     formatNoInterruptMode.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
-    EXPECT_NE(MSERR_OK, player_->SetParameter(formatNoInterruptMode));
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoInterruptMode));
 
-    EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
 }
 
 } // namespace Media
