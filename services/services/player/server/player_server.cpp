@@ -329,8 +329,7 @@ int32_t PlayerServer::SetRenderFirstFrame(bool display)
 
     if (isLiveStream_) {
         MEDIA_LOGE("Can not SetRenderFirstFrame, it is live-stream");
-        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetRenderFirstFrame, it is live-stream");
-        return MSERR_INVALID_OPERATION;
+        return MSERR_OK;
     }
 
     if (playerEngine_ != nullptr) {
