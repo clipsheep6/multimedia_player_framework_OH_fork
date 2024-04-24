@@ -78,7 +78,9 @@ std::shared_ptr<AudioHapticVibrator> AudioHapticVibrator::CreateAudioHapticVibra
 
 void AudioHapticVibratorImpl::SetIsSupportEffectId(bool isSupport)
 {
+#ifdef SUPPORT_VIBRATOR
     isSupportEffectId_ = isSupport;
+#endif
 }
 
 int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
