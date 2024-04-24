@@ -109,7 +109,6 @@ private:
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
-    double ChangeModeToSpeed(const PlaybackRateMode& mode) const;
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
     void NotifySeekDone(int32_t seekPos);
