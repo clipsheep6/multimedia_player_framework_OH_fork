@@ -231,6 +231,7 @@ void ScreenCaptureServer::SetSessionId(int32_t sessionId)
 
 int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
 {
+    MediaTrace trace("ScreenCaptureServer::SetCaptureMode");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
         "SetCaptureMode failed, capture is not CREATED, state:%{public}d, mode:%{public}d", captureState_, captureMode);
@@ -244,6 +245,7 @@ int32_t ScreenCaptureServer::SetCaptureMode(CaptureMode captureMode)
 
 int32_t ScreenCaptureServer::SetDataType(DataType dataType)
 {
+    MediaTrace trace("ScreenCaptureServer::SetDataType");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
         "SetDataType failed, capture is not CREATED, state:%{public}d, dataType:%{public}d", captureState_, dataType);
@@ -305,6 +307,7 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
 
 int32_t ScreenCaptureServer::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
+    MediaTrace trace("ScreenCaptureServer::SetScreenCaptureCallback");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
         "SetScreenCaptureCallback failed, capture is not CREATED, state:%{public}d", captureState_);
@@ -359,6 +362,7 @@ bool ScreenCaptureServer::CheckScreenCapturePermission()
 
 bool ScreenCaptureServer::IsUserPrivacyAuthorityNeeded()
 {
+    MediaTrace trace("ScreenCaptureServer::IsUserPrivacyAuthorityNeeded");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "IsUserPrivacyAuthorityNeeded start, appUid:%{public}d",
         FAKE_POINTER(this), appInfo_.appUid);
     if (appInfo_.appUid == ROOT_UID) {
@@ -659,6 +663,7 @@ void ScreenCaptureServer::InitAppInfo()
 
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
+    MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
     // If Root is treated as whitelisted, how to guarantee RequestUserPrivacyAuthority function by TDD cases.
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "RequestUserPrivacyAuthority start.", FAKE_POINTER(this));
     if (!IsUserPrivacyAuthorityNeeded()) {
@@ -733,6 +738,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
 
 int32_t ScreenCaptureServer::StartScreenCaptureStream()
 {
+    MediaTrace trace("ScreenCaptureServer::StartScreenCaptureStream");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartScreenCaptureStream start, dataType:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType);
     CHECK_AND_RETURN_RET(captureConfig_.dataType == DataType::ORIGINAL_STREAM, MSERR_INVALID_OPERATION);
@@ -826,6 +832,7 @@ void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<s
 
 void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
 {
+    MediaTrace trace("ScreenCaptureServer::PostStartScreenCapture.");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture start, isSuccess:%{public}s, "
         "dataType:%{public}d.", FAKE_POINTER(this), isSuccess ? "true" : "false", captureConfig_.dataType);
     if (isSuccess) {
@@ -881,6 +888,7 @@ int32_t ScreenCaptureServer::TryStartNotification()
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
 {
+    MediaTrace trace("ScreenCaptureServer::InitAudioCap");
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "InitAudioCap start, audioChannels:%{public}d, "
         "audioSampleRate:%{public}d, audioSource:%{public}d, state:%{public}d.", FAKE_POINTER(this),
@@ -905,6 +913,7 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
 
 int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 {
+    MediaTrace trace("ScreenCaptureServer::InitVideoCap");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
         "InitVideoCap failed, capture is not CREATED, state:%{public}d", captureState_);
@@ -985,6 +994,7 @@ int32_t ScreenCaptureServer::InitRecorder()
 
 bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState state)
 {
+    MediaTrace trace("ScreenCaptureServer::UpdatePrivacyUsingPermissionState");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "UpdatePrivacyUsingPermissionState start, "
         "state: %{public}d, uid: %{public}d", FAKE_POINTER(this), state, appInfo_.appUid);
     if (!IsUserPrivacyAuthorityNeeded()) {
@@ -1242,6 +1252,7 @@ void ScreenCaptureServer::UpdateLiveViewContent()
 
 int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
+    MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
@@ -1274,6 +1285,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
 
 int32_t ScreenCaptureServer::StartVideoCapture()
 {
+    MediaTrace trace("ScreenCaptureServer::StartVideoCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartVideoCapture start, state:%{public}d, "
         "dataType:%{public}d, isSurfaceMode:%{public}s.", FAKE_POINTER(this),
         captureConfig_.videoInfo.videoCapInfo.state, captureConfig_.dataType, isSurfaceMode_ ? "true" : "false");
@@ -1331,6 +1343,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
 
 int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
 {
+    MediaTrace trace("ScreenCaptureServer::CreateVirtualScreen");
     MEDIA_LOGI("CreateVirtualScreen Start");
     isConsumerStart_ = false;
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
@@ -1375,6 +1388,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
 
 int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 {
+    MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenMirror");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "MakeVirtualScreenMirror start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0 && screenId_ != SCREEN_ID_INVALID, MSERR_UNKNOWN,
         "MakeVirtualScreenMirror failed, invalid screenId");
@@ -1411,6 +1425,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
 
 void ScreenCaptureServer::DestroyVirtualScreen()
 {
+    MediaTrace trace("ScreenCaptureServer::DestroyVirtualScreen");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "DestroyVirtualScreen start.", FAKE_POINTER(this));
     if (screenId_ >=0 && screenId_ != SCREEN_ID_INVALID) {
         if (isConsumerStart_) {
@@ -1427,6 +1442,7 @@ void ScreenCaptureServer::DestroyVirtualScreen()
 
 void ScreenCaptureServer::CloseFd()
 {
+    MediaTrace trace("ScreenCaptureServer::CloseFd");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "CloseFd start, outputFd:%{public}d.", FAKE_POINTER(this),
         outputFd_);
     if (outputFd_ > 0) {
@@ -1437,6 +1453,7 @@ void ScreenCaptureServer::CloseFd()
 }
 VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer)
 {
+    MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "InitVirtualScreenOption start, naem:%{public}s.",
         FAKE_POINTER(this), name.c_str());
     VirtualScreenOption virScrOption = {
@@ -1469,6 +1486,7 @@ int32_t ScreenCaptureServer::GetMissionIds(std::vector<uint64_t> &missionIds)
 
 int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
+    MediaTrace trace("ScreenCaptureServer::AcquireAudioBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "AcquireAudioBuffer start, state:%{public}d, "
         "type:%{public}d.", FAKE_POINTER(this), captureState_, type);
@@ -1513,6 +1531,7 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
 
 int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
+    MediaTrace trace("ScreenCaptureServer::ReleaseAudioBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "ReleaseAudioBuffer start, state:%{public}d, "
         "type:%{public}d.", FAKE_POINTER(this), captureState_, type);
@@ -1577,6 +1596,7 @@ int32_t ScreenCaptureServer::GetMicAudioCaptureBufferSize(size_t &size)
 int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                 int64_t &timestamp, OHOS::Rect &damage)
 {
+    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "AcquireVideoBuffer start, state:%{public}d, "
         "fence:%{public}d, timestamp:%{public}" PRId64, FAKE_POINTER(this), captureState_, fence, timestamp);
@@ -1596,6 +1616,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
 
 int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 {
+    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "ReleaseVideoBuffer start, state:%{public}d.",
         FAKE_POINTER(this), captureState_);
@@ -1624,6 +1645,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 {
+    MediaTrace trace("ScreenCaptureServer::SetMicrophoneEnabled");
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetMicrophoneEnabled isMicrophoneOn_:%{public}d, "
         "new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneOn_, isMicrophone);
@@ -1640,6 +1662,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 
 int32_t ScreenCaptureServer::SetCanvasRotation(bool canvasRotation)
 {
+    MediaTrace trace("ScreenCaptureServer::SetCanvasRotation");
     std::lock_guard<std::mutex> lock(mutex_);
     canvasRotation_ = canvasRotation;
     MEDIA_LOGI("ScreenCaptureServer::SetCanvasRotation, canvasRotation:%{public}d", canvasRotation);
@@ -1652,6 +1675,7 @@ int32_t ScreenCaptureServer::SetCanvasRotation(bool canvasRotation)
 
 int32_t ScreenCaptureServer::SetCanvasRotationInner()
 {
+    MediaTrace trace("ScreenCaptureServer::SetCanvasRotationInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetCanvasRotationInner start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenId_ != SCREEN_ID_INVALID, MSERR_INVALID_VAL,
                              "SetCanvasRotation failed virtual screen not init");
@@ -1735,6 +1759,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
 
 int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode stateCode)
 {
+    MediaTrace trace("ScreenCaptureServer::StopScreenCaptureInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopScreenCaptureInner start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
     if (screenCaptureCb_ != nullptr) {
@@ -1769,6 +1794,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 
 void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCode)
 {
+    MediaTrace trace("ScreenCaptureServer::PostStopScreenCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStopScreenCapture start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
     if (screenCaptureCb_ != nullptr) {
@@ -1855,6 +1881,7 @@ bool ScreenCaptureObserverCallBack::StopAndRelease()
 
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
+    MediaTrace trace("ScreenCaptureServer::OnBufferAvailable");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "OnBufferAvailable start.", FAKE_POINTER(this));
     CHECK_AND_RETURN(consumer_ != nullptr);
     int32_t flushFence = 0;
@@ -1892,6 +1919,7 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
 int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
     int64_t &timestamp, OHOS::Rect &damage)
 {
+    MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer");
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "AcquireVideoBuffer start, fence:%{public}d, "
@@ -1910,6 +1938,7 @@ int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBu
 
 int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 {
+    MediaTrace trace("ScreenCaptureServer::ReleaseVideoBuffer");
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR "ReleaseVideoBuffer start.",
         FAKE_POINTER(this));
