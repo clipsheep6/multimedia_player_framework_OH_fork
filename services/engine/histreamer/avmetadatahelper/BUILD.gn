@@ -35,11 +35,6 @@ config("media_engine_histreamer_avmetadatahelper_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_C_UTILS/base/include",
-    "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
-    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_AVCODEC/interfaces",
-    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules",
   ]
 }
 
@@ -72,6 +67,7 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
   ]
 
   external_deps = [
+    "av_codec:av_codec_client",
     "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "av_codec:av_codec_media_engine_modules",

@@ -38,12 +38,6 @@ config("media_engine_histreamer_recorder_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_C_UTILS/base/include",
-    "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
-    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_AVCODEC/interfaces",
-    "$MEDIA_PLAYER_HISTREAMER/src",
-    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
   ]
 }
 
@@ -72,6 +66,7 @@ ohos_static_library("media_engine_histreamer_recorder") {
 
   external_deps = [
     "audio_framework:audio_capturer",
+    "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "c_utils:utils",
     "graphic_surface:surface",

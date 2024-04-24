@@ -79,13 +79,13 @@
           "call_manager",
           "core_service",
           "state_registry",
-          "resource_schedule_service"
-        ],
-        "third_party": [
+          "resource_schedule_service",
           "ffmpeg",
+          "bounds_checking_function",
           "libxml2",
-          "bounds_checking_function"
-        ]
+          "libuv"
+        ],
+        "third_party": []
       },
       "build": {
         "group_type": {
