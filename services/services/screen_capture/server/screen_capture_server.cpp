@@ -1948,7 +1948,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
         char* srcData[2] = {NULL};
         srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
         srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
-        int channels = 0;
+        int channels = 2;
         MixAudio(srcData, mix_data, channels, innerAudioBuffer->length);
         bufferMem->Write((uint8_t*)mix_data, innerAudioBuffer->length, 0);
         return screenCaptureServer_->ReleaseAudioBufferMix(type_);
