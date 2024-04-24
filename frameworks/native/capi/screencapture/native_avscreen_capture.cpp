@@ -391,7 +391,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
-OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_ExcludeContent(struct OH_AVScreenCapture *capture,
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreenCapture *capture,
     struct OH_AVScreenCapture_ContentFilter *filter)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
