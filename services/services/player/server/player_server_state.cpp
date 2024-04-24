@@ -303,7 +303,10 @@ void PlayerServer::PlayingState::StateEnter()
     int32_t userId = server_.GetUserId();
     bool isForeground = true;
     AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
-    if (!isForeground) {
+    bool isBootStarted = server_.IsBootAnimationStarted();
+    MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d isForeground = %{public}d isStarted = %{public}d",
+        userId, isForeground, isBootStarted);
+    if (!isForeground && isBootStarted) {
         server_.Pause();
         return;
     }

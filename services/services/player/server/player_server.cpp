@@ -131,6 +131,12 @@ int32_t PlayerServer::Init()
 
     PlayerServerStateMachine::Init(idleState_);
 
+    const uint8_t maxStateLen = 10;
+    char state[maxStateLen] = {0};
+    GetParameter("bootevent.bootanimation.started", "false", state, sizeof(state));
+    state[sizeof(state) - 1] = 0;
+    std::string bootState(state);
+    isBootAnimationStarted_ = bootState.find("true") != bootState.npos;
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appUid_, userId_);
     std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
     commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
@@ -1455,6 +1461,7 @@ void PlayerServer::OnCommonEventReceived(const std::string &event)
         auto pauseTask = std::make_shared<TaskHandler<void>>([server]() {
             std::shared_ptr<PlayerServer> spServer = server.lock();
             if (spServer != nullptr) {
+                spServer->taskMgr_.MarkTaskDone("receiveccommonevent done");
                 (void)spServer->Pause();
             }
         });
@@ -1470,6 +1477,11 @@ int32_t PlayerServer::GetUserId()
 std::shared_ptr<CommonEventReceiver> PlayerServer::GetCommonEventReceiver()
 {
     return commonEventReceiver_;
+}
+
+bool PlayerServer::IsBootAnimationStarted()
+{
+    return isBootAnimationStarted_;
 }
 } // namespace Media
 } // namespace OHOS
