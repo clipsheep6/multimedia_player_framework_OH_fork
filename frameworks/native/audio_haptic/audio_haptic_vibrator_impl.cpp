@@ -99,13 +99,14 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     }
     hapticSource_ = hapticSource;
     if (hapticSource.hapticUri == "") {
-        bool state = false;
-        if (Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &state) == 0) {
+        bool isSupported = false;
+        int32_t effectResult = Sensors::IsSupportEffect(hapticSource.effectId.c_str(), &isSupported);
+        if (effectResult == 0 && isSupported) {
             SetIsSupportEffectId(true);
             MEDIA_LOGI("The effectId is supported. Vibrator has been prepared.");
             return MSERR_OK;
         } else {
-            MEDIA_LOGW("the effectId not support.");
+            MEDIA_LOGE("The effectId is not supported!");
             return MSERR_UNSUPPORT_FILE;
         }
     }
