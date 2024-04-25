@@ -19,6 +19,8 @@
 #include "call_manager_client.h"
 #include "core_service_client.h"
 #include "call_manager_base.h"
+#include <locale>
+#include <codecvt>
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaTelephonyListener"};
@@ -39,20 +41,28 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
 {
-    (void)phoneNumber;
-    MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d", slotId, callState);
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+    MEDIA_LOGI("OnCallStateUpdated slotId = %{public}d, callState = %{public}d, phoneNumber = %{public}s",
+               slotId, callState, convert.to_bytes(phoneNumber).c_str());
     // skip no sim card CALL_STATUS_UNKNOWN
-    if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE) ||
-        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
+    if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ALERTING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DIALING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_INCOMING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_HOLDING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_WAITING)) {
+        MEDIA_LOGD("OnCallStateUpdated IN Report in call");
         InCallObserver::GetInstance().OnCallStateUpdated(true);
-    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED) ||
-               callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTING)) {
-        InCallObserver::GetInstance().OnCallStateUpdated(false);
+    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE)) {
+        MEDIA_LOGD("OnCallStateUpdated IN Report in active call");
+        InCallObserver::GetInstance().OnCallStateUpdated(true);
+        InCallObserver::GetInstance().OnCallCountUpdated(slotId, callState, phoneNumber);
+    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED)) {
+        // CALL_STATUS_DISCONNECTING 重复状态不需要
+        MEDIA_LOGD("OnCallStateUpdated IN Report stop call");
+        if (!InCallObserver::GetInstance().HasOtherCall(slotId, callState, phoneNumber)) {
+            InCallObserver::GetInstance().OnCallStateUpdated(false);
+        }
     }
 }
 

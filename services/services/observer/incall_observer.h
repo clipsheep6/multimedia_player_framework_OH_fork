@@ -42,6 +42,8 @@ public:
     bool IsInCall();
     bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack);
     void UnRegisterInCallObserverCallBack();
+    bool OnCallCountUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber);
+    bool HasOtherCall(int32_t slotId, int32_t callState, const std::u16string &phoneNumber);
 
 private:
 
@@ -53,6 +55,7 @@ private:
     std::mutex mutex_;
     bool Init();
     bool isTelephonyStateListenerDied_ = true;
+    std::atomic<int32_t> allInCallNum_{0};
 };
 }
 }
