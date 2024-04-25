@@ -1218,6 +1218,7 @@ int32_t PlayerServer::SelectTrack(int32_t index)
         MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
         CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->SelectTrack(index);
+        taskMgr_.MarkTaskDone("SelectTrack done");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SelectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "SelectTrack");
@@ -1238,6 +1239,7 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
         MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
         CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->DeselectTrack(index);
+        taskMgr_.MarkTaskDone("DeselectTrack done");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to DeselectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "DeselectTrack");
