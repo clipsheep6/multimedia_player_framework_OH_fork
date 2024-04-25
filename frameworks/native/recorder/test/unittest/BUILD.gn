@@ -26,6 +26,12 @@ ohos_unittest("recorder_unit_test") {
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   cflags = [
     "-Wall",
     "-Werror",
