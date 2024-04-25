@@ -65,7 +65,9 @@ ohos_shared_library("media") {
     "${multimedia_player_framework_path}/frameworks/js/soundpool/include",
     "${multimedia_player_framework_path}/frameworks/js/metadatahelper",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
+    "//third_party/libuv/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native/",
+    "//foundation/multimedia/image_framework/interfaces/innerkits/include/",
   ]
 
   sources = [
@@ -148,6 +150,13 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
+  if (multimedia_player_framework_support_player_js_api9) {
+    deps += [
+      "../../../../../../foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer",
+      "../../../../../../third_party/bounds_checking_function:libsec_shared",
+    ]
+  }
+
   if (multimedia_player_framework_support_jssoundpool) {
     deps += [
       "${multimedia_player_framework_path}/frameworks/js/soundpool:media_soundpool",
@@ -166,16 +175,10 @@ ohos_shared_library("media") {
     "image_framework:image",
     "image_framework:image_native",
     "ipc:ipc_single",
-    "libuv:uv",
     "media_foundation:media_foundation",
     "napi:ace_napi",
     "qos_manager:qos",
   ]
-
-  if (multimedia_player_framework_support_player_js_api9) {
-    deps += [ "../../../../../../foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer" ]
-    external_deps += [ "bounds_checking_function:libsec_shared" ]
-  }
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]

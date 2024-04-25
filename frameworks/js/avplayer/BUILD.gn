@@ -33,6 +33,7 @@ ohos_shared_library("media_avplayer") {
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "$MEDIA_ROOT_DIR/frameworks/js/mediasource",
     "//foundation/multimedia/player_framework/services/utils/include",
+    "//third_party/libuv/include",
   ]
 
   sources = [
@@ -69,17 +70,16 @@ ohos_shared_library("media_avplayer") {
   deps = [
     "../../../../../../foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "../../../../../../foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "../../../../../../third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
-    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
-    "libuv:uv",
     "napi:ace_napi",
     "qos_manager:qos",
   ]

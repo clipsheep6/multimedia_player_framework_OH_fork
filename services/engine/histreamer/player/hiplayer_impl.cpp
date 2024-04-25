@@ -26,7 +26,7 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "osal/task/task.h"
 #include "osal/utils/dump_buffer.h"
-#include "plugin/plugin_time.h"
+#include "common/plugin_time.h"
 #include "media_dfx.h"
 #include "media_utils.h"
 #include "meta_utils.h"

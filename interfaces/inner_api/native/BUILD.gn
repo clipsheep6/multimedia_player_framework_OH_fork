@@ -52,6 +52,9 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
+    "//utils/system/safwk/native/include",
+    "//commonlibrary/c_utils/base/include",
+    "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]
 
   cflags = [
@@ -162,7 +165,6 @@ ohos_shared_library("media_client") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
-    "graphic_surface:surface",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image_native",
@@ -171,7 +173,7 @@ ohos_shared_library("media_client") {
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [ "media_foundation:media_foundation" ]
+  public_deps = [ "$MEDIA_PLAYER_HISTREAMER/src:media_foundation" ]
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
