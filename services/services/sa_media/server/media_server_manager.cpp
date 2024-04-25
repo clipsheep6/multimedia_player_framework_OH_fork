@@ -112,6 +112,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write AVMetaServer information");
 
+    dumpString += "------------------ScreenCaptureServer------------------\n";
+    ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::SCREEN_CAPTURE],
+        argSets.find(u"screencapture") != argSets.end());
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to write ScreenCapture information");
+
     ret = ServiceDumpManager::GetInstance().Dump(fd, argSets);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
@@ -290,7 +296,14 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
 
     pid_t pid = IPCSkeleton::GetCallingPid();
     screenCaptureStubMap_[object] = pid;
+
+    Dumper dumper;
+    dumper.pid_ = pid;
+    dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.remoteObject_ = object;
+    dumperTbl_[StubType::SCREEN_CAPTURE].emplace_back(dumper);
     MEDIA_LOGD("The number of screen capture services(%{public}zu).", screenCaptureStubMap_.size());
+    (void)Dump(-1, std::vector<std::u16string>());
     return object;
 }
 
