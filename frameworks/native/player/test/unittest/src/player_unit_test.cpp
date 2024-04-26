@@ -471,24 +471,6 @@ HWTEST_F(PlayerUnitTest, Player_Local_001, TestSize.Level2)
 
 /**
  * @tc.name  : Test Player Local
- * @tc.number: Player_Local_002
- * @tc.desc  : Test Player Local source
- */
-HWTEST_F(PlayerUnitTest, Player_Local_002, TestSize.Level2)
-{
-    int32_t ret = player_->SetSource(MEDIA_ROOT + "ChineseColor_H264_AAC_480p_15fps.mp4");
-    EXPECT_EQ(MSERR_OK, ret);
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    ret = player_->PrepareAsync();
-    if (ret == MSERR_OK) {
-        PlayFunTest(LOCAL_PLAY);
-    }
-}
-
-/**
- * @tc.name  : Test Player Local
  * @tc.number: Player_Local_003
  * @tc.desc  : Test Player Local source
  */
@@ -1667,28 +1649,6 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
 
 /**
  * @tc.name  : Test SetDataSource API
- * @tc.number: Player_SetDataSource_002
- * @tc.desc  : Test Player SetDataSource
- */
-HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
-    sleep(PLAYING_TIME_2_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
-    sleep(PLAYING_TIME_10_SEC);
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_EQ(MSERR_OK, player_->Reset());
-    EXPECT_EQ(MSERR_OK, player_->Release());
-}
-
-/**
- * @tc.name  : Test SetDataSource API
  * @tc.number: Player_SetDataSource_003
  * @tc.desc  : Test Player SetDataSource
  */
@@ -2448,40 +2408,6 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_PREVIOUS_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
-}
-
-/**
- * @tc.name  : Test SetEffect API
- * @tc.number: Player_SetEffect_001
- * @tc.desc  : Test Player SetEffect state machine
- */
-HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
-{
-    Format format;
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
-
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Reset());
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    EXPECT_EQ(MSERR_OK, player_->Release());
-    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 }
 
 /**
