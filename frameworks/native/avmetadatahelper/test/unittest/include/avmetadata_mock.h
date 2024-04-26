@@ -17,7 +17,6 @@
 #define AVMETADATA_MOCK_H
 
 #include "securec.h"
-#include "jpeglib.h"
 #include "avmetadatahelper.h"
 #include "unittest_log.h"
 
