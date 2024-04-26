@@ -265,7 +265,9 @@ private:
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
+    std::string appName_ = "AVScreenCapture";
     AVScreenCaptureConfig captureConfig_;
+    StatisticalEvent statisticalEvent_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
     ScreenId screenId_ = SCREEN_ID_INVALID;
