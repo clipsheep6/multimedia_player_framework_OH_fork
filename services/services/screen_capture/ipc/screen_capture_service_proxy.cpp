@@ -431,7 +431,7 @@ int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &co
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents");
     }
 
-    int error = Remote()->SendRequest(SET_MIC_ENABLE, data, reply, option);
+    int error = Remote()->SendRequest(EXCLUDE_CONTENT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "ExcludeContent failed, error: %{public}d", error);
     return reply.ReadInt32();

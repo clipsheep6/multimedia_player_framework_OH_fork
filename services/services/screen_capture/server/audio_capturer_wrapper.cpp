@@ -136,6 +136,18 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
     std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
 
+    if (contentFilter_.filteredAudioContents.find(
+            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
+            contentFilter_.filteredAudioContents.end()) {
+        CaptureFilterOptions filterOptions;
+        filterOptions.pids.push_back(appInfo.appPid);
+        filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
+        AudioPlaybackCaptureConfig config;
+        config.filterOptions = filterOptions;
+        int32_t filterReturn = audioCapturer->UpdatePlaybackCaptureConfig(config);
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " createAudioCapturer set audioFilter, filterReturn : %{public}d",
+            FAKE_POINTER(this), filterReturn);
+    }
     std::shared_ptr<AudioCapturerCallbackImpl> callback = std::make_shared<AudioCapturerCallbackImpl>();
     int ret = audioCapturer->SetCapturerCallback(callback);
     if (ret != MSERR_OK) {

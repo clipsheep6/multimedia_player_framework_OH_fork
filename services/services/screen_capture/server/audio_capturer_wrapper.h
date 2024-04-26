@@ -40,8 +40,10 @@ public:
 class AudioCapturerWrapper {
 public:
     explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name)
-        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)) {}
+        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        ScreenCaptureContentFilter filter)
+        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)),
+        contentFilter_(filter) {}
     virtual ~AudioCapturerWrapper();
     int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
     int32_t Stop();
@@ -71,6 +73,7 @@ private:
     std::unique_ptr<std::thread> readAudioLoop_ = nullptr;
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
     std::shared_ptr<OHOS::Media::AudioCapturerCallbackImpl> audioCaptureCallback_ = nullptr;
+    ScreenCaptureContentFilter contentFilter_;
 
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
@@ -85,8 +88,10 @@ private:
 class MicAudioCapturerWrapper : public AudioCapturerWrapper {
 public:
     explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name)
-        : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name)) {}
+        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        ScreenCaptureContentFilter filter)
+        : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name),
+        filter) {}
     ~MicAudioCapturerWrapper() override {}
 
 protected:

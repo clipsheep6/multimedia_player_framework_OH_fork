@@ -81,6 +81,13 @@ enum AVScreenCaptureState : int32_t {
     STOPPED = 3
 };
 
+enum AVScreenCaptureMixMode : int32_t {
+    MIX_MODE = 0,
+    MIC_MODE = 1,
+    INNER_MODE = 2,
+    INVAILD_MODE = 3
+};
+
 struct SurfaceBufferEntry {
     SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
         : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
@@ -147,7 +154,7 @@ private:
 
 class AudioDataSource : public IAudioDataSource {
 public:
-    AudioDataSource(AudioCaptureSourceType type, ScreenCaptureServer* screenCaptureServer) : type_(type),
+    AudioDataSource(AVScreenCaptureMixMode type, ScreenCaptureServer* screenCaptureServer) : type_(type),
         screenCaptureServer_(screenCaptureServer) {}
 
     int32_t ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
@@ -156,7 +163,7 @@ public:
 private:
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
-    AudioCaptureSourceType type_;
+    AVScreenCaptureMixMode type_;
     ScreenCaptureServer* screenCaptureServer_;
 };
 
@@ -196,8 +203,8 @@ public:
     void UpdateMicrophoneEnabled();
 
     int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer, AudioCaptureSourceType type);
-    int32_t ReleaseAudioBufferMix(AudioCaptureSourceType type);
+        std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type);
+    int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
 

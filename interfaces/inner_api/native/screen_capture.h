@@ -127,6 +127,8 @@ enum AVScreenCaptureBufferType {
 enum AVScreenCaptureFilterableAudioContent {
     /* Audio content of notification sound */
     SCREEN_CAPTURE_NOTIFICATION_AUDIO = 0,
+    /* Audio content of the sound of the app itself */
+    SCREEN_CAPTURE_CURRENT_APP_AUDIO = 1,
 };
 
 enum AVScreenCaptureParamValidationState : int32_t {
