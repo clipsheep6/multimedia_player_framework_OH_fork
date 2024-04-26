@@ -305,7 +305,6 @@ sptr<OHOS::SurfaceBuffer> ScreenCaptureCapiMock::AcquireVideoBuffer(int32_t &fen
     sptr<OHOS::SurfaceBuffer> surfacebuffer;
     if (buffer != nullptr) {
         surfacebuffer =  OHOS::SurfaceBuffer::NativeBufferToSurfaceBuffer(buffer);
-        OH_NativeBuffer_Unreference(buffer);
     }
     return surfacebuffer;
 }
