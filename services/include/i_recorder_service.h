@@ -500,7 +500,7 @@ public:
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
     */
-    virtual int32_t SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo) = 0;
+    virtual int32_t SetUserCustomInfo(Meta &userCustomInfo) = 0;
 
     /**
      * @brief genre
@@ -509,7 +509,7 @@ public:
      * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
      * in {@link media_errors.h} otherwise.
     */
-    virtual int32_t SetGenre(int32_t sourceId, std::string &genre) = 0;
+    virtual int32_t SetGenre(std::string &genre) = 0;
 };
 } // namespace Media
 } // namespace OHOS

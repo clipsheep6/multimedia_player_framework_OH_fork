@@ -412,7 +412,7 @@ int32_t RecorderServer::SetDataSource(DataSourceType dataType, int32_t &sourceId
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
+int32_t RecorderServer::SetUserCustomInfo(Meta &userCustomInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
@@ -421,7 +421,7 @@ int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo
     config_.customInfo = userCustomInfo;
     CustomInfo userCustom(userCustomInfo);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->Configure(sourceId, userCustom);
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, userCustom);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
@@ -430,7 +430,7 @@ int32_t RecorderServer::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo
     return result.Value();
 }
 
-int32_t RecorderServer::SetGenre(int32_t sourceId, std::string &genre)
+int32_t RecorderServer::SetGenre(std::string &genre)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
@@ -439,7 +439,7 @@ int32_t RecorderServer::SetGenre(int32_t sourceId, std::string &genre)
     config_.genre = genre;
     GenreInfo genreInfo(genre);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->Configure(sourceId, genreInfo);
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, genreInfo);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");

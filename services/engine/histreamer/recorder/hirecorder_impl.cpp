@@ -234,8 +234,8 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::OUT_FD:
         case RecorderPublicParamType::VID_ORIENTATION_HINT:
         case RecorderPublicParamType::GEO_LOCATION:
-        case RecorderPublicParamType::VID_GENRE_INFO:
-        case RecorderPublicParamType::VID_CUSTOM_INFO:
+        case RecorderPublicParamType::GENRE_INFO:
+        case RecorderPublicParamType::CUSTOM_INFO:
             ConfigureMuxer(recParam);
             break;
         default:
@@ -700,12 +700,12 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
             muxerFormat_->Set<Tag::MEDIA_LONGITUDE>(geoLocation.longitude);
             break;
         }
-        case RecorderPublicParamType::VID_CUSTOM_INFO: {
+        case RecorderPublicParamType::CUSTOM_INFO: {
             CustomInfo customInfo = static_cast<const CustomInfo&>(recParam);
             userMeta_ = std::make_shared<Meta>(customInfo.userCustomInfo);
             break;
         }
-        case RecorderPublicParamType::VID_GENRE_INFO: {
+        case RecorderPublicParamType::GENRE_INFO: {
             GenreInfo genreInfo = static_cast<const GenreInfo&>(recParam);
             muxerFormat_->SetData("genre", genreInfo.genre);
             break;

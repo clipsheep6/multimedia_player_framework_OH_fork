@@ -1451,9 +1451,8 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     }
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
-        ret = AVRecorderNapi::GetAVMetaData(asyncCtx, env, args);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK,
-            (asyncCtx->AVRecorderSignError(ret, "GetAVMetaData", "metadata"), ret));
+        CHECK_AND_RETURN_RET_LOG(AVRecorderNapi::GetAVMetaData(asyncCtx, env, args) == MSERR_OK,
+            MSERR_INVALID_VAL, "failed to GetAVMetaData");
     }
     return MSERR_OK;
 }
@@ -1498,28 +1497,27 @@ int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &a
 {
     napi_value metadata = nullptr;
     if (napi_get_named_property(env, args, "metadata", &metadata) != napi_ok) {
-        return MSERR_INVALID_VAL;
+        return (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata"), MSERR_INVALID_VAL);
     }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, metadata, &valueType) != napi_ok || valueType != napi_object) {
         if (valueType == napi_undefined) {
             return MSERR_OK;
         }
-        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata");
-        return MSERR_INVALID_VAL;
+        return (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetAVMetaData", "metadata"), MSERR_INVALID_VAL);
     }
 
     AVMetadata &avMetadata = asyncCtx->config_->metadata;
 
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "location")) {
-        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
+        CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, metadata),
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
     }
     if (CommonNapi::CheckhasNamedProperty(env, metadata, "genre")) {
         napi_value item = nullptr;
-        CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, args, "genre", &item) == napi_ok,
+        CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, metadata, "genre", &item) == napi_ok,
             MSERR_INVALID_VAL, "get genre property fail");
-        avMetadata.genre = CommonNapi::GetCustomString(env, item);
+        avMetadata.genre = CommonNapi::GetStringArgument(env, item, CUSTOM_MAX_LENGTH);
         CHECK_AND_RETURN_RET(avMetadata.genre != "",
             (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getgenre", "genre"), MSERR_INVALID_VAL));
     }
@@ -1635,14 +1633,15 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
     if (config->withVideo) {
         recorder_->SetOrientationHint(config->rotation);
-        if (!config->metadata.genre.empty()) {
-            ret = recorder_->SetGenre(videoSourceID_, config->metadata.genre);
-            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetGenre", "Genre"));
-        }
-        if (!config->metadata.customInfo.Empty()) {
-            ret = recorder_->SetUserCustomInfo(videoSourceID_, config->metadata.customInfo);
-            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
-        }
+    }
+
+    if (!config->metadata.genre.empty()) {
+        ret = recorder_->SetGenre(config->metadata.genre);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetGenre", "Genre"));
+    }
+    if (!config->metadata.customInfo.Empty()) {
+        ret = recorder_->SetUserCustomInfo(config->metadata.customInfo);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
     }
 
     ret = MSERR_INVALID_VAL;

@@ -100,7 +100,7 @@ namespace RecorderTestParam {
         bool enableTemporalScale = false;
         float latitude = 30.0;
         float longitude = 60.0;
-        std::string genre = "hauwei";
+        std::string genre = "hi";
     };
     struct AudioRecorderConfig {
         int32_t outputFd = 0;
@@ -139,6 +139,8 @@ public:
     int32_t SetNextOutputFile(int32_t fd);
     void SetLocation(float latitude, float longitude);
     void SetOrientationHint(int32_t rotation);
+    int32_t SetGenre(std::string &genre);
+    int32_t SetUserCustomInfo(Meta &userCustomInfo);
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
     int32_t Prepare();
     int32_t Start();
