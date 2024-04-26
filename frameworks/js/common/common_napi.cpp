@@ -25,32 +25,12 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-std::string CommonNapi::GetStringArgument(napi_env env, napi_value value)
+std::string CommonNapi::GetStringArgument(napi_env env, napi_value value, size_t maxLength)
 {
     std::string strValue = "";
     size_t bufLength = 0;
     napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
-    if (status == napi_ok && bufLength > 0 && bufLength < PATH_MAX) {
-        char *buffer = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
-        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
-        status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
-        if (status == napi_ok) {
-            MEDIA_LOGD("argument = %{public}s", buffer);
-            strValue = buffer;
-        }
-        free(buffer);
-        buffer = nullptr;
-    }
-    return strValue;
-}
-
-std::string CommonNapi::GetCustomString(napi_env env, napi_value value)
-{
-    std::string strValue = "";
-    size_t bufLength = 0;
-    size_t custom_str_maxLength = 1001;
-    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
-    if (status == napi_ok && bufLength > 0 && bufLength < custom_str_maxLength) {
+    if (status == napi_ok && bufLength > 0 && bufLength < maxLength) {
         char *buffer = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
         status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
@@ -191,11 +171,10 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
 
     napi_value dataList = nullptr;
     uint32_t count = 0;
-    uint32_t maxCount = 500;
     status = napi_get_property_names(env, in, &dataList);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get property names failed");
     status = napi_get_array_length(env, dataList, &count);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= maxCount,
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && count <= MAX_COUNT,
         napi_invalid_arg, "get length failed or more than 500");
 
     napi_value jsKey = nullptr;
@@ -206,7 +185,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
         status = napi_typeof(env, jsKey, &valueType);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
         CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "key not supported type");
-        std::string strKey = GetCustomString(env, jsKey);
+        std::string strKey = GetStringArgument(env, jsKey, CUSTOM_MAX_LENGTH);
         CHECK_AND_RETURN_RET_LOG(strKey != "", napi_invalid_arg, "key not supported");
 
         status = napi_get_named_property(env, in, strKey.c_str(), &jsValue);
@@ -215,9 +194,9 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "get valueType failed");
 
         CHECK_AND_RETURN_RET_LOG(valueType == napi_string, napi_invalid_arg, "value not supported type");
-        std::string sValue = GetCustomString(env, jsValue);
-        CHECK_AND_RETURN_RET_LOG(!sValue.empty(), napi_invalid_arg, "get value failed");
-        meta.SetData(strKey, sValue);
+        std::string strValue = GetStringArgument(env, jsValue, CUSTOM_MAX_LENGTH);
+        CHECK_AND_RETURN_RET_LOG(!strValue.empty(), napi_invalid_arg, "get value failed");
+        meta.SetData(strKey, strValue);
     }
     return napi_ok;
 }
