@@ -890,7 +890,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
             int32_t height;
             trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
-            videoTrackInfo.PutIntValue("height", sheight);
+            videoTrackInfo.PutIntValue("height", height);
             int32_t width;
             trackInfo->GetData(Tag::VIDEO_WIDTH, width);
             videoTrackInfo.PutIntValue("width", width);
