@@ -384,7 +384,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
     
     CHECK_AND_RETURN_RET_LOG(
         content >= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO ||
-        content <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO,
+        content <= OH_AVScreenCaptureFilterableAudioContent::OH_SCREEN_CAPTURE_CURRENT_APP_AUDIO,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input content invalid!");
     contentFilterObj->screenCaptureContentFilter.filteredAudioContents.insert(
         static_cast<AVScreenCaptureFilterableAudioContent>(content));

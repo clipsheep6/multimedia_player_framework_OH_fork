@@ -717,15 +717,16 @@ int32_t ScreenCaptureServer::StartAudioCapture()
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureInner");
         innerCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.innerCapInfo, screenCaptureCb_,
-            std::string("OS_InnerAudioCapture"));
+            std::string("OS_InnerAudioCapture"), contentFilter_);
         int32_t ret = innerCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture innerCapture failed");
     }
     std::shared_ptr<AudioCapturerWrapper> micCapture;
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MediaTrace trace("ScreenCaptureServer::StartAudioCaptureMic");
+        ScreenCaptureContentFilter contentFilterMic;
         micCapture = std::make_shared<AudioCapturerWrapper>(captureConfig_.audioInfo.micCapInfo, screenCaptureCb_,
-            std::string("OS_MicAudioCapture"));
+            std::string("OS_MicAudioCapture"), contentFilterMic);
         int32_t ret = micCapture->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture micCapture failed");
         micCapture->SetIsMuted(!isMicrophoneOn_);
@@ -941,22 +942,28 @@ int32_t ScreenCaptureServer::InitRecorder()
     AudioCaptureInfo audioInfo;
 
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
-        captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
-        captureConfig_.audioInfo.micCapInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT) {
+        captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
-        audioInfo = captureConfig_.audioInfo.micCapInfo;
-        audioSource_ = std::make_unique<AudioDataSource>(audioInfo.audioSource, this);
+        audioInfo = captureConfig_.audioInfo.innerCapInfo;
+        audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
         MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
         MEDIA_LOGI("InitRecorder prepare to SetAudioSource inner");
-        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_INNER, audioSourceId_);
+        audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, this);
+        ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.micCapInfo;
         MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
-        ret = recorder_->SetAudioSource(AudioSourceType::AUDIO_MIC, audioSourceId_);
+        audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, this);
+        ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
+    } else {
+        MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
+        return MSERR_UNKNOWN;
     }
     
     ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
@@ -1506,23 +1513,22 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 }
 
 int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-    std::shared_ptr<AudioBuffer> &micAudioBuffer, AudioCaptureSourceType type)
+    std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type)
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
     int32_t retInner = MSERR_OK;
     int32_t retMic = MSERR_OK;
-    if (type == AudioCaptureSourceType::SOURCE_DEFAULT && micAudioCapture_ != nullptr &&
+    if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
         retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
         retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
         return retInner && retMic;
     }
-    if (type == AudioCaptureSourceType::MIC && micAudioCapture_ != nullptr) {
+    if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
     }
-    if (((type == AudioCaptureSourceType::ALL_PLAYBACK) || (type == AudioCaptureSourceType::APP_PLAYBACK)) &&
-        innerAudioCapture_ != nullptr) {
+    if (type == AVScreenCaptureMixMode::INNER_MODE && innerAudioCapture_ != nullptr) {
         return innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
     }
     MEDIA_LOGE("AcquireAudioBufferMix failed, source type not support, type:%{public}d", type);
@@ -1550,23 +1556,22 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
     return MSERR_UNKNOWN;
 }
 
-int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AudioCaptureSourceType type)
+int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AVScreenCaptureMixMode type)
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "ReleaseAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
     int32_t retInner = MSERR_OK;
     int32_t retMic = MSERR_OK;
-    if (type == AudioCaptureSourceType::SOURCE_DEFAULT && micAudioCapture_ != nullptr &&
+    if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
         retInner = innerAudioCapture_->ReleaseAudioBuffer();
         retMic = micAudioCapture_->ReleaseAudioBuffer();
         return retInner && retMic;
     }
-    if (type == AudioCaptureSourceType::MIC && micAudioCapture_ != nullptr) {
+    if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->ReleaseAudioBuffer();
     }
-    if (((type == AudioCaptureSourceType::ALL_PLAYBACK) || (type == AudioCaptureSourceType::APP_PLAYBACK)) &&
-        innerAudioCapture_ != nullptr) {
+    if (type == AVScreenCaptureMixMode::INNER_MODE && innerAudioCapture_ != nullptr) {
         return innerAudioCapture_->ReleaseAudioBuffer();
     }
     MEDIA_LOGE("ReleaseAudioBufferMix failed, source type not support, type:%{public}d", type);
@@ -1961,32 +1966,41 @@ int32_t ScreenCapBufferConsumerListener::Release()
 
 int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
-    MEDIA_LOGI("AudioDataSource ReadAt start");
+    MEDIA_LOGD("AudioDataSource ReadAt start");
     std::shared_ptr<AudioBuffer> innerAudioBuffer = nullptr;
     std::shared_ptr<AudioBuffer> micAudioBuffer = nullptr;
     int32_t ret = MSERR_OK;
     ret = screenCaptureServer_->AcquireAudioBufferMix(innerAudioBuffer, micAudioBuffer, type_);
     if (ret == MSERR_OK) {
-        MEDIA_LOGI("AcquireAudioBufferMix sucess");
+        MEDIA_LOGD("AcquireAudioBufferMix sucess");
         std::shared_ptr<AVMemory> &bufferMem = buffer->memory_;
         if (buffer->memory_ == nullptr) {
             MEDIA_LOGE("buffer->memory_ is nullptr");
             return MSERR_INVALID_VAL;
         }
-        char* mix_data = new char[innerAudioBuffer->length];
-        char* srcData[2] = {NULL};
-        srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
-        srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
-        int channels = 2;
-        MixAudio(srcData, mix_data, channels, innerAudioBuffer->length);
-        bufferMem->Write((uint8_t*)mix_data, innerAudioBuffer->length, 0);
-        return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+        if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
+            char* mixData = new char[innerAudioBuffer->length];
+            char* srcData[2] = {NULL};
+            srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
+            srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
+            int channels = 2;
+            MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
+            bufferMem->Write((uint8_t*)mixData, innerAudioBuffer->length, 0);
+            return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+        } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
+            bufferMem->Write((uint8_t*)innerAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+        } else if (type_ == AVScreenCaptureMixMode::MIC_MODE) {
+            bufferMem->Write((uint8_t*)micAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+        }
     } else {
         MEDIA_LOGE("AudioDataSource AcquireAudioBufferMix failed");
         return MSERR_INVALID_VAL;
     }
+    return MSERR_UNKNOWN;
 }
-      
+
 int32_t AudioDataSource::GetSize(int64_t &size)
 {
     size_t bufferLen;

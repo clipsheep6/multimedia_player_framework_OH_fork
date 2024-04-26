@@ -475,6 +475,8 @@ typedef enum OH_AVScreenCaptureBufferType {
 typedef enum OH_AVScreenCaptureFilterableAudioContent {
     /* Audio content of notification sound */
     OH_SCREEN_CAPTURE_NOTIFICATION_AUDIO = 0,
+    /* Audio content of the sound of the app itself */
+    OH_SCREEN_CAPTURE_CURRENT_APP_AUDIO = 1,
 } OH_AVScreenCaptureFilterableAudioContent;
 
 /**
