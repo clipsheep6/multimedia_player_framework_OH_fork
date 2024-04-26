@@ -273,16 +273,16 @@ int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sou
     return recorderServer_->SetDataSource(dataType, sourceId);
 }
 
-int32_t RecorderServiceStub::SetUserCustomInfo(int32_t sourceId, Meta &userCustomInfo)
+int32_t RecorderServiceStub::SetUserCustomInfo(Meta &userCustomInfo)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetUserCustomInfo(sourceId, userCustomInfo);
+    return recorderServer_->SetUserCustomInfo(userCustomInfo);
 }
 
-int32_t RecorderServiceStub::SetGenre(int32_t sourceId, std::string &genre)
+int32_t RecorderServiceStub::SetGenre(std::string &genre)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetGenre(sourceId, genre);
+    return recorderServer_->SetGenre(genre);
 }
 
 int32_t RecorderServiceStub::SetMaxDuration(int32_t duration)
@@ -625,21 +625,19 @@ int32_t RecorderServiceStub::SetUserCustomInfo(MessageParcel &data, MessageParce
 {
     (void)reply;
     Meta userCustomInfo;
-    int32_t sourceId = data.ReadInt32();
     bool ret = userCustomInfo.FromParcel(data);
     if (!ret) {
         MEDIA_LOGE("userCustomInfo FromParcel failed");
     }
-    reply.WriteInt32(SetUserCustomInfo(sourceId, userCustomInfo));
+    reply.WriteInt32(SetUserCustomInfo(userCustomInfo));
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetGenre(MessageParcel &data, MessageParcel &reply)
 {
     (void)reply;
-    int32_t sourceId = data.ReadInt32();
     std::string genre = data.ReadString();
-    reply.WriteInt32(SetGenre(sourceId, genre));
+    reply.WriteInt32(SetGenre(genre));
     return MSERR_OK;
 }
 
