@@ -28,6 +28,9 @@
 #include "screen_capture_listener_proxy.h"
 #include "res_type.h"
 #include "res_sched_client.h"
+#include "param_wrapper.h"
+#include <unistd.h>
+#include <sys/stat.h>
 
 using OHOS::Rosen::DMError;
 
@@ -1606,6 +1609,21 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
     (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->
         AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
+    std::string dumpEnable;
+    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
+    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "");
+    if (dumpRes == 0 && !dumpEnable.empty() && dumpEnable == "true") {
+        if (surfacebuffer != nullptr) {
+            void* addr = surfacebuffer->GetVirAddr();
+            uint32_t bufferSize = surfacebuffer->GetSize();
+            std::string path = "/data/system/screen_capture.bin";
+            FILE *desFile = fopen(path.c_str(), "wb+");
+            if (desFile) {
+                (void)fwrite(addr, 1, bufferSize, desFile);
+                (void)fclose(desFile);
+            }
+        }
+    }
     if (surfaceBuffer != nullptr) {
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
         return MSERR_OK;
