@@ -882,19 +882,19 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::VIDEO));
             int32_t trackIndex;
             trackInfo->GetData(Tag::REGULAR_TRACK_ID, trackIndex);
-            videoTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
+            videoTrackInfo.PutIntValue("track_index", trackIndex);
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
-            videoTrackInfo.PutIntValue("bitrate", static_cast<int32_t>(bitRate));
+            videoTrackInfo.PutLongValue("bitrate", bitRate);
             double frameRate;
             trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
-            videoTrackInfo.PutIntValue("frame_rate", static_cast<int32_t>(frameRate * FRAME_RATE_UNIT_MULTIPLE));
+            videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
             int32_t height;
             trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
-            videoTrackInfo.PutIntValue("height", static_cast<int32_t>(height));
+            videoTrackInfo.PutIntValue("height", height);
             int32_t width;
             trackInfo->GetData(Tag::VIDEO_WIDTH, width);
-            videoTrackInfo.PutIntValue("width", static_cast<int32_t>(width));
+            videoTrackInfo.PutIntValue("width", width);
             Plugins::VideoRotation rotation;
             trackInfo->Get<Tag::VIDEO_ROTATION>(rotation);
             videoTrackInfo.PutIntValue(Tag::VIDEO_ROTATION, rotation);
@@ -923,16 +923,16 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
-            audioTrackInfo.PutIntValue("bitrate", static_cast<int32_t>(bitRate));
+            audioTrackInfo.PutLongValue("bitrate", bitRate);
             int32_t audioChannels;
             trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
-            audioTrackInfo.PutIntValue("channel_count", static_cast<int32_t>(audioChannels));
+            audioTrackInfo.PutIntValue("channel_count", audioChannels);
             int32_t audioSampleRate;
             trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
-            audioTrackInfo.PutIntValue("sample_rate", static_cast<int32_t>(audioSampleRate));
+            audioTrackInfo.PutIntValue("sample_rate", audioSampleRate);
             int32_t sampleDepth;
             trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
-            audioTrackInfo.PutIntValue("sample_depth", static_cast<int32_t>(sampleDepth));
+            audioTrackInfo.PutIntValue("sample_depth", sampleDepth);
             audioTrack.emplace_back(std::move(audioTrackInfo));
         }
     }
