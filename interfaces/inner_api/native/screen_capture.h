@@ -78,6 +78,20 @@ enum DataType {
     INVAILD = -1
 };
 
+enum AvType : int8_t {
+    AUDIO_TYPE = 0,
+    VIDEO_TYPE = 1,
+    AV_TYPE = 2,
+    INVALID = -1
+};
+
+enum StopReason: int8_t {
+    NORMAL_STOPPED = 0,
+    RECEIVE_USERPRIVACY_AUTHORITY_FAILED = 1,
+    POST_START_SCREENCAPTURE_HANDLE_FAILURE = 2,
+    REQUEST_USER_PRIVACY_AUTHORITY_FAILED = 3,
+};
+
 enum CaptureMode : int32_t {
     /* capture home screen */
     CAPTURE_HOME_SCREEN = 0,
@@ -192,7 +206,16 @@ struct AVScreenCaptureConfig {
     AudioInfo audioInfo;
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
+    AvType avType = AvType::INVALID;
 };
+
+struct StatisticalEvent {
+    int32_t captureDuration;
+    bool requireMic;
+    std::string videoResolution;
+    StopReason stopReason = StopReason::NORMAL_STOPPED;
+    int32_t startLatency;
+}
 
 struct AudioBuffer {
     AudioBuffer(uint8_t *buf, int32_t size, int64_t timestamp, AudioCaptureSourceType type)

@@ -15,13 +15,18 @@
 #ifndef SCREEN_CAPTURE_IMPL_H
 #define SCREEN_CAPTURE_IMPL_H
 
+#include <media_dfx.h>
 #include "screen_capture.h"
 #include "nocopyable.h"
 #include "i_screen_capture_service.h"
 #include "surface_buffer_impl.h"
+#include "hitrace/tracechain.h"
+#include "media_dfx.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 class ScreenCaptureImpl : public ScreenCapture, public NoCopyable {
 public:
     ScreenCaptureImpl();
@@ -53,6 +58,9 @@ private:
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
     DataType dataType_ = DataType::INVAILD;
     bool isPrivacyAuthorityEnabled_ = false;
+    AvType avType_ = AvType::INVALID;
+    HiTraceId traceId_;
+    std::string appName_;
 };
 } // namespace Media
 } // namespace OHOS

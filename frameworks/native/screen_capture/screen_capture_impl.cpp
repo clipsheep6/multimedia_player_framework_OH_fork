@@ -18,12 +18,14 @@
 #include "media_errors.h"
 #include "i_media_service.h"
 #include "string_ex.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureImpl"};
 }
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture()
 {
     std::shared_ptr<ScreenCaptureImpl> impl = std::make_shared<ScreenCaptureImpl>();
@@ -56,6 +58,11 @@ int32_t ScreenCaptureImpl::SetScreenCaptureCallback(const std::shared_ptr<Screen
 ScreenCaptureImpl::ScreenCaptureImpl()
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    auto uid = IPCSkeleton::GetCallingUid();
+    appName_ = GetClientBundleName(uid);
+    traceId_ = HiTraceChain::Begin("AVScreenCapture", HITRACE_FLAG_DEFAULT);
+    HiTraceChain::SetId(traceId_);
+    CreateMediaInfo(SCREEN_CAPTRUER, getuid());
 }
 
 ScreenCaptureImpl::~ScreenCaptureImpl()
@@ -64,6 +71,8 @@ ScreenCaptureImpl::~ScreenCaptureImpl()
         (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureService(screenCaptureService_);
         screenCaptureService_ = nullptr;
     }
+    HiTraceChain::End(traceId_);
+    Report();
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -146,6 +155,7 @@ int32_t ScreenCaptureImpl::Init(AVScreenCaptureConfig config)
             return MSERR_UNSUPPORT;
         case CAPTURE_FILE: {
             ret = InitCaptureFile(config);
+            avType_ = (ret == MSERR_OK) ? AvType::AV_TYPE : AvType::INVALID;
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitCaptureFile failed");
             break;
         }
@@ -172,6 +182,14 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
     int32_t ret = MSERR_OK;
     bool isInnerAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.innerCapInfo);
     bool isVideoCapInfoIgnored = IsVideoCapInfoIgnored(config.videoInfo.videoCapInfo);
+    bool isAudioCapInfoIgnored = IsAudioCapInfoIgnored(config.audioInfo.micCapInfo);
+    if ((!isAudioCapInfoIgnored || !isInnerAudioCapInfoIgnored) && !isVideoCapInfoIgnored) {
+        avType_ = AvType::AV_TYPE;
+    } else if (!isAudioCapInfoIgnored || !isInnerAudioCapInfoIgnored) {
+        avType_ = AvType::AUDIO_TYPE;
+    } else if (!isVideoCapInfoIgnored) {
+        avType_ = AvType::VIDEO_TYPE;
+    }
     CHECK_AND_RETURN_RET_LOG(!(isInnerAudioCapInfoIgnored && isVideoCapInfoIgnored), MSERR_INVALID_VAL,
         "init cap failed, both innerAudioCap and videoCap Info ignored is not allowed");
     if (!isInnerAudioCapInfoIgnored) {
@@ -182,7 +200,7 @@ int32_t ScreenCaptureImpl::InitOriginalStream(AVScreenCaptureConfig config)
         ret = screenCaptureService_->InitVideoCap(config.videoInfo.videoCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init videoCap failed");
     }
-    if (!IsAudioCapInfoIgnored(config.audioInfo.micCapInfo)) {
+    if (!isAudioCapInfoIgnored) {
         ret = screenCaptureService_->InitAudioCap(config.audioInfo.micCapInfo);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init micAudioCap failed");
     }
@@ -254,6 +272,8 @@ int32_t ScreenCaptureImpl::StartScreenCapture()
         return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCapture error , dataType_ : %{public}d", dataType_);
+        FaultScreenCaptureEventWrite(appName_, avType_, dataType_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "StartScreenCapture error");
         return MSERR_INVALID_VAL;
     }
 }
@@ -268,6 +288,8 @@ int32_t ScreenCaptureImpl::StartScreenCaptureWithSurface(sptr<Surface> surface)
         return screenCaptureService_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenCaptureWithSurface error , dataType_ : %{public}d", dataType_);
+        FaultScreenCaptureEventWrite(appName_, avType_, dataType_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "StartScreenCaptureWithSurface error");
         return MSERR_INVALID_VAL;
     }
 }
@@ -282,6 +304,8 @@ int32_t ScreenCaptureImpl::StopScreenCapture()
         return screenCaptureService_->StopScreenCapture();
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StopScreenCapture error , dataType_ : %{public}d", dataType_);
+        FaultScreenCaptureEventWrite(appName_, avType_, dataType_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "StopScreenCapture error");
         return MSERR_INVALID_VAL;
     }
 }
@@ -295,6 +319,8 @@ int32_t ScreenCaptureImpl::StartScreenRecording()
         return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , dataType_ : %{public}d", dataType_);
+        FaultScreenCaptureEventWrite(appName_, avType_, dataType_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "StartScreenRecording error");
         return MSERR_INVALID_VAL;
     }
 }
@@ -309,6 +335,8 @@ int32_t ScreenCaptureImpl::StopScreenRecording()
         return screenCaptureService_->StopScreenCapture();
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StopScreenRecording error , dataType_ : %{public}d", dataType_);
+        FaultScreenCaptureEventWrite(appName_, avType_, dataType_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "StopScreenRecording error");
         return MSERR_INVALID_VAL;
     }
 }
