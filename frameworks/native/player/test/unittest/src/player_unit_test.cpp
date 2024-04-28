@@ -2412,6 +2412,48 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_016, TestSize.Level0)
 
 /**
  * @tc.name  : Test SetEffect API
+ * @tc.number: Player_SetEffect_001
+ * @tc.desc  : Test Player SetEffect state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
+{
+    Format format;
+    const float FLOAT_VALUE = 1.0;
+    const double DOUBLE_VALUE = 2.5;
+    const std::string STRING_VALUE = "player_test";
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutFloatValue(PlayerKeys::AUDIO_EFFECT_MODE, FLOAT_VALUE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutDoubleValue(PlayerKeys::AUDIO_EFFECT_MODE, DOUBLE_VALUE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutStringValue(PlayerKeys::AUDIO_EFFECT_MODE, STRING_VALUE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+}
+
+/**
+ * @tc.name  : Test SetEffect API
  * @tc.number: Player_SetEffect_002
  * @tc.desc  : Test Player SetEffect param
  */
