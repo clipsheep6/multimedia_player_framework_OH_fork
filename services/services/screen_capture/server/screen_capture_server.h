@@ -212,6 +212,7 @@ private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t OnStartScreenCapture();
     void PostStartScreenCapture(bool isSuccess);
+    int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();

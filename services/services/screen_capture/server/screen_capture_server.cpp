@@ -927,6 +927,31 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo)
+{
+    int32_t ret = MSERR_OK;
+    ret = recorder->SetOutputFormat(fileFormat_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
+    ret = recorder->SetAudioEncoder(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioCodecformat);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
+    ret = recorder->SetAudioSampleRate(audioSourceId_, audioInfo.audioSampleRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSampleRate failed");
+    ret = recorder->SetAudioChannels(audioSourceId_, audioInfo.audioChannels);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
+    ret = recorder->SetAudioEncodingBitRate(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioBitrate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
+    ret = recorder->SetVideoEncoder(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoCodec);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
+    ret = recorder->SetVideoSize(videoSourceId_, captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
+        captureConfig_.videoInfo.videoCapInfo.videoFrameHeight);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
+    ret = recorder->SetVideoFrameRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoFrameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
+    ret = recorder->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::InitRecorder()
 {
     CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_OPERATION, "the outputFd is invalid");
@@ -969,25 +994,9 @@ int32_t ScreenCaptureServer::InitRecorder()
     ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
 
-    ret = recorder_->SetOutputFormat(fileFormat_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
-    ret = recorder_->SetAudioEncoder(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioCodecformat);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
-    ret = recorder_->SetAudioSampleRate(audioSourceId_, audioInfo.audioSampleRate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioSampleRate failed");
-    ret = recorder_->SetAudioChannels(audioSourceId_, audioInfo.audioChannels);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
-    ret = recorder_->SetAudioEncodingBitRate(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioBitrate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
-    ret = recorder_->SetVideoEncoder(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoCodec);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
-    ret = recorder_->SetVideoSize(videoSourceId_, captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
-        captureConfig_.videoInfo.videoCapInfo.videoFrameHeight);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
-    ret = recorder_->SetVideoFrameRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoFrameRate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
-    ret = recorder_->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+    ret = InitRecorderInfo(recorder_, audioInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "InitRecorderInfo failed");
+
     ret = recorder_->SetOutputFile(outputFd_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
     ret = recorder_->Prepare();
@@ -1980,7 +1989,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
         }
         if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
             char* mixData = new char[innerAudioBuffer->length];
-            char* srcData[2] = {NULL};
+            char* srcData[2] = {nullptr};
             srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
             srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
             int channels = 2;
@@ -2003,7 +2012,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
 
 int32_t AudioDataSource::GetSize(int64_t &size)
 {
-    size_t bufferLen;
+    size_t bufferLen = 0;
     int32_t ret = screenCaptureServer_->GetInnerAudioCaptureBufferSize(bufferLen);
     MEDIA_LOGD("AudioDataSource::GetSize : %{public}zu", bufferLen);
     size = static_cast<int64_t>(bufferLen);
@@ -2013,8 +2022,8 @@ int32_t AudioDataSource::GetSize(int64_t &size)
 void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize)
 {
     MEDIA_LOGD("AudioDataSource MixAudio");
-    int const MAX = 32767;
-    int const MIN = -32768;
+    int const max = 32767;
+    int const min = -32768;
     double const splitNum = 32;
     int const doubleChannels = 2;
     double coefficient = 1;
@@ -2027,21 +2036,21 @@ void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int 
     for (totalNum = 0; totalNum < bufferSize / channels; totalNum++) {
         int temp = 0;
         for (channelNum = 0; channelNum < channels; channelNum++) {
-            temp += *(short*)(srcData[channelNum] + totalNum * channels);
+            temp += *reinterpret_cast<short*>(srcData[channelNum] + totalNum * channels);
         }
-        output = (int)(temp * coefficient);
-        if (output > MAX) {
-            coefficient = (double)MAX / (double)(output);
-            output = MAX;
+        output = static_cast<int32_t>(temp * coefficient);
+        if (output > max) {
+            coefficient = static_cast<double>(max) / static_cast<double>(output);
+            output = max;
         }
-        if (output < MIN) {
-            coefficient = (double)MIN / (double)(output);
-            output = MIN;
+        if (output < min) {
+            coefficient = static_cast<double>(min) / static_cast<double>(output);
+            output = min;
         }
         if (coefficient < 1) {
-            coefficient += ((double)1 - coefficient) / splitNum;
+            coefficient += (static_cast<double>(1) - coefficient) / splitNum;
         }
-        *(short*)(mixData + totalNum * doubleChannels) = (short)output;
+        *reinterpret_cast<short*>(mixData + totalNum * doubleChannels) = static_cast<short>(output);
     }
 }
 } // namespace Media
