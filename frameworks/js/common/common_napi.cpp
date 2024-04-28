@@ -575,6 +575,24 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
                     CHECK_AND_RETURN_RET(SetPropertyInt32(env, buffer, iter.first, intValue) == true, nullptr);
                 }
                 break;
+            case FORMAT_TYPE_INT64:
+                int64_t longValue;
+                if (format.GetLongValue(iter.first, longValue)) {
+                    if (longValue >= INT32_MIN && longValue <= INT32_MAX) {
+                        intValue = static_cast<int32_t>(longValue);
+                        CHECK_AND_RETURN_RET(SetPropertyInt32(env, buffer, iter.first, intValue) == true, nullptr);
+                    }
+                }
+                break;
+            case FORMAT_TYPE_DOUBLE:
+                double doubleValue;
+                if (format.GetDoubleValue(iter.first, doubleValue)) {
+                    if (doubleValue >= INT32_MIN && doubleValue <= INT32_MAX) {
+                        intValue = static_cast<int32_t>(doubleValue);
+                        CHECK_AND_RETURN_RET(SetPropertyInt32(env, buffer, iter.first, intValue) == true, nullptr);
+                    }
+                }
+                break;
             case FORMAT_TYPE_STRING:
                 if (format.GetStringValue(iter.first, strValue)) {
                     CHECK_AND_RETURN_RET(SetPropertyString(env, buffer, iter.first, strValue) == true, nullptr);
