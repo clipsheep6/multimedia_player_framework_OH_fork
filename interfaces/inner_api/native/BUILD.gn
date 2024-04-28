@@ -54,6 +54,7 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//utils/system/safwk/native/include",
     "//commonlibrary/c_utils/base/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_GRAPHIC/../graphic_surface/surface/include",
   ]
 
@@ -167,7 +168,9 @@ ohos_shared_library("media_client") {
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
     "image_framework:image_native",
+    "ipc:ipc_core",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "qos_manager:qos",

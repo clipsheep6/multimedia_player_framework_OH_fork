@@ -78,6 +78,13 @@ enum DataType {
     INVAILD = -1
 };
 
+enum AvType : int8_t {
+    AUDIO_TYPE = 0,
+    VIDEO_TYPE = 1,
+    AV_TYPE = 2,
+    INVALID = -1
+};
+
 enum CaptureMode : int32_t {
     /* capture home screen */
     CAPTURE_HOME_SCREEN = 0,
@@ -192,6 +199,7 @@ struct AVScreenCaptureConfig {
     AudioInfo audioInfo;
     VideoInfo videoInfo;
     RecorderInfo recorderInfo;
+    AvType avType = AvType::INVALID;
 };
 
 struct AudioBuffer {
