@@ -732,6 +732,10 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::string url = data.ReadString();
     auto mapSize = data.ReadUint32();
     std::map<std::string, std::string> header;
+    int32_t maxHeaderSize = 100;
+    if (mapSize >= maxHeaderSize) {
+        mapSize = maxHeaderSize;
+    }
     for (size_t i = 0; i < mapSize; i++) {
         auto kstr = data.ReadString();
         auto vstr = data.ReadString();

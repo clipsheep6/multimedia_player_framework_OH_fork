@@ -1282,7 +1282,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     napi_value args[2] = { nullptr };
     size_t argCount = 2;
-    int expectedargCounts = 2;
+    int minargCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
@@ -1292,7 +1292,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (argCount < expectedargCounts || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
+    if (argCount < minargCount || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
         || napi_typeof(env, args[1], &valueType) != napi_ok) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetMediaSource is not napi_object");
         return result;
