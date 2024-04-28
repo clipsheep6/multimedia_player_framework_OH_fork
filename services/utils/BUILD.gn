@@ -45,10 +45,8 @@ ohos_shared_library("media_service_utils") {
   ]
 
   include_dirs = [
-    "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "//third_party/libxml2/include",
   ]
 
   defines = [ "MEDIA_OHOS" ]
@@ -82,8 +80,6 @@ ohos_shared_library("media_service_utils") {
 
   configs = [ ":media_service_utils_public_config" ]
 
-  deps = [ "//third_party/libxml2:xml2" ]
-
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
@@ -98,6 +94,7 @@ ohos_shared_library("media_service_utils") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "media_foundation:media_foundation",
     "qos_manager:qos",
     "samgr:samgr_proxy",

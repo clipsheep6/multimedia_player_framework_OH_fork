@@ -34,10 +34,7 @@ ohos_shared_library("media_service_log_dfx") {
 
   sources = [ "dfx_log_dump.cpp" ]
 
-  include_dirs = [
-    ".",
-    "//commonlibrary/c_utils/base/include",
-  ]
+  include_dirs = [ "." ]
 
   cflags = [
     "-std=c++17",
@@ -88,7 +85,6 @@ ohos_shared_library("media_service_dfx") {
 
   include_dirs = [
     ".",
-    "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
   ]
 

@@ -38,11 +38,6 @@ ohos_shared_library("soundpool_client") {
   include_dirs = [
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
     "${multimedia_player_framework_path}/services/utils/include",
-    "${av_codec_root_path}/interfaces/inner_api/native",
-    "${multimedia_audio_framework_path}/services/audio_service/client/include",
-    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiocommon/include",
-    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiomanager/include",
-    "${av_codec_root_path}/services/utils/include",
   ]
 
   deps = [ "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client" ]
@@ -54,7 +49,6 @@ ohos_shared_library("soundpool_client") {
     "ability_runtime:abilitykit_native",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
-    "av_codec:av_codec_client",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "graphic_surface:surface",
@@ -62,6 +56,8 @@ ohos_shared_library("soundpool_client") {
     "init:libbegetutil",
     "qos_manager:qos",
   ]
+
+  public_external_deps = [ "av_codec:av_codec_client" ]
 
   cflags = [
     "-Wall",

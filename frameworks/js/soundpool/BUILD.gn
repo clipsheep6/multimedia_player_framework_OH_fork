@@ -70,7 +70,6 @@ ohos_shared_library("media_soundpool") {
     "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
     "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
     "${multimedia_player_framework_path}/services/utils:media_service_utils",
-    "../../../../../../third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
@@ -79,6 +78,7 @@ ohos_shared_library("media_soundpool") {
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

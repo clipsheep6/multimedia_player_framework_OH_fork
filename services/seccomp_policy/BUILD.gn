@@ -11,9 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-STARTUP_INIT_ROOT_DIR = "//base/startup/init"
-import(
-    "$STARTUP_INIT_ROOT_DIR/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 ohos_prebuilt_seccomp("media_seccomp_filter") {
   sources = [ "media_service.seccomp.policy" ]

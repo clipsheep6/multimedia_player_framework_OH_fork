@@ -76,7 +76,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
-    "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
   ]
 
@@ -188,7 +187,6 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//third_party/libxml2:xml2",
   ]
 
   external_deps = [
@@ -207,6 +205,7 @@ ohos_shared_library("media_service") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "media_foundation:media_foundation",
     "napi:ace_napi",
     "os_account:os_account_innerkits",
