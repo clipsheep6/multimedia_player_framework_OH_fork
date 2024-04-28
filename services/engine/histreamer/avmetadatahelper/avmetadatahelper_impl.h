@@ -63,6 +63,7 @@ private:
 
     void Reset();
     void Destroy();
+    std::string groupId_;
 };
 }  // namespace Media
 }  // namespace OHOS
