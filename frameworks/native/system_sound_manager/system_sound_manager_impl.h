@@ -102,8 +102,6 @@ private:
     std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
-    std::unordered_map<RingtoneType, std::shared_ptr<ToneAttrs>> defaultRingtoneAttrsMap_;
-    std::unordered_map<SystemToneType, std::shared_ptr<ToneAttrs>> defaultSystemToneAttrsMap_;
     std::shared_ptr<ToneAttrs> ringtoneAttrs_;
     std::shared_ptr<ToneAttrs> systemtoneAttrs_;
     std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
