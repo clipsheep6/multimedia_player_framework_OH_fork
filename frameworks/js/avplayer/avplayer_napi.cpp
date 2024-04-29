@@ -38,8 +38,8 @@ using namespace OHOS::AudioStandard;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
-    constexpr uint32_t MIN_ARG_COUNTS = 1;
-    constexpr uint32_t MAX_ARG_COUNTS = 2;
+    constexpr size_t MIN_ARG_COUNTS = 1;
+    constexpr size_t MAX_ARG_COUNTS = 2;
 }
 
 namespace OHOS {
