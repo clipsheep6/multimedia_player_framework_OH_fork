@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "hitrace_meter.h"
+#include "hitrace/tracechain.h"
 #include "ipc_skeleton.h"
 #include "media_utils.h"
 
@@ -28,6 +29,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 bool MediaEvent::CreateMsg(const char *format, ...)
 {
     va_list args;
@@ -82,6 +84,46 @@ void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::Hi
                     "BUNDLE", bundleName);
 }
 
+void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+    const std::string& appName, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
+    const std::string& errMsg)
+{
+    uint64_t traceId = HiTraceChain::GetId().GetChainId();
+    std::string traceIdStr = std::to_string(traceId);
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
+                    "APP_NAME", appName,
+                    "INSTANCE_ID", traceIdStr,
+                    "CALLER_TYPE", callerType,
+                    "SOURCE_TYPE", sourceType,
+                    "SOURCE_URI", sourceUrl,
+                    "ERROR_MESG", errMsg);
+}
+
+void MediaEvent::RecordAudioEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+    const std::string& appName, int8_t sourceType, const std::string& errorMessage)
+{
+    uint64_t traceId = HiTraceChain::GetId().GetChainId();
+    std::string traceIdStr = std::to_string(traceId);
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
+                    "APP_NAME", appName,
+                    "INSTANCE_ID", traceIdStr,
+                    "AUDIO_SOURCE_TYPE", sourceType,
+                    "ERROR_MESG", errorMessage);
+}
+
+void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+    const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errorMessage)
+{
+    uint64_t traceId = HiTraceChain::GetId().GetChainId();
+    std::string traceIdStr = std::to_string(traceId);
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
+                    "APP_NAME", appName,
+                    "INSTANCE_ID", traceIdStr,
+                    "CAPTURE_MODE", captureMode,
+                    "DATA_MODE", dataMode,
+                    "ERROR_CODE", errorCode,
+                    "ERROR_MESG", errorMessage);
+}
 
 void BehaviorEventWrite(std::string status, std::string module)
 {
@@ -118,6 +160,29 @@ void FaultEventWrite(std::string msg, std::string module)
     if (event.CreateMsg("%s", msg.c_str())) {
         event.EventWrite("PLAYER_ERR", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, module);
     }
+}
+
+void FaultSourceEventWrite(const std::string& appName, const std::string& callerType, int8_t sourceType,
+    const std::string& sourceUrl, const std::string& errorMessage)
+{
+    MediaEvent event;
+    event.SourceEventWrite("SOURCE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName, callerType,
+        sourceType, sourceUrl, errorMessage);
+}
+
+void FaultRecordAudioEventWrite(const std::string& appName, int8_t sourceType, const std::string& errorMessage)
+{
+    MediaEvent event;
+    event.RecordAudioEventWrite("RECORD_AUDIO_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
+        sourceType, errorMessage);
+}
+
+void FaultScreenCaptureEventWrite(const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode,
+    const std::string& errorMessage)
+{
+    MediaEvent event;
+    event.ScreenCaptureEventWrite("SCREEN_CAPTURE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
+        captureMode, dataMode, errorCode, errorMessage);
 }
 
 MediaTrace::MediaTrace(const std::string &funcName)

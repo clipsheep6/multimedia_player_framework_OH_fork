@@ -88,6 +88,19 @@ enum AVScreenCaptureMixMode : int32_t {
     INVAILD_MODE = 3
 };
 
+enum AVScreenCaptureAvType : int8_t {
+    INVALID_TYPE = -1,
+    AUDIO_TYPE = 0,
+    VIDEO_TYPE = 1,
+    AV_TYPE = 2
+};
+
+enum AVScreenCaptureDataMode : int8_t {
+    BUFFER_MODE = 0,
+    SUFFACE_MODE = 1,
+    FILE_MODE = 2
+};
+
 struct SurfaceBufferEntry {
     SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
         : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
@@ -273,7 +286,10 @@ private:
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
+    std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
+    AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
+    AVScreenCaptureDataMode dataMode_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
     ScreenId screenId_ = SCREEN_ID_INVALID;
