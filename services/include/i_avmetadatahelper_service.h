@@ -29,7 +29,8 @@ public:
           height_(height),
           stride_(stride),
           bytesPerPixel_(bytesPerPixel),
-          size_(stride_ * height)  // interleaved layout
+          size_(stride_ * height),  // interleaved layout
+          rotation_(0)
     {
     }
 
@@ -48,6 +49,7 @@ public:
     int32_t stride_;  // interleaved layout
     int32_t bytesPerPixel_;
     int32_t size_;
+    int32_t rotation_;
 };
 
 struct OutputConfiguration {

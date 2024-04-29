@@ -39,6 +39,7 @@ public:
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
 private:
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
+    int32_t rotation_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

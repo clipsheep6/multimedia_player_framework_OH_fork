@@ -61,6 +61,8 @@ private:
     std::shared_ptr<Meta> trackInfo_;
     std::mutex mutex_;
     std::condition_variable cond_;
+    std::atomic<uint32_t> bufferIndex_;
+    sptr<SurfaceBuffer> surfaceBuffer_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_;
