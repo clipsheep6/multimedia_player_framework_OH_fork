@@ -1103,16 +1103,16 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     bool svp = 0;
     napi_status status = napi_get_value_bool(env, args[1], &svp);
     if (status != napi_ok) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the svp");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "secureVideoPath type should be boolean.");
         return result;
     }
     napi_value sessionObj;
     status = napi_coerce_to_object(env, args[0], &sessionObj);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "JsSetDecryptConfig get sessionObj failure!");
+    
     napi_valuetype valueType;
     if (argCount < 1 || napi_typeof(env, sessionObj, &valueType) != napi_ok || valueType != napi_object) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "keysession is not napi_object");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "mediaKeySession should be drm.MediaKeySession.");
         return result;
     }
     napi_value nativePointer = nullptr;
@@ -1292,9 +1292,13 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
-    if (argCount < minargCount || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object
-        || napi_typeof(env, args[1], &valueType) != napi_ok) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetMediaSource is not napi_object");
+    if (argCount < minargCount || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "src type should be MediaSource.");
+        return result;
+    }
+
+    if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
     }
 
@@ -1310,8 +1314,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
         MEDIA_LOGE("get fileDescriptor argument failed!");
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the input parameters(fileDescriptor)");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "strategy type should be PlaybackStrategy.");
         return result;
     }
     strategy.preferredBufferDuration = strategyTmp.preferredBufferDuration;
@@ -2251,10 +2254,18 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
-    if (argCount < requireArgc ||
-        napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
-        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
+    if (argCount < requireArgc) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "type should be string.");
+        return result;
+    }
+
+    if (napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "callback type should be Callback or function.");
         return result;
     }
 
@@ -2290,8 +2301,13 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     }
 
     napi_valuetype valueType0 = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
+    if (argCount < 1) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "type should be string.");
         return result;
     }
 
