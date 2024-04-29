@@ -783,24 +783,39 @@ napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info i
     MEDIA_LOGI("JsSetEventCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
+    
     size_t argCount = 2;
+    constexpr size_t requireArgc = 1;
     napi_value args[2] = { nullptr, nullptr };
     AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "Failed to retrieve instance");
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
-    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
-        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
-        recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
+
+    if (argCount < requireArgc) {
+        recorderNapi->ErrorCallback(MSERR_MANDATORY_PARAMETER_UNSPECIFIED, "SetEventCallback",
+            "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+        recorderNapi->ErrorCallback(MSERR_INCORRECT_PARAMETER_TYPE, "SetEventCallback",
+            "type should be string");
+        return result;
+    }
+
+    if (napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+        recorderNapi->ErrorCallback(MSERR_INCORRECT_PARAMETER_TYPE, "SetEventCallback",
+            "callback type should be Callback or function.");
         return result;
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != AVRecorderEvent::EVENT_ERROR && callbackName != AVRecorderEvent::EVENT_STATE_CHANGE
         && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
-        recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
+        recorderNapi->ErrorCallback(MSERR_PARAMETER_VERIFICATION_FAILED, "SetEventCallback",
+            "type must be error, stateChange or audioCapturerChange.");
         return result;
     }
 
@@ -821,22 +836,32 @@ napi_value AVRecorderNapi::JsCancelEventCallback(napi_env env, napi_callback_inf
     MEDIA_LOGI("JsCancelEventCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
+    constexpr size_t requireArgc = 1;
     size_t argCount = 1;
+
     napi_value args[1] = { nullptr };
     AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "Failed to retrieve instance");
 
     napi_valuetype valueType0 = napi_undefined;
+
+    if (argCount < requireArgc) {
+        recorderNapi->ErrorCallback(MSERR_MANDATORY_PARAMETER_UNSPECIFIED, "CancelEventCallback",
+            "Mandatory parameters are left unspecified.");
+        return result;
+    }
+
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
-        recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
+        recorderNapi->ErrorCallback(MSERR_INCORRECT_PARAMETER_TYPE, "CancelEventCallback",
+            "type should be string.");
         return result;
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     if (callbackName != AVRecorderEvent::EVENT_ERROR && callbackName != AVRecorderEvent::EVENT_STATE_CHANGE
         && callbackName != AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) {
-        recorderNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
+        recorderNapi->ErrorCallback(MSERR_PARAMETER_VERIFICATION_FAILED, "CancelEventCallback",
+            "type must be error, stateChange or audioCapturerChange.");
         return result;
     }
 
@@ -1415,8 +1440,9 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
 {
     napi_valuetype valueType = napi_undefined;
     if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
-        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetConfig", "AVRecorderConfig");
-        return MSERR_INVALID_VAL;
+        asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVRecorderConfig",
+            "config type should be AVRecorderConfig.");
+        return MSERR_INCORRECT_PARAMETER_TYPE;
     }
 
     asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
@@ -1434,7 +1460,8 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     config->url = CommonNapi::GetPropertyString(env, args, "url");
     MEDIA_LOGI("url %{public}s!", config->url.c_str());
     CHECK_AND_RETURN_RET(config->url != "",
-        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "geturl", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "geturl", "url",
+            "config->url cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
 
     bool getValue = false;
     ret = AVRecorderNapi::GetPropertyInt32(env, args, "rotation", config->rotation, getValue);
@@ -1443,11 +1470,13 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
     MEDIA_LOGI("rotation %{public}d!", config->rotation);
     CHECK_AND_RETURN_RET((config->rotation == VIDEO_ROTATION_0 || config->rotation == VIDEO_ROTATION_90 ||
         config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
-        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
+        (asyncCtx->AVRecorderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "getrotation", "rotation",
+            "rotation angle must be 0, 90, 180 or 270!"), MSERR_PARAMETER_VERIFICATION_FAILED));
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "location")) {
         CHECK_AND_RETURN_RET(GetLocation(asyncCtx, env, args),
-            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetLocation", "Location"), MSERR_INVALID_VAL));
+            (asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetLocation", "Location",
+                "location type should be Location."), MSERR_INCORRECT_PARAMETER_TYPE));
     }
 
     if (CommonNapi::CheckhasNamedProperty(env, args, "metadata")) {
@@ -1462,8 +1491,9 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
     napi_valuetype valueType = napi_undefined;
     if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok ||
         (valueType != napi_object && valueType != napi_number)) {
-        asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "GetConfig", "AVRecorderConfig");
-        return MSERR_INVALID_VAL;
+        asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVRecorderConfig",
+            "rotation type should be number.");
+        return MSERR_INCORRECT_PARAMETER_TYPE;
     }
 
     asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
@@ -1606,7 +1636,7 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 {
     CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "Configure", ""));
-    CHECK_AND_RETURN_RET(config != nullptr, GetRetInfo(MSERR_INVALID_VAL, "Configure", "config"));
+    CHECK_AND_RETURN_RET(config != nullptr, GetRetInfo(MSERR_MANDATORY_PARAMETER_UNSPECIFIED, "Configure", "config"));
 
     if (hasConfiged_) {
         MEDIA_LOGE("AVRecorderConfig has been configured and will not be configured again");
@@ -1644,7 +1674,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetUserCustomInfo", "customInfo"));
     }
 
-    ret = MSERR_INVALID_VAL;
+    ret = MSERR_PARAMETER_VERIFICATION_FAILED;
     const std::string fdHead = "fd://";
     CHECK_AND_RETURN_RET(config->url.find(fdHead) != std::string::npos, GetRetInfo(ret, "Getfd", "uri"));
     int32_t fd = -1;
