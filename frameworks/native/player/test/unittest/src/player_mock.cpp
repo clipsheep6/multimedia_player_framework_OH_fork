@@ -412,6 +412,13 @@ int32_t PlayerMock::Prepare()
     return ret;
 }
 
+int32_t PlayerMock::SetRenderFirstFrame(bool display)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetRenderFirstFrame(display);
+}
+
 int32_t PlayerMock::PrepareAsync()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");

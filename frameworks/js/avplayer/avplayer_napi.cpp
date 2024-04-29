@@ -1282,7 +1282,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     napi_value args[2] = { nullptr };
     size_t argCount = 2;
-    int minargCount = 1;
+    size_t minargCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
