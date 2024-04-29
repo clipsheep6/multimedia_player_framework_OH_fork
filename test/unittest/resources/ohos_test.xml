@@ -16,11 +16,13 @@
 <configuration ver="2.0">
     <target name="player_unit_test">
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
+        <depend resource="test_videofile/H264_AAC_multi_track.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <depend resource="test_subtitlefile/utf8.srt" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
             <option name="push" value="test_subtitlefile/utf8.srt -> /data/test" src="res"/>
             <option name="push" value="test_subtitlefile/utf8_test1.srt -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_AAC_multi_track.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H265_AAC.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
