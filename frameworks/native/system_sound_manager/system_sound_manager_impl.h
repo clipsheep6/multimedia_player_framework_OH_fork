@@ -95,6 +95,7 @@ private:
     bool isSystemToneTypeValid(SystemToneType systemToneType);
 
     std::string systemSoundPath_ = "";
+    std::string alarmToneUri_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
@@ -103,12 +104,16 @@ private:
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
     std::unordered_map<RingtoneType, std::shared_ptr<ToneAttrs>> defaultRingtoneAttrsMap_;
     std::unordered_map<SystemToneType, std::shared_ptr<ToneAttrs>> defaultSystemToneAttrsMap_;
-    std::shared_ptr<ToneAttrs> defaultAlarmAttrs_;
+    std::shared_ptr<ToneAttrs> ringtoneAttrs_;
+    std::shared_ptr<ToneAttrs> systemtoneAttrs_;
+    std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
 
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRingerModeCallback> ringerModeCallback_ = nullptr;
-    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> ringtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> systemtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> alarmtoneAttrsArray_;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {

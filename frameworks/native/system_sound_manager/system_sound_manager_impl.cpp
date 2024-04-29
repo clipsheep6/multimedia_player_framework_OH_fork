@@ -377,107 +377,183 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(const shared_ptr<Context> &context, RingtoneType ringtoneType)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    CHECK_AND_RETURN_RET_LOG(isRingtoneTypeValid(ringtoneType),  nullptr, "Invalid ringtone type");
 
-    //向下调用inner接口， 暂无接口， 先用log代替
-//     ringtonePlayerMap_[ringtoneType] = GetDefaultRingtoneAttrs();
-     MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    if (defaultRingtoneAttrsMap_[ringtoneType] == nullptr) {
-        MEDIA_LOGI("The defaultRingtoneAttrs is empty.");
-    }
-    return defaultRingtoneAttrsMap_[ringtoneType] ;
+    MEDIA_LOGI("GetDefaultRingtoneAttrs ");
+
+    std::string title_ = "title_ringtoneattrs0";
+    std::string displayName_ = "displayName_ringtoneattrs0";
+    std::string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs0.ogg";
+
+    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_, 0, 1);
+
+    return ringtoneAttrs_;
 }
 
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
     RingtoneType ringtoneType)
 {
-    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return toneAttrsArray_;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    MEDIA_LOGI("GetRingtoneAttrList ");
+
+    std::string title_0 = "title_ringtoneattrs0";
+    std::string displayName_0 = "displayName_ringtoneattrs0";
+    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs0.ogg";
+    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, 0, 1);
+
+    ringtoneAttrsArray_.push_back(ringtoneAttrs_);
+
+    std::string title_1 = "title_ringtoneattrs1";
+    std::string displayName_1 = "displayName_ringtoneattrs1";
+    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/ringtoneattrs1.ogg";
+    ringtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, 1, 1);
+    ringtoneAttrsArray_.push_back(ringtoneAttrs_);
+
+    return ringtoneAttrsArray_;
 }
+
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
     SystemToneType systemToneType)
 {
-    MEDIA_LOGI("Get defaultSystemToneAttrs success");
-    if (defaultSystemToneAttrsMap_[systemToneType] == nullptr) {
-        MEDIA_LOGI("The defaultSystemToneAttrs is empty.");
-    }
-    return defaultSystemToneAttrsMap_[systemToneType] ;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    MEDIA_LOGI("GetDefaultSystemToneAttrs ");
+
+    std::string title_ = "title_systemtoneattrs0";
+    std::string displayName_ = "displayName_systemtoneattrs0";
+    std::string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs0.ogg";
+
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_, 0, 2);
+
+    return systemtoneAttrs_;
 }
+
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
     SystemToneType systemToneType)
 {
-    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return toneAttrsArray_;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    MEDIA_LOGI("GetSystemToneAttrList ");
+
+    std::string title_0 = "title_systemtoneattrs0";
+    std::string displayName_0 = "displayName_systemtoneattrs0";
+    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs0.ogg";
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, 0, 2);
+
+    systemtoneAttrsArray_.push_back(systemtoneAttrs_);
+
+    std::string title_1 = "title_systemtoneattrs1";
+    std::string displayName_1 = "displayName_systemtoneattrs1";
+    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/systemtoneattrs1.ogg";
+    systemtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, 1, 2);
+    systemtoneAttrsArray_.push_back(systemtoneAttrs_);
+
+    return systemtoneAttrsArray_;
 }
+
 int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    std::string key = "ringtone_for_sim_card_0";//与鸿蒙联调， 先写ringtone的key,卡一的通话铃声
 
-    MEDIA_LOGI("SetAlarmToneUri:  uri: %{public}s", uri.c_str());
-    int32_t result = WriteUriToDatabase(key, uri);
-    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, MSERR_INVALID_OPERATION,
-        "Failed to write alarmTone uri to database: result %{public}d", result);
-    return result;
+    MEDIA_LOGI("SetAlarmToneUri uri is [%{public}s]", uri.c_str());
+
+    alarmToneUri_ = uri;
+
+    return MSERR_OK;
 }
 
 std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    std::string key = "ringtone_for_sim_card_0";//与鸿蒙联调， 先写ringtone的key,卡一的通话铃声
-    std::string alarmToneUri = GetUriFromDatabase(key);
-    if (alarmToneUri == "") {
-        MEDIA_LOGI("The current alarm tone uri is empty.");
-        return nullptr;
-    }
-    MEDIA_LOGI("GetAlarmToneUri: key [%{public}s], alarmToneUri [%{public}s]", key.c_str(), alarmToneUri.c_str());
-    return alarmToneUri;
+
+    MEDIA_LOGI("GetAlarmToneUri ");
+
+    return alarmToneUri_;
 }
 
 std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return defaultAlarmAttrs_;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    MEDIA_LOGI("GetDefaultAlarmToneAttrs ");
+
+    std::string title_ = "title_alarmtoneattrs0";
+    std::string displayName_ = "displayName_alarmtoneattrs0";
+    std::string path_ = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs0.ogg";
+
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_, displayName_, path_, 0, 8);
+
+    return alarmtoneAttrs_;
 }
+
 std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context)
 {
-    std::vector<std::shared_ptr<ToneAttrs>> toneAttrsArray_;
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return toneAttrsArray_;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+
+    MEDIA_LOGI("GetAlarmToneAttrList ");
+
+    std::string title_0 = "title_alarmtoneattrs0";
+    std::string displayName_0 = "displayName_alarmtoneattrs0";
+    std::string path_0 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs0.ogg";
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_0, displayName_0, path_0, 0, 8);
+
+    alarmtoneAttrsArray_.push_back(alarmtoneAttrs_);
+
+    std::string title_1 = "title_alarmtoneattrs1";
+    std::string displayName_1 = "displayName_alarmtoneattrs1";
+    std::string path_1 = "/storage/media/local/data/com.ohos.ringtonelibrary.ringtonelibrarydata/test_insert_ringtone_library/alarmtoneattrs1.ogg";
+    alarmtoneAttrs_ = std::make_shared<ToneAttrs>(title_1, displayName_1, path_1, 1, 8);
+    alarmtoneAttrsArray_.push_back(alarmtoneAttrs_);
+
+    return alarmtoneAttrsArray_;
 }
+
 int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return MSERR_OK;
+    MEDIA_LOGI("GetAlarmToneAttrList ");
+    int32_t fd = 240429;
+    return fd;
 }
+
 int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    MEDIA_LOGI("Close fd is [%{public}s]", fd.c_str());
     return MSERR_OK;
 }
+
 std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return nullptr;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    MEDIA_LOGI("AddCustomizedToneByExternalUri externalUri is [%{public}s]", externalUri.c_str());
+
+    return externalUri.c_str();
 }
+
 std::string SystemSoundManagerImpl::AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return nullptr;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    MEDIA_LOGI("AddCustomizedToneByFd fd is [%{public}s]", fd.c_str());
+
+    return fd.c_str();
 }
+
 std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
-    return nullptr;
+    std::lock_guard<std::mutex> lock(uriMutex_);
+    MEDIA_LOGI("AddCustomizedToneByFdAndOffset fd is [%{public}s]", fd.c_str());
+    MEDIA_LOGI("AddCustomizedToneByFdAndOffset offset is [%{public}s]", offset.c_str());
+    MEDIA_LOGI("AddCustomizedToneByFdAndOffset length is [%{public}s]", length.c_str());
+
+    return fd.c_str();
 }
+
 int32_t SystemSoundManagerImpl::RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri)
 {
-    MEDIA_LOGI("Get defaultRingtoneAttrs success");
+    MEDIA_LOGI("RemoveCustomizedTone uri is [%{public}s]", uri.c_str());
+
     return MSERR_OK;
 }
 
