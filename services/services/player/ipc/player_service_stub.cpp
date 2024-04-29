@@ -32,7 +32,8 @@
 #endif
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
+    constexpr uint32_t MAX_MAP_SIZE = 100;
 }
 
 namespace OHOS {
@@ -732,9 +733,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     std::string url = data.ReadString();
     auto mapSize = data.ReadUint32();
     std::map<std::string, std::string> header;
-    int32_t maxHeaderSize = 100;
-    if (mapSize >= maxHeaderSize) {
-        mapSize = maxHeaderSize;
+    if (mapSize >= MAX_MAP_SIZE) {
+        MEDIA_LOGI("Exceeded maximum table size limit");
+        return MSERR_INVALID_OPERATION;
     }
     for (size_t i = 0; i < mapSize; i++) {
         auto kstr = data.ReadString();
