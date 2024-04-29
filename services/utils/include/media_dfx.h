@@ -34,6 +34,13 @@ public:
         std::string module, std::string status, int32_t appUid, int32_t appPid);
     void EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         std::string module, std::string status, int32_t appUid, int32_t appPid, std::string bundleName);
+    void SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type, const std::string&
+        appName, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
+        const std::string& errMsg);
+    void RecordAudioEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        const std::string& appName, int8_t sourceType, const std::string& errorMessage);
+    void ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errMsg);
 private:
     std::string msg_;
 };
@@ -44,6 +51,12 @@ __attribute__((visibility("default"))) void BehaviorEventWriteForScreenCapture(s
 __attribute__((visibility("default"))) void StatisticEventWriteBundleName(std::string status,
     std::string module);
 __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string module);
+__attribute__((visibility("default"))) void FaultSourceEventWrite(const std::string& appName,
+    const std::string& callerType, int8_t sourceType, const std::string& sourceUrl, const std::string& errorMessage);
+__attribute__((visibility("default"))) void FaultRecordAudioEventWrite(const std::string& appName, int8_t sourceType,
+    const std::string& errorMessage);
+__attribute__((visibility("default"))) void FaultScreenCaptureEventWrite(const std::string& appName, int8_t captureMode,
+    int8_t dataMode, int32_t errorCode, const std::string& errorMessage);
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

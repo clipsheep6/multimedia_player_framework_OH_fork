@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCapt
 }
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture()
 {
     std::shared_ptr<ScreenCaptureImpl> impl = std::make_shared<ScreenCaptureImpl>();
@@ -56,6 +57,8 @@ int32_t ScreenCaptureImpl::SetScreenCaptureCallback(const std::shared_ptr<Screen
 ScreenCaptureImpl::ScreenCaptureImpl()
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    traceId_ = HiTraceChain::Begin("AVScreenCapture", HITRACE_FLAG_DEFAULT);
+    HiTraceChain::SetId(traceId_);
 }
 
 ScreenCaptureImpl::~ScreenCaptureImpl()
@@ -64,6 +67,7 @@ ScreenCaptureImpl::~ScreenCaptureImpl()
         (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureService(screenCaptureService_);
         screenCaptureService_ = nullptr;
     }
+    HiTraceChain::End(traceId_);
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
