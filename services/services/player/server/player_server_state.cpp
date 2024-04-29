@@ -301,12 +301,18 @@ void PlayerServer::PlayingState::HandleEos()
 void PlayerServer::PlayingState::StateEnter()
 {
     int32_t userId = server_.GetUserId();
+    bool isBootCompleted = server_.IsBootCompleted();
+    if (userId <= 0 || !isBootCompleted) {
+        MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d, isBootCompleted = %{public}d, return",
+            userId, isBootCompleted);
+        return;
+    }
+
     bool isForeground = true;
     AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
-    bool isBootStarted = server_.IsBootAnimationStarted();
-    MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d isForeground = %{public}d isStarted = %{public}d",
-        userId, isForeground, isBootStarted);
-    if (!isForeground && isBootStarted) {
+    MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d isForeground = %{public}d isBootCompleted = %{public}d",
+        userId, isForeground, isBootCompleted);
+    if (!isForeground) {
         server_.Pause();
         return;
     }

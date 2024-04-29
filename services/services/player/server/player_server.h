@@ -125,7 +125,7 @@ public:
     void OnCommonEventReceived(const std::string &event);
     int32_t GetUserId();
     std::shared_ptr<CommonEventReceiver> GetCommonEventReceiver();
-    bool IsBootAnimationStarted();
+    bool IsBootCompleted();
 
 protected:
     class BaseState;
@@ -212,8 +212,8 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     std::atomic<bool> inReleasing_ = false;
-    int32_t userId_ = -1;
-    bool isBootAnimationStarted_ = false;
+    std::atomic<int32_t> userId_ = -1;
+    std::atomic<bool> isBootCompleted_ = false;
 };
 } // namespace Media
 } // namespace OHOS

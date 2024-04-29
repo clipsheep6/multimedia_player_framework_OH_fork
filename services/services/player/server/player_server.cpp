@@ -27,6 +27,7 @@
 #include "accesstoken_kit.h"
 #include "av_common.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "concurrent_task_client.h"
 #include "qos.h"
 #include "player_server_event_receiver.h"
@@ -131,15 +132,15 @@ int32_t PlayerServer::Init()
 
     PlayerServerStateMachine::Init(idleState_);
 
-    const uint8_t maxStateLen = 10;
-    char state[maxStateLen] = {0};
-    GetParameter("bootevent.bootanimation.started", "false", state, sizeof(state));
-    state[sizeof(state) - 1] = 0;
-    std::string bootState(state);
-    isBootAnimationStarted_ = bootState.find("true") != bootState.npos;
-    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appUid_, userId_);
-    std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
-    commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
+    std::string bootState = system::GetParameter("bootevent.boot.completed", "false");
+    isBootCompleted_.store(bootState == "true");
+    if (isBootCompleted_.load() && appUid_ != 0) {
+        int32_t userId = -1;
+        AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appUid_, userId);
+        userId_.store(userId);
+        std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
+        commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
+    }
     return MSERR_OK;
 }
 
@@ -1473,7 +1474,7 @@ void PlayerServer::OnCommonEventReceived(const std::string &event)
 
 int32_t PlayerServer::GetUserId()
 {
-    return userId_;
+    return userId_.load();
 }
 
 std::shared_ptr<CommonEventReceiver> PlayerServer::GetCommonEventReceiver()
@@ -1481,9 +1482,9 @@ std::shared_ptr<CommonEventReceiver> PlayerServer::GetCommonEventReceiver()
     return commonEventReceiver_;
 }
 
-bool PlayerServer::IsBootAnimationStarted()
+bool PlayerServer::IsBootCompleted()
 {
-    return isBootAnimationStarted_;
+    return isBootCompleted_.load();
 }
 } // namespace Media
 } // namespace OHOS
