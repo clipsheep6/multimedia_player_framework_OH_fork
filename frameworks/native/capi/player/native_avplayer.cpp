@@ -84,7 +84,7 @@ struct PlayerObject : public OH_AVPlayer {
 
     const std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<NativeAVPlayerCallback> callback_ = nullptr;
-    std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
+    std::multimap<std::vector<uint8_t>, std::vector<uint8_t>> localDrmInfos_;
 };
 
 class DrmSystemInfoCallback {
@@ -126,19 +126,14 @@ public:
         CHECK_AND_RETURN_RET_LOG(drmInfos != nullptr, AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
         for (int32_t i = 0; i < infoCount; i++) {
             DrmInfoItem temp = drmInfos[i];
-            std::stringstream ssConverter;
-            std::string uuid;
-            for (uint32_t index = 0; index < DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN; index++) {
-                ssConverter << std::hex << static_cast<int32_t>(temp.uuid[index]);
-                uuid = ssConverter.str();
-            }
+            std::vector<uint8_t> uuid(temp.uuid, temp.uuid + DrmConstant::DRM_MAX_M3U8_DRM_UUID_LEN);
             std::vector<uint8_t> pssh(temp.pssh, temp.pssh + temp.psshLen);
             playerObj->localDrmInfos_.insert({ uuid, pssh });
         }
         int index = 0;
         for (auto item : playerObj->localDrmInfos_) {
             int ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].uuid,
-                item.first.size(), item.first.c_str(), item.first.size());
+                item.first.size(), item.first.data(), item.first.size());
             int err = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
                 item.second.data(), item.second.size());
             CHECK_AND_RETURN_RET_LOG((err == 0 && ret == 0), AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
@@ -563,7 +558,7 @@ OH_AVErrCode OH_AVPlayer_GetMediaKeySystemInfo(OH_AVPlayer *player, DRM_MediaKey
     int index = 0;
     for (auto item : playerObj->localDrmInfos_) {
         int ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].uuid, item.first.size(),
-            item.first.c_str(), item.first.size());
+            item.first.data(), item.first.size());
         CHECK_AND_RETURN_RET_LOG(ret ==0, AV_ERR_INVALID_VAL, "no memory");
         ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
             item.second.data(), item.second.size());
