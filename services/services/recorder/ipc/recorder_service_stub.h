@@ -43,7 +43,6 @@ public:
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) override;
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
     int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) override;
-    int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) override;
@@ -56,8 +55,6 @@ public:
     int32_t SetMaxDuration(int32_t duration) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputFile(int32_t fd) override;
-    int32_t SetNextOutputFile(int32_t fd) override;
-    int32_t SetMaxFileSize(int64_t size) override;
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int32_t rotation) override;
     int32_t Prepare() override;
@@ -67,7 +64,6 @@ public:
     int32_t Stop(bool block) override;
     int32_t Reset() override;
     int32_t Release() override;
-    int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
     int32_t DumpInfo(int32_t fd);
     int32_t GetAVRecorderConfig(ConfigMap &configMap) override;
@@ -91,7 +87,6 @@ private:
     int32_t SetVideoEncodingBitRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoIsHdr(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoEnableTemporalScale(MessageParcel &data, MessageParcel &reply);
-    int32_t SetCaptureRate(MessageParcel &data, MessageParcel &reply);
     int32_t GetSurface(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncoder(MessageParcel &data, MessageParcel &reply);
@@ -102,8 +97,6 @@ private:
     int32_t SetMaxDuration(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFile(MessageParcel &data, MessageParcel &reply);
-    int32_t SetNextOutputFile(MessageParcel &data, MessageParcel &reply);
-    int32_t SetMaxFileSize(MessageParcel &data, MessageParcel &reply);
     int32_t SetLocation(MessageParcel &data, MessageParcel &reply);
     int32_t SetOrientationHint(MessageParcel &data, MessageParcel &reply);
     int32_t SetUserCustomInfo(MessageParcel &data, MessageParcel &reply);
@@ -115,7 +108,6 @@ private:
     int32_t Stop(MessageParcel &data, MessageParcel &reply);
     int32_t Reset(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
-    int32_t SetFileSplitDuration(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t GetAVRecorderConfig(MessageParcel &data, MessageParcel &reply);
     int32_t GetLocation(MessageParcel &data, MessageParcel &reply);
@@ -134,8 +126,8 @@ private:
     const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,
         SET_AUDIO_CHANNELS, SET_AUDIO_ENCODING_BIT_RATE};
     const std::set<uint32_t> COMMON_REQUEST = {SET_LISTENER_OBJ, SET_DATA_SOURCE, SET_MAX_DURATION,
-        SET_OUTPUT_FORMAT, SET_OUTPUT_FILE, SET_NEXT_OUTPUT_FILE, SET_MAX_FILE_SIZE, SET_LOCATION, SET_ORIENTATION_HINT,
-        PREPARE, START, PAUSE, RESUME, STOP, RESET, RELEASE, SET_FILE_SPLIT_DURATION, DESTROY};
+        SET_OUTPUT_FORMAT, SET_OUTPUT_FILE, SET_LOCATION, SET_ORIENTATION_HINT,
+        PREPARE, START, PAUSE, RESUME, STOP, RESET, RELEASE, DESTROY};
 };
 } // namespace Media
 } // namespace OHOS

@@ -64,7 +64,6 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_VIDEO_SIZE] = &RecorderServiceStub::SetVideoSize;
     recFuncs_[SET_VIDEO_FARAME_RATE] = &RecorderServiceStub::SetVideoFrameRate;
     recFuncs_[SET_VIDEO_ENCODING_BIT_RATE] = &RecorderServiceStub::SetVideoEncodingBitRate;
-    recFuncs_[SET_CAPTURE_RATE] = &RecorderServiceStub::SetCaptureRate;
     recFuncs_[GET_SURFACE] = &RecorderServiceStub::GetSurface;
     recFuncs_[SET_AUDIO_SOURCE] = &RecorderServiceStub::SetAudioSource;
     recFuncs_[SET_AUDIO_ENCODER] = &RecorderServiceStub::SetAudioEncoder;
@@ -75,8 +74,6 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_MAX_DURATION] = &RecorderServiceStub::SetMaxDuration;
     recFuncs_[SET_OUTPUT_FORMAT] = &RecorderServiceStub::SetOutputFormat;
     recFuncs_[SET_OUTPUT_FILE] = &RecorderServiceStub::SetOutputFile;
-    recFuncs_[SET_NEXT_OUTPUT_FILE] = &RecorderServiceStub::SetNextOutputFile;
-    recFuncs_[SET_MAX_FILE_SIZE] = &RecorderServiceStub::SetMaxFileSize;
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
     recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
     recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;
@@ -88,7 +85,6 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[STOP] = &RecorderServiceStub::Stop;
     recFuncs_[RESET] = &RecorderServiceStub::Reset;
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
-    recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
     recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
     recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
@@ -213,12 +209,6 @@ int32_t RecorderServiceStub::SetVideoEncodingBitRate(int32_t sourceId, int32_t r
     return recorderServer_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
-int32_t RecorderServiceStub::SetCaptureRate(int32_t sourceId, double fps)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetCaptureRate(sourceId, fps);
-}
-
 int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
@@ -303,18 +293,6 @@ int32_t RecorderServiceStub::SetOutputFile(int32_t fd)
     return recorderServer_->SetOutputFile(fd);
 }
 
-int32_t RecorderServiceStub::SetNextOutputFile(int32_t fd)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetNextOutputFile(fd);
-}
-
-int32_t RecorderServiceStub::SetMaxFileSize(int64_t size)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetMaxFileSize(size);
-}
-
 int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
@@ -369,12 +347,6 @@ int32_t RecorderServiceStub::Release()
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->Release();
-}
-
-int32_t RecorderServiceStub::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetFileSplitDuration(type, timestamp, duration);
 }
 
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
@@ -495,14 +467,6 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, Me
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::SetCaptureRate(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t sourceId = data.ReadInt32();
-    double fps = data.ReadDouble();
-    reply.WriteInt32(SetCaptureRate(sourceId, fps));
-    return MSERR_OK;
-}
-
 int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
@@ -587,21 +551,6 @@ int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &r
     int32_t fd = data.ReadFileDescriptor();
     reply.WriteInt32(SetOutputFile(fd));
     (void)::close(fd);
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::SetNextOutputFile(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t fd = data.ReadFileDescriptor();
-    reply.WriteInt32(SetNextOutputFile(fd));
-    (void)::close(fd);
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::SetMaxFileSize(MessageParcel &data, MessageParcel &reply)
-{
-    int64_t size = data.ReadInt64();
-    reply.WriteInt32(SetMaxFileSize(size));
     return MSERR_OK;
 }
 
@@ -692,16 +641,6 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
     reply.WriteInt32(Release());
     needAudioPermissionCheck = false;
     audioSourceType_ = AUDIO_SOURCE_INVALID;
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::SetFileSplitDuration(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t type = data.ReadInt32();
-    FileSplitType splitType = static_cast<FileSplitType>(type);
-    int64_t timestamp = data.ReadInt64();
-    uint32_t duration = data.ReadUint32();
-    reply.WriteInt32(SetFileSplitDuration(splitType, timestamp, duration));
     return MSERR_OK;
 }
 
