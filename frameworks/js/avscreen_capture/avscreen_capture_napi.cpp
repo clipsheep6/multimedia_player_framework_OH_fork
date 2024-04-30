@@ -209,24 +209,29 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
     MEDIA_LOGI("argCountL %{public}zu", argCount);
 
+    if (argCount < maxParam) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_MANDATORY_PARAMETER_UNSPECIFIED, "ReportUserChoice", "");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "ReportUserChoice",
-            "UserChoice input is not number");
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_INCORRECT_PARAMETER_TYPE, "ReportUserChoice", "sessionId",
+            "sessionId is not number");
         return result;
     }
     int32_t sessionId;
     status = napi_get_value_int32(env, args[0], &sessionId);
     if (status != napi_ok) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "ReportUserChoice",
+        asyncCtx->AVScreenCaptureSignError(MSERR_INCORRECT_PARAMETER_TYPE, "ReportUserChoice", "sessionId",
             "UserChoice get sessionId failed");
         return result;
     }
 
     valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_string) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_EXT_API9_INVALID_PARAMETER, "ReportUserChoice",
-            "UserChoice input is not string");
+    if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_string) {
+        asyncCtx->AVScreenCaptureSignError(MSERR_INCORRECT_PARAMETER_TYPE, "ReportUserChoice", "choice",
+            "choice is not string");
         return result;
     }
     std::string choice = CommonNapi::GetStringArgument(env, args[1]);
@@ -535,8 +540,9 @@ int32_t AVScreenCaptureNapi::GetConfig(std::unique_ptr<AVScreenCaptureAsyncConte
 {
     napi_valuetype valueType = napi_undefined;
     if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
-        asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetConfig", "AVScreenCaptureRecordConfig");
-        return MSERR_INVALID_VAL;
+        asyncCtx->AVScreenCaptureSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVScreenCaptureRecordConfig",
+            "config type should be AVScreenCaptureRecordConfig.");
+        return MSERR_INCORRECT_PARAMETER_TYPE;
     }
 
     asyncCtx->config_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;

@@ -49,9 +49,9 @@ VideoRecorderNapi::~VideoRecorderNapi()
 }
 
 static void SignError(VideoRecorderAsyncContext *asyncCtx, int32_t code,
-    const std::string &param1, const std::string &param2)
+    const std::string &param1, const std::string &param2, const std::string &add = "")
 {
-    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2);
+    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2) + add;
     asyncCtx->SignError(code, message);
 }
 
@@ -193,20 +193,18 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
 
-    // get args
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "", "get parameters failed.");
     }
 
-    // get recordernapi
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
-    // get param
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "",
+            "config type should be VideoRecorderConfig.");
     }
 
     std::string urlPath = CommonNapi::GetPropertyString(env, args[0], "url");
@@ -216,22 +214,20 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     asyncCtx->napi->GetConfig(env, args[0], asyncCtx, videoProperties);
 
     if (asyncCtx->napi->GetVideoRecorderProperties(env, args[0], videoProperties) != MSERR_OK) {
-        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "", "get videoProperties failed.");
     }
 
-    // set param
     if (asyncCtx->napi->SetVideoRecorderProperties(asyncCtx, videoProperties) != MSERR_OK) {
-        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "", "set videoProperties failed.");
     }
     if (asyncCtx->napi->SetUrl(urlPath) != MSERR_OK) {
-        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "", "the url is not valid.");
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     asyncCtx->napi->currentStates_ = VideoRecorderState::STATE_PREPARED;
-    // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
