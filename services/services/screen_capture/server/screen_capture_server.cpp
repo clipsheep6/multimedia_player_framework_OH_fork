@@ -215,15 +215,37 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     return MSERR_UNKNOWN;
 }
 
+void ScreenCaptureServer::SetMetaDataReport(std::shared_ptr<Media::Meta> meta)
+{
+    meta->SetData(Tag::SCREEN_CAPTURE_ERR_CODE, statisticalEventInfo_.errCode);
+    meta->SetData(Tag::SCREEN_CAPTURE_ERR_MSG, statisticalEventInfo_.errMsg);
+    meta->SetData(Tag::SCREEN_CAPTURE_DURATION, statisticalEventInfo_.captureDuration);
+    meta->SetData(Tag::SCREEN_CAPTURE_AV_TYPE, avType_);
+    meta->SetData(Tag::SCREEN_CAPTURE_DATA_TYPE, dataMode_);
+    meta->SetData(Tag::SCREEN_CAPTURE_USER_AGREE, statisticalEventInfo_.userAgree);
+    meta->SetData(Tag::SCREEN_CAPTURE_REQURE_MIC, statisticalEventInfo_.requireMic);
+    meta->SetData(Tag::SCREEN_CAPTURE_ENABLE_MIC, isMicrophoneOn_);
+    meta->SetData(Tag::SCREEN_CAPTURE_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
+    meta->SetData(Tag::SCREEN_CAPTURE_STOP_REASON, statisticalEventInfo_.stopReason);
+    meta->SetData(Tag::SCREEN_CAPTURE_START_LATENCY, statisticalEventInfo_.startLatency);
+    AppendMediaInfo(meta);
+}
+
 ScreenCaptureServer::ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     InitAppInfo();
+    traceId_ = HiTraceChain::Begin("AVScreenCapture", HITRACE_FLAG_DEFAULT);
 }
 
 ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    HiTraceChain::SetId(traceId_);
+    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid());
+    std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
+    SetMetaDataReport(meta);
+    Report();
     ReleaseInner();
 }
 
@@ -273,6 +295,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
     } else if (M4A.compare(recorderInfo.fileFormat) == 0) {
         MEDIA_LOGI("only recorder audio, still not support");
+        HiTraceChain::SetId(traceId_);
         FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
             "only recorder audio, still not support");
         return MSERR_UNSUPPORT;
@@ -294,6 +317,7 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
     MEDIA_LOGI("ScreenCaptureServer::SetOutputFile start");
     if (outputFd < 0) {
         MEDIA_LOGI("invalid outputFd");
+        HiTraceChain::SetId(traceId_);
         FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "invalid outputFd");
         return MSERR_INVALID_VAL;
@@ -356,6 +380,9 @@ int32_t ScreenCaptureServer::InitVideoEncInfo(VideoEncInfo videoEncInfo)
     MEDIA_LOGD("videoEncInfo videoCodec:%{public}d,  videoBitrate:%{public}d, videoFrameRate:%{public}d",
         videoEncInfo.videoCodec, videoEncInfo.videoBitrate, videoEncInfo.videoFrameRate);
     int32_t ret = CheckVideoEncInfo(videoEncInfo);
+    if (ret == MSERR_OK) {
+        statisticalEventInfo_.captureDuration = millisecondUnit_ / videoEncInfo.videoFrameRate;
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoEncInfo failed, ret:%{public}d", ret);
     captureConfig_.videoInfo.videoEncInfo = videoEncInfo;
     return MSERR_OK;
@@ -609,6 +636,7 @@ int32_t ScreenCaptureServer::CheckCaptureStreamParams()
         // surface mode, surface must not nullptr and videoCapInfo must valid.
         if (surface_ == nullptr ||
             captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+            HiTraceChain::SetId(traceId_);
             FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
                 "video Cap state fault, videoCapInfo is invalid");
             return MSERR_INVALID_VAL;
@@ -656,6 +684,7 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.audioInfo.audioEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.videoInfo.videoEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
+        HiTraceChain::SetId(traceId_);
         FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "innerCap audioEnc videoCap videoEnc state invalid");
         return MSERR_INVALID_VAL;
@@ -692,6 +721,21 @@ void ScreenCaptureServer::InitAppInfo()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "InitAppInfo end.", FAKE_POINTER(this));
 }
 
+int32_t ScreenCaptureServer::GetCurrentMillisecond(std::chrono::system_clock::time_point now)
+{
+    auto duration_since_epoch = now.time_since_epoch();
+    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration_since_epoch).count();
+    return static_cast<int32_t>(time);
+}
+
+void ScreenCaptureServer::SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree)
+{
+    statisticalEventInfo_.errCode = errCode;
+    statisticalEventInfo_.errMsg = errMsg;
+    statisticalEventInfo_.stopReason = stopReason;
+    statisticalEventInfo_.userAgree = userAgree;
+}
+
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 {
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
@@ -719,6 +763,8 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
     if (screenCaptureCb_ == nullptr) {
         MEDIA_LOGE("OnReceiveUserPrivacyAuthority failed, screenCaptureCb is nullptr, state:%{public}d", captureState_);
         captureState_ = AVScreenCaptureState::STOPPED;
+        SetErrorInfo(MSERR_UNKNOWN, "OnReceiveUserPrivacyAuthority failed, screenCaptureCb is nullptr",
+            StopReason::RECEIVE_USER_PRIVACY_AUTHORITY_FAILED, IsUserPrivacyAuthorityNeeded());
         return MSERR_UNKNOWN;
     }
 
@@ -900,6 +946,8 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         isPrivacyAuthorityEnabled_ = false;
         isSurfaceMode_ = false;
         captureState_ = AVScreenCaptureState::STOPPED;
+        SetErrorInfo(MSERR_UNKNOWN, "PostStartScreenCapture handle failure",
+            StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, IsUserPrivacyAuthorityNeeded());
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "PostStartScreenCapture end.", FAKE_POINTER(this));
 }
@@ -934,6 +982,9 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     if (audioInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo.audioSource == AudioCaptureSourceType::MIC) {
         captureConfig_.audioInfo.micCapInfo = audioInfo;
+        if (audioInfo.audioSource == AudioCaptureSourceType::MIC) {
+            statisticalEventInfo_.requireMic = true;
+        }
     } else if (audioInfo.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
@@ -957,6 +1008,8 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     captureConfig_.videoInfo.videoCapInfo = videoInfo;
     avType_ = (avType_ == AVScreenCaptureAvType::AUDIO_TYPE) ? AVScreenCaptureAvType::AV_TYPE :
         AVScreenCaptureAvType::VIDEO_TYPE;
+    statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + " * " +
+        std::to_string(videoInfo.videoFrameHeight);
     MEDIA_LOGI("InitVideoCap success width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
         videoInfo.videoFrameWidth, videoInfo.videoFrameHeight, videoInfo.videoSource, videoInfo.state);
     return MSERR_OK;
@@ -1077,6 +1130,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     if (InCallObserver::GetInstance().IsInCall()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+        HiTraceChain::SetId(traceId_);
         FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
             "ScreenCaptureServer Start InCall Abort");
         return MSERR_UNSUPPORT;
@@ -1099,6 +1153,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     ret = RequestUserPrivacyAuthority();
     if (ret != MSERR_OK) {
         captureState_ = AVScreenCaptureState::STOPPED;
+        SetErrorInfo(ret, "StartScreenCaptureInner RequestUserPrivacyAuthority failed",
+            StopReason::REQUEST_USER_PRIVACY_AUTHORITY_FAILED, IsUserPrivacyAuthorityNeeded());
         MEDIA_LOGE("StartScreenCaptureInner RequestUserPrivacyAuthority failed");
         return ret;
     }
@@ -1307,6 +1363,7 @@ int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     std::lock_guard<std::mutex> lock(mutex_);
+    statisticalEventInfo_.startLatency = GetCurrentMillisecond(std::chrono::system_clock::now());
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
         FAKE_POINTER(this), isPrivacyAuthorityEnabled ? "true" : "false", captureState_);
@@ -1423,6 +1480,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");
         DestroyVirtualScreen();
+        HiTraceChain::SetId(traceId_);
         FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
             "GetScreenById failed");
         return MSERR_UNKNOWN;
@@ -1480,6 +1538,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     }
     MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64,
         captureConfig_.videoInfo.videoCapInfo.displayId);
+    HiTraceChain::SetId(traceId_);
     FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "MakeVirtualScreenMirror failed to find screenId");
     return MSERR_UNKNOWN;
@@ -1564,6 +1623,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
         return innerAudioCapture_->AcquireAudioBuffer(audioBuffer);
     }
     MEDIA_LOGE("AcquireAudioBuffer failed, source type not support, type:%{public}d", type);
+    HiTraceChain::SetId(traceId_);
     FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "AcquireAudioBuffer failed, source type not support");
     return MSERR_UNKNOWN;
@@ -1610,6 +1670,7 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
         return innerAudioCapture_->ReleaseAudioBuffer();
     }
     MEDIA_LOGE("ReleaseAudioBuffer failed, source type not support, type:%{public}d", type);
+    HiTraceChain::SetId(traceId_);
     FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "ReleaseAudioBuffer failed, source type not support");
     return MSERR_UNKNOWN;
@@ -1670,6 +1731,11 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
     (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->
         AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
+    if (isFirstFrame_ && surfaceBuffer != nullptr) {
+        statisticalEventInfo_.startLatency = GetCurrentMillisecond(std::chrono::system_clock::now()) -
+            statisticalEventInfo_.startLatency;
+        isFirstFrame_ = false;
+    }
     std::string dumpEnable;
     const std::string dumpTag = "sys.media.screenCapture.dump.enable";
     int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "");
@@ -1689,6 +1755,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
         return MSERR_OK;
     }
+    HiTraceChain::SetId(traceId_);
     FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "AcquireVideoBuffer fault");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "AcquireVideoBuffer end.", FAKE_POINTER(this));
@@ -1721,6 +1788,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For the moment, not support:
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
+    HiTraceChain::SetId(traceId_);
     FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
         "ExcludeContent failed, capture is not STARTED");
     return MSERR_UNSUPPORT;
@@ -1853,6 +1921,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         captureState_ = AVScreenCaptureState::STOPPED;
         isSurfaceMode_ = false;
         surface_ = nullptr;
+        SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
         return MSERR_OK;
     }
     CHECK_AND_RETURN_RET(captureState_ != AVScreenCaptureState::STOPPED, MSERR_OK);
@@ -1870,6 +1939,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     }
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, ret, "state:%{public}d", captureState_);
     captureState_ = AVScreenCaptureState::STOPPED;
+    SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
