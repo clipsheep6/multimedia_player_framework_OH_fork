@@ -110,11 +110,11 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME);
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
     usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
+    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
 }
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
@@ -132,22 +132,23 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
     }
-    capturerOptions.capturerInfo.capturerFlags = 0;
-    std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);
-    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
-
+    if (contentFilter_.filteredAudioContents.find(
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
+        contentFilter_.filteredAudioContents.end()) {
+        capturerOptions.playbackCaptureConfig.filterOptions.usages.push_back(
+            OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+    }
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
         contentFilter_.filteredAudioContents.end()) {
-        CaptureFilterOptions filterOptions;
-        filterOptions.pids.push_back(appInfo.appPid);
-        filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
-        AudioPlaybackCaptureConfig config;
-        config.filterOptions = filterOptions;
-        int32_t filterReturn = audioCapturer->UpdatePlaybackCaptureConfig(config);
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " createAudioCapturer set audioFilter, filterReturn : %{public}d",
-            FAKE_POINTER(this), filterReturn);
+        capturerOptions.playbackCaptureConfig.filterOptions.pids.push_back(appInfo.appPid);
+        capturerOptions.playbackCaptureConfig.filterOptions.pidFilterMode =
+            OHOS::AudioStandard::FilterMode::EXCLUDE;
+        MEDIA_LOGI("createAudioCapturer exclude current app audio");
     }
+    capturerOptions.capturerInfo.capturerFlags = 0;
+    std::shared_ptr<AudioCapturer> audioCapturer = AudioCapturer::Create(capturerOptions, appInfo);
+    CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, nullptr, "AudioCapturer::Create failed");
     std::shared_ptr<AudioCapturerCallbackImpl> callback = std::make_shared<AudioCapturerCallbackImpl>();
     int ret = audioCapturer->SetCapturerCallback(callback);
     if (ret != MSERR_OK) {
