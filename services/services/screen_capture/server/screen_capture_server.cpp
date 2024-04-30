@@ -1456,10 +1456,12 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
         "MakeVirtualScreenMirror failed to GetAllScreens, ret:%{public}d", ret);
     std::vector<ScreenId> mirrorIds;
     mirrorIds.push_back(screenId_);
-    ScreenId mirrorGroup = static_cast<ScreenId>(1);
+    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
+    ScreenId mirrorGroup = defaultDisplay->GetScreenId();
 
     if (captureConfig_.captureMode != CAPTURE_SPECIFIED_SCREEN) {
-        ret = ScreenManager::GetInstance().MakeMirror(screens[0]->GetId(), mirrorIds, mirrorGroup);
+        MEDIA_LOGI("MakeVirtualScreenMirror DefaultDisplay, screenId:%{public}" PRIu64, defaultDisplay->GetScreenId());
+        ret = ScreenManager::GetInstance().MakeMirror(defaultDisplay->GetScreenId(), mirrorIds, mirrorGroup);
         CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
             "MakeVirtualScreenMirror failed to MakeMirror, captureMode:%{public}d, ret:%{public}d",
             captureConfig_.captureMode, ret);
