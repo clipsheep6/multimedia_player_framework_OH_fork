@@ -16,13 +16,37 @@
 #ifndef MEDIA_DFX_H
 #define MEDIA_DFX_H
 
+#include <cstring>
+#include <list>
+#include <memory>
+#include <map>
 #include <string>
 #include <refbase.h>
 #include "nocopyable.h"
 #include "hisysevent.h"
+#include "meta/meta.h"
+#include "nlohmann/json.hpp"
+#include <chrono>
+#include <mutex>
 
 namespace OHOS {
 namespace Media {
+using json = nlohmann::json;
+enum CallType {
+    AVPLAYER,
+    AVRECORDER,
+    METADATA_RETRIEVER,
+    IMAGE_GENERATER,
+    AVDEMUXER,
+    AVMUXER,
+    VIDEO_DECODER,
+    VIDEO_ENCODER,
+    AUDIO_DECODER,
+    AUDIO_ENCODER,
+    SOUNDPOOL,
+    SCREEN_CAPTRUER,
+    AVTRANSCODER
+};
 class __attribute__((visibility("default"))) MediaEvent : public NoCopyable {
 public:
     MediaEvent() = default;
@@ -41,9 +65,15 @@ public:
         const std::string& appName, int8_t sourceType, const std::string& errorMessage);
     void ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errMsg);
+    void CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap);
 private:
+    void StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        const std::vector<std::string>& infoArr);
+    void ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair, json& metaInfoJson);
     std::string msg_;
 };
+
 
 __attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string module);
 __attribute__((visibility("default"))) void BehaviorEventWriteForScreenCapture(std::string status,
@@ -57,6 +87,9 @@ __attribute__((visibility("default"))) void FaultRecordAudioEventWrite(const std
     const std::string& errorMessage);
 __attribute__((visibility("default"))) void FaultScreenCaptureEventWrite(const std::string& appName, int8_t captureMode,
     int8_t dataMode, int32_t errorCode, const std::string& errorMessage);
+__attribute__((visibility("default"))) int32_t CreateMediaInfo(CallType callType, int32_t uid);
+__attribute__((visibility("default"))) int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta);
+__attribute__((visibility("default"))) int32_t Report();
 
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:

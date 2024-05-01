@@ -24,6 +24,7 @@
 #include <atomic>
 #include <queue>
 #include <vector>
+#include <chrono>
 
 #include "audio_capturer_wrapper.h"
 #include "i_screen_capture_service.h"
@@ -50,6 +51,7 @@
 #include "notification_slot.h"
 #include "incall_observer.h"
 #include "media_data_source.h"
+#include "meta/meta.h"
 
 namespace OHOS {
 namespace Media {
@@ -101,6 +103,14 @@ enum AVScreenCaptureDataMode : int8_t {
     FILE_MODE = 2
 };
 
+enum StopReason: int8_t {
+    NORMAL_STOPPED = 0,
+    RECEIVE_USER_PRIVACY_AUTHORITY_FAILED = 1,
+    POST_START_SCREENCAPTURE_HANDLE_FAILURE = 2,
+    REQUEST_USER_PRIVACY_AUTHORITY_FAILED = 3,
+    STOP_REASON_INVALID = 4
+};
+
 struct SurfaceBufferEntry {
     SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
         : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
@@ -110,6 +120,18 @@ struct SurfaceBufferEntry {
     int32_t flushFence;
     int64_t timeStamp = 0;
     OHOS::Rect damageRect = {0, 0, 0, 0};
+};
+
+struct StatisticalEventInfo {
+    int32_t errCode;
+    std::string errMsg;
+    int32_t captureDuration = -1;
+    bool userAgree = false;
+    bool requireMic = false;
+    bool enableMic = false;
+    std::string videoResolution;
+    StopReason stopReason = StopReason::STOP_REASON_INVALID;
+    int32_t startLatency = -1;
 };
 
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
@@ -265,6 +287,9 @@ private:
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
+    int64_t GetCurrentMillisecond();
+    void SetMetaDataReport();
+    void SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree);
 
 private:
     std::mutex mutex_;
@@ -290,6 +315,7 @@ private:
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
     AVScreenCaptureDataMode dataMode_;
+    StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
     ScreenId screenId_ = SCREEN_ID_INVALID;
@@ -297,6 +323,7 @@ private:
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
+    int64_t startTime_ = 0;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;

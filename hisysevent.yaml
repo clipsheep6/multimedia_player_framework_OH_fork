@@ -116,3 +116,18 @@ DRM_CERTIFICATE_DOWNLOAD_INFO:
   CALL_SERVER_TIME: {type: UINT32, desc: Call time}
   SERVER_COST_DURATION: {type: UINT32, desc: Processing time of the server}
   SERVER_RESULT: {type: STRING, desc: Result}
+PLAYER_COMMON_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Player all info statistics}
+  EVENTS: {type: STRING, arrsize: 100, desc: Group of player events}
+
+RECORDER_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Recorder statistics}
+  EVENTS: {type: STRING, arrsize: 100, desc: Group of recorder events}
+
+SCREEN_CAPTURE_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Screen capture statistics}
+  EVENTS: {type: STRING, arrsize: 100, desc: Group of screen capture events}
+
+DRM_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: DRM common statistics}
+  EVENTS: {type: STRING, arrsize: 100, desc: Group of DRM common events}
