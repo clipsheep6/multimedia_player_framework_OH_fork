@@ -259,12 +259,14 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
 
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
     auto pixelMap = CreatePixelMap(mem, param.colorFormat, rotation_);
+
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
  
     const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
                                          .srcPixelFormat = PixelFormat::NV12 };
     pixelMap =
         PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
-    if (rotation_ > 0) {
+    if (rotation_ > 0 && pixelMap != nullptr) {
         pixelMap->rotate(rotation_);
     }
     return pixelMap;
