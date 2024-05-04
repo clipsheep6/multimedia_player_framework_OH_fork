@@ -91,7 +91,7 @@ namespace {
         g_reachMaxMapSize = (reportMediaInfoMap_[ct].size() >= MAX_MAP_SIZE);
         return true;
     }
-    
+
     int32_t StatisticsEventReport()
     {
         MEDIA_LOG_I("StatisticsEventReport.");
@@ -168,14 +168,13 @@ void MediaEvent::EventWriteBundleName(std::string eventName, OHOS::HiviewDFX::Hi
 }
 
 void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-    const std::string& appName, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
-    const std::string& errMsg)
+    const std::string& appName, uint64_t instanceId, const std::string& callerType, int8_t sourceType,
+    const std::string& sourceUrl, const std::string& errMsg)
 {
-    uint64_t traceId = HiTraceChain::GetId().GetChainId();
-    std::string traceIdStr = std::to_string(traceId);
+    std::string instanceIdStr = std::to_string(instanceId);
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
                     "APP_NAME", appName,
-                    "INSTANCE_ID", traceIdStr,
+                    "INSTANCE_ID", instanceIdStr,
                     "CALLER_TYPE", callerType,
                     "SOURCE_TYPE", sourceType,
                     "SOURCE_URI", sourceUrl,
@@ -183,25 +182,24 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
 }
 
 void MediaEvent::RecordAudioEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-    const std::string& appName, int8_t sourceType, const std::string& errorMessage)
+    const std::string& appName, uint64_t instanceId, int8_t sourceType, const std::string& errorMessage)
 {
-    uint64_t traceId = HiTraceChain::GetId().GetChainId();
-    std::string traceIdStr = std::to_string(traceId);
+    std::string instanceIdStr = std::to_string(instanceId);
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
                     "APP_NAME", appName,
-                    "INSTANCE_ID", traceIdStr,
+                    "INSTANCE_ID", instanceIdStr,
                     "AUDIO_SOURCE_TYPE", sourceType,
                     "ERROR_MESG", errorMessage);
 }
 
 void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-    const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errorMessage)
+    const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
+    const std::string& errorMessage)
 {
-    uint64_t traceId = HiTraceChain::GetId().GetChainId();
-    std::string traceIdStr = std::to_string(traceId);
+    std::string instanceIdStr = std::to_string(instanceId);
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
                     "APP_NAME", appName,
-                    "INSTANCE_ID", traceIdStr,
+                    "INSTANCE_ID", instanceIdStr,
                     "CAPTURE_MODE", captureMode,
                     "DATA_MODE", dataMode,
                     "ERROR_CODE", errorCode,
@@ -327,33 +325,32 @@ void FaultEventWrite(std::string msg, std::string module)
     }
 }
 
-void FaultSourceEventWrite(const std::string& appName, const std::string& callerType, int8_t sourceType,
-    const std::string& sourceUrl, const std::string& errorMessage)
+void FaultSourceEventWrite(const std::string& appName, uint64_t instanceId, const std::string& callerType,
+    int8_t sourceType, const std::string& sourceUrl, const std::string& errorMessage)
 {
     MediaEvent event;
-    event.SourceEventWrite("SOURCE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName, callerType,
-        sourceType, sourceUrl, errorMessage);
+    event.SourceEventWrite("SOURCE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName, instanceId,
+        callerType, sourceType, sourceUrl, errorMessage);
 }
 
-void FaultRecordAudioEventWrite(const std::string& appName, int8_t sourceType, const std::string& errorMessage)
-{
-    MediaEvent event;
-    event.RecordAudioEventWrite("RECORD_AUDIO_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
-        sourceType, errorMessage);
-}
-
-void FaultScreenCaptureEventWrite(const std::string& appName, int8_t captureMode, int8_t dataMode, int32_t errorCode,
+void FaultRecordAudioEventWrite(const std::string& appName, uint64_t instanceId, int8_t sourceType,
     const std::string& errorMessage)
 {
     MediaEvent event;
-    event.ScreenCaptureEventWrite("SCREEN_CAPTURE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
-        captureMode, dataMode, errorCode, errorMessage);
+    event.RecordAudioEventWrite("RECORD_AUDIO_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
+        instanceId, sourceType, errorMessage);
 }
 
-int32_t CreateMediaInfo(CallType callType, int32_t uid)
+void FaultScreenCaptureEventWrite(const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode,
+    int32_t errorCode, const std::string& errorMessage)
 {
-    MEDIA_LOG_I("CreateMediaInfo.");
-    uint64_t instanceId = HiTraceChain::GetId().GetChainId();
+    MediaEvent event;
+    event.ScreenCaptureEventWrite("SCREEN_CAPTURE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
+        instanceId, captureMode, dataMode, errorCode, errorMessage);
+}
+
+int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
+{
     MEDIA_LOG_I("CreateMediaInfo uid is: %{public}" PRId32 " instanceId is: %{public}" PRIu64, uid, instanceId);
     std::lock_guard<std::mutex> lock(collectMut_);
     auto instanceIdMap = idMap_.find(instanceId);
@@ -384,14 +381,13 @@ int32_t CreateMediaInfo(CallType callType, int32_t uid)
     return MSERR_OK;
 }
 
-int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta)
+int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
 {
     MEDIA_LOG_I("AppendMediaInfo.");
     if (meta == nullptr || meta->Empty()) {
         MEDIA_LOG_I("Insert meta is empty.");
         return MSERR_INVALID_OPERATION;
     }
-    uint64_t instanceId = HiTraceChain::GetId().GetChainId();
     std::lock_guard<std::mutex> lock(collectMut_);
     auto idMapIt = idMap_.find(instanceId);
     if (idMapIt == idMap_.end()) {
@@ -424,10 +420,9 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta)
     return MSERR_OK;
 }
 
-int32_t ReportMediaInfo()
+int32_t ReportMediaInfo(uint64_t instanceId)
 {
     MEDIA_LOG_I("Report.");
-    uint64_t instanceId = HiTraceChain::GetId().GetChainId();
     MEDIA_LOG_I("Delete media info instanceId is: %{public}" PRIu64, instanceId);
     if (!CollectReportMediaInfo(instanceId)) {
         MEDIA_LOG_I("Collect media info fail.");

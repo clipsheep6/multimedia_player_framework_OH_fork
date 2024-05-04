@@ -31,6 +31,7 @@
 #include "param_wrapper.h"
 #include <unistd.h>
 #include <sys/stat.h>
+#include "hitrace/tracechain.h"
 
 using OHOS::Rosen::DMError;
 
@@ -229,15 +230,16 @@ void ScreenCaptureServer::SetMetaDataReport()
     meta->SetData(Tag::SCREEN_CAPTURE_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
     meta->SetData(Tag::SCREEN_CAPTURE_STOP_REASON, statisticalEventInfo_.stopReason);
     meta->SetData(Tag::SCREEN_CAPTURE_START_LATENCY, statisticalEventInfo_.startLatency);
-    AppendMediaInfo(meta);
-    ReportMediaInfo();
+    AppendMediaInfo(meta, instanceId_);
+    ReportMediaInfo(instanceId_);
 }
 
 ScreenCaptureServer::ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     InitAppInfo();
-    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid());
+    instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
+    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid(), instanceId_);
 }
 
 ScreenCaptureServer::~ScreenCaptureServer()
@@ -292,13 +294,13 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
     } else if (M4A.compare(recorderInfo.fileFormat) == 0) {
         MEDIA_LOGI("only recorder audio, still not support");
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
             "only recorder audio, still not support");
         return MSERR_UNSUPPORT;
     } else {
         MEDIA_LOGE("invalid fileFormat type");
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "invalid fileFormat type");
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "invalid fileFormat type");
         return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "SetRecorderInfo OK.", FAKE_POINTER(this));
@@ -313,21 +315,21 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
     MEDIA_LOGI("ScreenCaptureServer::SetOutputFile start");
     if (outputFd < 0) {
         MEDIA_LOGI("invalid outputFd");
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "invalid outputFd");
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_,
+            SCREEN_CAPTURE_ERR_INVALID_VAL, "invalid outputFd");
         return MSERR_INVALID_VAL;
     }
 
     int flags = fcntl(outputFd, F_GETFL);
     if (flags == -1) {
         MEDIA_LOGE("Fail to get File Status Flags");
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "Fail to get File Status Flags");
         return MSERR_INVALID_VAL;
     }
     if ((static_cast<unsigned int>(flags) & (O_RDWR | O_WRONLY)) == 0) {
         MEDIA_LOGE("File descriptor is not in read-write mode or write-only mode");
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "File descriptor is not in read-write mode or write-only mode");
         return MSERR_INVALID_VAL;
     }
@@ -628,25 +630,25 @@ int32_t ScreenCaptureServer::CheckCaptureStreamParams()
         // surface mode, surface must not nullptr and videoCapInfo must valid.
         if (surface_ == nullptr ||
             captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-            FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+            FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
                 "video Cap state fault, videoCapInfo is invalid");
             return MSERR_INVALID_VAL;
         }
     }
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "audio inner cap or video cap state invalid");
         return MSERR_INVALID_VAL;
     }
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE &&
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "audio inner cap or video cap state ignore");
         return MSERR_INVALID_VAL;
     }
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "audio inner cap state invalid");
         return MSERR_INVALID_VAL;
     }
@@ -675,12 +677,12 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.audioInfo.audioEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.videoInfo.videoEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "innerCap audioEnc videoCap videoEnc state invalid");
         return MSERR_INVALID_VAL;
     }
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
             "audio mic cap state invalid");
         return MSERR_INVALID_VAL;
     }
@@ -694,7 +696,7 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
         return MSERR_OK;
     }
     MEDIA_LOGE("CheckCaptureFileParams failed, inner and mic param not consistent");
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
         "CheckCaptureFileParams failed, inner and mic param not consistent");
     return MSERR_INVALID_VAL;
 }
@@ -1069,7 +1071,7 @@ int32_t ScreenCaptureServer::InitRecorder()
         MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
         return MSERR_UNKNOWN;
     }
-    
+
     ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
 
@@ -1121,7 +1123,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     if (InCallObserver::GetInstance().IsInCall()) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
             "ScreenCaptureServer Start InCall Abort");
         return MSERR_UNSUPPORT;
     } else {
@@ -1181,7 +1183,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_.c_str();
     comStr += "\"}";
-    
+
     AAFwk::Want want;
     want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
     auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
@@ -1471,7 +1473,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");
         DestroyVirtualScreen();
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
             "GetScreenById failed");
         return MSERR_UNKNOWN;
     }
@@ -1482,7 +1484,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     if (ret != MSERR_OK) {
         MEDIA_LOGE("MakeVirtualScreenMirror failed");
         DestroyVirtualScreen();
-        FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
             "MakeVirtualScreenMirror failed");
         return MSERR_UNKNOWN;
     }
@@ -1528,7 +1530,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     }
     MEDIA_LOGE("MakeVirtualScreenMirror failed to find screenId:%{public}" PRIu64,
         captureConfig_.videoInfo.videoCapInfo.displayId);
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "MakeVirtualScreenMirror failed to find screenId");
     return MSERR_UNKNOWN;
 }
@@ -1612,7 +1614,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
         return innerAudioCapture_->AcquireAudioBuffer(audioBuffer);
     }
     MEDIA_LOGE("AcquireAudioBuffer failed, source type not support, type:%{public}d", type);
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "AcquireAudioBuffer failed, source type not support");
     return MSERR_UNKNOWN;
 }
@@ -1658,7 +1660,7 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
         return innerAudioCapture_->ReleaseAudioBuffer();
     }
     MEDIA_LOGE("ReleaseAudioBuffer failed, source type not support, type:%{public}d", type);
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "ReleaseAudioBuffer failed, source type not support");
     return MSERR_UNKNOWN;
 }
@@ -1737,7 +1739,7 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
         return MSERR_OK;
     }
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
         "AcquireVideoBuffer fault");
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR "AcquireVideoBuffer end.", FAKE_POINTER(this));
     return MSERR_UNKNOWN;
@@ -1769,7 +1771,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For the moment, not support:
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
-    FaultScreenCaptureEventWrite(appName_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
         "ExcludeContent failed, capture is not STARTED");
     return MSERR_UNSUPPORT;
 }
@@ -2148,7 +2150,7 @@ int32_t AudioDataSource::GetSize(int64_t &size)
     size = static_cast<int64_t>(bufferLen);
     return ret;
 }
- 
+
 void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int bufferSize)
 {
     MEDIA_LOGD("AudioDataSource MixAudio");
