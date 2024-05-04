@@ -202,6 +202,7 @@ ohos_shared_library("media_service") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
