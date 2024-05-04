@@ -45,6 +45,34 @@ static const std::map<HelperStates, std::string> stateMap = {
     {HELPER_CALL_DONE, AVMetadataHelperState::STATE_CALL_DONE},
 };
 
+/**
+ * support metadata parameters
+*/
+static const std::vector<std::string> g_Metadata = {
+    "album",
+    "albumArtist",
+    "artist",
+    "author",
+    "dateTime",
+    "dateTimeFormat",
+    "composer",
+    "duration",
+    "genre",
+    "hasAudio",
+    "hasVideo",
+    "mimeType",
+    "trackCount",
+    "sampleRate",
+    "title",
+    "videoHeight",
+    "videoWidth",
+    "videoOrientation",
+    "hdrType",
+    "latitude",
+    "longitude",
+    "customInfo",
+};
+
 thread_local napi_ref AVMetadataExtractorNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVMetadataExtractor";
 
@@ -283,7 +311,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
             MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
             continue;
         }
-        MEDIA_LOGE("success to find key: %{public}s", key.c_str());
+        MEDIA_LOGD("success to find key: %{public}s", key.c_str());
         if (key == "latitude" || key == "longitude") {
             CHECK_AND_CONTINUE_LOG(CommonNapi::SetPropertyByValueType(env, location, metadata, key),
                 "SetProperty failed, key: %{public}s", key.c_str());

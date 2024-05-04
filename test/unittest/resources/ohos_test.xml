@@ -228,6 +228,7 @@
             <option name="push" value="error.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/HDR.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/SDR.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/camera_info_parser.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="vcodec_native_unit_test">

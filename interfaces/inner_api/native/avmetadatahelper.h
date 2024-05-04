@@ -89,34 +89,6 @@ static const std::map<int32_t, const char*> g_MetadataCodeMap = {
     {39,    "hdrType"},
 };
 
-/**
- * support metadata parameters
-*/
-static const std::vector<std::string> g_Metadata = {
-    "album",
-    "albumArtist",
-    "artist",
-    "author",
-    "dateTime",
-    "dateTimeFormat",
-    "composer",
-    "duration",
-    "genre",
-    "hasAudio",
-    "hasVideo",
-    "mimeType",
-    "trackCount",
-    "sampleRate",
-    "title",
-    "videoHeight",
-    "videoWidth",
-    "videoOrientation",
-    "hdrType",
-    "latitude",
-    "longitude",
-    "customInfo",
-};
-
 enum HdrType : int32_t {
     /**
      * This option is used to mark none HDR type.

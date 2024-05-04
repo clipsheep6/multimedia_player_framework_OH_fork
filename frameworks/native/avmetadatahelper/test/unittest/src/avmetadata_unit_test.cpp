@@ -43,6 +43,8 @@ void AVMetadataUnitTest::CheckMeta(std::string uri, std::unordered_map<int32_t, 
     }
     auto resultMetas = helper->ResolveMetadata();
     EXPECT_EQ(AVMetadataTestBase::GetInstance().CompareMetadata(resultMetas, expectMeta), true);
+    std::shared_ptr<Meta> result = helper->GetAVMetadata();
+    EXPECT_EQ(AVMetadataTestBase::GetInstance().CheckGetAVMeta(result, expectMeta), true);
     helper->Release();
 }
 
@@ -170,6 +172,60 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0800, Function | MediumT
         std::string("/SDR.mp4");
     expectMeta.insert(std::make_pair(AV_KEY_VIDEO_IS_HDR_VIVID, ""));
     CheckMeta(uri, expectMeta);
+}
+
+/**
+    * @tc.number    : GetAVMetaData_Format_MP4_0100
+    * @tc.name      : 01.MP4 format Get MetaData(LOCATION)
+    * @tc.desc      : test GetAVMetaData LOCATION
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumTest | Level0)
+{
+    float expectLatitude = 114.059998f;
+    float expectLongitude = 22.67000f;
+    float dis = 0.001f; // distance
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("/camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_META_ONLY));
+    std::shared_ptr<Meta> result = helper->GetAVMetadata();
+    float latitude = 0.0f;
+    float longitude = 0.0f;
+    result->GetData(Tag::MEDIA_LATITUDE, latitude);
+    result->GetData(Tag::MEDIA_LONGITUDE, longitude);
+    EXPECT_EQ(abs(latitude - expectLatitude) < 0.001, true);
+    EXPECT_EQ(abs(longitude - expectLatitude) < 0.001, true);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : GetAVMetaData_Format_MP4_0200
+    * @tc.name      : 01.MP4 format Get MetaData(customInfo)
+    * @tc.desc      : test GetAVMetaData customInfo
+*/
+HWTEST_F(AVMetadataUnitTest, GetAVMetaData_Format_MP4_0200, Function | MediumTest | Level0)
+{
+    std::string keyStr = "com.os.manufacturer";
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("/camera_info_parser.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_META_ONLY));
+    std::shared_ptr<Meta> result = helper->GetAVMetadata();
+    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
+    result->GetData("customInfo", customInfo);
+    int32_t version = 0;
+    int32_t expectVersion = 5;
+    customInfo->GetData("com.os.version", version);
+    ASSERT_EQ(version, expectVersion);
+    std::string value = "";
+    std::string expectValue = "HW";
+    customInfo->GetData(keyStr, value);
+    ASSERT_EQ(value, expectValue);
+    helper->Release();
 }
 
 /**

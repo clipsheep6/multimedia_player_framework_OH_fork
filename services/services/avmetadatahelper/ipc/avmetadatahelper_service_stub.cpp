@@ -256,24 +256,23 @@ int32_t AVMetadataHelperServiceStub::GetAVMetadata(MessageParcel &data, MessageP
 {
     (void)data;
     bool ret = true;
-    std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
     auto metadata = GetAVMetadata();
-    if (metadata == nullptr) {
-        MEDIA_LOGE("metadata is null");
-        metadata = std::make_shared<Meta>();
-    }
-
+    CHECK_AND_RETURN_RET_LOG(metadata != nullptr, MSERR_INVALID_VAL, "No metadata");
     auto iter = metadata->Find("customInfo");
     if (iter != metadata->end()) {
+        std::shared_ptr<Meta> customInfo = std::make_shared<Meta>();
         ret &= metadata->GetData("customInfo", customInfo);
+        metadata->Remove("customInfo");
         ret &= reply.WriteString("customInfo");
         ret &= customInfo->ToParcel(reply);
+        ret &= metadata->ToParcel(reply);
+    } else {
+        ret &= reply.WriteString("AVMetadata");
+        ret &= metadata->ToParcel(reply);
     }
-    metadata->Remove("customInfo");
-    ret &= reply.WriteString("AVMetadata");
-    ret &= metadata->ToParcel(reply);
     if (!ret) {
         MEDIA_LOGE("GetAVMetadata ToParcel error");
+        return MSERR_INVALID_VAL;
     }
     return MSERR_OK;
 }

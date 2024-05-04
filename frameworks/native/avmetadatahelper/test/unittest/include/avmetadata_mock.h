@@ -63,6 +63,14 @@ static std::unordered_map<int32_t, std::string> EXPECT_META = {
     {AV_KEY_VIDEO_WIDTH, "720"},
     {AV_KEY_DATE_TIME, "2022"},
 };
+static std::unordered_map<std::string, std::string> EXPECT_CUSTOM_INFO = {
+    {"hi","hello"},
+}
+
+static std::unordered_map<std::string, float> EXPECT_META_FLOAT = {
+    {Tag::MEDIA_LATITUDE, 39.916351},
+    {Tag::MEDIA_LONGITUDE, 116.397401},
+};
 } // namespace AVMetadataTestParam
 
 static const int RGB888_PIXEL_BYTES = 3;
@@ -94,6 +102,7 @@ public:
     void PrintMetadata();
     std::string ResolveMetadata(int32_t key);
     std::unordered_map<int32_t, std::string> ResolveMetadata();
+    std::shared_ptr<Meta> GetAVMetadata();
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
     void Release();
@@ -123,6 +132,8 @@ public:
     bool CompareMetadata(int32_t key, const std::string &result, const std::string &expected);
     bool CompareMetadata(const std::unordered_map<int32_t, std::string> &result,
                          const std::unordered_map<int32_t, std::string> &expected);
+    void CheckGetAVMeta(const std::shared_ptr<Meta> &result,
+        const std::unordered_map<int32_t, std::string> &expectMeta);
 private:
     AVMetadataTestBase();
     ~AVMetadataTestBase();
