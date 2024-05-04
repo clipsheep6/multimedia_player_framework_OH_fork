@@ -230,7 +230,7 @@ void ScreenCaptureServer::SetMetaDataReport()
     meta->SetData(Tag::SCREEN_CAPTURE_STOP_REASON, statisticalEventInfo_.stopReason);
     meta->SetData(Tag::SCREEN_CAPTURE_START_LATENCY, statisticalEventInfo_.startLatency);
     AppendMediaInfo(meta);
-    Report();
+    ReportMediaInfo();
 }
 
 ScreenCaptureServer::ScreenCaptureServer()
@@ -888,7 +888,7 @@ int32_t ScreenCaptureServer::OnStartScreenCapture()
         MEDIA_LOGI("OnStartScreenCapture start success, dataType:%{public}d", captureConfig_.dataType);
     } else {
         MEDIA_LOGE("OnStartScreenCapture start failed, dataType:%{public}d", captureConfig_.dataType);
-        statisticalEventInfo_.startLatency = -1;
+        statisticalEventInfo_.startLatency = -1; // latency -1 means invalid
     }
     return ret;
 }
@@ -975,9 +975,7 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     if (audioInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo.audioSource == AudioCaptureSourceType::MIC) {
         captureConfig_.audioInfo.micCapInfo = audioInfo;
-        if (audioInfo.audioSource == AudioCaptureSourceType::MIC) {
-            statisticalEventInfo_.requireMic = true;
-        }
+        statisticalEventInfo_.requireMic = true;
     } else if (audioInfo.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
@@ -1001,7 +999,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     captureConfig_.videoInfo.videoCapInfo = videoInfo;
     avType_ = (avType_ == AVScreenCaptureAvType::AUDIO_TYPE) ? AVScreenCaptureAvType::AV_TYPE :
         AVScreenCaptureAvType::VIDEO_TYPE;
-    statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + " * " +
+    statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + "x" +
         std::to_string(videoInfo.videoFrameHeight);
     MEDIA_LOGI("InitVideoCap success width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
         videoInfo.videoFrameWidth, videoInfo.videoFrameHeight, videoInfo.videoSource, videoInfo.state);
@@ -1970,9 +1968,13 @@ int32_t ScreenCaptureServer::StopScreenCapture()
 
     std::lock_guard<std::mutex> lock(mutex_);
     int32_t ret = StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID);
-    int64_t endTime = GetCurrentMillisecond();
-    statisticalEventInfo_.captureDuration = static_cast<int32_t>(endTime - startTime_ -
-        statisticalEventInfo_.startLatency);
+    if (statisticalEventInfo_.startLatency < 0) {
+        statisticalEventInfo_.captureDuration = -1; // latency -1 means invalid
+    } else {
+        int64_t endTime = GetCurrentMillisecond();
+        statisticalEventInfo_.captureDuration = static_cast<int32_t>(endTime - startTime_ -
+            statisticalEventInfo_.startLatency);
+    }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances StopScreenCapture E", FAKE_POINTER(this));
     return ret;
 }
