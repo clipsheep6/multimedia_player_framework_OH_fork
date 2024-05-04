@@ -39,6 +39,7 @@ std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture()
 int32_t ScreenCaptureImpl::Init()
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    HiTraceChain::SetId(traceId_);
     screenCaptureService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureService();
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN,
         "failed to create ScreenCapture service");
@@ -58,7 +59,6 @@ ScreenCaptureImpl::ScreenCaptureImpl()
 {
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     traceId_ = HiTraceChain::Begin("AVScreenCapture", HITRACE_FLAG_DEFAULT);
-    HiTraceChain::SetId(traceId_);
 }
 
 ScreenCaptureImpl::~ScreenCaptureImpl()

@@ -266,7 +266,7 @@ private:
     void InitAppInfo();
     void CloseFd();
     void ReleaseInner();
- 
+
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t MakeVirtualScreenMirror();
@@ -340,6 +340,9 @@ private:
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
+
+    /* used for DFX events */
+    int64_t instanceId_ = 0;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
