@@ -124,7 +124,7 @@ public:
     bool CompareMetadata(int32_t key, const std::string &result, const std::string &expected);
     bool CompareMetadata(const std::unordered_map<int32_t, std::string> &result,
                          const std::unordered_map<int32_t, std::string> &expected);
-    void CheckGetAVMeta(const std::shared_ptr<Meta> &result,
+    bool CheckGetAVMeta(const std::shared_ptr<Meta> &result,
         const std::unordered_map<int32_t, std::string> &expected);
 private:
     AVMetadataTestBase();

@@ -331,7 +331,7 @@ bool AVMetadataTestBase::CompareMetadata(const std::unordered_map<int32_t, std::
     return success;
 }
 
-void AVMetadataTestBase::CheckGetAVMeta(const std::shared_ptr<Meta> &result,
+bool AVMetadataTestBase::CheckGetAVMeta(const std::shared_ptr<Meta> &result,
     const std::unordered_map<int32_t, std::string> &expected)
 {
     std::string keyStr;
