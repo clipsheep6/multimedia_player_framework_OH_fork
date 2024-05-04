@@ -179,7 +179,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0800, Function | MediumT
     * @tc.name      : 01.MP4 format Get MetaData(LOCATION)
     * @tc.desc      : test GetAVMetaData LOCATION
 */
-HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumTest | Level0)
+HWTEST_F(AVMetadataUnitTest, GetAVMetaData_Format_MP4_0100, Function | MediumTest | Level0)
 {
     float expectLatitude = 114.059998f;
     float expectLongitude = 22.67000f;
@@ -195,8 +195,8 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumT
     float longitude = 0.0f;
     result->GetData(Tag::MEDIA_LATITUDE, latitude);
     result->GetData(Tag::MEDIA_LONGITUDE, longitude);
-    EXPECT_EQ(abs(latitude - expectLatitude) < 0.001, true);
-    EXPECT_EQ(abs(longitude - expectLatitude) < 0.001, true);
+    EXPECT_EQ(abs(latitude - expectLatitude) < dis, true);
+    EXPECT_EQ(abs(longitude - expectLongitude) < dis, true);
     helper->Release();
 }
 
