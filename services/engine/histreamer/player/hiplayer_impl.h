@@ -86,6 +86,9 @@ public:
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t GetAudioFrameCount(uint32_t &frameCount) override;
+    int32_t GetAudioBufferSize(size_t &bufferSize) override;
+    bool IsAudioWriteable() override;
 
     // internal interfaces
     void OnEvent(const Event &event);

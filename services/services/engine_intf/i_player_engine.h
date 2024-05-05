@@ -161,6 +161,23 @@ public:
         (void)mode;
         return 0;
     }
+
+    virtual int32_t GetAudioFrameCount(uint32_t &frameCount)
+    {
+        (void) frameCount;
+        return 0;
+    }
+
+    virtual int32_t GetAudioBufferSize(size_t &bufferSize)
+    {
+        (void) bufferSize;
+        return 0;
+    }
+
+    virtual bool IsAudioWriteable()
+    {
+        return false;
+    }
 };
 } // namespace Media
 } // namespace OHOS
