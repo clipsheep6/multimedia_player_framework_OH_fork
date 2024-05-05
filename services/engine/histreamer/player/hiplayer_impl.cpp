@@ -313,13 +313,12 @@ bool HiPlayerImpl::BreakIfInterruptted()
     return false;
 }
 
-int32_t HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
+void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 {
     isInterruptNeeded_ = isInterruptNeeded;
     if (demuxer_ != nullptr) {
         demuxer_->SetInterruptState(isInterruptNeeded);
     }
-    return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
