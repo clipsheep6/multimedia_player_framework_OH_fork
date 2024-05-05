@@ -327,8 +327,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_INITIALIZED &&
-        state != AVPlayerState::STATE_PREPARED &&
+    if (state != AVPlayerState::STATE_PREPARED &&
         state != AVPlayerState::STATE_PAUSED &&
         state != AVPlayerState::STATE_COMPLETED &&
         state != AVPlayerState::STATE_PLAYING) {
@@ -1937,8 +1936,7 @@ bool AVPlayerNapi::IsControllable()
 {
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
-        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
-        state == AVPlayerState::STATE_INITIALIZED) {
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED) {
         return true;
     } else {
         return false;
