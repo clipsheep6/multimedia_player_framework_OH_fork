@@ -147,6 +147,7 @@ private:
     int32_t InitVideoWidthAndHeight();
     void SetBundleName(std::string bundleName);
     void InitAudioDefaultTrackIndex();
+    bool BreakIfInterruptted();
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
