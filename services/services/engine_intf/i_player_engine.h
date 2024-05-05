@@ -166,6 +166,7 @@ public:
         (void)isInterruptNeeded;
         return 0;
     }
+};
 } // namespace Media
 } // namespace OHOS
 #endif // I_PLAYER_ENGINE_H
