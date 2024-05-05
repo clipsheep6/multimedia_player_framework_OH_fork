@@ -280,12 +280,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
-
-    if (isInterruptNeeded_.load()) {
-        OnStateChanged(PlayerStateId::READY);
-        return Status::OK;
-    }
-
+    FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I("PrepareAsync entered, current pipeline state: " PUBLIC_LOG_S,
         StringnessPlayerState(pipelineStates_).c_str());
@@ -307,6 +302,15 @@ int32_t HiPlayerImpl::PrepareAsync()
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
+}
+
+bool HiPlayerImpl::BreakIfInterruptted()
+{
+    if (isInterruptNeeded_.load()) {
+        OnStateChanged(PlayerStateId::READY);
+        return true;
+    }
+    return false;
 }
 
 int32_t HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
