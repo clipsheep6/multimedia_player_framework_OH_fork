@@ -367,10 +367,10 @@ int32_t PlayerServer::OnPrepare(bool sync)
 {
     MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
     int32_t ret = MSERR_OK;
-
     lastOpStatus_ = PLAYER_PREPARED;
-
+    playerEngine_->SetInterruptState(false);
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
@@ -551,6 +551,7 @@ int32_t PlayerServer::OnStop(bool sync)
 {
     MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
 
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
