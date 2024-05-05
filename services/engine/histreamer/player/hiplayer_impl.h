@@ -86,7 +86,7 @@ public:
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
-    void SetInterruptState() override;
+    void SetInterruptState(bool isInterruptNeeded) override;
 
     // internal interfaces
     void OnEvent(const Event &event);
