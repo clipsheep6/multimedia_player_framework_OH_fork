@@ -161,8 +161,11 @@ public:
         (void)mode;
         return 0;
     }
-    virtual int32_t SetInterruptState(bool isInterruptNeeded) = 0;
-};
+    virtual int32_t SetInterruptState(bool isInterruptNeeded)
+    {
+        (void)isInterruptNeeded;
+        return 0;
+    }
 } // namespace Media
 } // namespace OHOS
 #endif // I_PLAYER_ENGINE_H
