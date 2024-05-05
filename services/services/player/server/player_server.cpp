@@ -596,6 +596,7 @@ int32_t PlayerServer::OnReset()
         (void)OnStop(true);
     }
 
+    taskMgr_.ClearAllTask();
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() {
         ChangeState(idleState_);
     });
