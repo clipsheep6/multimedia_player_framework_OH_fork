@@ -377,6 +377,15 @@ int32_t PlayerServer::StoppedState::Stop()
     return MSERR_OK;
 }
 
+void PlayerServer::StoppedState::HandleStateChange(int32_t newState)
+{
+    if (newState == PLAYER_STATE_ERROR) {
+        (void)server_.taskMgr_.MarkTaskDone("stopped->error done");
+    } else if (newState == PLAYER_STOPPED) {
+        (void)server_.taskMgr_.MarkTaskDone("double stop");
+    }
+}
+
 int32_t PlayerServer::PlaybackCompletedState::Play()
 {
     return server_.HandlePlay();
