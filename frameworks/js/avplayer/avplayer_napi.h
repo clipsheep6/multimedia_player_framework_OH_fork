@@ -309,10 +309,10 @@ private:
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
         ~AVPlayerContext() = default;
-        void CheckTaskResult()
+        void CheckTaskResult(bool isTimeLimited = false, uint32_t milliseconds = 0)
         {
             if (asyncTask != nullptr) {
-                auto result = asyncTask->GetResult();
+                auto result = isTimeLimited ? asyncTask->GetResultWithTimeLimit(milliseconds) : asyncTask->GetResult();
                 if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                     SignError(result.Value().first, result.Value().second);
                 }

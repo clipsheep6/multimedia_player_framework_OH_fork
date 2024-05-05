@@ -161,6 +161,10 @@ public:
         (void)mode;
         return 0;
     }
+    virtual void SetInterruptState(bool isInterruptNeeded)
+    {
+        (void)isInterruptNeeded;
+    }
 };
 } // namespace Media
 } // namespace OHOS
