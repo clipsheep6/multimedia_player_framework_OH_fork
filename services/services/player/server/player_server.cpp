@@ -551,7 +551,7 @@ int32_t PlayerServer::OnStop(bool sync)
 {
     MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    playerEngine_->SetInterruptState(true);    
+    playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
 
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
