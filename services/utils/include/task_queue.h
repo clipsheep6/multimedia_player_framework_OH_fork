@@ -160,7 +160,6 @@ public:
         std::unique_lock<std::mutex> lock(mutex_);
         auto isFinished = cond_.wait_for(lock, std::chrono::milliseconds(milliseconds),
             [this] { return state_ == TaskState::FINISHED || state_ == TaskState::CANCELED; });
-
         if (isFinished) {
             auto res = ClearResult();
             if (state_ == TaskState::IDLE) {
