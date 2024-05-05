@@ -138,6 +138,7 @@ public:
 
     int32_t Prepare() override;
     int32_t Stop() override;
+    void HandleStateChange(int32_t newState) override;
 };
 
 class PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {

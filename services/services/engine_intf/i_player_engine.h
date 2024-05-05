@@ -161,6 +161,7 @@ public:
         (void)mode;
         return 0;
     }
+    virtual int32_t SetInterruptState(bool isInterruptNeeded) = 0;
 };
 } // namespace Media
 } // namespace OHOS

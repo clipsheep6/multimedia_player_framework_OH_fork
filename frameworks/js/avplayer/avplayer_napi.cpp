@@ -15,7 +15,6 @@
 
 #include "avplayer_napi.h"
 #include "avplayer_callback.h"
-#include "media_log.h"
 #include "media_errors.h"
 #include "common_napi.h"
 #ifdef SUPPORT_DRM
@@ -33,6 +32,7 @@
 #include "av_common.h"
 #include "meta/video_types.h"
 #include "media_source_napi.h"
+#include "media_log.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -40,6 +40,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
     constexpr size_t MIN_ARG_COUNTS = 1;
     constexpr size_t MAX_ARG_COUNTS = 2;
+    constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
 }
 
 namespace OHOS {
@@ -270,7 +271,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
             MEDIA_LOGD("Wait Prepare Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            promiseCtx->CheckTaskResult();
+            promiseCtx->CheckTaskResult(true, TASK_TIME_LIMIT_MS);
             MEDIA_LOGD("Wait Prepare Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -326,7 +327,8 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_PREPARED &&
+    if (state != AVPlayerState::STATE_INITIALIZED &&
+        state != AVPlayerState::STATE_PREPARED &&
         state != AVPlayerState::STATE_PAUSED &&
         state != AVPlayerState::STATE_COMPLETED &&
         state != AVPlayerState::STATE_PLAYING) {
@@ -348,7 +350,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
             MEDIA_LOGD("Wait JsPlay Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            promiseCtx->CheckTaskResult();
+            promiseCtx->CheckTaskResult(true, TASK_TIME_LIMIT_MS);
             MEDIA_LOGD("Wait JsPlay Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -1935,7 +1937,8 @@ bool AVPlayerNapi::IsControllable()
 {
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_PLAYING ||
-        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED) {
+        state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_COMPLETED ||
+        state == AVPlayerState::STATE_INITIALIZED) {
         return true;
     } else {
         return false;

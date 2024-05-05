@@ -155,6 +155,22 @@ public:
         return ClearResult();
     }
 
+    TaskResult<T> GetResultWithTimeLimit(uint32_t milliseconds)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto isFinished = cond_.wait_for(lock, std::chrono::milliseconds(milliseconds),
+            [this] { return state_ == TaskState::FINISHED || state_ == TaskState::CANCELED; });
+
+        if (isFinished) {
+            auto res = ClearResult();
+            if (state_ == TaskStaate::IDLE) {
+                return res;
+            }
+        }
+        TaskResult<T> tmp;
+        return tmp;
+    }
+
     void Cancel() override
     {
         std::unique_lock<std::mutex> lock(mutex_);

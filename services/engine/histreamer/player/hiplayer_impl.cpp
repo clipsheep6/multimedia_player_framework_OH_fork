@@ -260,7 +260,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return MSERR_INVALID_OPERATION;
     }
     auto ret = Init();
-    if (ret != Status::OK) {
+    if (ret != Status::OK || isInterruptNeeded_.load()) {
         MEDIA_LOG_E("PrepareAsync error: init error");
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
     }
@@ -279,6 +279,11 @@ int32_t HiPlayerImpl::PrepareAsync()
         MEDIA_LOG_E("PrepareAsync error: DoSetSource error");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+    }
+
+    if (isInterruptNeeded_.load()) {
+        OnStateChanged(PlayerStateId::READY);
+        return Status::OK;
     }
 
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
@@ -302,6 +307,15 @@ int32_t HiPlayerImpl::PrepareAsync()
     OnStateChanged(PlayerStateId::READY);
     MEDIA_LOG_I("PrepareAsync End, resource duration " PUBLIC_LOG_D32, durationMs_.load());
     return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
+{
+    isInterruptNeeded_ = isInterruptNeeded;
+    if (demuxer_ != nullptr) {
+        demuxer_->SetInterruptState(isInterruptNeeded);
+    }
+    return MSERR_OK;
 }
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
@@ -1204,6 +1218,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
         MEDIA_LOG_W("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
+    }
+    if (ret != Status::OK) {
+        return ret;
     }
     SetBundleName(bundleName_);
     demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());

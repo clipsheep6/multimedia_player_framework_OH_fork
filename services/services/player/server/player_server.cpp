@@ -109,6 +109,7 @@ PlayerServer::~PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
+    playerEngine_->SetInterruptState(true);
     VideoPlayerManager::GetInstance().UnRegisterVideoPlayer(this);
 #endif
 }
@@ -553,6 +554,7 @@ int32_t PlayerServer::OnStop(bool sync)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     taskMgr_.ClearAllTask();
 
+    playerEngine_->SetInterruptState(true);
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
@@ -595,7 +597,6 @@ int32_t PlayerServer::OnReset()
         (void)OnStop(true);
     }
 
-    taskMgr_.ClearAllTask();
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() {
         ChangeState(idleState_);
     });
