@@ -86,7 +86,7 @@ public:
                                  const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
-    int32_t ResetInstance() override;
+    void SetInterruptState() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -182,7 +182,7 @@ private:
     std::atomic<int32_t> videoWidth_{0};
     std::atomic<int32_t> videoHeight_{0};
     std::atomic<bool> needSwapWH_{false};
-    std::atomic<bool> isInstanceReset_{false};
+    std::atomic<bool> isInterruptNeeded_{false};
 
     std::shared_ptr<Meta> audioRenderInfo_{nullptr};
     std::shared_ptr<Meta> audioInterruptMode_{nullptr};
