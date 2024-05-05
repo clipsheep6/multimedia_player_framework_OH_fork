@@ -163,7 +163,7 @@ public:
 
         if (isFinished) {
             auto res = ClearResult();
-            if (state_ == TaskStaate::IDLE) {
+            if (state_ == TaskState::IDLE) {
                 return res;
             }
         }
