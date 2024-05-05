@@ -150,6 +150,7 @@ void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRe
 
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
+    MediaTrace trace("RecorderServer::SetVideoSource");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSource in, source(%{public}d), sourceId(%{public}d)",
         FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
@@ -320,6 +321,7 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
 
 int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
+    MediaTrace trace("RecorderServer::SetAudioSource");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetAudioSource in, source(%{public}d), sourceId(%{public}d)",
         FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
@@ -778,6 +780,7 @@ int32_t RecorderServer::Reset()
 
 int32_t RecorderServer::Release()
 {
+    MediaTrace trace("RecorderServer::Release");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     {
         std::lock_guard<std::mutex> lock(mutex_);
