@@ -304,8 +304,8 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
 
 int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetAudioSource");
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
 
