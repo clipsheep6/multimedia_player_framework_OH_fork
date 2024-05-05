@@ -16,6 +16,7 @@
 #include "meta/audio_types.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
+#include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {
@@ -85,6 +86,7 @@ HiRecorderImpl::~HiRecorderImpl()
 
 int32_t HiRecorderImpl::Init()
 {
+    MediaTrace trace("HiRecorderImpl::Init");
     MEDIA_LOG_I(PUBLIC_LOG_S "Init enter.", avRecorderTag_.c_str());
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
@@ -95,6 +97,7 @@ int32_t HiRecorderImpl::Init()
 
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
+    MediaTrace trace("HiRecorderImpl::SetVideoSource");
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -142,6 +145,7 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
+    MediaTrace trace("HiRecorderImpl::SetAudioSource");
     MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource enter.", avRecorderTag_.c_str());
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -259,6 +263,7 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 
 int32_t HiRecorderImpl::Prepare()
 {
+    MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I(PUBLIC_LOG_S "Prepare enter.", avRecorderTag_.c_str());
     if (lseek(fd_, 0, SEEK_CUR) == -1) {
         MEDIA_LOG_E(PUBLIC_LOG_S "The fd is invalid.", avRecorderTag_.c_str());
@@ -308,6 +313,7 @@ int32_t HiRecorderImpl::Prepare()
 
 int32_t HiRecorderImpl::Start()
 {
+    MediaTrace trace("HiRecorderImpl::Start");
     MEDIA_LOG_I(PUBLIC_LOG_S "Start enter.", avRecorderTag_.c_str());
     Status ret = Status::OK;
     if (curState_ == StateId::PAUSE) {
@@ -323,6 +329,7 @@ int32_t HiRecorderImpl::Start()
 
 int32_t HiRecorderImpl::Pause()
 {
+    MediaTrace trace("HiRecorderImpl::Pause");
     MEDIA_LOG_I(PUBLIC_LOG_S "Pause enter.", avRecorderTag_.c_str());
     Status ret = Status::OK;
     if (curState_ != StateId::READY) {
@@ -336,6 +343,7 @@ int32_t HiRecorderImpl::Pause()
 
 int32_t HiRecorderImpl::Resume()
 {
+    MediaTrace trace("HiRecorderImpl::Resume");
     MEDIA_LOG_I(PUBLIC_LOG_S "Resume enter.", avRecorderTag_.c_str());
     Status ret = Status::OK;
     ret = pipeline_->Resume();
@@ -347,6 +355,7 @@ int32_t HiRecorderImpl::Resume()
 
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
+    MediaTrace trace("HiRecorderImpl::Stop");
     MEDIA_LOG_I(PUBLIC_LOG_S "Stop enter.", avRecorderTag_.c_str());
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
@@ -378,6 +387,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 
 int32_t HiRecorderImpl::Reset()
 {
+    MediaTrace trace("HiRecorderImpl::Reset");
     MEDIA_LOG_I(PUBLIC_LOG_S "Reset enter.", avRecorderTag_.c_str());
     return Stop(false);
 }
