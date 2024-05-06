@@ -163,6 +163,7 @@ private:
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
         }
+        free(ohAvBuffer->buffer_->memory_->GetAddr());
         errCode = ReleaseAudioBuffer(screenCaptureObj->screenCapture_, audioSourceType);
         return errCode;
     }
