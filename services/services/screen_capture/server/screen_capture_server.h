@@ -123,7 +123,7 @@ struct SurfaceBufferEntry {
 };
 
 struct StatisticalEventInfo {
-    int32_t errCode;
+    int32_t errCode = 0;
     std::string errMsg;
     int32_t captureDuration = -1;
     bool userAgree = false;
@@ -314,7 +314,7 @@ private:
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
-    AVScreenCaptureDataMode dataMode_;
+    AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
@@ -342,7 +342,7 @@ private:
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
 
     /* used for DFX events */
-    int64_t instanceId_ = 0;
+    uint64_t instanceId_ = 0;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);
