@@ -203,9 +203,8 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(
 
     mediaDemuxer_->SelectTrack(trackIndex_);
     int64_t realSeekTime = timeUs;
-    mediaDemuxer_->SeekTo(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
-    MEDIA_LOGI(
-        "0x%{public}06" PRIXPTR " FetchFrameAtTime realSeekTime:%{public}" PRId64 "", FAKE_POINTER(this), realSeekTime);
+    auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     {
         std::unique_lock<std::mutex> lock(mutex_);
@@ -225,6 +224,15 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(
         }
     }
     return fetchedFrameAtTime_;
+}
+
+Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime)
+{
+    auto res = mediaDemuxer_->SeekTo(timeMs, option, realSeekTime);
+    if (res != Status::OK && option != Plugins::SeekMode::SEEK_CLOSEST_SYNC) {
+        res = mediaDemuxer_->SeekTo(timeMs, Plugins::SeekMode::SEEK_CLOSEST_SYNC, realSeekTime);
+    }
+    return res;
 }
 
 bool AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer)
