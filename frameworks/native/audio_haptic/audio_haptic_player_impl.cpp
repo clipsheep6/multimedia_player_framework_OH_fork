@@ -243,7 +243,8 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
     result = audioHapticSound_->SetVolume(actualVolume);
 
     if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL &&
-        streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE &&
+        (streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE ||
+        streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE) &&
         playerState_ == AudioHapticPlayerState::STATE_RUNNING &&
         std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
         // only for the call manager ringtone

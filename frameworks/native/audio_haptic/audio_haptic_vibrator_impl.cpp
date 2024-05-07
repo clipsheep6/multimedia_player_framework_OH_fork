@@ -42,6 +42,7 @@ static const std::unordered_map<AudioStandard::StreamUsage, VibratorUsage> USAGE
     {AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MESSAGE, VibratorUsage::USAGE_COMMUNICATION},
     {AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE, VibratorUsage::USAGE_RING},
     {AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE, VibratorUsage::USAGE_RING},
+    {AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE, VibratorUsage::USAGE_RING},
     {AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION, VibratorUsage::USAGE_NOTIFICATION},
     {AudioStandard::StreamUsage::STREAM_USAGE_ACCESSIBILITY, VibratorUsage::USAGE_MEDIA},
     {AudioStandard::StreamUsage::STREAM_USAGE_SYSTEM, VibratorUsage::USAGE_NOTIFICATION},
