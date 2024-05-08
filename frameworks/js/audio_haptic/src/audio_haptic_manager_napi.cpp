@@ -229,7 +229,7 @@ napi_value AudioHapticManagerNapi::RegisterSource(napi_env env, napi_callback_in
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result, "RegisterSource: napi_get_cb_info fail");
     if (argc != ARGS_TWO) {
         MEDIA_LOGE("RegisterSource: requires 2 parameters");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
         return result;
     }
 
@@ -249,7 +249,8 @@ napi_value AudioHapticManagerNapi::RegisterSource(napi_env env, napi_callback_in
             asyncContext->hapticUri = std::string(buffer);
         } else {
             MEDIA_LOGE("RegisterSource: the param type mismatch");
-            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The type of audioUri and hapticUri must be string");
             return result;
         }
     }
@@ -324,7 +325,7 @@ napi_value AudioHapticManagerNapi::UnregisterSource(napi_env env, napi_callback_
         "UnregisterSource: Failed to retrieve details about the callback");
     if (argc != ARGS_ONE) {
         MEDIA_LOGE("UnregisterSource: requires 1 parameter");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
         return result;
     }
 
@@ -337,7 +338,8 @@ napi_value AudioHapticManagerNapi::UnregisterSource(napi_env env, napi_callback_
             napi_get_value_int32(env, argv[PARAM0], &asyncContext->sourceID);
         } else {
             MEDIA_LOGE("UnregisterSource: the param type mismatch");
-            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The type of id must be number");
             return result;
         }
         napi_create_promise(env, &asyncContext->deferred, &result);
@@ -469,7 +471,7 @@ napi_value AudioHapticManagerNapi::SetStreamUsage(napi_env env, napi_callback_in
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
     if (argc != ARGS_TWO) {
         MEDIA_LOGE("SetStreamUsage: requires 2 parameters");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
         return result;
     }
 
@@ -485,7 +487,7 @@ napi_value AudioHapticManagerNapi::SetStreamUsage(napi_env env, napi_callback_in
     napi_typeof(env, argv[PARAM0], &valueType);
     if (valueType != napi_number) {
         MEDIA_LOGE("SetStreamUsage: the param type mismatch");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "the type of id must be number");
         return result;
     }
     int32_t sourceID = 0;
@@ -494,14 +496,15 @@ napi_value AudioHapticManagerNapi::SetStreamUsage(napi_env env, napi_callback_in
     napi_typeof(env, argv[PARAM1], &valueType);
     if (valueType != napi_number) {
         MEDIA_LOGE("SetStreamUsage: the param type mismatch");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "the type of usage must be number");
         return result;
     }
     int32_t streamUsage = 0;
     napi_get_value_int32(env, argv[PARAM1], &streamUsage);
     if (!IsLegalAudioStreamUsage (streamUsage)) {
         MEDIA_LOGE("SetStreamUsage: the value of streamUsage is invalid");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID,
+            "the param of usage must be enum audio.StreamUsage");
         return result;
     }
 
@@ -554,14 +557,13 @@ napi_value AudioHapticManagerNapi::CreatePlayer(napi_env env, napi_callback_info
     CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result, "napi_get_cb_info failed");
     if (argc != ARGS_ONE && argc != ARGS_TWO) {
         MEDIA_LOGE("CreatePlayer: requires 1 parameter or 2 parameters");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
         return result;
     }
 
     std::unique_ptr<AudioHapticManagerAsyncContext> asyncContext = std::make_unique<AudioHapticManagerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
-        "Failed to get asyncContext->objectInfo");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result, "objectInfo invalid");
 
     for (size_t i = PARAM0; i < argc; i++) {
         napi_valuetype valueType = napi_undefined;
@@ -577,7 +579,8 @@ napi_value AudioHapticManagerNapi::CreatePlayer(napi_env env, napi_callback_info
             }
         } else {
             MEDIA_LOGE("CreatePlayer: the param type mismatch");
-            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+            AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The type of id must be number; The type of options must be object");
             return result;
         }
     }

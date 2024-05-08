@@ -23,14 +23,6 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
-#define THROW_ERROR_ASSERT(env, assertion, code)        \
-    do {                                                \
-        if (!(assertion)) {                             \
-            RingtoneCommonNapi::ThrowError(env, code);    \
-            return nullptr;                             \
-        }                                               \
-    } while (0)
-
 namespace OHOS {
 namespace Media {
 const int32_t  NAPI_ERR_INPUT_INVALID = 401;
@@ -49,7 +41,7 @@ public:
     RingtoneCommonNapi() = delete;
     ~RingtoneCommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
-    static void ThrowError(napi_env env, int32_t code);
+    static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
     static std::string GetMessageByCode(int32_t &code);
 };
 } // namespace Media

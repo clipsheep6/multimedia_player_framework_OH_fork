@@ -154,7 +154,7 @@ napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result, "IsMuted: napi_get_cb_info fail");
     if (argc != ARGS_ONE) {
         MEDIA_LOGE("IsMuted: requires 1 parameters");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
         return result;
     }
 
@@ -174,7 +174,8 @@ napi_value AudioHapticPlayerNapi::IsMuted(napi_env env, napi_callback_info info)
     }
     if (!IsLegalAudioHapticType(jsAudioHapticType)) {
         MEDIA_LOGE("IsMuted: the param type mismatch");
-        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID);
+        AudioHapticCommonNapi::ThrowError(env, NAPI_ERR_INPUT_INVALID,
+            "parameter verification failed: The param of type must be enum AudioHapticType");
         return result;
     }
 
