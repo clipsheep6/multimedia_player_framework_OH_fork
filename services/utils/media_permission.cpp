@@ -41,10 +41,6 @@ int32_t MediaPermission::CheckMicPermission()
 
 int32_t MediaPermission::CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
-    if (appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return Security::AccessToken::PERMISSION_GRANTED;
-    }
     MEDIA_LOGD("enter and check appUid: %{public}d", appUid);
     Security::AccessToken::AccessTokenID tokenCaller = appTokenId;
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.INTERNET");
