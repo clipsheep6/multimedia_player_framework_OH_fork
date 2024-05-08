@@ -1085,6 +1085,7 @@ int32_t HiPlayerImpl::SetAudioRendererInfo(const int32_t contentType, const int3
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
     }
+    audioRenderInfo_->SetData(Tag::AUDIO_RENDER_SET_FLAG, true);
     audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
     if (audioSink_ != nullptr) {
         audioSink_->SetParameter(audioRenderInfo_);
