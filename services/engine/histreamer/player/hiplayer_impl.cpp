@@ -325,6 +325,7 @@ int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
     if (demuxer_ == nullptr) {
         MEDIA_LOG_E("SelectBitRate failed, demuxer_ is null");
+        return MSERR_INVALID_OPERATION;
     }
     Status ret = demuxer_->SelectBitRate(bitRate);
     if (ret == Status::OK) {
