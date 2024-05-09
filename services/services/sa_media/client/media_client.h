@@ -27,6 +27,10 @@
 #ifdef SUPPORT_PLAYER
 #include "player_client.h"
 #endif
+#ifdef SUPPORT_CODEC
+#include "avcodeclist_client.h"
+#include "avcodec_client.h"
+#endif
 #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_client.h"
 #endif
@@ -53,6 +57,12 @@ public:
 #ifdef SUPPORT_PLAYER
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
+#endif
+#ifdef SUPPORT_CODEC
+    std::shared_ptr<IAVCodecService> CreateAVCodecService() override;
+    std::shared_ptr<IAVCodecListService> CreateAVCodecListService() override;
+    int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) override;
+    int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) override;
 #endif
 #ifdef SUPPORT_METADATA
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
@@ -85,6 +95,10 @@ private:
 #endif
 #ifdef SUPPORT_METADATA
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;
+#endif
+#ifdef SUPPORT_CODEC
+    std::list<std::shared_ptr<IAVCodecService>> avCodecClientList_;
+    std::list<std::shared_ptr<IAVCodecListService>> avCodecListClientList_;
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     std::list<std::shared_ptr<IScreenCaptureService>> screenCaptureClientList_;

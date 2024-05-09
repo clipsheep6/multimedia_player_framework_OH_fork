@@ -82,8 +82,8 @@
           "resource_schedule_service",
           "ffmpeg",
           "bounds_checking_function",
-          "libxml2",
-          "libuv"
+          "libuv",
+          "libxml2"
         ],
         "third_party": [
           "bounds_checking_function"
@@ -117,6 +117,10 @@
             "name": "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "header": {
               "header_files": [
+                "avcodec_audio_decoder.h",
+                "avcodec_audio_encoder.h",
+                "avcodec_video_decoder.h",
+                "avcodec_video_encoder.h",
                 "player.h",
                 "recorder.h",
                 "screen_capture.h",
