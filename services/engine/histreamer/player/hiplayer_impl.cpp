@@ -535,6 +535,12 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doPreparedSeek.");
+    int32_t curPosMs = 0;
+    GetCurrentTime(curPosMs);
+    if (seekPos == static_cast<int64_t>(curPosMs)) {
+        MEDIA_LOG_I("doPreparedSeek return and already at curPosMs: " PUBLIC_LOG_D32, curPosMs);
+        return Status::OK;
+    }
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
     return rtv;
@@ -557,6 +563,12 @@ Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doPausedSeek.");
+    int32_t curPosMs = 0;
+    GetCurrentTime(curPosMs);
+    if (seekPos == static_cast<int64_t>(curPosMs)) {
+        MEDIA_LOG_I("doPausedSeek return and already at curPosMs: " PUBLIC_LOG_D32, curPosMs);
+        return Status::OK;
+    }
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
