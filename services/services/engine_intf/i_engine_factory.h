@@ -27,6 +27,10 @@
 #ifdef SUPPORT_METADATA
 #include "i_avmetadatahelper_engine.h"
 #endif
+#ifdef SUPPORT_CODEC
+#include "i_avcodec_engine.h"
+#include "i_avcodeclist_engine.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -73,6 +77,18 @@ public:
 
 #ifdef SUPPORT_METADATA
     virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine()
+    {
+        return nullptr;
+    }
+#endif
+
+#ifdef SUPPORT_CODEC
+    virtual std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine()
+    {
+        return nullptr;
+    }
+
+    virtual std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine()
     {
         return nullptr;
     }

@@ -50,7 +50,6 @@ ohos_unittest("incallobserver_unit_test") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
-    "av_codec:av_codec_client",
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
     "core_service:tel_core_service_api",
