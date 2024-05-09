@@ -40,10 +40,6 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client",
     "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_ROOT_DIR/services/services/common",
-    "$MEDIA_ROOT_DIR/services/services/avcodec/client",
-    "$MEDIA_ROOT_DIR/services/services/avcodec/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avcodeclist/client",
-    "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/client",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
@@ -134,22 +130,6 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
-  if (multimedia_player_framework_support_codec) {
-    sources += [
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
-      "$MEDIA_ROOT_DIR/services/services/avcodec/client/avcodec_client.cpp",
-      "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_listener_stub.cpp",
-      "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_service_proxy.cpp",
-      "$MEDIA_ROOT_DIR/services/services/avcodeclist/client/avcodeclist_client.cpp",
-      "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc/avcodeclist_service_proxy.cpp",
-      "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/avcodeclist_parcel.cpp",
-    ]
-  }
   if (multimedia_player_framework_support_metadata) {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
@@ -180,6 +160,7 @@ ohos_shared_library("media_client") {
 
   external_deps = [
     "audio_framework:audio_client",
+    "av_codec:av_codec_client",
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",

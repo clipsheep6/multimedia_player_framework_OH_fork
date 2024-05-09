@@ -52,7 +52,10 @@ ohos_unittest("recorder_profiles_unit_test") {
 
   deps = [ "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client" ]
 
-  external_deps = [ "graphic_surface:surface" ]
+  external_deps = [
+    "av_codec:av_codec_client",
+    "graphic_surface:surface",
+  ]
 }
 
 group("unittest") {
