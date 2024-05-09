@@ -138,7 +138,7 @@ void HiPlayerImpl::SetDefaultAudioRenderInfo()
 {
     MEDIA_LOG_I("SetDefaultAudioRenderInfo");
     Plugins::AudioRenderInfo audioRenderInfo {AudioStandard::CONTENT_TYPE_MUSIC,
-        AudioStandard::STREAM_USAGE_UNKNOWN, 0};
+        AudioStandard::STREAM_USAGE_MEDIA, 0};
     if (audioRenderInfo_ == nullptr) {
         audioRenderInfo_ = std::make_shared<Meta>();
         audioRenderInfo_->SetData(Tag::AUDIO_RENDER_INFO, audioRenderInfo);
