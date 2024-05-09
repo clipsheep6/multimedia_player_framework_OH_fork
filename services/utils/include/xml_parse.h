@@ -25,7 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-using namespace MediaAVCodec;
 class __attribute__((visibility("default"))) XmlParser {
 public:
     virtual ~XmlParser();

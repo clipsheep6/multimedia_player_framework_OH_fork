@@ -24,6 +24,8 @@ ohos_shared_library("media_engine_common") {
     debug = false
   }
 
+  deps = [ "avcodeclist:media_engine_common_avcodeclist" ]
+
   external_deps = [ "hilog:libhilog" ]
 
   subsystem_name = "multimedia"

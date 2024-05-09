@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace Media {
-using namespace MediaAVCodec;
 /**
  * @brief Video recorder quality level
  *
