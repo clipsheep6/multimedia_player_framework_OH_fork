@@ -310,7 +310,7 @@ std::unique_ptr<PixelMap> AVThumbnailGenerator::GetYuvDataAlignStride(const sptr
     int32_t stride = surfaceBuffer->GetStride();
     int32_t outputHeight;
     auto hasFormatHeight = outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
-    if (!hasFormatHeight) {
+    if (!hasFormatHeight || outputHeight == 0) {
         outputHeight = height;
     }
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
