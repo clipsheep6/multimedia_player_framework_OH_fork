@@ -71,6 +71,7 @@ static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.huawei.ohos.screenrecorder";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -740,7 +741,12 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
-        return StartPrivacyWindow();
+        if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
+            return StartPrivacyWindow();
+        } else {
+            MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
+            return MSERR_OK;
+        }
     }
 #endif
     MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
@@ -911,7 +917,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_) {
+        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
             int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
@@ -1140,6 +1146,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     density_ = display->GetDpi();
 
+    bundleName_ = GetClientBundleName(appInfo_.appUid);
+
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::STARTING;
     ret = RequestUserPrivacyAuthority();
@@ -1153,7 +1161,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     if (IsUserPrivacyAuthorityNeeded()) {
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_) {
+        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
             // Wait for user interactions to ALLOW/DENY capture
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
@@ -1773,7 +1781,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For CAPTURE FILE, should call Recorder interface to make effect when start
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
         "ExcludeContent failed, capture is not STARTED");
-    return MSERR_UNSUPPORT;
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
@@ -1941,7 +1949,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
         }
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    if (isPrivacyAuthorityEnabled_) {
+    if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);

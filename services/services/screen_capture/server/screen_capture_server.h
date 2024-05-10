@@ -324,6 +324,7 @@ private:
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
+    std::string bundleName_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
