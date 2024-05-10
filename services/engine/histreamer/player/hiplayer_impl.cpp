@@ -1641,6 +1641,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
         videoDecoder_->SetSyncCenter(syncManager_);
+        videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
         }
