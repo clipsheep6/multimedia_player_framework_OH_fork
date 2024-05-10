@@ -27,10 +27,6 @@
 #ifdef SUPPORT_METADATA
 #include "i_avmetadatahelper_service.h"
 #endif
-#ifdef SUPPORT_CODEC
-#include "i_avcodec_service.h"
-#include "i_avcodeclist_service.h"
-#endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "i_screen_capture_service.h"
 #include "i_screen_capture_controller.h"
@@ -114,54 +110,6 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) = 0;
-#endif
-
-#ifdef SUPPORT_CODEC
-    /**
-     * @brief Create a codeclist service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::shared_ptr<IAVCodecListService> CreateAVCodecListService() = 0;
-
-    /**
-     * @brief Destroy a codeclist service.
-     *
-     * call the API to destroy the codeclist service.
-     *
-     * @param pointer to the codeclist service.
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.1
-     * @version 3.1
-     */
-    virtual int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) = 0;
-
-    /**
-     * @brief Create an avcodec service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.1
-     * @version 3.1
-     */
-    virtual std::shared_ptr<IAVCodecService> CreateAVCodecService() = 0;
-
-    /**
-     * @brief Destroy a avcodec service.
-     *
-     * call the API to destroy the avcodec service.
-     *
-     * @param pointer to the avcodec service.
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.1
-     * @version 3.1
-     */
-    virtual int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) = 0;
 #endif
 
 #ifdef SUPPORT_METADATA
