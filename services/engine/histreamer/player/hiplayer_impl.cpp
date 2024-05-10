@@ -1566,6 +1566,16 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
     return Status::OK;
 }
 
+void HiPlayerImpl::OnDumpInfo(int32_t fd)
+{
+    MEDIA_LOG_D("HiPlayerImpl::OnDumpInfo called.");
+    audioDecoder_->OnDumpInfo(fd);
+    demuxer_->OnDumpInfo(fd);
+#ifdef SUPPORT_VIDEO
+    videoDecoder_->OnDumpInfo(fd);
+#endif
+}
+
 Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
 {
     MediaTrace trace("HiPlayerImpl::LinkAudioDecoderFilter");

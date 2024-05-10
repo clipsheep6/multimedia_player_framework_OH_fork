@@ -20,6 +20,7 @@
 #include "nocopyable.h"
 #include "osal/task/autolock.h"
 #include "i_player_service.h"
+#include "hitrace/tracechain.h"
 
 
 namespace OHOS {
@@ -84,6 +85,7 @@ private:
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
+    HiviewDFX::HiTraceId traceId_;
 };
 
 class PlayerImplCallback : public PlayerCallback {

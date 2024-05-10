@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
 #include "media_dfx.h"
@@ -103,6 +104,7 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 PlayerServer::PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
 }
 
 PlayerServer::~PlayerServer()
@@ -1292,8 +1294,10 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     dumpString += "PlayerServer audio effect mode is: " + std::to_string(config_.effectMode) + "\n";
     if (playerEngine_ != nullptr) {
         dumpString += "PlayerServer enable HEBC: " + std::to_string(playerEngine_->GetHEBCMode()) + "\n";
+        playerEngine_->OnDumpInfo(fd);
     }
-
+    dumpString += "PlayerServer client bundle name is: " + GetClientBundleName(appUid_) + "\n";
+    dumpString += "PlayerServer instance id is: " + std::to_string(instanceId_) + "\n";
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);
     dumpString += "PlayerServer video tracks info: \n";

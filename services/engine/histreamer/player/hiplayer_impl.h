@@ -87,6 +87,7 @@ public:
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
     void SetInterruptState(bool isInterruptNeeded) override;
+    void OnDumpInfo(int32_t fd) override;
 
     // internal interfaces
     void OnEvent(const Event &event);

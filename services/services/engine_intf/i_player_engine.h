@@ -165,6 +165,10 @@ public:
     {
         (void)isInterruptNeeded;
     }
+    virtual void OnDumpInfo(int32_t fd)
+    {
+        (void)fd;
+    }
 };
 } // namespace Media
 } // namespace OHOS

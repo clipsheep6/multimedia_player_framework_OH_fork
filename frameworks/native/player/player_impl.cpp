@@ -39,6 +39,7 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 int32_t PlayerImpl::Init()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    HiviewDFX::HiTraceChain::SetId(traceId_);
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     return MSERR_OK;
@@ -48,6 +49,7 @@ PlayerImpl::PlayerImpl()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     ResetSeekVariables();
+    traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
 }
 
 PlayerImpl::~PlayerImpl()
@@ -57,6 +59,7 @@ PlayerImpl::~PlayerImpl()
         playerService_ = nullptr;
     }
     ResetSeekVariables();
+    HiviewDFX::HiTraceChain::End(traceId_);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
