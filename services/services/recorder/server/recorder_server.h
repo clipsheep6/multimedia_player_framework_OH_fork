@@ -123,6 +123,7 @@ public:
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;
+    std::string bundleName_;
 private:
     int32_t Init();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);

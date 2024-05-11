@@ -195,6 +195,10 @@ public:
      * Return max amplitude.
      */
     virtual int32_t GetMaxAmplitude() = 0;
+    /**
+     * Set App calling info for recording.
+     */
+    virtual void SetCallingInfo(const std::string &bundleName, uint64_t instanceId) = 0;
 };
 } // namespace Media
 } // namespace OHOS

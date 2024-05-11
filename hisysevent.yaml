@@ -77,6 +77,32 @@ DRM_COMMON_FAILURE:
   ERROR_MESG: {type: STRING, desc: Fault description}
   EXTRA_MESG: {type: STRING, desc: Extra associated DRM response info}
 
+AUDIO_CODEC_FAILURE:
+  __BASE: {type: FAULT, level: CRITICAL, desc: AudioCodec fault}
+  APP_NAME: {type: STRING, desc: Caller app name}
+  INSTANCE_ID: {type: STRING, desc: Distinct player id}
+  CALLER_TYPE: {type: STRING, desc: Caller is App or player_framework}
+  AUDIO_CODEC: {type: STRING, desc: Audio mime type}
+  ERROR_MESG: {type: STRING, desc: Fault description}
+
+VIDEO_CODEC_FAILURE:
+  __BASE: {type: FAULT, level: CRITICAL, desc: VideoCodec fault}
+  APP_NAME: {type: STRING, desc: Caller app name}
+  INSTANCE_ID: {type: STRING, desc: Distinct player id}
+  CALLER_TYPE: {type: STRING, desc: Caller is App or player_framework}
+  VIDEO_CODEC: {type: STRING, desc: Video mime type}
+  ERROR_MESG: {type: STRING, desc: Fault description}
+
+MUXER_FAILURE:
+  __BASE: {type: FAULT, level: CRITICAL, desc: Muxer fault}
+  APP_NAME: {type: STRING, desc: Caller app name}
+  INSTANCE_ID: {type: STRING, desc: Distinct player id}
+  CALLER_TYPE: {type: STRING, desc: Caller is App or player_framework}
+  VIDEO_CODEC: {type: STRING, desc: Video mime type}
+  AUDIO_CODEC: {type: STRING, desc: Audio mime type}
+  CONTAINER_FORMAT: {type: STRING, desc: Container format}
+  ERROR_MESG: {type: STRING, desc: Fault description}
+
 DRM_SERVICE_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM service start or end information}
   MODULE: {type: STRING, desc: Module name}

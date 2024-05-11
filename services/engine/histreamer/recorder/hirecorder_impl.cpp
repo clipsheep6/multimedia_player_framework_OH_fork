@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 class RecorderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
@@ -111,6 +112,9 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
             videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
                 ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
         }
+        if (videoEncoderFilter_) {
+            videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+        }
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
             videoSourceIsRGBA_ = true;
@@ -154,6 +158,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
     if (audioCaptureFilter_ == nullptr) {
         MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
     }
+    audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioCapture to pipeline fail");
@@ -430,6 +435,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
                 audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
                     ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
+                audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                 audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
                 audioEncoderFilter_->Configure(audioEncFormat_);
@@ -439,6 +445,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 if (muxerFilter_ == nullptr) {
                     muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
@@ -452,6 +459,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 if (muxerFilter_ == nullptr) {
                     muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
@@ -814,6 +822,12 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
         }
     }
     return encoderInfoVector;
+}
+
+void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t instanceId)
+{
+    bundleName_ = bundleName;
+    instanceId_ = instanceId;
 }
 } // namespace MEDIA
 } // namespace OHOS
