@@ -149,6 +149,7 @@ private:
     void SetBundleName(std::string bundleName);
     void InitAudioDefaultTrackIndex();
     bool BreakIfInterruptted();
+    bool IsSeekInSitu(int64_t mSeconds);
 
     bool isNetWorkPlay_ = false;
     int32_t appUid_{0};
