@@ -308,16 +308,11 @@ std::unique_ptr<PixelMap> AVThumbnailGenerator::GetYuvDataAlignStride(const sptr
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
     int32_t stride = surfaceBuffer->GetStride();
-    int32_t outputWidth;
     int32_t outputHeight;
-    outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
-    outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
-#if !(defined(__x86_64__) || defined(__aarch64__))
-    MEDIA_LOGI("32Bit OS GetYuvDataAlignStride");
-    if (outputHeight == 0) {
+    auto isOutputFormatValid = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
+    if (!isOutputFormatValid && outputHeight == 0) {
         outputHeight = height;
     }
-#endif
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
         stride, outputHeight);
 
