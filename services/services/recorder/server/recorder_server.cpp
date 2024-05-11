@@ -23,6 +23,7 @@
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
 #include "hitrace/tracechain.h"
+#include "media_utils.h"
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
 #endif
@@ -92,6 +93,7 @@ int32_t RecorderServer::Init()
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
+    bundleName_ = GetClientBundleName(appUid);
 
     auto task = std::make_shared<TaskHandler<MediaServiceErrCode>>([&, this] {
         auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
@@ -101,6 +103,7 @@ int32_t RecorderServer::Init()
         recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId, fullTokenId);
         CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to create recorder engine");
+        recorderEngine_->SetCallingInfo(bundleName_, instanceId_);
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
