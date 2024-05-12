@@ -93,6 +93,7 @@ public:
     void OnEvent(const Event &event);
     void OnEventSub(const Event &event);
     void OnStateChanged(PlayerStateId state);
+    void GetDumpFlag();
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
 
@@ -151,6 +152,7 @@ private:
     bool BreakIfInterruptted();
 
     bool isNetWorkPlay_ = false;
+    bool isDump_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};
