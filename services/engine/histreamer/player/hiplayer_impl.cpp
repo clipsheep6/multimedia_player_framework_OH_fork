@@ -31,6 +31,7 @@
 #include "media_utils.h"
 #include "meta_utils.h"
 #include "meta/media_types.h"
+#include "param_wrapper.h"
 
 namespace {
 const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 to 1.
@@ -135,9 +136,21 @@ Status HiPlayerImpl::Init()
         item.second = false;
     }
     SetDefaultAudioRenderInfo();
+    GetDumpFlag();
     return Status::OK;
 }
-
+void HiPlayerImpl::GetDumpFlag()
+{
+    const std::string dumpTag = "sys.media.player.dump.enable";
+    std::string dumpEnable;
+    int32_t dumpRes;
+    dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "");
+    if (dumpRes == 0 && !dumpEnable.empty() && dumpEnable == "true") {
+        isDump_ = true;
+    } else{
+        isDump_ =false;
+    }
+}
 void HiPlayerImpl::SetDefaultAudioRenderInfo()
 {
     MEDIA_LOG_I("SetDefaultAudioRenderInfo");
@@ -1242,7 +1255,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->duration = bufferDuration_;
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
-
+    demuxer_->SetDumpFlag(isDump_);
     auto ret = demuxer_->SetDataSource(source);
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
         MEDIA_LOG_W("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
@@ -1602,7 +1615,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
-
+    audioDecoder_->SetDumpFlag(isDump_);
     // set decrypt config for drm audios
     if (isDrmProtected_) {
         MEDIA_LOG_D("HiPlayerImpl::LinkAudioDecoderFilter will SetDecryptConfig");
@@ -1667,6 +1680,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
             FilterType::FILTERTYPE_VDEC);
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
+        videoDecoder_->SetDumpFlag(isDump_);
         videoDecoder_->SetSyncCenter(syncManager_);
         videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_);
         if (surface_ != nullptr) {
