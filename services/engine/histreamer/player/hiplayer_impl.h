@@ -105,6 +105,7 @@ private:
 
     Status DoSetSource(const std::shared_ptr<MediaSource> source);
     Status Resume();
+    void GetDumpFlag();
     void HandleCompleteEvent(const Event& event);
     void HandleInitialPlayingStateChange(const EventType& eventType);
     void HandleDrmInfoUpdatedEvent(const Event& event);
@@ -151,6 +152,7 @@ private:
     bool BreakIfInterruptted();
 
     bool isNetWorkPlay_ = false;
+    bool isDump_ = false;
     int32_t appUid_{0};
     int32_t appPid_{0};
     int32_t appTokenId_{0};
