@@ -481,6 +481,11 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     MediaTrace trace("HiPlayerImpl::Seek");
     MEDIA_LOG_I("Seek entered. mSeconds : " PUBLIC_LOG_D64 ", seekMode : " PUBLIC_LOG_D32,
                 mSeconds, static_cast<int32_t>(mode));
+    if (IsSeekInSitu(mSeconds)) {
+        MEDIA_LOG_I("Return and already at curPosMs: " PUBLIC_LOG_D64, mSeconds);
+        NotifySeek(Status::OK, notifySeekDone, mSeconds);
+        return Status::OK;
+    }
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
     }
@@ -521,6 +526,17 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     return rtv;
 }
 
+bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
+{
+    int32_t curPosMs = 0;
+    GetCurrentTime(curPosMs);
+    int64_t currentMs = static_cast<int64_t>(curPosMs);
+    if (pipelineStates_ == PlayerStates::PLAYER_PREPARED || pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
+        return mSeconds == currentMs;
+    }
+    return false;
+}
+
 void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
 {
     if (rtv != Status::OK) {
@@ -543,12 +559,6 @@ int32_t HiPlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doPreparedSeek.");
-    int32_t curPosMs = 0;
-    GetCurrentTime(curPosMs);
-    if (seekPos == static_cast<int64_t>(curPosMs)) {
-        MEDIA_LOG_I("doPreparedSeek return and already at curPosMs: " PUBLIC_LOG_D32, curPosMs);
-        return Status::OK;
-    }
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
     return rtv;
@@ -571,12 +581,6 @@ Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
 Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOG_I("doPausedSeek.");
-    int32_t curPosMs = 0;
-    GetCurrentTime(curPosMs);
-    if (seekPos == static_cast<int64_t>(curPosMs)) {
-        MEDIA_LOG_I("doPausedSeek return and already at curPosMs: " PUBLIC_LOG_D32, curPosMs);
-        return Status::OK;
-    }
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
