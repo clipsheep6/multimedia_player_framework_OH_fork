@@ -18,10 +18,7 @@
 
 #include <array>
 
-#include "data_ability_helper.h"
 #include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
-#include "uri.h"
-#include "want.h"
 
 #include "audio_system_manager.h"
 

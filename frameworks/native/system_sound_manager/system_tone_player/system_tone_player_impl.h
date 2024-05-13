@@ -19,15 +19,14 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "isoundpool.h"
+#include "audio_haptic_manager.h"
 #include "system_sound_manager_impl.h"
-#include "system_sound_vibrator.h"
 
 namespace OHOS {
 namespace Media {
 class SystemTonePlayerCallback;
 
-class SystemTonePlayerImpl : public SystemTonePlayer {
+class SystemTonePlayerImpl : public SystemTonePlayer, public std::enable_shared_from_this<SystemTonePlayerImpl> {
 public:
     SystemTonePlayerImpl(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType);
@@ -41,37 +40,37 @@ public:
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
 
-    int32_t NotifyLoadCompleted();
+    void NotifyEndOfStream();
 
 private:
-    void InitPlayer();
-    int32_t ApplyDefaultSystemToneUri(std::string &defaultUri);
+    int32_t InitPlayer(const std::string &audioUri);
+    bool GetMuteHapticsValue();
 
-    std::shared_ptr<Media::ISoundPool> player_ = nullptr;
+    std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
+    std::shared_ptr<AudioHapticPlayer> player_ = nullptr;
     std::shared_ptr<SystemTonePlayerCallback> callback_ = nullptr;
+    bool muteAudio_ = false;
+    bool muteHaptics_ = false;
+    int32_t sourceId_ = -1;
+    std::string configuredUri_ = "";
+
     std::shared_ptr<AbilityRuntime::Context> context_;
     SystemSoundManagerImpl &systemSoundMgr_;
     SystemToneType systemToneType_;
-    std::string configuredUri_ = "";
-    int32_t soundID_ = -1;
-    int32_t fileDes_ = -1;
-    bool loadCompleted_ = false;
-    bool isReleased_ = false;
+    SystemToneState systemToneState_ = SystemToneState::STATE_NEW;
     std::mutex systemTonePlayerMutex_;
-    std::mutex loadUriMutex_;
-    std::condition_variable condLoadUri_;
 };
 
-class SystemTonePlayerCallback : public ISoundPoolCallback {
+class SystemTonePlayerCallback : public AudioHapticPlayerCallback {
 public:
-    explicit SystemTonePlayerCallback(SystemTonePlayerImpl &systemTonePlayerImpl);
+    explicit SystemTonePlayerCallback(std::shared_ptr<SystemTonePlayerImpl> systemTonePlayerImpl);
     virtual ~SystemTonePlayerCallback() = default;
-    void OnLoadCompleted(int32_t soundId) override;
-    void OnPlayFinished() override;
-    void OnError(int32_t errorCode) override;
+
+    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent);
+    void OnEndOfStream(void);
 
 private:
-    SystemTonePlayerImpl &systemTonePlayerImpl_;
+    std::weak_ptr<SystemTonePlayerImpl> systemTonePlayerImpl_;
 };
 } // namespace Media
 } // namespace OHOS

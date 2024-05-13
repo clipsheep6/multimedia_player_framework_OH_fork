@@ -49,10 +49,9 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
 {
     if (player_ != nullptr) {
         player_->Release();
-        (void)SystemSoundVibrator::StopVibrator();
         player_ = nullptr;
-        callback_ = nullptr;
     }
+    callback_ = nullptr;
 }
 
 void RingtonePlayerImpl::InitPlayer(std::string &audioUri)

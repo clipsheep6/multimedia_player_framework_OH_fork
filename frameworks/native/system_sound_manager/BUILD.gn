@@ -35,7 +35,6 @@ ohos_shared_library("system_sound_client") {
   install_enable = true
   sources = [
     "./ringtone_player/ringtone_player_impl.cpp",
-    "./system_sound_vibrator/system_sound_vibrator.cpp",
     "./system_tone_player/system_tone_player_impl.cpp",
     "system_sound_manager_impl.cpp",
   ]
@@ -43,7 +42,6 @@ ohos_shared_library("system_sound_client") {
   include_dirs = [
     "./",
     "./ringtone_player",
-    "./system_sound_vibrator",
     "./system_tone_player",
     "./../../../interfaces/inner_api/native/audio_haptic/include",
     "./../../../interfaces/inner_api/native/soundpool/include",
