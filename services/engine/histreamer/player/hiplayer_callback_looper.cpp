@@ -113,6 +113,10 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
 
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
+    if (!reportMediaProgress_) {
+        return;
+    }
+    
     OHOS::Media::AutoLock lock(loopMutex_);
     auto obs = obs_.lock();
     if (obs && !isDropMediaProgress_) {
