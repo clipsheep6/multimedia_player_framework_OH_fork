@@ -768,7 +768,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
-        "instanceId: %{public}lld", mSeconds, mode, instanceId_);
+        "instanceId: %{public}llu", mSeconds, mode, instanceId_);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
 

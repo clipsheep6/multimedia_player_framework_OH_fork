@@ -78,7 +78,6 @@ ohos_static_library("media_engine_histreamer_player") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "hitrace:libhitracechain",
-    "init:libbegetutil",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
