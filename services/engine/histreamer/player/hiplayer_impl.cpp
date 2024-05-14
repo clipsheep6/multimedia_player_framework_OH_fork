@@ -216,6 +216,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
     }
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
@@ -267,10 +268,30 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     }
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
     return ret;
+}
+
+int32_t HiPlayerImpl::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("HiPlayerImpl::AddSubSource uri");
+    MEDIA_LOG_I("AddSubSource entered source uri: " PUBLIC_LOG_S, url.c_str());
+    subUrl_ = url;
+    if (IsFileUrl(url)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("AddSubSource error: GetRealPath error");
+            return result;
+        }
+        subUrl_ = "file://" + realUriPath;
+    }
+
+    hasExtSub_ = true;
+    return TransStatus(Status::OK);
 }
 
 void HiPlayerImpl::ResetIfSourceExisted()
@@ -293,6 +314,15 @@ void HiPlayerImpl::ResetIfSourceExisted()
 int32_t HiPlayerImpl::Prepare()
 {
     return TransStatus(Status::OK);
+}
+
+void HiPlayerImpl::Subtitlecallback(SubtitleInfo info)
+{
+    Format subtitleInfo {};       
+    subtitleInfo.PutIntValue("subtitle_pts", info.pts);
+    subtitleInfo.PutStringValue("subtitle_test", info.test);
+    subtitleInfo.PutIntValue("subtitle_duration", info.duration);
+    callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, subtitleInfo);
 }
 
 int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
@@ -1478,6 +1508,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
     lock.unlock();
 
+    if (hasExtSub_) {
+        demuxer_->SetSubtitleSource(std::make_shared<MediaSource>(subUrl_));
+    }
     SetBundleName(bundleName_);
     demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());
     return ret;

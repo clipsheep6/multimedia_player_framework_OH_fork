@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <mutex>
 #include "media_log.h"
 #include "media_errors.h"
@@ -20,13 +21,15 @@
 #include "native_window.h"
 #include "avplayer.h"
 #include <securec.h>
+#include <string>
+#include <unistd.h>
 #ifdef SUPPORT_DRM
 #include "foundation/multimedia/drm_framework/interfaces/kits/c/drm_capi/common/native_drm_object.h"
 #endif
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeAVPlayer"};
     constexpr uint32_t STATE_MAP_LENGTH = 9;
-    constexpr uint32_t INFO_TYPE_LENGTH = 19;
+    constexpr uint32_t INFO_TYPE_LENGTH = 20;
 }
 
 using namespace OHOS::Media;
@@ -75,6 +78,7 @@ static const PlayerOnInfoTypeConvert g_onInfoType[INFO_TYPE_LENGTH] = {
     { INFO_TYPE_SUBTITLE_UPDATE, AV_INFO_TYPE_SUBTITLE_UPDATE },
     { INFO_TYPE_AUDIO_DEVICE_CHANGE, AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE},
     { INFO_TYPE_DRM_INFO_UPDATED, AV_INFO_TYPE_DRM_INFO_UPDATED},
+    { INFO_TYPE_SUBTITLE_UPDATE_INFO, AV_INFO_TYPE_SUBTITLE_UPDATE_INFO},
 };
 
 struct PlayerObject : public OH_AVPlayer {
@@ -92,6 +96,9 @@ public:
     virtual ~DrmSystemInfoCallback() = default;
 
     virtual int32_t SetDrmSystemInfoCallback(Player_MediaKeySystemInfoCallback drmSystemInfoCallback) = 0;
+    virtual int32_t SetSubtitleInfoCallback(OH_AVPlayerOnSubtitleUpdate subtitleInfoCallback) = 0;
+    virtual int32_t GetSubtitleInfos(const Format &infoBody,
+        AVplayerSubtitleInfo *avplayerSubtitleInfo, struct PlayerObject *playerObj) = 0;
 #ifdef SUPPORT_DRM
     virtual int32_t GetDrmSystemInfos(const Format &infoBody,
         DRM_MediaKeySystemInfo *mediaKeySystemInfo, struct PlayerObject *playerObj) = 0;
@@ -144,6 +151,33 @@ public:
     }
 #endif
 
+    int32_t GetSubtitleInfos(const Format &infoBody,
+        AVplayerSubtitleInfo *avplayerSubtitleInfo, struct PlayerObject *playerObj) override
+    {
+        if (!infoBody.ContainKey(std::string(PlayerKeys::SUBTITLE_TEXT))) {
+            MEDIA_LOGW("there's no SubtitleInfo-update SUBTITLE_TEXT key");
+            return AV_ERR_INVALID_VAL;
+        }
+        if (!infoBody.ContainKey(std::string(PlayerKeys::SUBTITLE_PTS))) {
+            MEDIA_LOGW("there's no SubtitleInfo-update SUBTITLE_PTS key");
+            return AV_ERR_INVALID_VAL;
+        }
+        if (!infoBody.ContainKey(std::string(PlayerKeys::SUBTITLE_DURATION))) {
+            MEDIA_LOGW("there's no SubtitleInfo-update SUBTITLE_DURATION key");
+            return AV_ERR_INVALID_VAL;
+        }
+        std::string subtitleInfo;
+        int32_t pts;
+        int32_t duration;
+        infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), subtitleInfo);
+        infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_PTS), pts);
+        CHECK_AND_RETURN_RET_LOG(pts < 0, AV_ERR_INVALID_VAL, "cast pts invalid");
+        infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_DURATION), duration);
+        CHECK_AND_RETURN_RET_LOG(duration < 0, AV_ERR_INVALID_VAL, "cast duration invalid");
+
+        return AV_ERR_OK;
+    }
+
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override
     {
         std::unique_lock<std::mutex> lock(mutex_);
@@ -167,6 +201,14 @@ public:
                 drmsysteminfocallback_(player_, &mediaKeySystemInfo);
             }
 #endif
+        }
+        if (type == INFO_TYPE_SUBTITLE_UPDATE_INFO && player_ != nullptr) {
+            struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player_);
+            AVplayerSubtitleInfo avplayerSubtitleInfo;
+            GetSubtitleInfos(infoBody, &avplayerSubtitleInfo, playerObj);
+            if (subtitleinfocallback_ != nullptr) {
+                subtitleinfocallback_(player_, avplayerSubtitleInfo.text.c_str(), &avplayerSubtitleInfo.pts, &avplayerSubtitleInfo.duration, nullptr);
+            }
         }
 
         if (player_ != nullptr && callback_.onInfo != nullptr) {
@@ -196,6 +238,13 @@ public:
         return AV_ERR_OK;
     }
 
+    int32_t SetSubtitleInfoCallback(OH_AVPlayerOnSubtitleUpdate subtitleInfoCallback) override
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        subtitleinfocallback_ = subtitleInfoCallback;
+        return AV_ERR_OK;
+    }
+
     int32_t SetPlayCallback(AVPlayerCallback callback) override
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -207,6 +256,7 @@ private:
     struct OH_AVPlayer *player_;
     struct AVPlayerCallback callback_;
     Player_MediaKeySystemInfoCallback drmsysteminfocallback_ = nullptr;
+    OH_AVPlayerOnSubtitleUpdate subtitleinfocallback_ = nullptr;
     std::mutex mutex_;
 };
 
@@ -497,6 +547,48 @@ OH_AVErrCode OH_AVPlayer_SelectTrack(OH_AVPlayer *player, int32_t index)
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
     int32_t ret = playerObj->player_->SelectTrack(index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SelectTrack failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_AddSubtitleURLSource(OH_AVPlayer *player, const char *url, const char *mimeType)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->AddSubSource(url);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player AddSubtitleURL failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_AddSubtitleFDSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size, const char *mimeType)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    int32_t ret = playerObj->player_->AddSubSource(fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player AddSubtitleFD failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetSubtitleCallback(OH_AVPlayer *player, OH_AVPlayerOnSubtitleUpdate callback, void *userData)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_ERR_INVALID_VAL, "SetSubtitleCallback is null");
+
+    if (playerObj->callback_ == nullptr) {
+        static AVPlayerCallback playCallback = { nullptr, nullptr };
+        playerObj->callback_ = std::make_shared<NativeAVPlayerCallback>(player, playCallback);
+        int32_t ret = playerObj->player_->SetPlayerCallback(playerObj->callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetSubtitleCallback failed");
+        ret = playerObj->callback_->SetSubtitleInfoCallback(callback);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetSubtitleCallback failed");
+    } else {
+        int32_t ret = playerObj->callback_->SetSubtitleInfoCallback(callback);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetSubtitleCallback failed");
+    }
+
     return AV_ERR_OK;
 }
 

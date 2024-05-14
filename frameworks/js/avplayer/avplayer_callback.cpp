@@ -20,6 +20,7 @@
 #include "avplayer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "player.h"
 #include "scope_guard.h"
 #include "event_queue.h"
 #include "avplayer_callback.h"
@@ -587,6 +588,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
     onInfoFuncs_[INFO_TYPE_DRM_INFO_UPDATED] = &AVPlayerCallback::OnDrmInfoUpdatedCb;
     onInfoFuncs_[INFO_TYPE_SET_DECRYPT_CONFIG_DONE] = &AVPlayerCallback::OnSetDecryptConfigDoneCb;
+    onInfoFuncs_[INFO_TYPE_SUBTITLE_UPDATE_INFO] = &AVPlayerCallback::OnSubtitleInfoCb;
     onInfoFuncs_[INFO_TYPE_AUDIO_DEVICE_CHANGE] = &AVPlayerCallback::OnAudioDeviceChangeCb;
 }
 
