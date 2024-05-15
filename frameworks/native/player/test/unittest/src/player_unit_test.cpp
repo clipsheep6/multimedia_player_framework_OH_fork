@@ -2536,6 +2536,7 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
     const float FLOAT_VALUE = 1.0;
     const double DOUBLE_VALUE = 2.5;
     const std::string STRING_VALUE = "player_test";
+    const int32_t INT_VALUE = 1;
     (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     (void)format.PutFloatValue(PlayerKeys::AUDIO_EFFECT_MODE, FLOAT_VALUE);
@@ -2543,6 +2544,8 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
     (void)format.PutDoubleValue(PlayerKeys::AUDIO_EFFECT_MODE, DOUBLE_VALUE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     (void)format.PutStringValue(PlayerKeys::AUDIO_EFFECT_MODE, STRING_VALUE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, INT_VALUE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
