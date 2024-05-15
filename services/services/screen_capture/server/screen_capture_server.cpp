@@ -35,6 +35,10 @@
 
 using OHOS::Rosen::DMError;
 
+namespace {
+const std::string DUMP_PATH = "/data/media/screen_capture.bin";
+}
+
 namespace OHOS {
 namespace Media {
 namespace {
@@ -1359,12 +1363,22 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
 }
 
+void ScreenCaptureServer::GetDumpFlag()
+{
+    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
+    std::string dumpEnable;
+    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "false");
+    isDump_ = (dumpEnable == "true");
+    MEDIA_LOGI("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
+}
+
 int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     std::lock_guard<std::mutex> lock(mutex_);
     startTime_ = GetCurrentMillisecond();
     statisticalEventInfo_.enableMic = isMicrophoneOn_;
+    GetDumpFlag();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
         FAKE_POINTER(this), isPrivacyAuthorityEnabled ? "true" : "false", captureState_);
@@ -1730,19 +1744,13 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
     (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->
         AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
-    std::string dumpEnable;
-    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
-    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "");
-    if (dumpRes == 0 && !dumpEnable.empty() && dumpEnable == "true") {
-        if (surfaceBuffer != nullptr) {
-            void* addr = surfaceBuffer->GetVirAddr();
-            uint32_t bufferSize = surfaceBuffer->GetSize();
-            std::string path = "/data/media/screen_capture.bin";
-            FILE *desFile = fopen(path.c_str(), "wb+");
-            if (desFile) {
-                (void)fwrite(addr, 1, bufferSize, desFile);
-                (void)fclose(desFile);
-            }
+    if (isDump_ && surfaceBuffer != nullptr) {
+        void* addr = surfaceBuffer->GetVirAddr();
+        uint32_t bufferSize = surfaceBuffer->GetSize();
+        FILE *desFile = fopen(DUMP_PATH.c_str(), "wb+");
+        if (desFile && addr != nullptr) {
+            (void)fwrite(addr, 1, bufferSize, desFile);
+            (void)fclose(desFile);
         }
     }
     if (surfaceBuffer != nullptr) {
