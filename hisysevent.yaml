@@ -157,3 +157,8 @@ SCREEN_CAPTURE_STATISTICS:
 DRM_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: DRM common statistics}
   EVENTS: {type: STRING, arrsize: 100, desc: Group of DRM common events}
+
+DATA_USAGE_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: Streaming video data usage statistics}
+  DATA_USAGE: {type: UINT64, desc: The data usage of play streaming video}
+  DURATION: {type: INT64, desc: The download duration}
