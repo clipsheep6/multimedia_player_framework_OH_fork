@@ -32,6 +32,8 @@
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #include "seek_agent.h"
+#include "meta/meta.h"
+#include <chrono>
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -39,6 +41,46 @@
 namespace OHOS {
 namespace Media {
 using namespace Pipeline;
+struct PlayStatisticalInfo {
+    int32_t errCode;
+    std::string errMsg;
+    int32_t playDuration;
+    int32_t sourceType;
+    std::string sourceUrl;
+    int32_t avgDownloadRate;
+    std::string containerMime;
+    std::string videoMime;
+    std::string videoResolution;
+    float videoFrameRate;
+    int8_t videoBitdepth;
+    int32_t videoBitrate;
+    int8_t hdrType;
+    std::string audioMime;
+    int32_t audioSampleRate;
+    int32_t audioChannelCount;
+    int32_t audioBitrate;
+    bool isDrmProtected;
+    int32_t startLatency;
+    int32_t avgDownloadSpeed;
+    int32_t maxSeekLatency;
+    int32_t maxAccurateSeekLatency;
+    int32_t lagTimes;
+    int32_t maxLagDuration;
+    int32_t avgLagDuration;
+    int32_t maxSurfaceSwapLatency;
+};
+
+enum VideoHdrType : int32_t {
+    /**
+     * This option is used to mark none HDR type.
+     */
+    VIDEO_HDR_TYPE_NONE,
+    /**
+     * This option is used to mark HDR Vivid type.
+     */
+    VIDEO_HDR_TYPE_VIVID,
+};
+
 
 class HiPlayerImpl : public IPlayerEngine, public std::enable_shared_from_this<HiPlayerImpl> {
 public:
@@ -88,6 +130,7 @@ public:
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
+    void SetInstancdId(uint64_t instanceId) override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -131,6 +174,12 @@ private:
     bool IsFileUrl(const std::string &url) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     void SetDefaultAudioRenderInfo();
+    void AppendPlayerMediaInfo();
+    int64_t GetCurrentMillisecond();
+    void UpdatePlayStatistics();
+    void DoSetMediaSource(Status& ret);
+    void UpdatePlayerStateAndNotify();
+    void UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime);
 #ifdef SUPPORT_VIDEO
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
@@ -219,6 +268,13 @@ private:
     std::string playerId_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
+    PlayStatisticalInfo playStatisticalInfo_;
+    int64_t startTime_ = 0;
+    int64_t maxSeekLatency_ = 0;
+    int64_t maxAccurateSeekLatency_ = 0;
+    uint64_t instanceId_ = 0;
+    int64_t maxSurfaceSwapLatency_ = 0;
+    int64_t playTotalDuration_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

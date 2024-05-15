@@ -23,6 +23,7 @@
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
@@ -32,6 +33,7 @@
 #include "concurrent_task_client.h"
 #include "qos.h"
 #include "player_server_event_receiver.h"
+#include "common/media_source.h"
 
 using namespace OHOS::QOS;
 
@@ -42,6 +44,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
+using namespace OHOS::Media::Plugins;
 const std::string START_TAG = "PlayerCreate->Start";
 const std::string STOP_TAG = "PlayerStop->Destroy";
 static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTION_TABLE = {
@@ -96,7 +100,6 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "failed to new PlayerServer");
-
     (void)server->Init();
     return server;
 }
@@ -156,18 +159,28 @@ int32_t PlayerServer::SetSource(const std::string &url)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
-
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
     if (url.find("http") != std::string::npos) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
             MEDIA_LOGE("user do not have the right to access INTERNET");
             OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
+            errmasg = "user do not have the right to access INTERNET";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI),
+                url, errmasg);
             return MSERR_INVALID_OPERATION;
         }
     }
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
+    if (ret != MSERR_OK) {
+        errmasg = "SetSource Failed!";
+        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url,
+            errmasg);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
 }
@@ -181,7 +194,15 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
     dataSrc_ = dataSrc;
     std::string url = "media data source";
     config_.url = url;
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     int32_t ret = InitPlayEngine(url);
+    if (ret != MSERR_OK) {
+        errmasg = "SetSource Failed!";
+        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_STREAM),
+            url, errmasg);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitPlayEngine Failed!");
     int64_t size = 0;
     (void)dataSrc_->GetSize(size);
@@ -200,10 +221,18 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
         ", size: %{public}" PRId64, fd, offset, size);
     int32_t ret;
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     if (uriHelper_ != nullptr) {
         std::string uri = uriHelper_->FormattedUri();
         MEDIA_LOGI("UriHelper already existed, uri: %{public}s", uri.c_str());
         ret = InitPlayEngine(uri);
+        if (ret != MSERR_OK) {
+            errmasg = "SetSource Failed!";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
+                uri, errmasg);
+        }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
         MEDIA_LOGI("UriHelper is nullptr, create a new instance.");
@@ -211,6 +240,11 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
         ret = InitPlayEngine(uriHelper->FormattedUri());
+        if (ret != MSERR_OK) {
+            errmasg = "SetSource Failed!";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
+                uriHelper->FormattedUri(), errmasg);
+        }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
     }
@@ -238,7 +272,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
-
+    playerEngine_->SetInstancdId(instanceId_);
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(url);
     } else {
@@ -1264,8 +1298,9 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
 
 int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
-    CHECK_AND_RETURN_RET_LOG(trackType >= MediaType::MEDIA_TYPE_AUD && trackType <= MediaType::MEDIA_TYPE_SUBTITLE,
-        MSERR_INVALID_VAL, "Invalid trackType %{public}d", trackType);
+    CHECK_AND_RETURN_RET_LOG(trackType >= Media::MediaType::MEDIA_TYPE_AUD &&
+        trackType <= Media::MediaType::MEDIA_TYPE_SUBTITLE, MSERR_INVALID_VAL,
+        "Invalid trackType %{public}d", trackType);
 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||

@@ -105,15 +105,6 @@ HWTEST_F(MediaDfxTest, FAULT_SOURCE_EVENT, TestSize.Level1)
     FaultSourceEventWrite(appName, instanceId, callerType, sourceType, sourceUrl, errorMessage);
 }
 
-HWTEST_F(MediaDfxTest, FAULT_RECORD_AUDIO_EVENT, TestSize.Level1)
-{
-    std::string appName = "appName";
-    uint64_t instanceId = 1;
-    int8_t sourceType = 1;
-    std::string errorMessage = "errorMessage";
-    FaultRecordAudioEventWrite(appName, instanceId, sourceType, errorMessage);
-}
-
 HWTEST_F(MediaDfxTest, FAULT_SCREEN_CAPTURE_EVENT, TestSize.Level1)
 {
     std::string appName = "appName";

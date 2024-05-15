@@ -43,6 +43,16 @@ SOURCE_FAILURE:
   SOURCE_URI: {type: STRING, desc: URI of source}
   ERROR_MESG: {type: STRING, desc: Fault description}
 
+DEMUXER_FAILURE:
+  __BASE: {type: FAULT, level: CRITICAL, desc: Demuxer fault}
+  APP_NAME: {type: STRING, desc: Caller app name}
+  INSTANCE_ID: {type: STRING, desc: Distinct player id}
+  CALLER_TYPE: {type: STRING, desc: Caller is App or player_framework}
+  SOURCE_TYPE: {type: INT8, desc: Enum of source type}
+  CONTAINER_FORMAT: {type: STRING, desc: Container format}
+  STREAM_TYPE: {type: STRING, desc: Stream mimeType}
+  ERROR_MESG: {type: STRING, desc: Fault description}
+
 RECORD_AUDIO_FAILURE:
   __BASE: {type: FAULT, level: CRITICAL, desc: Recorder fau1t}
   APP_NAME: {type: STRING, desc: Caller app name}

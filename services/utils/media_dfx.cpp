@@ -181,17 +181,6 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
                     "ERROR_MESG", errMsg);
 }
 
-void MediaEvent::RecordAudioEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-    const std::string& appName, uint64_t instanceId, int8_t sourceType, const std::string& errorMessage)
-{
-    std::string instanceIdStr = std::to_string(instanceId);
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
-                    "APP_NAME", appName,
-                    "INSTANCE_ID", instanceIdStr,
-                    "AUDIO_SOURCE_TYPE", sourceType,
-                    "ERROR_MESG", errorMessage);
-}
-
 void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
     const std::string& errorMessage)
@@ -331,14 +320,6 @@ void FaultSourceEventWrite(const std::string& appName, uint64_t instanceId, cons
     MediaEvent event;
     event.SourceEventWrite("SOURCE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName, instanceId,
         callerType, sourceType, sourceUrl, errorMessage);
-}
-
-void FaultRecordAudioEventWrite(const std::string& appName, uint64_t instanceId, int8_t sourceType,
-    const std::string& errorMessage)
-{
-    MediaEvent event;
-    event.RecordAudioEventWrite("RECORD_AUDIO_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
-        instanceId, sourceType, errorMessage);
 }
 
 void FaultScreenCaptureEventWrite(const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode,
