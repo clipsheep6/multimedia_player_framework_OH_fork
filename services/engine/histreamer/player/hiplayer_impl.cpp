@@ -225,6 +225,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
+    mimeType_ = mediaSource->GetMimeType();
     return MSERR_OK;
 }
 
@@ -1256,7 +1257,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->duration = bufferDuration_;
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
-
+    if(!mimeType_.empty()) {
+        source->SetMimeType(mimeType_);
+    }
     demuxer_->SetDumpFlag(isDump_);
     auto ret = demuxer_->SetDataSource(source);
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {

@@ -219,6 +219,7 @@ private:
     std::string playerId_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
+    std::string mimeType_;
 };
 } // namespace Media
 } // namespace OHOS

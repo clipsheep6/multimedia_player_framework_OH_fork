@@ -58,6 +58,18 @@ public:
     {
         header.clear();
     }
+
+    void SetMimeType(const std::string& MimeType)
+    {
+        mimeType_ = MimeType;
+    }
+
+    std::string GetMimeType()
+    {
+        return mimeType_;
+    }
+
+    std::string mimeType_ {};
     std::string url {0};
     std::map<std::string, std::string> header;
 };

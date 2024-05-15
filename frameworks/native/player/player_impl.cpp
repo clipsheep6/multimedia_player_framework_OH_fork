@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include <fcntl.h>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
@@ -300,6 +301,12 @@ int32_t PlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSo
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMediaSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    std::string type = mediaSource->GetMimeType();
+    std::string uri = mediaSource->url;
+    size_t pos = uri.find("?");
+    std::string fdStr = uri.substr(strlen("fd://"), pos - strlen("fd://"));
+    int32_t fd = stoi(fdStr);
+    int flags = fcntl(fd, F_GETFL);
     return playerService_->SetMediaSource(mediaSource, strategy);
 }
 
