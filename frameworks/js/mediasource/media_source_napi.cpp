@@ -30,6 +30,11 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createMediaSourceWithUrl", JsCreateMediaSourceWithUrl),
     };
+
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("setMimeType", JsSetMimeType);
+    };
+
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), 0, Constructor, nullptr, 0, nullptr, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVPlayer class");
@@ -123,5 +128,28 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callba
     (void)CommonNapi::GetPropertyMap(env, args[1], mediaSource->header);
     return jsMediaSource;
 }
+
+JsSetMimeType(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "failed to napi_get_cb_info");
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        return undefinedResult;
+    }
+    std::string mimeType = CommonNapi::GetStringArgument(env, args[0]);
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+
+    if (mediaSource != nullptr) {
+        mediaSource->SetMimeType(mimeType);
+    }
+    return undefinedResult;
+}
+
 } // Media
 } // OHOS
