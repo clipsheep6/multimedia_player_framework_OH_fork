@@ -198,6 +198,10 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
 int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 {
     MEDIA_LOG_I("SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
+    if (format == OutputFormatType::FORMAT_MPEG_4) {
+        this->OnEvent({"SetOutputFormat", EventType::EVENT_ERROR, Status::ERROR_UNSUPPORTED_FORMAT});
+        return (int32_t)Status::ERROR_UNSUPPORTED_FORMAT;
+    }
     outputFormatType_ = format;
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
@@ -406,6 +410,9 @@ void HiRecorderImpl::OnEvent(const Event &event)
                 switch (AnyCast<Status>(event.param)) {
                     case Status::ERROR_AUDIO_INTERRUPT:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
+                        break;
+                    case Status::ERROR_UNSUPPORTED_FORMAT:
+                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_UNSUPPORT_VID_ENC_TYPE);
                         break;
                     default:
                         ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
