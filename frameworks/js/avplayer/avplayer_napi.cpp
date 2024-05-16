@@ -891,7 +891,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::AddSubSource(std::string url)
 {
-    MEDIA_LOGI("input url is %{public}s!", url.c_str());
+    MEDIA_LOGI("input url is %{private}s!", url.c_str());
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
@@ -1097,7 +1097,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     // get url from js
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("JsSetUrl url: %{public}s", jsPlayer->url_.c_str());
+    MEDIA_LOGI("JsSetUrl url: %{private}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));

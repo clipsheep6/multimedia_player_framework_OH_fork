@@ -177,7 +177,7 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
     }
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
     if (!ret) {
-        MEDIA_LOGE("invalid url. The Url (%{public}s) path may be invalid.", url.c_str());
+        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
         return MSERR_OPEN_FILE_FAILED;
     }
     if (access(realUrlPath.c_str(), R_OK) != 0) {

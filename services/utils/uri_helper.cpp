@@ -260,7 +260,7 @@ bool UriHelper::ParseFdUri(std::string_view uri)
         CHECK_AND_RETURN_RET_LOG(StrToInt(sizeStr, size_), false, "Invalid fd url");
         fd_ = fd;
     } else {
-        MEDIA_LOGE("invalid fd uri: %{public}s", uri.data());
+        MEDIA_LOGE("invalid fd uri: %{private}s", uri.data());
         return false;
     }
 
