@@ -120,7 +120,8 @@ napi_status ToneAttrsNapi::NewInstance(napi_env env, std::shared_ptr<ToneAttrs>&
     return napi_ok;
 }
 
-std::shared_ptr<ToneAttrs> ToneAttrsNapi::GetToneAttrs() {
+std::shared_ptr<ToneAttrs> ToneAttrsNapi::GetToneAttrs()
+{
     return toneAttrs_;
 }
 

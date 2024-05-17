@@ -63,8 +63,9 @@ std::unordered_map<RingtoneType, RingToneType> ringtoneTypeMap_;
 std::unordered_map<int32_t, ToneCustomizedType> sourceTypeMap_;
 Uri RINGTONEURI(RINGTONE_PATH_URI);
 vector<string> COLUMNS= {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}, {RINGTONE_COLUMN_DISPLAY_NAME},
-    {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE}, {RINGTONE_COLUMN_SHOT_TONE_TYPE},
-    {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE}, {RINGTONE_COLUMN_RING_TONE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE}};
+    {RINGTONE_COLUMN_TITLE}, {RINGTONE_COLUMN_TONE_TYPE}, {RINGTONE_COLUMN_SOURCE_TYPE},
+    {RINGTONE_COLUMN_SHOT_TONE_TYPE}, {RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE},
+    {RINGTONE_COLUMN_RING_TONE_TYPE}, {RINGTONE_COLUMN_ALARM_TONE_TYPE}};
 
 std::shared_ptr<SystemSoundManager> SystemSoundManagerFactory::CreateSystemSoundManager()
 {
@@ -425,8 +426,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultRingtoneAttrs(
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType()))
-    {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -473,7 +473,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
         case SYSTEM_TONE_TYPE_SIM_CARD_1:
             toneType = SHOT_TONE_TYPE_SIM_CARD_2;
             break;
-        case SYSTEM_TONE_TYPE_NOTIFICATION: 
+        case SYSTEM_TONE_TYPE_NOTIFICATION:
             toneType = NOTIFICATION_TONE_TYPE;
             break;
         default:
@@ -487,8 +487,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType()))
-    {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -520,7 +519,7 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetSystemToneAtt
         case SYSTEM_TONE_TYPE_SIM_CARD_1:
             toneType = SHOT_TONE_TYPE_SIM_CARD_2;
             break;
-        case SYSTEM_TONE_TYPE_NOTIFICATION: 
+        case SYSTEM_TONE_TYPE_NOTIFICATION:
             toneType = NOTIFICATION_TONE_TYPE;
             break;
         default:
@@ -575,8 +574,7 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_CUSTOMISED != ringtoneAsset->GetSourceType()))
-    {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_CUSTOMISED != ringtoneAsset->GetSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -596,8 +594,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultAlarmToneAttrs(
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType()))
-    {
+    while ((ringtoneAsset != nullptr) && (SOURCE_TYPE_PRESET != ringtoneAsset->GetSourceType())) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
@@ -637,7 +634,6 @@ int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRunti
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     auto resultSet = g_dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
-    MEDIA_LOGI("OpenAlarmTone failed %{public}d, %{public}s", businessError.GetCode(), businessError.GetMessage().c_str());
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
@@ -692,11 +688,11 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<ToneAttr
             toneAttrs->SetUri(RINGTONE_CUSTOMIZED_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR +"text_message.ogg");
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION));
             break;
-        case TONE_CATEGORY_NOTIFICATION: 
+        case TONE_CATEGORY_NOTIFICATION:
             toneAttrs->SetUri(RINGTONE_CUSTOMIZED_NOTIFICATIONS_PATH + RINGTONE_SLASH_CHAR +"notification.ogg");
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_NOTIFICATION));
             break;
-        case TONE_CATEGORY_ALARM: 
+        case TONE_CATEGORY_ALARM:
             toneAttrs->SetUri(RINGTONE_CUSTOMIZED_ALARM_PATH + RINGTONE_SLASH_CHAR +"alarm.ogg");
             valuesBucket.Put(RINGTONE_COLUMN_TONE_TYPE, static_cast<int>(TONE_TYPE_ALARM));
             break;
@@ -727,7 +723,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     uint32_t bytesRead = 0;
     while ((bytesRead = read(srcFd, buffer, sizeof(buffer))) > 0 && len > 0) {
         uint32_t bytesWritten = write(dstFd, buffer, (bytesRead < len) ? bytesRead : len);
-        memset(buffer, 0, sizeof(buffer));
+        memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
         len -= bytesWritten;
         if (bytesWritten == -1) {
             break;

@@ -1638,7 +1638,8 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     } else if (context->fd != 0) {
         if (context->length != 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
-                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd, context->offset, context->length);
+                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd,
+                context->offset, context->length);
         } else {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFd(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd);
