@@ -1638,7 +1638,11 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
         innerAudioCapture_ != nullptr) {
         retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
         retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
-        return retInner && retMic;
+        if (retInner == MSERR_OK && retMic == MSERR_OK) {
+            return MSERR_OK;
+        } else {
+            return MSERR_UNKNOWN;
+        }
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
