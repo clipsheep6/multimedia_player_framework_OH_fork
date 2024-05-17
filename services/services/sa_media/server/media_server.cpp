@@ -56,11 +56,11 @@ void MediaServer::OnStart()
     //notify systemability
     int32_t pid = getpid();
     //notify
-    Memory::MemMgrClient::GetIntstance.NotifyProcessStatus(pid,1,1,said);
+    Memory::MemMgrClient::GetInstance.NotifyProcessStatus(pid,1,1,said);
     //setcritical
-    Memory::MemMgrClient::GetIntstance.SetCritical(pid,true,said);
+    Memory::MemMgrClient::GetInstance.SetCritical(pid,true,said);
     sleep(10);
-    Memory::MemMgrClient::GetIntstance.SetCritical(pid,false,said);
+    Memory::MemMgrClient::GetInstance.SetCritical(pid,false,said);
 }
 
 void MediaServer::OnStop()
@@ -68,7 +68,7 @@ void MediaServer::OnStop()
     MEDIA_LOGD("MediaServer OnStop");
     //notify systemability
     int32_t pid = getpid();
-    Memory::MemMgrClient::GetIntstance.NotifyProcessStatus(pid,1,0,said);
+    Memory::MemMgrClient::GetInstance.NotifyProcessStatus(pid,1,0,said);
 }
 
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
