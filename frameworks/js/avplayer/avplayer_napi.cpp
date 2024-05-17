@@ -161,14 +161,16 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
         jsPlayer->ClearCallbackReference();
-        auto task = jsPlayer->ReleaseTask();
-        if (task != nullptr) {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor Wait Release Task Start", FAKE_POINTER(jsPlayer));
-            task->GetResult(); // sync release
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor Wait Release Task End", FAKE_POINTER(jsPlayer));
-        }
-        jsPlayer->WaitTaskQueStop();
-        delete jsPlayer;
+        std::thread([jsPlayer]() -> void {
+            auto task = jsPlayer->ReleaseTask();
+            if (task != nullptr) {
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor wait >>", FAKE_POINTER(jsPlayer));
+                task->GetResult(); // sync release
+                MEDIA_LOGI("0x%{public}06" PRIXPTR " Destructor wait <<", FAKE_POINTER(jsPlayer));
+            }
+            jsPlayer->WaitTaskQueStop();
+            delete jsPlayer;
+        }).detach();
     }
     MEDIA_LOGI("Destructor success");
 }
