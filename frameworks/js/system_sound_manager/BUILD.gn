@@ -31,6 +31,7 @@ ohos_shared_library("systemsoundmanager") {
     "./include",
     "./include/ringtone_player",
     "./include/system_tone_player",
+    "./include/tone_attrs",
     "./../avplayer/",
     "./../common/",
     "./../../native/system_sound_manager",
@@ -49,11 +50,14 @@ ohos_shared_library("systemsoundmanager") {
     "./src/system_sound_manager_napi.cpp",
     "./src/system_tone_player/system_tone_options_napi.cpp",
     "./src/system_tone_player/system_tone_player_napi.cpp",
+    "./src/tone_attrs/tone_attrs_napi.cpp",
+     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
   ]
 
   deps = [ "./../../native/system_sound_manager:system_sound_client" ]
 
   external_deps = [
+    "av_codec:av_codec_client",
     "ability_runtime:abilitykit_native",
     "ability_runtime:napi_base_context",
     "access_token:libaccesstoken_sdk",

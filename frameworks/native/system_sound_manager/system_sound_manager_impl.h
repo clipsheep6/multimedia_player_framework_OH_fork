@@ -48,6 +48,10 @@ public:
         RingtoneType ringtoneType) override;
     std::shared_ptr<RingtonePlayer> GetRingtonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         RingtoneType ringtoneType) override;
+    std::shared_ptr<ToneAttrs> GetDefaultRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
+        RingtoneType ringtoneType) override;
+    std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
+        RingtoneType ringtoneType) override;
 
     int32_t SetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri,
         SystemToneType systemToneType) override;
@@ -55,6 +59,25 @@ public:
         SystemToneType systemToneType) override;
     std::shared_ptr<SystemTonePlayer> GetSystemTonePlayer(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType) override;
+    std::shared_ptr<ToneAttrs> GetDefaultSystemToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemToneType systemToneType) override;
+    std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context,
+        SystemToneType systemToneType) override;
+
+    int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
+    std::string GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context) override;
+    std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context) override;
+    std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(const std::shared_ptr<AbilityRuntime::Context> &context) override;
+
+    int32_t OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
+    int32_t Close(const int32_t &fd) override;
+    std::string AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri) override;
+    std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd) override;
+    std::string AddCustomizedToneByFdAndOffset(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd, const int32_t &offset, const int32_t &length) override;
+    int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
 
 private:
     void InitDefaultUriMap();
@@ -72,16 +95,23 @@ private:
     bool isSystemToneTypeValid(SystemToneType systemToneType);
 
     std::string systemSoundPath_ = "";
+    std::string alarmToneUri_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
     std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
+    std::shared_ptr<ToneAttrs> ringtoneAttrs_;
+    std::shared_ptr<ToneAttrs> systemtoneAttrs_;
+    std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
 
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRingerModeCallback> ringerModeCallback_ = nullptr;
+    std::vector<std::shared_ptr<ToneAttrs>> ringtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> systemtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> alarmtoneAttrsArray_;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {
