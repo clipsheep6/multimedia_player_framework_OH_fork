@@ -23,7 +23,7 @@
 #endif
 #include "meta/format.h"
 #include "media_data_source.h"
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
+#include "i_keysession_service.h"
 
 namespace OHOS {
 namespace Media {

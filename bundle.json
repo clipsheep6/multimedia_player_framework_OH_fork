@@ -60,7 +60,7 @@
           "hicollie",
           "media_foundation",
           "drivers_peripheral_codec",
-          "drivers_peripheral_display",
+          "drivers_interface_display",
           "hdf_core",
           "ability_base",
           "ability_runtime",
@@ -83,7 +83,8 @@
           "ffmpeg",
           "bounds_checking_function",
           "libxml2",
-          "libuv"
+          "libuv",
+          "os_account"
         ],
         "third_party": [
           "bounds_checking_function"
