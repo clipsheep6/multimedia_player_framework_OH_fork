@@ -725,7 +725,8 @@ int64_t ScreenCaptureServer::GetCurrentMillisecond()
     return time;
 }
 
-void ScreenCaptureServer::SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree)
+void ScreenCaptureServer::SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason,
+    bool userAgree)
 {
     statisticalEventInfo_.errCode = errCode;
     statisticalEventInfo_.errMsg = errMsg;
@@ -1648,12 +1649,10 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
-    int32_t retInner = MSERR_OK;
-    int32_t retMic = MSERR_OK;
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
-        retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
-        retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
+        int32_t retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
+        int32_t retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
         if (retInner == MSERR_OK && retMic == MSERR_OK) {
             return MSERR_OK;
         } else {
@@ -1697,13 +1696,15 @@ int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AVScreenCaptureMixMode type)
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "ReleaseAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
-    int32_t retInner = MSERR_OK;
-    int32_t retMic = MSERR_OK;
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
-        retInner = innerAudioCapture_->ReleaseAudioBuffer();
-        retMic = micAudioCapture_->ReleaseAudioBuffer();
-        return retInner && retMic;
+        int32_t retInner = innerAudioCapture_->ReleaseAudioBuffer();
+        int32_t retMic = micAudioCapture_->ReleaseAudioBuffer();
+        if (retInner == MSERR_OK && retMic == MSERR_OK) {
+            return MSERR_OK;
+        } else {
+            return MSERR_UNKNOWN;
+        }
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->ReleaseAudioBuffer();
@@ -2148,13 +2149,13 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
             int channels = 2;
             MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
-            bufferMem->Write((uint8_t*)mixData, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
-            bufferMem->Write((uint8_t*)innerAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::MIC_MODE) {
-            bufferMem->Write((uint8_t*)micAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         }
     } else {
@@ -2181,18 +2182,16 @@ void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int 
     double const splitNum = 32;
     int const doubleChannels = 2;
     double coefficient = 1;
-    int output;
     int totalNum = 0;
-    int channelNum = 0;
     if (channels == 0) {
         return;
     }
     for (totalNum = 0; totalNum < bufferSize / channels; totalNum++) {
         int temp = 0;
-        for (channelNum = 0; channelNum < channels; channelNum++) {
+        for (int channelNum = 0; channelNum < channels; channelNum++) {
             temp += *reinterpret_cast<short*>(srcData[channelNum] + totalNum * channels);
         }
-        output = static_cast<int32_t>(temp * coefficient);
+        int32_t output = static_cast<int32_t>(temp * coefficient);
         if (output > max) {
             coefficient = static_cast<double>(max) / static_cast<double>(output);
             output = max;

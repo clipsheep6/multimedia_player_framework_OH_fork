@@ -290,7 +290,7 @@ private:
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
-    void SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree);
+    void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
 
 private:
     std::mutex mutex_;
