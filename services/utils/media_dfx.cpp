@@ -237,6 +237,11 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
             if (listPair.second->GetData(it->first, uintVal)) {
                 metaInfoJson[it->first] = std::to_string(uintVal);
             }
+        } else if (Any::IsSameTypeWith<uint64_t>(valueType)) {
+            uint64_t uintVal;
+            if (listPair.second->GetData(it->first, uintVal)) {
+                metaInfoJson[it->first] = std::to_string(uintVal);
+            }
         } else if (Any::IsSameTypeWith<std::string>(valueType)) {
             metaInfoJson[it->first] = AnyCast<std::string>(it->second);
         } else if (Any::IsSameTypeWith<int8_t>(valueType)) {

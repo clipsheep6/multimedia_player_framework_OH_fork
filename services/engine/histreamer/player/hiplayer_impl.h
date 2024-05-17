@@ -68,6 +68,8 @@ struct PlayStatisticalInfo {
     int32_t maxLagDuration;
     int32_t avgLagDuration;
     int32_t maxSurfaceSwapLatency;
+    uint64_t totalDownLoadBits;
+    bool isTimeOut;
 };
 
 enum VideoHdrType : int32_t {

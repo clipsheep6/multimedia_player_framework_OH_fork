@@ -534,10 +534,14 @@ void HiPlayerImpl::UpdatePlayStatistics()
     MEDIA_LOG_I("HiPlayerImpl UpdatePlayStatistics");
     playStatisticalInfo_.isDrmProtected = isDrmProtected_;
     if (demuxer_ != nullptr) {
-        auto ret = demuxer_->GetDownloadInfo(playStatisticalInfo_.avgDownloadRate,
-            playStatisticalInfo_.avgDownloadSpeed);
+        DownloadInfo downLoadInfo;
+        auto ret = demuxer_->GetDownloadInfo(downLoadInfo);
         if (ret == Status::OK) {
             MEDIA_LOG_I("GetDownloadInfo success");
+            playStatisticalInfo_.avgDownloadRate = downLoadInfo.avgDownloadRate;
+            playStatisticalInfo_.avgDownloadSpeed = downLoadInfo.avgDownloadSpeed;
+            playStatisticalInfo_.totalDownLoadBits = downLoadInfo.totalDownLoadBits;
+            playStatisticalInfo_.isTimeOut = downLoadInfo.isTimeOut;
         } else {
             MEDIA_LOG_E("GetDownloadInfo failed with error " PUBLIC_LOG_D32, ret);
         }
@@ -576,6 +580,9 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
     meta->SetData(Tag::AV_PLAYER_SOURCE_TYPE, playStatisticalInfo_.sourceType);
     meta->SetData(Tag::MEDIA_FILE_URI, playStatisticalInfo_.sourceUrl);
     meta->SetData(Tag::AV_PLAYER_AVG_DOWNLOAD_RATE, playStatisticalInfo_.avgDownloadRate);
+    meta->SetData(Tag::AV_PLAYER_AVG_DOWNLOAD_SPEED, playStatisticalInfo_.avgDownloadSpeed);
+    meta->SetData(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS, playStatisticalInfo_.totalDownLoadBits);
+    meta->SetData(Tag::AV_PLAYER_DOWNLOAD_TIME_OUT, playStatisticalInfo_.isTimeOut);
     meta->SetData(Tag::AV_PLAYER_CONTAINER_MIME, playStatisticalInfo_.containerMime);
     meta->SetData(Tag::AV_PLAYER_VIDEO_MIME, playStatisticalInfo_.videoMime);
     meta->SetData(Tag::AV_PLAYER_VIDEO_RESOLUTION, playStatisticalInfo_.videoResolution);
@@ -588,7 +595,6 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
     meta->SetData(Tag::AV_PLAYER_AUDIO_BITRATE, playStatisticalInfo_.audioBitrate);
     meta->SetData(Tag::AV_PLAYER_IS_DRM_PROTECTED, playStatisticalInfo_.isDrmProtected);
     meta->SetData(Tag::AV_PLAYER_START_LATENCY, playStatisticalInfo_.startLatency);
-    meta->SetData(Tag::AV_PLAYER_AVG_DOWNLOAD_SPEED, playStatisticalInfo_.avgDownloadSpeed);
     meta->SetData(Tag::AV_PLAYER_MAX_SEEK_LATENCY, playStatisticalInfo_.maxSeekLatency);
     meta->SetData(Tag::AV_PLAYER_MAX_ACCURATE_SEEK_LATENCY, playStatisticalInfo_.maxAccurateSeekLatency);
     meta->SetData(Tag::AV_PLAYER_LAG_TIMES, playStatisticalInfo_.lagTimes);
