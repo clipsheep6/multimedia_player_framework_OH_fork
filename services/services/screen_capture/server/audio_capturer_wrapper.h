@@ -48,6 +48,7 @@ public:
     int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
     int32_t Stop();
     void SetIsMuted(bool isMuted);
+    bool GetIsMuted();
     int32_t CaptureAudio();
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
     int32_t GetBufferSize(size_t &size);

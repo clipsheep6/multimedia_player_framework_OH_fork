@@ -228,6 +228,7 @@ public:
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
+    bool GetMicWorkingState();
     int32_t SetCanvasRotation(bool canvasRotation) override;
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
@@ -252,6 +253,8 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
+    int32_t StartInnerAudioCapture();
+    int32_t StartMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
