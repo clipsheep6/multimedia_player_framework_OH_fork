@@ -193,7 +193,6 @@ napi_value SystemSoundManagerNapi::CreateToneCategoryAlarmObject(napi_env env)
 
 napi_value SystemSoundManagerNapi::Init(napi_env env, napi_value exports)
 {
-    napi_status status;
     napi_value ctorObj;
     int32_t refCount = 1;
 
@@ -233,7 +232,7 @@ napi_value SystemSoundManagerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_ALARM", CreateToneCategoryAlarmObject(env)),
     };
 
-    status = napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(),
+    napi_status status = napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(),
         NAPI_AUTO_LENGTH, Construct, nullptr, sizeof(syssndmgr_prop) / sizeof(syssndmgr_prop[0]),
         syssndmgr_prop, &ctorObj);
     if (status == napi_ok) {
@@ -1566,9 +1565,8 @@ void SystemSoundManagerNapi::CloseAsyncCallbackComp(napi_env env, napi_status st
 
 napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback_info info)
 {
-    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
-        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-        "No system permission");
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(), ThrowErrorAndReturn(env,
+        NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED), "No system permission");
     napi_value result = nullptr;
     napi_value resource = nullptr;
     napi_value thisVar = nullptr;
@@ -1579,9 +1577,8 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
-    CHECK_AND_RETURN_RET_LOG((argc == ARGS_THREE || argc == ARGS_FOUR || argc == ARGS_FIVE),
-        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
-        "invalid arguments");
+    CHECK_AND_RETURN_RET_LOG((argc == ARGS_THREE || argc == ARGS_FOUR || argc == ARGS_FIVE), ThrowErrorAndReturn(env,
+        NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
     std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
@@ -1631,7 +1628,8 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
     } else if (context->fd != 0) {
         if (context->offset != 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
-                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd, context->offset, context->length);
+                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(),
+                context->fd, context->offset, context->length);
         } else {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFd(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd);
