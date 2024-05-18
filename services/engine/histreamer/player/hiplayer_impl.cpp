@@ -323,15 +323,18 @@ int32_t HiPlayerImpl::PrepareAsync()
         auto errCode = TransStatus(ret);
         playStatisticalInfo_.errCode = errCode;
         playStatisticalInfo_.errMsg = "pipeline PrepareAsync failed";
+        OnEvent({"engine", EventType::EVENT_ERROR, errCode});
         return errCode;
     }
     ret = pipeline_->PrepareFrame(renderFirstFrame_);
-    auto code = TransStatus(ret);
     if (ret != Status::OK) {
+        MEDIA_LOGE("PrepareFrame failed.");
+        auto code = TransStatus(ret);
         playStatisticalInfo_.errCode = code;
         playStatisticalInfo_.errMsg = "PrepareFrame failed.";
+        OnEvent({"engine", EventType::EVENT_ERROR, code});
+        return code;
     }
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, code, "PrepareFrame failed.");
     UpdatePlayerStateAndNotify();
     MEDIA_LOGI("PrepareAsync End");
     return TransStatus(ret);
