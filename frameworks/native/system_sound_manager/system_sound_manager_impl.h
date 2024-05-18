@@ -113,6 +113,9 @@ private:
     std::atomic<AudioStandard::AudioRingerMode> ringerMode_ = AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL;
     std::shared_ptr<AudioStandard::AudioGroupManager> audioGroupManager_ = nullptr;
     std::shared_ptr<AudioStandard::AudioRingerModeCallback> ringerModeCallback_ = nullptr;
+    std::vector<std::shared_ptr<ToneAttrs>> ringtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> systemtoneAttrsArray_;
+    std::vector<std::shared_ptr<ToneAttrs>> alarmtoneAttrsArray_;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {
