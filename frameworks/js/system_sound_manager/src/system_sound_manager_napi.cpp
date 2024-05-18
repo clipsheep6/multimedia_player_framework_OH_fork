@@ -1579,8 +1579,6 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
 
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
     napi_get_undefined(env, &result);
-    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
-        "AddCustomizedTone: Failed to retrieve details about the callback");
     CHECK_AND_RETURN_RET_LOG((argc == ARGS_THREE || argc == ARGS_FOUR || argc == ARGS_FIVE),
         ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
         "invalid arguments");
@@ -1599,15 +1597,11 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
                 asyncContext->externalUri = std::string(buffer);
             } else if (i == PARAM2 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->fd);
-            } else if (i == PARAM3 && valueType == napi_number && argc == ARGS_FOUR) {
-                asyncContext->offset = 0;
-                napi_get_value_int32(env, argv[i], &asyncContext->length);
-            } else if (i == PARAM3 && valueType == napi_number && argc != ARGS_FOUR) {
+            } else if (i == PARAM3 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->offset);
+                asyncContext->length = INT_MAX;
             } else if (i == PARAM4 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &asyncContext->length);
-            } else {
-                NAPI_ASSERT(env, false, "AddCustomizedTone: type mismatch");
             }
         }
 
@@ -1616,7 +1610,6 @@ napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback
         status = napi_create_async_work(env, nullptr, resource, AsyncAddCustomizedTone,
             AddCustomizedToneAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            MEDIA_LOGE("AddCustomizedTone: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1636,10 +1629,9 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
             context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->externalUri);
         context->status = SUCCESS;
     } else if (context->fd != 0) {
-        if (context->length != 0) {
+        if (context->offset != 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
-                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd,
-                context->offset, context->length);
+                context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd, context->offset, context->length);
         } else {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFd(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->fd);
