@@ -22,6 +22,7 @@
 #include "media_errors.h"
 #include "media_parcel.h"
 #include "media_dfx.h"
+#include "av_common.h"
 #include "player_xcollie.h"
 
 namespace {
@@ -568,6 +569,23 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
             return MSERR_INVALID_OPERATION;
         }
     }
+    
+    std::string mimeType = mediaSource->GetMimeType();
+    data.WriteString(mimeType);
+
+    std::string uri = mediaSource->url;
+    int32_t fd = -1;
+    size_t fdHeadPos = uri.find("fd:://");
+    size_t fdTailPos = uri.find("?");
+
+    if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
+        fdTailPos != std::string::npos) {
+        std::string fdStr = uri.substr(strlen("fd:://"), fdTailPos - strlen("fd:://"));
+        fd = stoi(fdStr);
+        (void)data.WriteFileDescriptor(fd);
+        MEDIA_LOGI("fd : %d", fd);
+    }
+
     (void)data.WriteUint32(strategy.preferredWidth);
     (void)data.WriteUint32(strategy.preferredHeight);
     (void)data.WriteUint32(strategy.preferredBufferDuration);

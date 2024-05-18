@@ -238,8 +238,27 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     preferedHeight_ = strategy.preferredHeight;
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
-    playStatisticalInfo_.errCode = MSERR_OK;
-    return MSERR_OK;
+    mimeType_ = mediaSource->GetMimeType();
+
+    if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url_, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOGE("SetSource error: GetRealPath error");
+            playStatisticalInfo_.errCode = result;
+            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
+            return result;
+        }
+        url_ = "file://" + realUriPath;
+    }
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
+    }
+
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    int ret = TransStatus(Status::OK); 
+    playStatisticalInfo_.errCode = ret;
+    return ret;
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
@@ -1424,6 +1443,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->duration = bufferDuration_;
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
+
+    if (!mimeType_.empty()) {
+        source->SetMimeType(mimeType_);
+    }
 
     demuxer_->SetDumpFlag(isDump_);
     auto ret = demuxer_->SetDataSource(source);

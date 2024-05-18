@@ -273,10 +273,12 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
     playerEngine_->SetInstancdId(instanceId_);
-    if (dataSrc_ == nullptr) {
-        ret = playerEngine_->SetSource(url);
-    } else {
+    if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
+    } else if (mediaSource_ != nullptr){
+        playerEngine_->SetMediaSource(mediaSource_, strategy_);
+    } else {
+        ret = playerEngine_->SetSource(url);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
@@ -660,6 +662,7 @@ int32_t PlayerServer::HandleReset()
     dataSrc_ = nullptr;
     config_.looping = false;
     uriHelper_ = nullptr;
+    mediaSource_ = nullptr;
     {
         decltype(subUriHelpers_) temp;
         temp.swap(subUriHelpers_);
@@ -1005,12 +1008,38 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetMediaSource");
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
-    InitPlayEngine(mediaSource->url);
-    int ret = playerEngine_->SetMediaSource(mediaSource, strategy);
+
+    mediaSource_ = mediaSource;
+    strategy_ = strategy;
+
+    std::string uri = mediaSource_->url;
+    std::string mimeType = mediaSource_->GetMimeType();
+    size_t pos1 = uri.find("?");
+    size_t pos2 = uri.find("offset=");
+    size_t pos3 = uri.find("&");
+
+    if (mimeType == AVMimeType::APPLICATION_M3U8 && pos1 != std::string::npos && pos2 != std::string::npos &&
+        pos3 != std::string::npos) {
+        std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
+        std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
+        std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
+        int32_t fd = stoi(fdStr);
+        int32_t offset = stoi(offsetStr);
+        int32_t size = stoi(sizeStr);
+
+        auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
+        CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed ro read fd.");
+        uriHelper_ = std::move(uriHelper);
+        mediaSource_->url = uriHelper_->FormattedUri();
+    }
+
+    int32_t ret = InitPlayEngine(mediaSource->url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMediaSource Failed!");
-    config_.url = mediaSource->url;
-    config_.header = mediaSource->header;
+
+    config_.url = mediaSource_->url;
+    config_.header = mediaSource_->header;
     config_.strategy_ = strategy;
+
     return MSERR_OK;
 }
 

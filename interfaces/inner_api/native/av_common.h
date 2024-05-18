@@ -76,6 +76,10 @@ enum VideoRotation : uint32_t {
     VIDEO_ROTATION_270 = 270,
 };
 
+class AVMimeType {
+public:
+    static constexpr std::string_view APPLICATION_M3U8 = "application/m3u8";
+};
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

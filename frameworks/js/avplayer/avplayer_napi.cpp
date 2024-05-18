@@ -1327,6 +1327,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(mediaSourceTmp->url,
          mediaSourceTmp->header);
+    mediaSource->SetMimeType(mediaSource->GetMimeType());
 
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
