@@ -430,7 +430,12 @@ int32_t ScreenCaptureServiceProxy::ExcludeContent(ScreenCaptureContentFilter &co
         token = data.WriteInt32(static_cast<int32_t>(element));
         CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write filteredAudioContents");
     }
-
+    token = data.WriteInt32(static_cast<int32_t>(contentFilter.windowIDsVec.size()));
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowCount size!");
+    for (size_t i = 0; i < contentFilter.windowIDsVec.size(); i++) {
+        token = data.WriteInt32(static_cast<int32_t>(contentFilter.windowIDsVec[i]));
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write windowIDs");
+    }
     int error = Remote()->SendRequest(EXCLUDE_CONTENT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "ExcludeContent failed, error: %{public}d", error);

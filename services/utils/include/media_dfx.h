@@ -25,13 +25,17 @@
 #include "nocopyable.h"
 #include "hisysevent.h"
 #include "meta/meta.h"
+#ifdef SUPPORT_JSON
 #include "nlohmann/json.hpp"
+#endif
 #include <chrono>
 #include <mutex>
 
 namespace OHOS {
 namespace Media {
+#ifdef SUPPORT_JSON
 using json = nlohmann::json;
+#endif
 enum CallType {
     AVPLAYER,
     AVRECORDER,
@@ -61,8 +65,6 @@ public:
     void SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type, const std::string&
         appName, uint64_t instanceId, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
         const std::string& errMsg);
-    void RecordAudioEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-        const std::string& appName, uint64_t instanceId, int8_t sourceType, const std::string& errorMessage);
     void ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
         const std::string& errMsg);
@@ -71,7 +73,9 @@ public:
 private:
     void StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::vector<std::string>& infoArr);
+#ifdef SUPPORT_JSON
     void ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> &listPair, json& metaInfoJson);
+#endif
     std::string msg_;
 };
 
@@ -84,8 +88,6 @@ __attribute__((visibility("default"))) void StatisticEventWriteBundleName(std::s
 __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string module);
 __attribute__((visibility("default"))) void FaultSourceEventWrite(const std::string& appName, uint64_t instanceId,
     const std::string& callerType, int8_t sourceType, const std::string& sourceUrl, const std::string& errorMessage);
-__attribute__((visibility("default"))) void FaultRecordAudioEventWrite(const std::string& appName, uint64_t instanceId,
-    int8_t sourceType, const std::string& errorMessage);
 __attribute__((visibility("default"))) void FaultScreenCaptureEventWrite(const std::string& appName,
     uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errorMessage);
 __attribute__((visibility("default"))) int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId);

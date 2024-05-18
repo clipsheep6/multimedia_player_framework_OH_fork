@@ -266,6 +266,7 @@ private:
     void InitAppInfo();
     void CloseFd();
     void ReleaseInner();
+    void GetDumpFlag();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
@@ -289,7 +290,7 @@ private:
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
-    void SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree);
+    void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
 
 private:
     std::mutex mutex_;
@@ -318,6 +319,7 @@ private:
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
+    bool isDump_ = false;
     ScreenId screenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     ScreenCaptureContentFilter contentFilter_;

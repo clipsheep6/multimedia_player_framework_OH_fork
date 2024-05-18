@@ -161,24 +161,27 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
         return;
     }
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
-    mediaDemuxer_->ReadSample(trackIndex_, buffer);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnInputBufferAvailable decoder is nullptr.");
+    mediaDemuxer_->ReadSample(trackIndex_, buffer);
     videoDecoder_->QueueInputBuffer(index);
 }
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
     MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
-    if (buffer == nullptr || buffer->memory_ == nullptr) {
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
+    if (buffer == nullptr || buffer->memory_ == nullptr || buffer->memory_->GetSurfaceBuffer() == nullptr) {
+        MEDIA_LOGW("Output buffer is nullptr");
+        videoDecoder_->ReleaseOutputBuffer(index, false);
         return;
     }
-    if (buffer->pts_ >= seekTime_ && !hasFetchedFrame_.load() && !stopProcessing_.load()) {
+    if (!hasFetchedFrame_.load() && !stopProcessing_.load()) {
         bufferIndex_ = index;
         surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
         hasFetchedFrame_ = true;
         cond_.notify_all();
+        return;
     }
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnOutputBufferAvailable videoDecoder_ is nullptr");
     videoDecoder_->ReleaseOutputBuffer(index, false);
 }
 
