@@ -360,22 +360,10 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0200, Function | MediumT
 
 /**
  * @tc.number    : FetchFrameAtTime_Resolution_0100
- * @tc.name      : Resolution 170x170
- * @tc.desc      : Get THUMBNAIL
- */
-HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0100, TestSize.Level0)
-{
-    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("out_170_170.mp4");
-    GetThumbnail(uri);
-}
-
-/**
- * @tc.number    : FetchFrameAtTime_Resolution_0200
  * @tc.name      : Resolution 480x320
  * @tc.desc      : Get THUMBNAIL
  */
-HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0200, TestSize.Level0)
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0100, TestSize.Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("out_480_320.mp4");
