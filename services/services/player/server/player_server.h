@@ -216,6 +216,8 @@ private:
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
     uint64_t instanceId_ = 0;
+    std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
+    AVPlayStrategy strategy_;
 };
 } // namespace Media
 } // namespace OHOS

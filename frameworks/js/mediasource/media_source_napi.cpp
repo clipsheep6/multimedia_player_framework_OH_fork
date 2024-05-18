@@ -30,8 +30,14 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createMediaSourceWithUrl", JsCreateMediaSourceWithUrl),
     };
+
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("setMimeType", JsSetMimeType),
+    };
+
     napi_value constructor = nullptr;
-    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), 0, Constructor, nullptr, 0, nullptr, &constructor);
+    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
+        sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVPlayer class");
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
@@ -122,6 +128,39 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callba
     MEDIA_LOGE("JsCreateMediaSourceWithUrl get map");
     (void)CommonNapi::GetPropertyMap(env, args[1], mediaSource->header);
     return jsMediaSource;
+}
+
+napi_value MediaSourceNapi::JsSetMimeType(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsSetMimeType In");
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    size_t argCount = 1;
+    napi_value args[1] = {nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "failed to napi_get_cb_info");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        return undefinedResult;
+    }
+
+    std::string mimeType = CommonNapi::GetStringArgument(env, args[0]);
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance..");
+        return undefinedResult;
+    }
+    if (mimeType.empty()) {
+        MEDIA_LOGE("MimeType is empty.");
+        return undefinedResult;
+    }
+
+    mediaSource->SetMimeType(mimeType);
+
+    return undefinedResult;
 }
 } // Media
 } // OHOS
