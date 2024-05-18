@@ -150,7 +150,7 @@ napi_value MediaSourceNapi::JsSetMimeType(napi_env env, napi_callback_info info)
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
 
     if (mediaSource == nullptr) {
-        MEDIA_LOGE("Fail to get mediaSource instance.");
+        MEDIA_LOGE("Fail to get mediaSource instance..");
         return undefinedResult;
     }
     if (mimeType.empty()) {

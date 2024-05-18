@@ -143,7 +143,7 @@ private:
         int32_t height;
         int32_t frameRate;
         int32_t bitRate;
-        bool isHdr;
+        bool isHdr = false;
         bool enableTemporalScale;
         double captureRate;
         int32_t audioSampleRate;

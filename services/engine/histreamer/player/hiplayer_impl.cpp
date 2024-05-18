@@ -239,7 +239,6 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
     mimeType_ = mediaSource->GetMimeType();
-
     if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
@@ -256,7 +255,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     }
 
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
-    int ret = TransStatus(Status::OK); 
+    int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
     return ret;
 }
@@ -1214,9 +1213,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             Plugins::VideoRotation rotation;
             trackInfo->Get<Tag::VIDEO_ROTATION>(rotation);
             videoTrackInfo.PutIntValue(Tag::VIDEO_ROTATION, rotation);
-            bool hdr;
-            trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, hdr);
-            if (hdr) {
+            bool isHdr = false;
+            trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+            if (isHdr) {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_VIVID);
             } else {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_NONE);
@@ -1448,10 +1447,10 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
         source->SetMimeType(mimeType_);
     }
 
-    demuxer_->SetDumpFlag(isDump_);
     auto ret = demuxer_->SetDataSource(source);
     if (demuxer_ != nullptr) {
         demuxer_->SetCallerInfo(instanceId_, bundleName_);
+        demuxer_->SetDumpFlag(isDump_);
     }
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
         MEDIA_LOGW("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
@@ -1800,10 +1799,16 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
 void HiPlayerImpl::OnDumpInfo(int32_t fd)
 {
     MEDIA_LOGD("HiPlayerImpl::OnDumpInfo called.");
-    audioDecoder_->OnDumpInfo(fd);
-    demuxer_->OnDumpInfo(fd);
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->OnDumpInfo(fd);
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->OnDumpInfo(fd);
+    }
 #ifdef SUPPORT_VIDEO
-    videoDecoder_->OnDumpInfo(fd);
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->OnDumpInfo(fd);
+    }
 #endif
 }
 
@@ -1817,8 +1822,8 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
-    audioDecoder_->SetDumpFlag(isDump_);
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
+    audioDecoder_->SetDumpFlag(isDump_);
     // set decrypt config for drm audios
     if (isDrmProtected_) {
         MEDIA_LOGD("HiPlayerImpl::LinkAudioDecoderFilter will SetDecryptConfig");

@@ -753,11 +753,9 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         fd = data.ReadFileDescriptor();
         MEDIA_LOGI("fd : %d", fd);
     }
-
     std::string uri = mediaSource->url;
     size_t fdHeadPos = uri.find("fd:://");
     size_t fdTailPos = uri.find("?");
-
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
         std::string temp = uri.substr(fdTailPos);
@@ -772,7 +770,7 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     strategy.preferredHdr = data.ReadBool();
     reply.WriteInt32(SetMediaSource(mediaSource, strategy));
     if (mimeType == AVMimeType::APPLICATION_M3U8) {
-        (void)::close(fd);        
+        (void)::close(fd);
     }
     return MSERR_OK;
 }

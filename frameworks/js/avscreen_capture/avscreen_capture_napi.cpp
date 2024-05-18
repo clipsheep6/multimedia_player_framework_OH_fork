@@ -362,6 +362,7 @@ napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callba
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->task_ = AVScreenCaptureNapi::GetSetMicrophoneEnableTask(asyncCtx, enable);
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);

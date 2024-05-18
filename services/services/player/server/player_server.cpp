@@ -275,7 +275,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_->SetInstancdId(instanceId_);
     if (dataSrc_ != nullptr) {
         ret = playerEngine_->SetSource(dataSrc_);
-    } else if (mediaSource_ != nullptr){
+    } else if (mediaSource_ != nullptr) {
         playerEngine_->SetMediaSource(mediaSource_, strategy_);
     } else {
         ret = playerEngine_->SetSource(url);
@@ -1017,7 +1017,6 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     size_t pos1 = uri.find("?");
     size_t pos2 = uri.find("offset=");
     size_t pos3 = uri.find("&");
-
     if (mimeType == AVMimeType::APPLICATION_M3U8 && pos1 != std::string::npos && pos2 != std::string::npos &&
         pos3 != std::string::npos) {
         std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));

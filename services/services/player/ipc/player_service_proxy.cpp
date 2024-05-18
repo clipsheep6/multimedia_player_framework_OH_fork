@@ -572,12 +572,10 @@ int32_t PlayerServiceProxy::SetMediaSource(const std::shared_ptr<AVMediaSource> 
     
     std::string mimeType = mediaSource->GetMimeType();
     data.WriteString(mimeType);
-
     std::string uri = mediaSource->url;
     int32_t fd = -1;
     size_t fdHeadPos = uri.find("fd:://");
     size_t fdTailPos = uri.find("?");
-
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
         fdTailPos != std::string::npos) {
         std::string fdStr = uri.substr(strlen("fd:://"), fdTailPos - strlen("fd:://"));
