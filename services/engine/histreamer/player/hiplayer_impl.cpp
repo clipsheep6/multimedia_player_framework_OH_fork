@@ -1195,9 +1195,9 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             Plugins::VideoRotation rotation;
             trackInfo->Get<Tag::VIDEO_ROTATION>(rotation);
             videoTrackInfo.PutIntValue(Tag::VIDEO_ROTATION, rotation);
-            bool hdr;
-            trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, hdr);
-            if (hdr) {
+            bool isHdr = false;
+            trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+            if (isHdr) {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_VIVID);
             } else {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_NONE);
