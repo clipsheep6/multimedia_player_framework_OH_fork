@@ -17,6 +17,7 @@
 
 #include "common/media_source.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_description.h"
 #include "meta_utils.h"
@@ -49,6 +50,7 @@ AVMetadataHelperImpl::~AVMetadataHelperImpl()
 
 int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t /* usage */)
 {
+    MediaTrace trace("M:SetSource");
     UriHelper uriHelper(uri);
     if (uriHelper.UriType() != UriHelper::URI_TYPE_FILE && uriHelper.UriType() != UriHelper::URI_TYPE_FD) {
         MEDIA_LOGE("Unsupported uri type : %{private}s", uri.c_str());
@@ -105,6 +107,7 @@ Status AVMetadataHelperImpl::SetSourceInternel(const std::shared_ptr<IMediaDataS
 
 std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 {
+    MediaTrace trace("M:ResolveMetadata");
     MEDIA_LOGI("enter ResolveMetadata with key: %{public}d", key);
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, "");
@@ -113,6 +116,7 @@ std::string AVMetadataHelperImpl::ResolveMetadata(int32_t key)
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 {
+    MediaTrace trace("M:ResolveMetadata");
     MEDIA_LOGD("enter ResolveMetadata");
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, {});
@@ -121,6 +125,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperImpl::ResolveMetadata()
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
 {
+    MediaTrace trace("M:FetchArtPicture");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " enter FetchArtPicture", FAKE_POINTER(this));
     auto res = InitMetadataCollector();
     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
@@ -138,6 +143,7 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
 std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, const OutputConfiguration &param)
 {
+    MediaTrace trace("M:FetchFrameAtTime");
     MEDIA_LOGD("enter FetchFrameAtTime");
     auto res = InitThumbnailGenerator();
     CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
