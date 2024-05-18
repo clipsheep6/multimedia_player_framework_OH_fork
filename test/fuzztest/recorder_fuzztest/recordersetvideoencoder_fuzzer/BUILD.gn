@@ -62,10 +62,10 @@ ohos_fuzztest("RecorderSetVideoEncoderFuzzTest") {
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "../../../../../../../foundation/graphic/graphic_2d/utils:sync_fence",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:sync_fence",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",

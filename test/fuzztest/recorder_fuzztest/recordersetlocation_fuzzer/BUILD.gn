@@ -61,11 +61,11 @@ ohos_fuzztest("RecorderSetLocationFuzzTest") {
   }
   deps = [
     "../../../../../../../foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "../../../../../../../foundation/graphic/graphic_2d/utils:sync_fence",
     "../../../../../../../foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_2d:sync_fence",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",

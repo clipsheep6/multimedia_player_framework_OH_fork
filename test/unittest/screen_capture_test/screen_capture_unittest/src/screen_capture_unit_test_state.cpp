@@ -21,6 +21,7 @@
 #include "ability_manager_client.h"
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
+#include <nativetoken_kit.h>
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -296,7 +297,42 @@ void ScreenCaptureUnitTestCallback::InitCaptureTrackInfo(FILE *file, int32_t fla
 
 const std::string ScreenCaptureUnitTest::SCREEN_CAPTURE_ROOT_DIR = "/data/test/media/";
 
-void ScreenCaptureUnitTest::SetUpTestCase(void) {}
+void ScreenCaptureUnitTest::SetUpTestCase(void)
+{
+    vector<string> permission;
+    permission.push_back("ohos.permission.MICROPHONE");
+    uint64_t tokenId = 0;
+
+    auto perms = std::make_unique<const char* []>(permission.size());
+    for (size_t i = 0; i < permission.size(); i++) {
+        perms[i] = permission[i].c_str();
+    }
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = static_cast<int32_t>(permission.size()),
+        .aclsNum = 0,
+        .dcaps = nullptr,
+        .perms = perms.get(),
+        .acls = nullptr,
+        .processName = "avscreencapture_unittest",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    if (tokenId == 0) {
+        MEDIA_LOGE("Get Access Token Id Failed");
+        return;
+    }
+    int ret = SetSelfTokenID(tokenId);
+    if (ret != 0) {
+        MEDIA_LOGE("Set Acess Token Id failed");
+        return;
+    }
+    ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    if (ret < 0) {
+        MEDIA_LOGE("Reload Native Token Info Failed");
+    }
+}
+
 
 void ScreenCaptureUnitTest::TearDownTestCase(void) {}
 

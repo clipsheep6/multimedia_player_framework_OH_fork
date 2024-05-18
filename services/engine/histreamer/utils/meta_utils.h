@@ -23,9 +23,6 @@
 namespace OHOS {
 namespace Media {
 namespace MetaUtils {
-
-using FileType = OHOS::Media::Plugins::FileType;
-
 inline bool CheckFileType(const std::shared_ptr<Meta> meta)
 {
     if (meta == nullptr) {

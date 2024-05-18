@@ -42,9 +42,14 @@ std::string RingtoneCommonNapi::GetStringArgument(napi_env env, napi_value value
     return strValue;
 }
 
-void RingtoneCommonNapi::ThrowError(napi_env env, int32_t code)
+void RingtoneCommonNapi::ThrowError(napi_env env, int32_t code, const std::string &errMessage)
 {
-    std::string messageValue = RingtoneCommonNapi::GetMessageByCode(code);
+    std::string messageValue;
+    if (code == NAPI_ERR_INVALID_PARAM || code == NAPI_ERR_INPUT_INVALID) {
+        messageValue = errMessage.c_str();
+    } else {
+        messageValue = RingtoneCommonNapi::GetMessageByCode(code);
+    }
     napi_throw_error(env, (std::to_string(code)).c_str(), messageValue.c_str());
 }
 

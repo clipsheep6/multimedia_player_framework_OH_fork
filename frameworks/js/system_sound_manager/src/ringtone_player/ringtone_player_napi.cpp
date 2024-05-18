@@ -56,6 +56,12 @@ RingtonePlayerNapi::RingtonePlayerNapi() : env_(nullptr) {}
 
 RingtonePlayerNapi::~RingtonePlayerNapi() = default;
 
+static napi_value ThrowErrorAndReturn(napi_env env, int32_t errCode, const std::string &errMessage)
+{
+    RingtoneCommonNapi::ThrowError(env, errCode, errMessage);
+    return nullptr;
+}
+
 napi_value RingtonePlayerNapi::Init(napi_env env, napi_value exports)
 {
     napi_status status;
@@ -628,12 +634,19 @@ napi_value RingtonePlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value argv[requireArgc + 1] = {nullptr, nullptr, nullptr};
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
-    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
-    THROW_ERROR_ASSERT(env, argc >= requireArgc, NAPI_ERR_INPUT_INVALID);
+    if (status != napi_ok) {
+        ThrowErrorAndReturn(env, NAPI_ERR_SYSTEM, "system err");
+    }
+    if (argc < requireArgc) {
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
+    }
 
     napi_valuetype argvType = napi_undefined;
     napi_typeof(env, argv[0], &argvType);
-    THROW_ERROR_ASSERT(env, argvType == napi_string, NAPI_ERR_INPUT_INVALID);
+    if (argvType != napi_string) {
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            "incorrect parameter types: The type of eventType must be string");
+    }
 
     std::string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
     MEDIA_LOGI("RingtonePlayerNapi: On callbackName: %{public}s", callbackName.c_str());
@@ -641,16 +654,25 @@ napi_value RingtonePlayerNapi::On(napi_env env, napi_callback_info info)
     napi_valuetype callbackFunction = napi_undefined;
     if (argc == requireArgc) {
         napi_typeof(env, argv[1], &callbackFunction);
-        THROW_ERROR_ASSERT(env, callbackFunction == napi_function, NAPI_ERR_INPUT_INVALID);
+        if (callbackFunction != napi_function) {
+            ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The type of callback must be function");
+        }
     } else {
         napi_valuetype paramArg1 = napi_undefined;
         napi_typeof(env, argv[1], &paramArg1);
         napi_valuetype expectedValType = napi_number;  // Default. Reset it with 'callbackName' if check, if required.
-        THROW_ERROR_ASSERT(env, paramArg1 == expectedValType, NAPI_ERR_INPUT_INVALID);
+        if (paramArg1 != expectedValType) {
+            ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The parameter must be number");
+        }
 
         const int32_t arg2 = 2;
         napi_typeof(env, argv[arg2], &callbackFunction);
-        THROW_ERROR_ASSERT(env, callbackFunction == napi_function, NAPI_ERR_INPUT_INVALID);
+        if (callbackFunction != napi_function) {
+            ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+                "incorrect parameter types: The type of callback must be function");
+        }
     }
 
     return RegisterCallback(env, jsThis, argv, callbackName);
@@ -661,10 +683,15 @@ napi_value RingtonePlayerNapi::RegisterCallback(napi_env env, napi_value jsThis,
 {
     RingtonePlayerNapi *ringtonePlayerNapi = nullptr;
     napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&ringtonePlayerNapi));
-    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi != nullptr, NAPI_ERR_NO_MEMORY);
-
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->ringtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
+    if (status != napi_ok) {
+        ThrowErrorAndReturn(env, NAPI_ERR_SYSTEM, "system err");
+    }
+    if (ringtonePlayerNapi == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_NO_MEMORY, "no memory");
+    }
+    if (ringtonePlayerNapi->ringtonePlayer_ == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_NO_MEMORY, "no memory");
+    }
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -673,7 +700,10 @@ napi_value RingtonePlayerNapi::RegisterCallback(napi_env env, napi_value jsThis,
         result = RegisterRingtonePlayerCallback(env, argv, cbName, ringtonePlayerNapi);
     } else {
         bool unknownCallback = true;
-        THROW_ERROR_ASSERT(env, !unknownCallback, NAPI_ERR_INVALID_PARAM);
+        if (unknownCallback) {
+            ThrowErrorAndReturn(env, NAPI_ERR_INVALID_PARAM,
+                "parameter verification failed: The param of type is not supported");
+        }
     }
 
     return result;
@@ -682,7 +712,9 @@ napi_value RingtonePlayerNapi::RegisterCallback(napi_env env, napi_value jsThis,
 napi_value RingtonePlayerNapi::RegisterRingtonePlayerCallback(napi_env env, napi_value* argv,
     const std::string& cbName, RingtonePlayerNapi *ringtonePlayerNapi)
 {
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->callbackNapi_ != nullptr, NAPI_ERR_NO_MEMORY);
+    if (ringtonePlayerNapi->callbackNapi_ == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_NO_MEMORY, "no memory");
+    }
 
     std::shared_ptr<RingtonePlayerCallbackNapi> cb =
         std::static_pointer_cast<RingtonePlayerCallbackNapi>(ringtonePlayerNapi->callbackNapi_);
@@ -701,12 +733,19 @@ napi_value RingtonePlayerNapi::Off(napi_env env, napi_callback_info info)
     napi_value argv[requireArgc + 1] = {nullptr, nullptr, nullptr};
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
-    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
-    THROW_ERROR_ASSERT(env, argc <= requireArgc, NAPI_ERR_INVALID_PARAM);
+    if (status != napi_ok) {
+        ThrowErrorAndReturn(env, NAPI_ERR_SYSTEM, "system err");
+    }
+    if (argc > requireArgc) {
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID, "mandatory parameters are left unspecified");
+    }
 
     napi_valuetype callbackNameType = napi_undefined;
     napi_typeof(env, argv[0], &callbackNameType);
-    THROW_ERROR_ASSERT(env, callbackNameType == napi_string, NAPI_ERR_INVALID_PARAM);
+    if (callbackNameType != napi_string) {
+        ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID,
+            "incorrect parameter types: The type of eventType must be string");
+    }
 
     string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
     MEDIA_LOGI("Off callbackName: %{public}s", callbackName.c_str());
@@ -718,15 +757,24 @@ napi_value RingtonePlayerNapi::UnregisterCallback(napi_env env, napi_value jsThi
 {
     RingtonePlayerNapi *ringtonePlayerNapi = nullptr;
     napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&ringtonePlayerNapi));
-    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi != nullptr, NAPI_ERR_NO_MEMORY);
-    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->ringtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
+    if (status != napi_ok) {
+        ThrowErrorAndReturn(env, NAPI_ERR_SYSTEM, "system err");
+    }
+    if (ringtonePlayerNapi == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_NO_MEMORY, "no memory");
+    }
+    if (ringtonePlayerNapi->ringtonePlayer_ == nullptr) {
+        ThrowErrorAndReturn(env, NAPI_ERR_NO_MEMORY, "no memory");
+    }
 
     if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
         UnregisterRingtonePlayerCallback(ringtonePlayerNapi, cbName);
     } else {
         bool unknownCallback = true;
-        THROW_ERROR_ASSERT(env, !unknownCallback, NAPI_ERR_UNSUPPORTED);
+        if (unknownCallback) {
+            ThrowErrorAndReturn(env, NAPI_ERR_INVALID_PARAM,
+                "parameter verification failed: The param of type is not supported");
+        }
     }
 
     napi_value result = nullptr;

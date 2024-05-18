@@ -22,6 +22,8 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "media_dfx.h"
+#include "hitrace/tracechain.h"
+#include "media_utils.h"
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/shutdown_priority.h"
 #endif
@@ -63,6 +65,8 @@ RecorderServer::RecorderServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
+    instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
+    CreateMediaInfo(AVRECORDER, IPCSkeleton::GetCallingUid(), instanceId_);
 }
 
 RecorderServer::~RecorderServer()
@@ -89,6 +93,7 @@ int32_t RecorderServer::Init()
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
+    bundleName_ = GetClientBundleName(appUid);
 
     auto task = std::make_shared<TaskHandler<MediaServiceErrCode>>([&, this] {
         auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
@@ -98,6 +103,7 @@ int32_t RecorderServer::Init()
         recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId, fullTokenId);
         CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to create recorder engine");
+        recorderEngine_->SetCallingInfo(bundleName_, instanceId_);
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
@@ -128,6 +134,7 @@ void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Recorder");
+    SetErrorInfo(errorCode, lastErrMsg_);
     CHECK_AND_RETURN(recorderCb_ != nullptr);
     recorderCb_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
 }
@@ -665,6 +672,7 @@ int32_t RecorderServer::Start()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Start");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Start in", FAKE_POINTER(this));
+    startTime_ = GetCurrentMillisecond();
     if (status_ == REC_RECORDING) {
         MEDIA_LOGE("Can not repeat Start");
         return MSERR_INVALID_OPERATION;
@@ -687,6 +695,10 @@ int32_t RecorderServer::Start()
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
+    if (status_ == REC_RECORDING) {
+        int64_t endTime = GetCurrentMillisecond();
+        statisticalEventInfo_.startLatency = static_cast<int32_t>(endTime - startTime_);
+    }
     return ret;
 }
 
@@ -755,6 +767,11 @@ int32_t RecorderServer::Stop(bool block)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    if (status_ == REC_INITIALIZED) {
+        int64_t endTime = GetCurrentMillisecond();
+        statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
+            statisticalEventInfo_.startLatency);
+    }
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -798,6 +815,7 @@ int32_t RecorderServer::Release()
         }
 #endif
     }
+    SetMetaDataReport();
     return MSERR_OK;
 }
 
@@ -920,6 +938,77 @@ int32_t RecorderServer::GetMaxAmplitude()
 
     auto result = task->GetResult();
     return result.Value();
+}
+
+void RecorderServer::SetMetaDataReport()
+{
+    std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
+    meta->SetData(Tag::RECORDER_ERR_CODE, statisticalEventInfo_.errCode);
+    meta->SetData(Tag::RECORDER_ERR_MSG, statisticalEventInfo_.errMsg);
+    meta->SetData(Tag::RECORDER_DURATION, statisticalEventInfo_.recordDuration);
+    statisticalEventInfo_.containerMime = GetVideoMime(config_.videoCodec) + ";" + GetAudioMime(config_.audioCodec);
+    meta->SetData(Tag::RECORDER_CONTAINER_MIME, statisticalEventInfo_.containerMime);
+    meta->SetData(Tag::RECORDER_VIDEO_MIME, GetVideoMime(config_.videoCodec));
+    statisticalEventInfo_.videoResolution = std::to_string(config_.width) + "x" + std::to_string(config_.height);
+    meta->SetData(Tag::RECORDER_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
+    meta->SetData(Tag::RECORDER_VIDEO_BITRATE, config_.bitRate);
+    if (config_.isHdr) {
+        statisticalEventInfo_.hdrType = static_cast<int8_t>(HdrType::HDR_TYPE_VIVID);
+    }
+    meta->SetData(Tag::RECORDER_HDR_TYPE, statisticalEventInfo_.hdrType);
+    meta->SetData(Tag::RECORDER_AUDIO_MIME, GetAudioMime(config_.audioCodec));
+    meta->SetData(Tag::RECORDER_AUDIO_SAMPLE_RATE, config_.audioSampleRate);
+    meta->SetData(Tag::RECORDER_AUDIO_CHANNEL_COUNT, config_.audioChannel);
+    meta->SetData(Tag::RECORDER_AUDIO_BITRATE, config_.audioBitRate);
+    meta->SetData(Tag::RECORDER_START_LATENCY, statisticalEventInfo_.startLatency);
+    AppendMediaInfo(meta, instanceId_);
+    ReportMediaInfo(instanceId_);
+}
+
+int64_t RecorderServer::GetCurrentMillisecond()
+{
+    std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();
+    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return time;
+}
+
+void RecorderServer::SetErrorInfo(int32_t errCode, std::string &errMsg)
+{
+    statisticalEventInfo_.errCode = errCode;
+    statisticalEventInfo_.errMsg = errMsg;
+}
+
+const std::string& RecorderServer::GetVideoMime(VideoCodecFormat encoder)
+{
+    std::string videoMime;
+    switch (encoder) {
+        case OHOS::Media::VideoCodecFormat::H264:
+            videoMime = Plugins::MimeType::VIDEO_AVC;
+            break;
+        case OHOS::Media::VideoCodecFormat::MPEG4:
+            videoMime = Plugins::MimeType::VIDEO_MPEG4;
+            break;
+        case OHOS::Media::VideoCodecFormat::H265:
+            videoMime = Plugins::MimeType::VIDEO_HEVC;
+            break;
+        default:
+            break;
+    }
+    return videoMime;
+}
+
+const std::string& RecorderServer::GetAudioMime(AudioCodecFormat encoder)
+{
+    std::string audioMime;
+    switch (encoder) {
+        case OHOS::Media::AudioCodecFormat::AUDIO_DEFAULT:
+        case OHOS::Media::AudioCodecFormat::AAC_LC:
+            audioMime = Plugins::MimeType::AUDIO_AAC;
+            break;
+        default:
+            break;
+    }
+    return audioMime;
 }
 
 #ifdef SUPPORT_POWER_MANAGER

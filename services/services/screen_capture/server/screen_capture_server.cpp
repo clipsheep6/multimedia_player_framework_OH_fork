@@ -35,6 +35,10 @@
 
 using OHOS::Rosen::DMError;
 
+namespace {
+const std::string DUMP_PATH = "/data/media/screen_capture.bin";
+}
+
 namespace OHOS {
 namespace Media {
 namespace {
@@ -71,6 +75,7 @@ static const std::string ICON_PATH_STOP = "/etc/screencapture/stop.png";
 static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
+static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.huawei.ohos.screenrecorder";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -720,7 +725,8 @@ int64_t ScreenCaptureServer::GetCurrentMillisecond()
     return time;
 }
 
-void ScreenCaptureServer::SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree)
+void ScreenCaptureServer::SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason,
+    bool userAgree)
 {
     statisticalEventInfo_.errCode = errCode;
     statisticalEventInfo_.errMsg = errMsg;
@@ -740,7 +746,12 @@ int32_t ScreenCaptureServer::RequestUserPrivacyAuthority()
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_) {
-        return StartPrivacyWindow();
+        if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
+            return StartPrivacyWindow();
+        } else {
+            MEDIA_LOGI("ScreenCaptureServer::RequestUserPrivacyAuthority support screenrecorder");
+            return MSERR_OK;
+        }
     }
 #endif
     MEDIA_LOGI("privacy notification window not support, go on to check CAPTURE_SCREEN permission");
@@ -911,7 +922,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
     if (isSuccess) {
         MEDIA_LOGI("PostStartScreenCapture handle success");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_) {
+        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
             int32_t tryTimes = TryStartNotification();
             if (tryTimes > NOTIFICATION_MAX_TRY_NUM) {
                 captureState_ = AVScreenCaptureState::STARTED;
@@ -1140,6 +1151,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     density_ = display->GetDpi();
 
+    bundleName_ = GetClientBundleName(appInfo_.appUid);
+
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::STARTING;
     ret = RequestUserPrivacyAuthority();
@@ -1153,7 +1166,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     if (IsUserPrivacyAuthorityNeeded()) {
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_) {
+        if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
             // Wait for user interactions to ALLOW/DENY capture
             MEDIA_LOGI("Wait for user interactions to ALLOW/DENY capture");
             return MSERR_OK;
@@ -1351,12 +1364,22 @@ void ScreenCaptureServer::UpdateLiveViewContent()
     localLiveViewContent_->addFlag(NotificationLocalLiveViewContent::LiveViewContentInner::BUTTON);
 }
 
+void ScreenCaptureServer::GetDumpFlag()
+{
+    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
+    std::string dumpEnable;
+    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "false");
+    isDump_ = (dumpEnable == "true");
+    MEDIA_LOGI("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
+}
+
 int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
     MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
     std::lock_guard<std::mutex> lock(mutex_);
     startTime_ = GetCurrentMillisecond();
     statisticalEventInfo_.enableMic = isMicrophoneOn_;
+    GetDumpFlag();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "StartScreenCapture start, "
         "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
         FAKE_POINTER(this), isPrivacyAuthorityEnabled ? "true" : "false", captureState_);
@@ -1453,7 +1476,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
-        MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
+        MEDIA_LOGI("get displayInfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
                    display->GetHeight(), display->GetDpi());
         virScrOption.density_ = display->GetDpi();
     }
@@ -1467,8 +1490,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
-    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenid");
-
+    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+    for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
+        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}d", contentFilter_.windowIDsVec[i]);
+    }
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");
@@ -1624,13 +1649,15 @@ int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> 
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
-    int32_t retInner = MSERR_OK;
-    int32_t retMic = MSERR_OK;
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
-        retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
-        retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
-        return retInner && retMic;
+        int32_t retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
+        int32_t retMic = micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
+        if (retInner == MSERR_OK && retMic == MSERR_OK) {
+            return MSERR_OK;
+        } else {
+            return MSERR_UNKNOWN;
+        }
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->AcquireAudioBuffer(micAudioBuffer);
@@ -1669,13 +1696,15 @@ int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AVScreenCaptureMixMode type)
 {
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
         "ReleaseAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
-    int32_t retInner = MSERR_OK;
-    int32_t retMic = MSERR_OK;
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
-        retInner = innerAudioCapture_->ReleaseAudioBuffer();
-        retMic = micAudioCapture_->ReleaseAudioBuffer();
-        return retInner && retMic;
+        int32_t retInner = innerAudioCapture_->ReleaseAudioBuffer();
+        int32_t retMic = micAudioCapture_->ReleaseAudioBuffer();
+        if (retInner == MSERR_OK && retMic == MSERR_OK) {
+            return MSERR_OK;
+        } else {
+            return MSERR_UNKNOWN;
+        }
     }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->ReleaseAudioBuffer();
@@ -1720,19 +1749,13 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_NO_MEMORY, "AcquireVideoBuffer failed, callback is nullptr");
     (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->
         AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
-    std::string dumpEnable;
-    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
-    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "");
-    if (dumpRes == 0 && !dumpEnable.empty() && dumpEnable == "true") {
-        if (surfaceBuffer != nullptr) {
-            void* addr = surfaceBuffer->GetVirAddr();
-            uint32_t bufferSize = surfaceBuffer->GetSize();
-            std::string path = "/data/media/screen_capture.bin";
-            FILE *desFile = fopen(path.c_str(), "wb+");
-            if (desFile) {
-                (void)fwrite(addr, 1, bufferSize, desFile);
-                (void)fclose(desFile);
-            }
+    if (isDump_ && surfaceBuffer != nullptr) {
+        void* addr = surfaceBuffer->GetVirAddr();
+        uint32_t bufferSize = surfaceBuffer->GetSize();
+        FILE *desFile = fopen(DUMP_PATH.c_str(), "wb+");
+        if (desFile && addr != nullptr) {
+            (void)fwrite(addr, 1, bufferSize, desFile);
+            (void)fclose(desFile);
         }
     }
     if (surfaceBuffer != nullptr) {
@@ -1773,7 +1796,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For CAPTURE FILE, should call Recorder interface to make effect when start
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
         "ExcludeContent failed, capture is not STARTED");
-    return MSERR_UNSUPPORT;
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
@@ -1941,7 +1964,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
         }
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    if (isPrivacyAuthorityEnabled_) {
+    if (isPrivacyAuthorityEnabled_ && SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) != 0) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
@@ -2126,13 +2149,13 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
             int channels = 2;
             MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
-            bufferMem->Write((uint8_t*)mixData, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
-            bufferMem->Write((uint8_t*)innerAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::MIC_MODE) {
-            bufferMem->Write((uint8_t*)micAudioBuffer->buffer, innerAudioBuffer->length, 0);
+            bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         }
     } else {
@@ -2159,18 +2182,16 @@ void AudioDataSource::MixAudio(char** srcData, char* mixData, int channels, int 
     double const splitNum = 32;
     int const doubleChannels = 2;
     double coefficient = 1;
-    int output;
     int totalNum = 0;
-    int channelNum = 0;
     if (channels == 0) {
         return;
     }
     for (totalNum = 0; totalNum < bufferSize / channels; totalNum++) {
         int temp = 0;
-        for (channelNum = 0; channelNum < channels; channelNum++) {
+        for (int channelNum = 0; channelNum < channels; channelNum++) {
             temp += *reinterpret_cast<short*>(srcData[channelNum] + totalNum * channels);
         }
-        output = static_cast<int32_t>(temp * coefficient);
+        int32_t output = static_cast<int32_t>(temp * coefficient);
         if (output > max) {
             coefficient = static_cast<double>(max) / static_cast<double>(output);
             output = max;

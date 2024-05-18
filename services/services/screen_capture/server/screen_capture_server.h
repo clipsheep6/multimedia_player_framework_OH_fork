@@ -123,7 +123,7 @@ struct SurfaceBufferEntry {
 };
 
 struct StatisticalEventInfo {
-    int32_t errCode;
+    int32_t errCode = 0;
     std::string errMsg;
     int32_t captureDuration = -1;
     bool userAgree = false;
@@ -266,6 +266,7 @@ private:
     void InitAppInfo();
     void CloseFd();
     void ReleaseInner();
+    void GetDumpFlag();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
@@ -289,7 +290,7 @@ private:
     void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
-    void SetErrorInfo(int32_t errCode, std::string errMsg, StopReason stopReason, bool userAgree);
+    void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
 
 private:
     std::mutex mutex_;
@@ -314,16 +315,18 @@ private:
     std::string appName_ = "";
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
-    AVScreenCaptureDataMode dataMode_;
+    AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isConsumerStart_ = false;
+    bool isDump_ = false;
     ScreenId screenId_ = SCREEN_ID_INVALID;
     std::vector<uint64_t> missionIds_;
     ScreenCaptureContentFilter contentFilter_;
     AVScreenCaptureState captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<NotificationLocalLiveViewContent> localLiveViewContent_;
     int64_t startTime_ = 0;
+    std::string bundleName_;
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
@@ -342,7 +345,7 @@ private:
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
 
     /* used for DFX events */
-    int64_t instanceId_ = 0;
+    uint64_t instanceId_ = 0;
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);
     static int32_t CheckVideoCapParam(const VideoCaptureInfo &videoCapInfo);

@@ -35,6 +35,11 @@ void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code)
     napi_throw_error(env, (std::to_string(code)).c_str(), messageValue.c_str());
 }
 
+void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code, const std::string &errMessage)
+{
+    napi_throw_error(env, (std::to_string(code)).c_str(), errMessage.c_str());
+}
+
 std::string AudioHapticCommonNapi::GetMessageByCode(int32_t &code)
 {
     std::string errMessage;

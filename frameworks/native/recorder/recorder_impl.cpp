@@ -38,6 +38,7 @@ std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 int32_t RecorderImpl::Init()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    HiTraceChain::SetId(traceId_);
     recorderService_ = MediaServiceFactory::GetInstance().CreateRecorderService();
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NO_MEMORY, "failed to create recorder service");
     return MSERR_OK;
@@ -58,6 +59,7 @@ int32_t RecorderImpl::GetLocation(Location &location)
 RecorderImpl::RecorderImpl()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    traceId_ = HiTraceChain::Begin("AVRecorder", HITRACE_FLAG_DEFAULT);
 }
 
 RecorderImpl::~RecorderImpl()
@@ -66,6 +68,7 @@ RecorderImpl::~RecorderImpl()
         (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
         recorderService_ = nullptr;
     }
+    HiTraceChain::End(traceId_);
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 

@@ -19,9 +19,11 @@
 #include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "engine_factory_repo.h"
 #include "player_server_state.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
@@ -31,6 +33,7 @@
 #include "concurrent_task_client.h"
 #include "qos.h"
 #include "player_server_event_receiver.h"
+#include "common/media_source.h"
 
 using namespace OHOS::QOS;
 
@@ -41,6 +44,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
+using namespace OHOS::Media::Plugins;
 const std::string START_TAG = "PlayerCreate->Start";
 const std::string STOP_TAG = "PlayerStop->Destroy";
 static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTION_TABLE = {
@@ -95,7 +100,6 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "failed to new PlayerServer");
-
     (void)server->Init();
     return server;
 }
@@ -103,6 +107,7 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 PlayerServer::PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
 }
 
 PlayerServer::~PlayerServer()
@@ -141,6 +146,11 @@ int32_t PlayerServer::Init()
         std::weak_ptr<PlayerServer> server = std::static_pointer_cast<PlayerServer>(shared_from_this());
         commonEventReceiver_ = std::make_shared<PlayerServerCommonEventReceiver>(server);
     }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Dump Info: lastOpStatus: %{public}s, lastErrMsg: %{public}s, "
+        "speedMode: %{public}d, looping: %{public}s, effectMode: %{public}d, leftVolume: %{public}f, "
+        "rightVolume: %{public}f", FAKE_POINTER(this), lastOpStatus_?"true":"false",
+        lastErrMsg_.c_str(), config_.speedMode, config_.looping?"true":"false", config_.effectMode,
+        config_.leftVolume, config_.rightVolume);
     return MSERR_OK;
 }
 
@@ -149,18 +159,28 @@ int32_t PlayerServer::SetSource(const std::string &url)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
-
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     MEDIA_LOGW("0x%{public}06" PRIXPTR " KPI-TRACE: PlayerServer SetSource in(url)", FAKE_POINTER(this));
     if (url.find("http") != std::string::npos) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
             MEDIA_LOGE("user do not have the right to access INTERNET");
             OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
+            errmasg = "user do not have the right to access INTERNET";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI),
+                url, errmasg);
             return MSERR_INVALID_OPERATION;
         }
     }
     config_.url = url;
     int32_t ret = InitPlayEngine(url);
+    if (ret != MSERR_OK) {
+        errmasg = "SetSource Failed!";
+        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url,
+            errmasg);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
 }
@@ -174,7 +194,15 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
     dataSrc_ = dataSrc;
     std::string url = "media data source";
     config_.url = url;
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     int32_t ret = InitPlayEngine(url);
+    if (ret != MSERR_OK) {
+        errmasg = "SetSource Failed!";
+        FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_STREAM),
+            url, errmasg);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitPlayEngine Failed!");
     int64_t size = 0;
     (void)dataSrc_->GetSize(size);
@@ -193,10 +221,18 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd), fd: %{public}d, offset: %{public}" PRId64
         ", size: %{public}" PRId64, fd, offset, size);
     int32_t ret;
+    std::string appName = GetClientBundleName(appUid_);
+    std::string callerType = "player_framework";
+    std::string errmasg = "";
     if (uriHelper_ != nullptr) {
         std::string uri = uriHelper_->FormattedUri();
-        MEDIA_LOGI("UriHelper already existed, uri: %{public}s", uri.c_str());
+        MEDIA_LOGI("UriHelper already existed, uri: %{private}s", uri.c_str());
         ret = InitPlayEngine(uri);
+        if (ret != MSERR_OK) {
+            errmasg = "SetSource Failed!";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
+                uri, errmasg);
+        }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     } else {
         MEDIA_LOGI("UriHelper is nullptr, create a new instance.");
@@ -204,6 +240,11 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
             MSERR_INVALID_VAL, "Failed to read the fd");
         ret = InitPlayEngine(uriHelper->FormattedUri());
+        if (ret != MSERR_OK) {
+            errmasg = "SetSource Failed!";
+            FaultSourceEventWrite(appName, instanceId_, callerType, static_cast<int8_t>(SourceType::SOURCE_TYPE_FD),
+                uriHelper->FormattedUri(), errmasg);
+        }
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
         uriHelper_ = std::move(uriHelper);
     }
@@ -223,7 +264,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     int32_t ret = taskMgr_.Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task mgr init failed");
-    MEDIA_LOGI("current url is : %{public}s", url.c_str());
+    MEDIA_LOGI("current url is : %{private}s", url.c_str());
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
         IEngineFactory::Scene::SCENE_PLAYBACK, appUid_, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
@@ -231,7 +272,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
-
+    playerEngine_->SetInstancdId(instanceId_);
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(url);
     } else {
@@ -396,6 +437,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
 
 int32_t PlayerServer::HandlePrepare()
 {
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
 
@@ -526,6 +568,7 @@ int32_t PlayerServer::OnPause()
 
 int32_t PlayerServer::HandlePause()
 {
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePause in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
     int32_t ret = playerEngine_->Pause();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Pause Failed!");
@@ -715,6 +758,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
+    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
         lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -757,6 +801,8 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
+        "instanceId: %{public}" PRIu64 "", mSeconds, mode, instanceId_);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
 
@@ -1252,8 +1298,9 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
 
 int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
-    CHECK_AND_RETURN_RET_LOG(trackType >= MediaType::MEDIA_TYPE_AUD && trackType <= MediaType::MEDIA_TYPE_SUBTITLE,
-        MSERR_INVALID_VAL, "Invalid trackType %{public}d", trackType);
+    CHECK_AND_RETURN_RET_LOG(trackType >= Media::MediaType::MEDIA_TYPE_AUD &&
+        trackType <= Media::MediaType::MEDIA_TYPE_SUBTITLE, MSERR_INVALID_VAL,
+        "Invalid trackType %{public}d", trackType);
 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
@@ -1292,8 +1339,10 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     dumpString += "PlayerServer audio effect mode is: " + std::to_string(config_.effectMode) + "\n";
     if (playerEngine_ != nullptr) {
         dumpString += "PlayerServer enable HEBC: " + std::to_string(playerEngine_->GetHEBCMode()) + "\n";
+        playerEngine_->OnDumpInfo(fd);
     }
-
+    dumpString += "PlayerServer client bundle name is: " + GetClientBundleName(appUid_) + "\n";
+    dumpString += "PlayerServer instance id is: " + std::to_string(instanceId_) + "\n";
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);
     dumpString += "PlayerServer video tracks info: \n";

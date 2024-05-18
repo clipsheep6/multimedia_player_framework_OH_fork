@@ -486,7 +486,7 @@ napi_value AVImageGeneratorNapi::JsRelease(napi_env env, napi_callback_info info
 
 void AVImageGeneratorNapi::SetSource(std::string url)
 {
-    MEDIA_LOGI("input url is %{public}s!", url.c_str());
+    MEDIA_LOGI("input url is %{private}s!", url.c_str());
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {

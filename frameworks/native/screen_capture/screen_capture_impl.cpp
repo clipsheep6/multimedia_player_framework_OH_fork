@@ -199,7 +199,7 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     // For capture file:
     // 1. All of innerCapInfo/videoCapInfo/audioEncInfo/videoEncInfo should be be valid
     // 2. micCapInfo should not be invalid
-    MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitCaptureFile start, url:%{public}s, "
+    MEDIA_LOGI("ScreenCaptureImpl: 0x%{public}06" PRIXPTR "InitCaptureFile start, url:%{private}s, "
         "videoEncInfo.audioBitrate:%{public}d, videoEncInfo.audioCodecformat:%{public}d, "
         "innerCapInfo.audioSampleRate:%{public}d, innerCapInfo.audioChannels::%{public}d, "
         "micCapInfo.audioSampleRate:%{public}d, micCapInfo.audioChannels:%{public}d, "

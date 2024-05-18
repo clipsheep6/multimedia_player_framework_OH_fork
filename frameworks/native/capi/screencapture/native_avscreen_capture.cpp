@@ -162,6 +162,7 @@ private:
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
+            free(ohAvBuffer->buffer_->memory_->GetAddr());
         }
         errCode = ReleaseAudioBuffer(screenCaptureObj->screenCapture_, audioSourceType);
         return errCode;
@@ -312,13 +313,11 @@ public:
 
     bool IsDataCallbackEnabled()
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
         return dataCallback_ != nullptr;
     }
 
     bool IsStateChangeCallbackEnabled()
     {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
         return stateChangeCallback_ != nullptr;
     }
 
@@ -845,5 +844,21 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScr
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SetCanvasRotation failed!");
 
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
+    struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount)
+{
+    CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
+    struct ScreenCaptureContentFilterObject *contentFilterObj =
+            reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
+    CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
+                             AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
+    std::vector<int32_t> vec;
+    for (int32_t i = 0; i < windowCount; i++) {
+        vec.push_back(static_cast<int32_t>(*(windowIDs + i)));
+    }
+    contentFilterObj->screenCaptureContentFilter.windowIDsVec = vec;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }

@@ -161,6 +161,7 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
     void SoundPoolAsyncSignError(int32_t errCode, const std::string &operate,
         const std::string &param, const std::string &add = "");
     SoundPoolNapi *napi = nullptr;
+    std::shared_ptr<ISoundPool> soundPool_;
     std::string url_ = "";
     int32_t fd_ = 0;
     int64_t offset_ = 0;

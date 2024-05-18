@@ -76,6 +76,7 @@ public:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t GetMaxAmplitude();
+    void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
 
 private:
     void ConfigureAudioCapture();
@@ -138,9 +139,9 @@ private:
 
     static constexpr uint32_t ENCODE_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE |
         BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_VIDEO_ENCODER;
-    
-    std::string avRecorderTag_ = "[AVRecorder]";
     std::string recorderId_;
+    std::string bundleName_;
+    uint64_t instanceId_ = 0;
 };
 } // namespace MEDIA
 } // namespace OHOS

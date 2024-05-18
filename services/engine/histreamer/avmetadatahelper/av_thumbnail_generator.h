@@ -73,6 +73,7 @@ private:
     void ConvertP010ToNV12(
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
     std::unique_ptr<PixelMap> GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
+    Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
 };
 }  // namespace Media
 }  // namespace OHOS

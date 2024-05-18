@@ -67,7 +67,7 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("AVMetadataHelperServer::SetSource_uri");
-    MEDIA_LOGD("Current uri is : %{public}s %{public}u", uri.c_str(), usage);
+    MEDIA_LOGD("Current uri is : %{private}s %{public}u", uri.c_str(), usage);
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
 
     uriHelper_ = std::make_unique<UriHelper>(uri);

@@ -16,11 +16,14 @@
 #ifndef RECORDER_SERVICE_SERVER_H
 #define RECORDER_SERVICE_SERVER_H
 
+#include <chrono>
+
 #include "i_recorder_service.h"
 #include "i_recorder_engine.h"
 #include "nocopyable.h"
 #include "task_queue.h"
 #include "watchdog.h"
+#include "meta/meta.h"
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/sync_shutdown_callback_stub.h"
 #include "shutdown/shutdown_client.h"
@@ -57,6 +60,11 @@ public:
         REC_RECORDING,
         REC_PAUSED,
         REC_ERROR,
+    };
+
+    enum HdrType : int8_t {
+        HDR_TYPE_NONE,
+        HDR_TYPE_VIVID,
     };
 
     // IRecorderService override
@@ -107,6 +115,15 @@ public:
     void OnInfo(InfoType type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
 
+    void SetMetaDataReport();
+    int64_t GetCurrentMillisecond();
+    void SetErrorInfo(int32_t errCode, std::string &errMsg);
+    const std::string& GetVideoMime(VideoCodecFormat encoder);
+    const std::string& GetAudioMime(AudioCodecFormat encoder);
+
+    /* used for DFX events */
+    uint64_t instanceId_ = 0;
+    std::string bundleName_;
 private:
     int32_t Init();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
@@ -126,7 +143,7 @@ private:
         int32_t height;
         int32_t frameRate;
         int32_t bitRate;
-        bool isHdr;
+        bool isHdr = false;
         bool enableTemporalScale;
         double captureRate;
         int32_t audioSampleRate;
@@ -148,6 +165,16 @@ private:
     std::string lastErrMsg_;
 
     std::atomic<bool> watchdogPause_ = false;
+    struct StatisticalEventInfo {
+        int32_t errCode;
+        std::string errMsg;
+        int32_t recordDuration = -1;
+        std::string containerMime;
+        std::string videoResolution;
+        int8_t hdrType = HdrType::HDR_TYPE_NONE;
+        int32_t startLatency = -1;
+    } statisticalEventInfo_;
+    int64_t startTime_ = 0;
 #ifdef SUPPORT_POWER_MANAGER
     sptr<SaveDocumentSyncCallback> syncCallback_ = nullptr;
     PowerMgr::ShutdownClient &shutdownClient_ = PowerMgr::ShutdownClient::GetInstance();
