@@ -232,15 +232,13 @@ napi_value SystemSoundManagerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("TONE_CATEGORY_ALARM", CreateToneCategoryAlarmObject(env)),
     };
 
-    napi_status status = napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(),
-        NAPI_AUTO_LENGTH, Construct, nullptr, sizeof(syssndmgr_prop) / sizeof(syssndmgr_prop[0]),
-        syssndmgr_prop, &ctorObj);
+    napi_status status = napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+        Construct, nullptr, sizeof(syssndmgr_prop) / sizeof(syssndmgr_prop[0]), syssndmgr_prop, &ctorObj);
     if (status == napi_ok) {
         if (napi_create_reference(env, ctorObj, refCount, &sConstructor_) == napi_ok) {
-            if (napi_set_named_property(env, exports,
-                SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), ctorObj) == napi_ok &&
-                napi_define_properties(env, exports, sizeof(static_prop) / sizeof
-                (static_prop[0]), static_prop) == napi_ok) {
+            if (napi_set_named_property(env, exports, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(),
+                ctorObj) == napi_ok && napi_define_properties(env, exports,
+                sizeof(static_prop) / sizeof(static_prop[0]), static_prop) == napi_ok) {
                     return exports;
             }
         }
