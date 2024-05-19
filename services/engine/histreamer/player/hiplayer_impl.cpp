@@ -1863,6 +1863,10 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOGI("LinkVideoDecoderFilter");
+    if (surface_ == nullptr) {
+        MEDIA_LOGW("no surface, abandon video decode link");
+        return Status::ERROR_NULL_SURFACE;
+    }
     if (videoDecoder_ == nullptr) {
         videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
             FilterType::FILTERTYPE_VDEC);
