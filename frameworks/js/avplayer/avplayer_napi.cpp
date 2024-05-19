@@ -1320,13 +1320,13 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check");
         return result;
     }
-    std::shared_ptr<AVMediaSourceTmp> mediaSourceTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
-    if (mediaSourceTmp == nullptr) {
+    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
+    if (srcTmp == nullptr) {
         MEDIA_LOGE("get GetMediaSource argument failed!");
         return result;
     }
-    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(mediaSourceTmp->url,
-         mediaSourceTmp->header);
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
+    mediaSource->SetMimeType(srcTmp->GetMimeType());
 
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;

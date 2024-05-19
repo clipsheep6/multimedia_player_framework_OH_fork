@@ -58,7 +58,17 @@ public:
     {
         header.clear();
     }
+    void SetMimeType(const std::string& mimeType)
+    {
+        mimeType_ = mimeType;
+    }
+    std::string GetMimeType() const
+    {
+        return mimeType_;
+    }
+
     std::string url {0};
+    std::string mimeType_ {};
     std::map<std::string, std::string> header;
 };
 class PlayerKeys {

@@ -277,6 +277,7 @@ private:
     uint64_t instanceId_ = 0;
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
+    std::string mimeType_;
 };
 } // namespace Media
 } // namespace OHOS
