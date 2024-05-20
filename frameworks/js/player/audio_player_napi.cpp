@@ -851,6 +851,7 @@ napi_value AudioPlayerNapi::GetState(napi_env env, napi_callback_info info)
 
 void AudioPlayerNapi::ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg)
 {
+    MEDIA_LOGD("AudioPlayerNapi ErrorCallback");
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<PlayerCallbackNapi> napiCb = std::static_pointer_cast<PlayerCallbackNapi>(callbackNapi_);
         napiCb->SendErrorCallback(errCode, errMsg);
