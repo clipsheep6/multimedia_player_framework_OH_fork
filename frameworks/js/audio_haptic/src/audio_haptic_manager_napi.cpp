@@ -264,6 +264,7 @@ napi_value AudioHapticManagerNapi::RegisterSource(napi_env env, napi_callback_in
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
+        MEDIA_LOGE("succeed to get create async work");
         asyncContext.release();
     }
 
