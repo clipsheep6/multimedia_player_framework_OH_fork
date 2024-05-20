@@ -1809,6 +1809,8 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
         if (desFile && addr != nullptr) {
             (void)fwrite(addr, 1, bufferSize, desFile);
             (void)fclose(desFile);
+        } else if (desFile) {
+            (void)fclose(desFile);
         }
     }
     if (surfaceBuffer != nullptr) {
