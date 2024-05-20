@@ -83,7 +83,9 @@
           "ffmpeg",
           "bounds_checking_function",
           "libxml2",
-          "libuv"
+          "libuv",
+          "data_share",
+          "ringtone_library"
         ],
         "third_party": [
           "bounds_checking_function"
