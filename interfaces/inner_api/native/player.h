@@ -220,19 +220,23 @@ enum PlayerStates : int32_t {
 
 enum PlaybackRateMode : int32_t {
     /* Video playback at 0.75x normal speed */
-    SPEED_FORWARD_0_75_X,
+    SPEED_FORWARD_0_75_X = 0,
     /* Video playback at normal speed */
-    SPEED_FORWARD_1_00_X,
+    SPEED_FORWARD_1_00_X = 1,
     /* Video playback at 1.25x normal speed */
-    SPEED_FORWARD_1_25_X,
+    SPEED_FORWARD_1_25_X = 2,
     /* Video playback at 1.75x normal speed */
-    SPEED_FORWARD_1_75_X,
+    SPEED_FORWARD_1_75_X = 3,
     /* Video playback at 2.0x normal speed */
-    SPEED_FORWARD_2_00_X,
+    SPEED_FORWARD_2_00_X = 4,
     /* Video playback at 0.5x normal speed */
-    SPEED_FORWARD_0_50_X,
+    SPEED_FORWARD_0_50_X = 5,
     /* Video playback at 1.5x normal speed */
-    SPEED_FORWARD_1_50_X,
+    SPEED_FORWARD_1_50_X = 6,
+    /* Video playback at 0.25x normal speed */
+    SPEED_FORWARD_0_25_X = 8,
+    /* Video playback at 0.125x normal speed */
+    SPEED_FORWARD_0_125_X = 9,
 };
 
 class PlayerCallback {
