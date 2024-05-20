@@ -146,6 +146,8 @@ static const std::vector<struct JsEnumInt> g_frameFlags = {
 static const std::vector<struct JsEnumInt> g_hdrType = {
     { "AV_HDR_TYPE_NONE", HdrType::AV_HDR_TYPE_NONE },
     { "AV_HDR_TYPE_VIVID", HdrType::AV_HDR_TYPE_VIVID },
+    { "APPLICATION_M3U8", HdrType::AV_HDR_TYPE_NONE },
+    { "APPLICATION_DASH", HdrType::AV_HDR_TYPE_VIVID }
 };
 
 static const std::vector<struct JsEnumInt> g_seekMode = {

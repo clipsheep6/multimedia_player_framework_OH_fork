@@ -33,6 +33,7 @@
 #include "meta/video_types.h"
 #include "media_source_napi.h"
 #include "media_log.h"
+#include <fcntl.h>
 
 using namespace OHOS::AudioStandard;
 
@@ -1327,6 +1328,14 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(srcTmp->url, srcTmp->header);
     mediaSource->SetMimeType(srcTmp->GetMimeType());
+
+    mediaSource->SetMimeType(mediaSourceTmp->GetMimeType());
+    std::string type = mediaSource->GetMimeType();
+    std::string uri = mediaSource->url;
+    size_t pos = uri.find("?");
+    std::string fdStr = uri.substr(strlen("fd://"), pos - strlen("fd://"));
+    int32_t fd = stoi(fdStr);
+    int flags = fcntl(fd, F_GETFL);
 
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;

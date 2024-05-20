@@ -67,6 +67,7 @@ public:
         return mimeType_;
     }
 
+    std::string mimeType_ {};
     std::string url {0};
     std::string mimeType_ {};
     std::map<std::string, std::string> header;
