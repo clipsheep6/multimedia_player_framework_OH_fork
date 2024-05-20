@@ -23,7 +23,6 @@ ohos_unittest("recorder_unit_test") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/frameworks/native/recorder",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
-    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
   ]
 
   sanitize = {
@@ -46,7 +45,6 @@ ohos_unittest("recorder_unit_test") {
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
 
@@ -64,6 +62,7 @@ ohos_unittest("recorder_unit_test") {
     "access_token:libtoken_setproc",
     "c_utils:utils",
     "drivers_peripheral_display:hdi_gralloc_client",
+    "graphic_2d:sync_fence",
     "graphic_surface:surface",
     "hilog:libhilog",
   ]
