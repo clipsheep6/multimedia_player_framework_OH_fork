@@ -19,6 +19,9 @@
 #include "media_errors.h"
 #include "system_ability_definition.h"
 #include "media_server_manager.h"
+#include "mem_mgr_client.h"
+#include "mem_mgr_proxy.h"
+#include "system_ability.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServer"};
@@ -26,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServe
 
 namespace OHOS {
 namespace Media {
+const int32_t said = 3002;
 REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)
 MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
@@ -48,11 +52,23 @@ void MediaServer::OnStart()
     MEDIA_LOGD("MediaServer OnStart");
     bool res = Publish(this);
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
+
+    //notify systemability
+    int32_t pid = getpid();
+    //notify
+    Memory::MemMgrClient::GetInstance.NotifyProcessStatus(pid,1,1,said);
+    //setcritical
+    Memory::MemMgrClient::GetInstance.SetCritical(pid,true,said);
+    sleep(10);
+    Memory::MemMgrClient::GetInstance.SetCritical(pid,false,said);
 }
 
 void MediaServer::OnStop()
 {
     MEDIA_LOGD("MediaServer OnStop");
+    //notify systemability
+    int32_t pid = getpid();
+    Memory::MemMgrClient::GetInstance.NotifyProcessStatus(pid,1,0,said);
 }
 
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
