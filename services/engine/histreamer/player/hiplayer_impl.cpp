@@ -177,7 +177,7 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
     }
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
     if (!ret) {
-        MEDIA_LOGE("invalid url. The Url (%{public}s) path may be invalid.", url.c_str());
+        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
         return MSERR_OPEN_FILE_FAILED;
     }
     if (access(realUrlPath.c_str(), R_OK) != 0) {
@@ -191,16 +191,26 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
     return url.find("://") == std::string::npos || url.find("file://") == 0;
 }
 
+void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
+{
+    instanceId_ = instanceId;
+}
+
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MediaTrace trace("HiPlayerImpl::SetSource uri");
     MEDIA_LOGD("SetSource uri");
+    CreateMediaInfo(CallType::AVPLAYER, appUid_, instanceId_);
+    playStatisticalInfo_.sourceUrl = "private";
+    playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
     url_ = uri;
     if (IsFileUrl(uri)) {
         std::string realUriPath;
         int32_t result = GetRealPath(uri, realUriPath);
         if (result != MSERR_OK) {
             MEDIA_LOGE("SetSource error: GetRealPath error");
+            playStatisticalInfo_.errCode = result;
+            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
             return result;
         }
         url_ = "file://" + realUriPath;
@@ -209,7 +219,9 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
         isNetWorkPlay_ = true;
     }
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
-    return TransStatus(Status::OK);
+    int ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return ret;
 }
 
 int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
@@ -217,6 +229,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     MediaTrace trace("HiPlayerImpl::SetMediaSource.");
     MEDIA_LOGI("SetMediaSource entered media source stream");
     if (mediaSource == nullptr) {
+        playStatisticalInfo_.errCode = MSERR_INVALID_VAL;
         return MSERR_INVALID_VAL;
     }
     header_ = mediaSource->header;
@@ -226,7 +239,25 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
     mimeType_ = mediaSource->GetMimeType();
-    return MSERR_OK;
+    if (mimeType_ != AVMimeTypes::APPLICATION_M3U8 && IsFileUrl(url_)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url_, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOGE("SetSource error: GetRealPath error");
+            playStatisticalInfo_.errCode = result;
+            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
+            return result;
+        }
+        url_ = "file://" + realUriPath;
+    }
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
+    }
+
+    pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
+    int ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return ret;
 }
 
 int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc)
@@ -236,9 +267,12 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     if (dataSrc == nullptr) {
         MEDIA_LOGE("SetSource error: dataSrc is null");
     }
+    playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
-    return TransStatus(Status::OK);
+    int ret = TransStatus(Status::OK);
+    playStatisticalInfo_.errCode = ret;
+    return ret;
 }
 
 void HiPlayerImpl::ResetIfSourceExisted()
@@ -275,28 +309,26 @@ int32_t HiPlayerImpl::PrepareAsync()
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOGD("PrepareAsync");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
+        playStatisticalInfo_.errCode = MSERR_INVALID_OPERATION;
+        playStatisticalInfo_.errMsg = "PrepareAsync pipelineStates not initialized or stopped";
         return MSERR_INVALID_OPERATION;
     }
     auto ret = Init();
     if (ret != Status::OK || isInterruptNeeded_.load()) {
         MEDIA_LOGE("PrepareAsync error: init error");
-        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        playStatisticalInfo_.errMsg = "PrepareAsync error: init error";
+        playStatisticalInfo_.errCode = errCode;
+        return errCode;
     }
-    if (dataSrc_ != nullptr) {
-        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
-    } else {
-        if (!header_.empty()) {
-            MEDIA_LOGI("DoSetSource header");
-            ret = DoSetSource(std::make_shared<MediaSource>(url_, header_));
-        } else {
-            MEDIA_LOGD("DoSetSource url");
-            ret = DoSetSource(std::make_shared<MediaSource>(url_));
-        }
-    }
+    DoSetMediaSource(ret);
     if (ret != Status::OK) {
         MEDIA_LOGE("PrepareAsync error: DoSetSource error");
+        playStatisticalInfo_.errMsg = "PrepareAsync error: DoSetSource error";
+        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        playStatisticalInfo_.errCode = errCode;
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
-        return TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        return errCode;
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
@@ -306,10 +338,40 @@ int32_t HiPlayerImpl::PrepareAsync()
     ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOGE("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
-        return TransStatus(ret);
+        auto errCode = TransStatus(ret);
+        playStatisticalInfo_.errCode = errCode;
+        playStatisticalInfo_.errMsg = "pipeline PrepareAsync failed";
+        return errCode;
     }
     ret = pipeline_->PrepareFrame(renderFirstFrame_);
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, TransStatus(ret), "PrepareFrame failed.");
+    auto code = TransStatus(ret);
+    if (ret != Status::OK) {
+        playStatisticalInfo_.errCode = code;
+        playStatisticalInfo_.errMsg = "PrepareFrame failed.";
+    }
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, code, "PrepareFrame failed.");
+    UpdatePlayerStateAndNotify();
+    MEDIA_LOGI("PrepareAsync End");
+    return TransStatus(ret);
+}
+
+void HiPlayerImpl::DoSetMediaSource(Status& ret)
+{
+    if (dataSrc_ != nullptr) {
+        ret = DoSetSource(std::make_shared<MediaSource>(dataSrc_));
+    } else {
+        if (!header_.empty()) {
+            MEDIA_LOG_I("DoSetSource header");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_, header_));
+        } else {
+            MEDIA_LOG_I("DoSetSource url");
+            ret = DoSetSource(std::make_shared<MediaSource>(url_));
+        }
+    }
+}
+
+void HiPlayerImpl::UpdatePlayerStateAndNotify()
+{
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     InitDuration();
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
@@ -318,8 +380,6 @@ int32_t HiPlayerImpl::PrepareAsync()
     NotifyPositionUpdate();
     DoInitializeForHttp();
     OnStateChanged(PlayerStateId::READY);
-    MEDIA_LOGI("PrepareAsync End");
-    return TransStatus(ret);
 }
 
 bool HiPlayerImpl::BreakIfInterruptted()
@@ -383,6 +443,7 @@ int32_t HiPlayerImpl::Play()
 {
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOGI("Play entered.");
+    startTime_ = GetCurrentMillisecond();
     int32_t ret = MSERR_INVALID_VAL;
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
@@ -405,6 +466,9 @@ int32_t HiPlayerImpl::Play()
         } else {
             MEDIA_LOGI("InitialPlay, pending to change state of playing");
         }
+    } else {
+        playStatisticalInfo_.errCode = ret;
+        playStatisticalInfo_.errMsg = "Play failed";
     }
     return ret;
 }
@@ -429,13 +493,25 @@ int32_t HiPlayerImpl::Pause()
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
     OnStateChanged(PlayerStateId::PAUSE);
+    if (startTime_ != -1) {
+        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    }
+    startTime_ = -1;
     return TransStatus(ret);
+}
+
+int64_t HiPlayerImpl::GetCurrentMillisecond()
+{
+    std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();
+    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return time;
 }
 
 int32_t HiPlayerImpl::Stop()
 {
     MediaTrace trace("HiPlayerImpl::Stop");
-    MEDIA_LOGI("Stop in");
+    MEDIA_LOGI("Stop entered.");
+    UpdatePlayStatistics();
     callbackLooper_.StopReportMediaProgress();
     // close demuxer first to avoid concurrent problem
     auto ret = Status::ERROR_UNKNOWN;
@@ -465,8 +541,85 @@ int32_t HiPlayerImpl::Stop()
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
+    AppendPlayerMediaInfo();
     OnStateChanged(PlayerStateId::STOPPED);
+    ReportMediaInfo(instanceId_);
     return TransStatus(ret);
+}
+
+void HiPlayerImpl::UpdatePlayStatistics()
+{
+    MEDIA_LOG_I("HiPlayerImpl UpdatePlayStatistics");
+    playStatisticalInfo_.isDrmProtected = isDrmProtected_;
+    if (demuxer_ != nullptr) {
+        DownloadInfo downLoadInfo;
+        auto ret = demuxer_->GetDownloadInfo(downLoadInfo);
+        if (ret == Status::OK) {
+            MEDIA_LOG_I("GetDownloadInfo success");
+            playStatisticalInfo_.avgDownloadRate = downLoadInfo.avgDownloadRate;
+            playStatisticalInfo_.avgDownloadSpeed = downLoadInfo.avgDownloadSpeed;
+            playStatisticalInfo_.totalDownLoadBits = downLoadInfo.totalDownLoadBits;
+            playStatisticalInfo_.isTimeOut = downLoadInfo.isTimeOut;
+        } else {
+            MEDIA_LOG_E("GetDownloadInfo failed with error " PUBLIC_LOG_D32, ret);
+        }
+    } else {
+        MEDIA_LOG_E("GetDownloadInfo failed demuxer is null");
+    }
+    if (videoDecoder_ != nullptr) {
+        auto ret = videoDecoder_->GetLagInfo(playStatisticalInfo_.lagTimes, playStatisticalInfo_.maxLagDuration,
+            playStatisticalInfo_.avgLagDuration);
+        if (ret == Status::OK) {
+            MEDIA_LOG_I("GetLagInfo success");
+        } else {
+            MEDIA_LOG_E("GetLagInfo failed with error " PUBLIC_LOG_D32, ret);
+        }
+    } else {
+        MEDIA_LOG_E("GetLagInfo failed videoDecoder is null");
+    }
+}
+
+void HiPlayerImpl::AppendPlayerMediaInfo()
+{
+    MEDIA_LOG_I("AppendPlayerMediaInfo entered.");
+    if (startTime_ != -1) {
+        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    }
+    startTime_ = -1;
+    playStatisticalInfo_.playDuration = static_cast<int32_t>(playTotalDuration_);
+    playStatisticalInfo_.maxSeekLatency = static_cast<int32_t>(maxSeekLatency_);
+    playStatisticalInfo_.maxAccurateSeekLatency = static_cast<int32_t>(maxAccurateSeekLatency_);
+    playStatisticalInfo_.maxSurfaceSwapLatency = static_cast<int32_t>(maxSurfaceSwapLatency_);
+    std::shared_ptr<Meta> meta = std::make_shared<Meta>();
+    playStatisticalInfo_.containerMime = playStatisticalInfo_.videoMime + " : " + playStatisticalInfo_.audioMime;
+    meta->SetData(Tag::AV_PLAYER_ERR_CODE, playStatisticalInfo_.errCode);
+    meta->SetData(Tag::AV_PLAYER_ERR_MSG, playStatisticalInfo_.errMsg);
+    meta->SetData(Tag::AV_PLAYER_PLAY_DURATION, playStatisticalInfo_.playDuration);
+    meta->SetData(Tag::AV_PLAYER_SOURCE_TYPE, playStatisticalInfo_.sourceType);
+    meta->SetData(Tag::MEDIA_FILE_URI, playStatisticalInfo_.sourceUrl);
+    meta->SetData(Tag::AV_PLAYER_AVG_DOWNLOAD_RATE, playStatisticalInfo_.avgDownloadRate);
+    meta->SetData(Tag::AV_PLAYER_AVG_DOWNLOAD_SPEED, playStatisticalInfo_.avgDownloadSpeed);
+    meta->SetData(Tag::AV_PLAYER_DOWNLOAD_TOTAL_BITS, playStatisticalInfo_.totalDownLoadBits);
+    meta->SetData(Tag::AV_PLAYER_DOWNLOAD_TIME_OUT, playStatisticalInfo_.isTimeOut);
+    meta->SetData(Tag::AV_PLAYER_CONTAINER_MIME, playStatisticalInfo_.containerMime);
+    meta->SetData(Tag::AV_PLAYER_VIDEO_MIME, playStatisticalInfo_.videoMime);
+    meta->SetData(Tag::AV_PLAYER_VIDEO_RESOLUTION, playStatisticalInfo_.videoResolution);
+    meta->SetData(Tag::AV_PLAYER_VIDEO_BITRATE, playStatisticalInfo_.videoBitrate);
+    meta->SetData(Tag::AV_PLAYER_VIDEO_FRAMERATE, playStatisticalInfo_.videoFrameRate);
+    meta->SetData(Tag::AV_PLAYER_HDR_TYPE, playStatisticalInfo_.hdrType);
+    meta->SetData(Tag::AV_PLAYER_AUDIO_MIME, playStatisticalInfo_.audioMime);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, playStatisticalInfo_.audioSampleRate);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, playStatisticalInfo_.audioChannelCount);
+    meta->SetData(Tag::AV_PLAYER_AUDIO_BITRATE, playStatisticalInfo_.audioBitrate);
+    meta->SetData(Tag::AV_PLAYER_IS_DRM_PROTECTED, playStatisticalInfo_.isDrmProtected);
+    meta->SetData(Tag::AV_PLAYER_START_LATENCY, playStatisticalInfo_.startLatency);
+    meta->SetData(Tag::AV_PLAYER_MAX_SEEK_LATENCY, playStatisticalInfo_.maxSeekLatency);
+    meta->SetData(Tag::AV_PLAYER_MAX_ACCURATE_SEEK_LATENCY, playStatisticalInfo_.maxAccurateSeekLatency);
+    meta->SetData(Tag::AV_PLAYER_LAG_TIMES, playStatisticalInfo_.lagTimes);
+    meta->SetData(Tag::AV_PLAYER_MAX_LAG_DURATION, playStatisticalInfo_.maxLagDuration);
+    meta->SetData(Tag::AV_PLAYER_AVG_LAG_DURATION, playStatisticalInfo_.avgLagDuration);
+    meta->SetData(Tag::AV_PLAYER_MAX_SURFACESWAP_LATENCY, playStatisticalInfo_.maxSurfaceSwapLatency);
+    AppendMediaInfo(meta, instanceId_);
 }
 
 int32_t HiPlayerImpl::Reset()
@@ -499,6 +652,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         NotifySeek(Status::OK, notifySeekDone, mSeconds);
         return Status::OK;
     }
+    int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
         audioSink_->SetIsTransitent(true);
     }
@@ -536,7 +690,18 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
         audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
+    UpdateMaxSeekLatency(mode, seekStartTime);
     return rtv;
+}
+
+void HiPlayerImpl::UpdateMaxSeekLatency(PlayerSeekMode mode, int64_t seekStartTime)
+{
+    int64_t seekDiffTime = GetCurrentMillisecond() - seekStartTime;
+    if (mode == PlayerSeekMode::SEEK_CLOSEST) {
+        maxAccurateSeekLatency_ = (maxAccurateSeekLatency_ > seekDiffTime) ? maxAccurateSeekLatency_ : seekDiffTime;
+    } else {
+        maxSeekLatency_ = (maxSeekLatency_ > seekDiffTime) ? maxSeekLatency_ : seekDiffTime;
+    }
 }
 
 bool HiPlayerImpl::IsSeekInSitu(int64_t mSeconds)
@@ -685,6 +850,7 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {
     MEDIA_LOGD("SetVideoSurface in");
 #ifdef SUPPORT_VIDEO
+    int64_t startSetSurfaceTime = GetCurrentMillisecond();
     FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
                          "Set video surface failed, surface == nullptr");
     surface_ = surface;
@@ -693,6 +859,9 @@ int32_t HiPlayerImpl::SetVideoSurface(sptr<Surface> surface)
         pipelineStates_ != PlayerStates::PLAYER_STATE_ERROR) {
         return TransStatus(videoDecoder_->SetVideoSurface(surface));
     }
+    int64_t endSetSurfaceTime = GetCurrentMillisecond();
+    int64_t diffTime = endSetSurfaceTime - startSetSurfaceTime;
+    maxSurfaceSwapLatency_ = maxSurfaceSwapLatency_ > diffTime ? maxSurfaceSwapLatency_ : diffTime;
 #endif
     return TransStatus(Status::OK);
 }
@@ -1020,6 +1189,7 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
         }
         if (IsVideoMime(mime)) {
             Format videoTrackInfo {};
+            playStatisticalInfo_.videoMime = mime;
             videoTrackInfo.PutStringValue("codec_mime", mime);
             videoTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::VIDEO));
             int32_t trackIndex;
@@ -1027,19 +1197,29 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             videoTrackInfo.PutIntValue("track_index", trackIndex);
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
+            playStatisticalInfo_.videoBitrate = static_cast<int32_t>(bitRate);
             videoTrackInfo.PutLongValue("bitrate", bitRate);
             double frameRate;
             trackInfo->GetData(Tag::VIDEO_FRAME_RATE, frameRate);
+            playStatisticalInfo_.videoFrameRate = static_cast<float>(frameRate);
             videoTrackInfo.PutDoubleValue("frame_rate", frameRate * FRAME_RATE_UNIT_MULTIPLE);
             int32_t height;
             trackInfo->GetData(Tag::VIDEO_HEIGHT, height);
             videoTrackInfo.PutIntValue("height", height);
             int32_t width;
             trackInfo->GetData(Tag::VIDEO_WIDTH, width);
+            playStatisticalInfo_.videoResolution = std::to_string(width) + "x" + std::to_string(height);
             videoTrackInfo.PutIntValue("width", width);
             Plugins::VideoRotation rotation;
             trackInfo->Get<Tag::VIDEO_ROTATION>(rotation);
             videoTrackInfo.PutIntValue(Tag::VIDEO_ROTATION, rotation);
+            bool isHdr = false;
+            trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+            if (isHdr) {
+                playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_VIVID);
+            } else {
+                playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_NONE);
+            }
             videoTrack.emplace_back(std::move(videoTrackInfo));
         }
     }
@@ -1059,18 +1239,22 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             continue;
         }
         if (mime.find("audio/") == 0) {
+            playStatisticalInfo_.audioMime = mime;
             Format audioTrackInfo {};
             audioTrackInfo.PutStringValue("codec_mime", mime);
             audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::AUDIO));
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
             int64_t bitRate;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
+            playStatisticalInfo_.audioBitrate = static_cast<int32_t>(bitRate);
             audioTrackInfo.PutLongValue("bitrate", bitRate);
             int32_t audioChannels;
             trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
+            playStatisticalInfo_.audioChannelCount = audioChannels;
             audioTrackInfo.PutIntValue("channel_count", audioChannels);
             int32_t audioSampleRate;
             trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
+            playStatisticalInfo_.audioSampleRate = audioSampleRate;
             audioTrackInfo.PutIntValue("sample_rate", audioSampleRate);
             int32_t sampleDepth;
             trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
@@ -1177,6 +1361,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
         case EventType::EVENT_VIDEO_RENDERING_START: {
             MEDIA_LOGI("video first frame reneder received");
             Format format;
+            playStatisticalInfo_.startLatency = static_cast<int32_t>(AnyCast<uint64_t>(event.param));
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
             HandleInitialPlayingStateChange(event.type);
             break;
@@ -1257,11 +1442,16 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->duration = bufferDuration_;
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
-    if(!mimeType_.empty()) {
+
+    if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    demuxer_->SetDumpFlag(isDump_);
+
     auto ret = demuxer_->SetDataSource(source);
+    if (demuxer_ != nullptr) {
+        demuxer_->SetCallerInfo(instanceId_, bundleName_);
+        demuxer_->SetDumpFlag(isDump_);
+    }
     if (ret == Status::OK && !MetaUtils::CheckFileType(demuxer_->GetGlobalMetaInfo())) {
         MEDIA_LOGW("0x%{public}06 " PRIXPTR "SetSource unsupport", FAKE_POINTER(this));
         ret = Status::ERROR_INVALID_DATA;
@@ -1283,6 +1473,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
 Status HiPlayerImpl::Resume()
 {
     MediaTrace trace("HiPlayerImpl::Resume");
+    MEDIA_LOG_I("Resume entered.");
     Status ret = Status::OK;
     ret = pipeline_->Resume();
     syncManager_->Resume();
@@ -1292,6 +1483,7 @@ Status HiPlayerImpl::Resume()
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
+    startTime_ = GetCurrentMillisecond();
     return ret;
 }
 
@@ -1353,6 +1545,10 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     if (!singleLoop_.load()) {
         OnStateChanged(PlayerStateId::EOS);
     }
+    if (startTime_ != -1) {
+        playTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    }
+    startTime_ = -1;
     callbackLooper_.OnInfo(INFO_TYPE_EOS, static_cast<int32_t>(singleLoop_.load()), format);
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
@@ -1538,6 +1734,7 @@ void HiPlayerImpl::NotifyAudioFirstFrame(const Event& event)
 {
     uint64_t latency = AnyCast<uint64_t>(event.param);
     MEDIA_LOGI("Audio first frame event in latency " PUBLIC_LOG_U64, latency);
+    playStatisticalInfo_.startLatency = static_cast<int32_t>(latency);
     Format format;
     (void)format.PutLongValue(PlayerKeys::AUDIO_FIRST_FRAME, latency);
     callbackLooper_.OnInfo(INFO_TYPE_AUDIO_FIRST_FRAME, 0, format);
@@ -1602,10 +1799,16 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
 void HiPlayerImpl::OnDumpInfo(int32_t fd)
 {
     MEDIA_LOGD("HiPlayerImpl::OnDumpInfo called.");
-    audioDecoder_->OnDumpInfo(fd);
-    demuxer_->OnDumpInfo(fd);
+    if (audioDecoder_ != nullptr) {
+        audioDecoder_->OnDumpInfo(fd);
+    }
+    if (demuxer_ != nullptr) {
+        demuxer_->OnDumpInfo(fd);
+    }
 #ifdef SUPPORT_VIDEO
-    videoDecoder_->OnDumpInfo(fd);
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->OnDumpInfo(fd);
+    }
 #endif
 }
 
@@ -1619,6 +1822,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
+    audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
     audioDecoder_->SetDumpFlag(isDump_);
     // set decrypt config for drm audios
     if (isDrmProtected_) {
@@ -1687,7 +1891,7 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
         FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
         videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
         videoDecoder_->SetSyncCenter(syncManager_);
-        videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_);
+        videoDecoder_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         if (surface_ != nullptr) {
             videoDecoder_->SetVideoSurface(surface_);
         }

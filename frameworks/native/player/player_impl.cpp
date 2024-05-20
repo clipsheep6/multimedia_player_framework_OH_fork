@@ -82,7 +82,7 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 
 int32_t PlayerImpl::SetSource(const std::string &url)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(url): %{public}s", FAKE_POINTER(this), url.c_str());
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->SetSource(url);
@@ -97,7 +97,8 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(url): %{public}s", FAKE_POINTER(this), url.c_str());
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(url): %{private}s",
+        FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->AddSubSource(url);

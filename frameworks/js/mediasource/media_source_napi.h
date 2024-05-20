@@ -34,7 +34,11 @@ private:
      * function createMediaSourceWithUrl(url: string, header?: string): MediaSource
      */
     static napi_value JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info);
+    /**
+     * function setMimeType(mimeType: AVMimeType): MediaSource
+     */
     static napi_value JsSetMimeType(napi_env env, napi_callback_info info);
+ 
     MediaSourceNapi() = default;
     virtual ~MediaSourceNapi() = default;
 

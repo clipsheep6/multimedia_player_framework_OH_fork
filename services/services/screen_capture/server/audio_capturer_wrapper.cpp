@@ -105,6 +105,12 @@ void AudioCapturerWrapper::SetIsMuted(bool isMuted)
     isMuted_.store(isMuted);
 }
 
+bool AudioCapturerWrapper::GetIsMuted()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " GetIsMuted isMuted:%{public}d", FAKE_POINTER(this), isMuted_.load());
+    return isMuted_.load();
+}
+
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
 {
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK

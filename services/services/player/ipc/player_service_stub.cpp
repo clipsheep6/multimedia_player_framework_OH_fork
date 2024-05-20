@@ -27,6 +27,7 @@
 #include "parameter.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
+#include "av_common.h"
 #ifdef SUPPORT_AVSESSION
 #include "avsession_background.h"
 #endif
@@ -742,13 +743,35 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
         auto vstr = data.ReadString();
         header.emplace(kstr, vstr);
     }
-    std::shared_ptr<AVMediaSource> meidaSource = std::make_shared<AVMediaSource>(url, header);
+    std::string mimeType = data.ReadString();
+
+    std::shared_ptr<AVMediaSource> mediaSource = std::make_shared<AVMediaSource>(url, header);
+    mediaSource->SetMimeType(mimeType);
+
+    int32_t fd = -1;
+    if (mimeType == AVMimeType::APPLICATION_M3U8) {
+        fd = data.ReadFileDescriptor();
+        MEDIA_LOGI("fd : %d", fd);
+    }
+    std::string uri = mediaSource->url;
+    size_t fdHeadPos = uri.find("fd://");
+    size_t fdTailPos = uri.find("?");
+    if (mimeType == AVMimeType::APPLICATION_M3U8 && fdHeadPos != std::string::npos &&
+        fdTailPos != std::string::npos) {
+        std::string temp = uri.substr(fdTailPos);
+        std::string newUrl = "fd://" + std::to_string(fd) + temp;
+        mediaSource->url = newUrl;
+    }
+
     struct AVPlayStrategy strategy;
     strategy.preferredWidth = data.ReadUint32();
     strategy.preferredHeight = data.ReadUint32();
     strategy.preferredBufferDuration = data.ReadUint32();
     strategy.preferredHdr = data.ReadBool();
-    reply.WriteInt32(SetMediaSource(meidaSource, strategy));
+    reply.WriteInt32(SetMediaSource(mediaSource, strategy));
+    if (mimeType == AVMimeType::APPLICATION_M3U8) {
+        (void)::close(fd);
+    }
     return MSERR_OK;
 }
 

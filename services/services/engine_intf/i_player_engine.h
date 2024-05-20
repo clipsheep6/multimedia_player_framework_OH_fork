@@ -169,6 +169,10 @@ public:
     {
         (void)fd;
     }
+    virtual void SetInstancdId(uint64_t instanceId)
+    {
+        (void)instanceId;
+    }
 };
 } // namespace Media
 } // namespace OHOS
