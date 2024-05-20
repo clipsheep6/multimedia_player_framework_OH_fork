@@ -595,6 +595,7 @@ AVPlayerCallback::~AVPlayerCallback()
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
+    MEDIA_LOGI("OnError is called");
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
         errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
