@@ -255,6 +255,7 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerServer::InitPlayEngine(const std::string &url)
 {
+    MEDIA_LOGI("PlayEngine Init");
     if (lastOpStatus_ != PLAYER_IDLE) {
         MEDIA_LOGE("current state is: %{public}s, not support SetSource", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
