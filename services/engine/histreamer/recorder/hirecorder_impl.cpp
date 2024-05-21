@@ -174,7 +174,7 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
 int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
 {
-    MEDIA_LOG_I("SetAudioDataSource enter.");
+    MEDIA_LOG_I("HiRecorderImpl SetAudioDataSource enter.");
     sourceId = INVALID_SOURCE_ID;
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
