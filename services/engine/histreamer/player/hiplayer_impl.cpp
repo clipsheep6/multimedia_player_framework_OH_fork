@@ -1018,8 +1018,11 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
     return TransStatus(Status::OK);
 }
 
-void HiPlayerImpl::InitAudioDefaultTrackIndex()
+Status HiPlayerImpl::InitAudioDefaultTrackIndex()
 {
+    if (!demuxer_) {
+        return Status::ERROR_UNKNOWN;
+    }
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
@@ -1034,6 +1037,7 @@ void HiPlayerImpl::InitAudioDefaultTrackIndex()
         }
     }
     currentAudioTrackId_ = defaultAudioTrackId_;
+    return Status::OK;
 }
 
 int32_t HiPlayerImpl::SetAudioEffectMode(int32_t effectMode)
@@ -1113,7 +1117,9 @@ int32_t HiPlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
         MSERR_INVALID_VAL, "Invalid trackType %{public}d", trackType);
     if (trackType == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
         if (currentAudioTrackId_ < 0) {
-            InitAudioDefaultTrackIndex();
+            if (Status::OK != InitAudioDefaultTrackIndex()) {
+                return MSERR_UNKNOWN;
+            }
         }
         index = currentAudioTrackId_;
     } else {
@@ -1129,7 +1135,9 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId)
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     if (currentAudioTrackId_ < 0) {
-        InitAudioDefaultTrackIndex();
+        if (Status::OK != InitAudioDefaultTrackIndex()) {
+            MEDIA_LOGW("Init audio default track index fail");
+        }
     }
     FALSE_RETURN_V_MSG_W(trackId != currentAudioTrackId_ && trackId >= 0 && trackId < metaInfo.size(),
         MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
@@ -1169,7 +1177,9 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
 {
     MEDIA_LOGI("DeselectTrack trackId is " PUBLIC_LOG_D32, trackId);
     if (currentAudioTrackId_ < 0) {
-        InitAudioDefaultTrackIndex();
+        if (Status::OK != InitAudioDefaultTrackIndex()) {
+            MEDIA_LOGW("Init audio default track index fail");
+        }
     }
     FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
         MSERR_INVALID_VAL, "DeselectTrack trackId invalid");

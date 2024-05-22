@@ -199,7 +199,7 @@ private:
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
     void SetBundleName(std::string bundleName);
-    void InitAudioDefaultTrackIndex();
+    Status InitAudioDefaultTrackIndex();
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
 
