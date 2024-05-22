@@ -21,6 +21,7 @@
 #include "securec.h"
 #include "image_source.h"
 #include "i_media_service.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
@@ -71,44 +72,10 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
         delete holder;
     };
 
-    int32_t minStride = frame.width_ * frame.bytesPerPixel_;
-    CHECK_AND_RETURN_RET_LOG(minStride <= frame.stride_, nullptr, "stride info wrong");
-
-    if (frame.stride_ == minStride) {
-        CANCEL_SCOPE_EXIT_GUARD(0);
-        holder->isShmem = true;
-        holder->shmem = mem;
-        holder->heap = frame.GetFlattenedData();
-        return holder;
-    }
-
-    static constexpr int64_t maxAllowedSize = 100 * 1024 * 1024;
-    int64_t memSize = static_cast<int64_t>(minStride) * frame.height_;
-    CHECK_AND_RETURN_RET_LOG(memSize <= maxAllowedSize, nullptr, "alloc heap size too large");
-
-    uint8_t *heap = new (std::nothrow) uint8_t[memSize];
-    CHECK_AND_RETURN_RET_LOG(heap != nullptr, nullptr, "alloc heap failed");
-
-    ON_SCOPE_EXIT(1) {
-        delete [] heap;
-    };
-
-    uint8_t *currDstPos = heap;
-    uint8_t *currSrcPos = frame.GetFlattenedData();
-    for (int32_t row = 0; row < frame.height_; ++row) {
-        errno_t rc = memcpy_s(currDstPos, static_cast<size_t>(memSize), currSrcPos, static_cast<size_t>(minStride));
-        CHECK_AND_RETURN_RET_LOG(rc == EOK, nullptr, "memcpy_s failed");
-
-        currDstPos += minStride;
-        currSrcPos += frame.stride_;
-        memSize -= minStride;
-    }
-
-    holder->isShmem = false;
-    holder->heap = heap;
-
     CANCEL_SCOPE_EXIT_GUARD(0);
-    CANCEL_SCOPE_EXIT_GUARD(1);
+    holder->isShmem = true;
+    holder->shmem = mem;
+    holder->heap = frame.GetFlattenedData();
     return holder;
 }
 
@@ -251,19 +218,20 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
-
+    MediaTrace fetchFrameAtTime("M:FetchFrameAtTime");
     OutputConfiguration config;
     config.colorFormat = param.colorFormat;
     config.dstHeight = param.dstHeight;
     config.dstWidth = param.dstWidth;
 
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
-    auto pixelMap = CreatePixelMap(mem, param.colorFormat, rotation_);
+    auto pixelMap = CreatePixelMap(mem, PixelFormat::NV12, rotation_);
 
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
  
     const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
                                          .srcPixelFormat = PixelFormat::NV12 };
+    MediaTrace convertYuvToRgb("M:ConvertYuvToRgb");
     pixelMap =
         PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
     if (rotation_ > 0 && pixelMap != nullptr) {
