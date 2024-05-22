@@ -249,7 +249,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOG_I("GetSurface enter.");
+    MEDIA_LOG_I("HiRecorderImpl GetSurface enter.");
     if (videoEncoderFilter_) {
         producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
