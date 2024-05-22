@@ -197,7 +197,7 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
 
 int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 {
-    MEDIA_LOG_I("SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
+    MEDIA_LOG_I("HiRecorderImpl SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
     outputFormatType_ = format;
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
