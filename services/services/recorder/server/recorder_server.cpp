@@ -66,6 +66,7 @@ RecorderServer::RecorderServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " RecorderServer instanceId:(%{public}d)", instanceId_);
     CreateMediaInfo(AVRECORDER, IPCSkeleton::GetCallingUid(), instanceId_);
 }
 
