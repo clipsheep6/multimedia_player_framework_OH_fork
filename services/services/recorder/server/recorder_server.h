@@ -118,8 +118,8 @@ public:
     void SetMetaDataReport();
     int64_t GetCurrentMillisecond();
     void SetErrorInfo(int32_t errCode, std::string &errMsg);
-    const std::string& GetVideoMime(VideoCodecFormat encoder);
-    const std::string& GetAudioMime(AudioCodecFormat encoder);
+    std::string GetVideoMime(VideoCodecFormat encoder);
+    std::string GetAudioMime(AudioCodecFormat encoder);
 
     /* used for DFX events */
     uint64_t instanceId_ = 0;

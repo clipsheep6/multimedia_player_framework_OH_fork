@@ -978,7 +978,7 @@ void RecorderServer::SetErrorInfo(int32_t errCode, std::string &errMsg)
     statisticalEventInfo_.errMsg = errMsg;
 }
 
-const std::string& RecorderServer::GetVideoMime(VideoCodecFormat encoder)
+std::string RecorderServer::GetVideoMime(VideoCodecFormat encoder)
 {
     std::string videoMime;
     switch (encoder) {
@@ -997,7 +997,7 @@ const std::string& RecorderServer::GetVideoMime(VideoCodecFormat encoder)
     return videoMime;
 }
 
-const std::string& RecorderServer::GetAudioMime(AudioCodecFormat encoder)
+std::string RecorderServer::GetAudioMime(AudioCodecFormat encoder)
 {
     std::string audioMime;
     switch (encoder) {
