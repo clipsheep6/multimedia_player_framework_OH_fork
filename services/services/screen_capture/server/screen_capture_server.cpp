@@ -905,10 +905,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
 
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
 
-    ret = StartAudioCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartAudioCapture failed, ret:%{public}d, dataType:%{public}d",
-        ret, captureConfig_.dataType);
-
     int32_t retInner = StartInnerAudioCapture();
     CHECK_AND_RETURN_RET_LOG(retInner == MSERR_OK, retInner, "StartInnerAudioCapture failed, ret:%{public}d,"
         "dataType:%{public}d", retInner, captureConfig_.dataType);
