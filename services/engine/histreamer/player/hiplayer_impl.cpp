@@ -1453,6 +1453,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     playStrategy->preferHDR = preferHDR_;
     source->SetPlayStrategy(playStrategy);
 
+    if (surface_ == nullptr) {
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    }
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
