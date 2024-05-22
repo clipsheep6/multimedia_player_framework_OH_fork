@@ -205,7 +205,7 @@ int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
 {
-    MEDIA_LOG_I("SetObs enter.");
+    MEDIA_LOG_I("HiRecorderImpl SetObs enter.");
     obs_ = obs;
     return (int32_t)Status::OK;
 }
