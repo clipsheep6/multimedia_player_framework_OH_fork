@@ -232,7 +232,10 @@ napi_value SystemTonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void *data) {
                 SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
-                context->title = context->objectInfo->systemTonePlayer_->GetTitle();
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->title = napiSystemTonePlayer->systemTonePlayer_->GetTitle();
                 context->status = MSERR_OK;
             },
             GetTitleAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
@@ -280,8 +283,11 @@ napi_value SystemTonePlayerNapi::Prepare(napi_env env, napi_callback_info info)
         napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
-                SystemTonePlayerAsyncContext* context = static_cast<SystemTonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->systemTonePlayer_->Prepare();
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->Prepare();
             },
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -386,8 +392,8 @@ napi_value SystemTonePlayerNapi::Start(napi_env env, napi_callback_info info)
 
 void SystemTonePlayerNapi::AsyncStart(napi_env env, void *data)
 {
-    SystemTonePlayerAsyncContext* context = static_cast<SystemTonePlayerAsyncContext*>(data);
-    auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+    SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
     ObjectRefMap objectGuard(obj);
     auto *napiSystemTonePlayer = objectGuard.GetPtr();
     context->streamID = napiSystemTonePlayer->systemTonePlayer_->Start(context->systemToneOptions);
@@ -432,11 +438,7 @@ napi_value SystemTonePlayerNapi::Stop(napi_env env, napi_callback_info info)
         }
 
         napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
-        status = napi_create_async_work(env, nullptr, resource,
-            [](napi_env env, void* data) {
-                SystemTonePlayerAsyncContext* context = static_cast<SystemTonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->systemTonePlayer_->Stop(context->streamID);
-            },
+        status = napi_create_async_work(env, nullptr, resource, AsyncStop,
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_LOGE("Stop: Failed to get create async work");
@@ -448,6 +450,15 @@ napi_value SystemTonePlayerNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     return result;
+}
+
+void SystemTonePlayerNapi::AsyncStop(napi_env env, void *data)
+{
+    SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
+    ObjectRefMap objectGuard(obj);
+    auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    context->status = napiSystemTonePlayer->systemTonePlayer_->Stop(context->streamID);
 }
 
 napi_value SystemTonePlayerNapi::Release(napi_env env, napi_callback_info info)
@@ -482,11 +493,7 @@ napi_value SystemTonePlayerNapi::Release(napi_env env, napi_callback_info info)
         }
 
         napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
-        status = napi_create_async_work(env, nullptr, resource,
-            [](napi_env env, void* data) {
-                SystemTonePlayerAsyncContext* context = static_cast<SystemTonePlayerAsyncContext*>(data);
-                context->status = context->objectInfo->systemTonePlayer_->Release();
-            },
+        status = napi_create_async_work(env, nullptr, resource, AsyncRelease,
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_LOGE("Release: Failed to get create async work");
@@ -498,6 +505,15 @@ napi_value SystemTonePlayerNapi::Release(napi_env env, napi_callback_info info)
     }
 
     return result;
+}
+
+void SystemTonePlayerNapi::AsyncRelease(napi_env env, void *data)
+{
+    SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
+    ObjectRefMap objectGuard(obj);
+    auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    context->status = napiSystemTonePlayer->systemTonePlayer_->Release();
 }
 } // namespace Media
 } // namespace OHOS
