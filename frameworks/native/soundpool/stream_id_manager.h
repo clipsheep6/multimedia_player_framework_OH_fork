@@ -44,6 +44,8 @@ public:
 
     int32_t SetFrameWriteCallback(const std::shared_ptr<ISoundPoolFrameWriteCallback> &callback);
 
+    int32_t ReorderStream(int32_t streamID, int32_t priority);
+
 private:
     class CacheBufferCallBack : public ISoundPoolCallback {
     public:

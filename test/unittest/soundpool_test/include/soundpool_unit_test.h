@@ -30,6 +30,7 @@ public:
 protected:
     static const int32_t SOUND_NUM = 4;
     static const int32_t waitTime1 = 1;
+    static const int32_t waitTime2 = 2;
     static const int32_t waitTime3 = 3;
     int32_t loadNum_ = 0;
     int32_t playNum_ = 0;

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include "parameter.h"
 #include "soundpool.h"
 #include "media_log.h"
@@ -170,7 +171,14 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
             QueueAndSortWillPlayStreamID(freshStreamIDAndPlayParamsInfo);
         }
     }
-
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        MEDIA_LOGD("StreamIDManager::SetPlay  playingStreamID:%{public}d", playingStreamID);
+    }
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
+        MEDIA_LOGD("StreamIDManager::SetPlay  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+    }
     return MSERR_OK;
 }
 
@@ -200,8 +208,13 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             if (freshCacheBuffer == nullptr) {
                 break;
             }
-            if (freshCacheBuffer->GetPriority() <= playingCacheBuffer->GetPriority()) {
+            if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
                 playingStreamIDs_.insert(playingStreamIDs_.begin() + i, streamID);
+                break;
+            }
+            if (i == playingStreamIDs_.size() - 1 &&
+                freshCacheBuffer->GetPriority() < playingCacheBuffer->GetPriority()) {
+                playingStreamIDs_.push_back(streamID);
                 break;
             }
         }
@@ -231,8 +244,13 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
             if (freshCacheBuffer == nullptr) {
                 break;
             }
-            if (freshCacheBuffer->GetPriority() <= willPlayCacheBuffer->GetPriority()) {
+            if (freshCacheBuffer->GetPriority() >= willPlayCacheBuffer->GetPriority()) {
                 willPlayStreamInfos_.insert(willPlayStreamInfos_.begin() + i, freshStreamIDAndPlayParamsInfo);
+                break;
+            }
+            if (i == willPlayStreamInfos_.size() - 1 &&
+                freshCacheBuffer->GetPriority() < willPlayCacheBuffer->GetPriority()) {
+                willPlayStreamInfos_.push_back(freshStreamIDAndPlayParamsInfo);
                 break;
             }
         }
@@ -282,6 +300,44 @@ int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
 {
     PlayParams playParameters;
     return GetFreshStreamID(soundID, playParameters);
+}
+
+int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
+{
+    int32_t playingSize = playingStreamIDs_.size();
+    for (int32_t i = 0; i < playingSize - 1; ++i) {
+        for (int32_t j = 0; j < playingSize - 1 - i; ++j) {
+            std::shared_ptr<CacheBuffer> left = FindCacheBuffer(playingStreamIDs_[j]);
+            std::shared_ptr<CacheBuffer> right = FindCacheBuffer(playingStreamIDs_[j + 1]);
+            if (left->GetPriority() < right->GetPriority()) {
+                int32_t streamIdTemp = playingStreamIDs_[j];
+                playingStreamIDs_[j] = playingStreamIDs_[j + 1];
+                playingStreamIDs_[j + 1] = streamIdTemp;
+            }
+        }
+    }
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        int32_t playingStreamID = playingStreamIDs_[i];
+        MEDIA_LOGD("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
+    }
+    
+    int32_t willPlaySize = willPlayStreamInfos_.size();
+    for (int32_t i = 0; i < willPlaySize - 1; ++i) {
+        for (int32_t j = 0; j < willPlaySize - 1 - i; ++j) {
+            std::shared_ptr<CacheBuffer> left = FindCacheBuffer(willPlayStreamInfos_[j].streamID);
+            std::shared_ptr<CacheBuffer> right = FindCacheBuffer(willPlayStreamInfos_[j + 1].streamID);
+            if (left->GetPriority() < right->GetPriority()) {
+                StreamIDAndPlayParamsInfo willPlayInfoTemp = willPlayStreamInfos_[j];
+                willPlayStreamInfos_[j] = willPlayStreamInfos_[j + 1];
+                willPlayStreamInfos_[j + 1] = willPlayInfoTemp;
+            }
+        }
+    }
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+        StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
+        MEDIA_LOGD("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
+    }
+    return MSERR_OK;
 }
 
 int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams playParameters)
