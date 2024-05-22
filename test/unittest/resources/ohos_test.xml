@@ -264,5 +264,11 @@
             <option name="shell" value="restorecon /data/test/"/>
         </preparer>
     </target>
+    <target name="system_sound_manager_impl">
+        <preparer>
+            <option name="push" value="test_sound_manager/ringtone.ogg -> /data/test/" src="res"/>
+            <option name="push" value="test_sound_manager/ringtone.json -> /data/test/" src="res"/>
+            <option name="shell" value="restorecon /data/test/"/>
+        </preparer>
+    </target>
 </configuration>
-
