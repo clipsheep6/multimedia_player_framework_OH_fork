@@ -50,19 +50,14 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DIALING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_INCOMING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_HOLDING) ||
+        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_WAITING)) {
         MEDIA_LOGD("OnCallStateUpdated IN Report in call");
         InCallObserver::GetInstance().OnCallStateUpdated(true);
-    } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE)) {
-        MEDIA_LOGD("OnCallStateUpdated IN Report in active call");
-        InCallObserver::GetInstance().OnCallStateUpdated(true);
-        InCallObserver::GetInstance().OnCallCountUpdated(slotId, callState, phoneNumber);
     } else if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DISCONNECTED)) {
         // CALL_STATUS_DISCONNECTING 重复状态不需要
         MEDIA_LOGD("OnCallStateUpdated IN Report stop call");
-        if (!InCallObserver::GetInstance().HasOtherCall(slotId, callState, phoneNumber)) {
-            InCallObserver::GetInstance().OnCallStateUpdated(false);
-        }
+        InCallObserver::GetInstance().OnCallStateUpdated(false);
     }
 }
 
