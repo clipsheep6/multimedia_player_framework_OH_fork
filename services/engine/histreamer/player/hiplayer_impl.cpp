@@ -1456,7 +1456,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-
+    if (surface_ == nullptr) {
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    }
     auto ret = demuxer_->SetDataSource(source);
     if (demuxer_ != nullptr) {
         demuxer_->SetCallerInfo(instanceId_, bundleName_);
