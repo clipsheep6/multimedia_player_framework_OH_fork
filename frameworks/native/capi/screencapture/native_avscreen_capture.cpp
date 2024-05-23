@@ -162,6 +162,9 @@ private:
         if (errCode == AV_SCREEN_CAPTURE_ERR_OK) {
             callback_(capture, reinterpret_cast<OH_AVBuffer *>(ohAvBuffer.GetRefPtr()), bufferType, timestamp,
                 userData_);
+            if (ohAvBuffer->buffer_->memory_ == nullptr) {
+                return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
+            }
             free(ohAvBuffer->buffer_->memory_->GetAddr());
         }
         errCode = ReleaseAudioBuffer(screenCaptureObj->screenCapture_, audioSourceType);

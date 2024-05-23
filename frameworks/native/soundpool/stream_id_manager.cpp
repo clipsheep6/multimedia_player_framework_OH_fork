@@ -305,7 +305,7 @@ int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
 
 int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
 {
-    int32_t playingSize = playingStreamIDs_.size();
+    uint32_t playingSize = playingStreamIDs_.size();
     for (int32_t i = 0; i < playingSize - 1; ++i) {
         for (int32_t j = 0; j < playingSize - 1 - i; ++j) {
             std::shared_ptr<CacheBuffer> left = FindCacheBuffer(playingStreamIDs_[j]);
@@ -322,7 +322,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
         MEDIA_LOGD("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
     
-    int32_t willPlaySize = willPlayStreamInfos_.size();
+    uint32_t willPlaySize = willPlayStreamInfos_.size();
     for (int32_t i = 0; i < willPlaySize - 1; ++i) {
         for (int32_t j = 0; j < willPlaySize - 1 - i; ++j) {
             std::shared_ptr<CacheBuffer> left = FindCacheBuffer(willPlayStreamInfos_[j].streamID);
