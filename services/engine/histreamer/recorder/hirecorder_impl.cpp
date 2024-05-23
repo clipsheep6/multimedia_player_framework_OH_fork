@@ -563,7 +563,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("ConfigureVideo enter.");
+    MEDIA_LOG_I("HiRecorderImpl ConfigureVideo enter.");
     switch (recParam.type) {
         case RecorderPublicParamType::VID_RECTANGLE: {
             VidRectangle vidRectangle = static_cast<const VidRectangle&>(recParam);
