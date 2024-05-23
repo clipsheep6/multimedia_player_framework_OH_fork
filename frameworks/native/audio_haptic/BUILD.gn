@@ -16,8 +16,10 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 config("audio_haptic_client_public_config") {
   visibility = [ ":*" ]
-  include_dirs =
-      [ "./../../../interfaces/inner_api/native/system_sound_manager/include" ]
+  include_dirs = [
+    "./../../../interfaces/inner_api/native/system_sound_manager/include",
+    "./../../../interfaces/inner_api/native/audio_haptic/include",
+  ]
 }
 
 ohos_shared_library("audio_haptic") {
