@@ -673,7 +673,7 @@ void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("ConfigureMuxer enter");
+    MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
             OutFd outFd = static_cast<const OutFd&>(recParam);
