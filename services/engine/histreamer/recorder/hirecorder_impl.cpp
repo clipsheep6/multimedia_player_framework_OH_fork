@@ -14,6 +14,7 @@
  */
 #include "hirecorder_impl.h"
 #include "meta/audio_types.h"
+#include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "media_dfx.h"
@@ -81,6 +82,7 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 HiRecorderImpl::~HiRecorderImpl()
 {
     Stop(false);
+    PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
 int32_t HiRecorderImpl::Init()
