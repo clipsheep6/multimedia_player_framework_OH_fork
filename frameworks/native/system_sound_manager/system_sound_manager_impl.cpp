@@ -558,8 +558,8 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     updatePredicates.SetWhereClause(RINGTONE_COLUMN_DATA + " = ? ");
     updatePredicates.SetWhereArgs({uri});
     updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE);
-    int32_t changedRows = g_dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
-    if (changedRows < 0) {
+    auto [changedRows, errCode] = g_dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    if (errCode != 0) {
         MEDIA_LOGE("SetAlarmToneUri: no customised alarmtone");
     }
     return MSERR_OK;
@@ -700,7 +700,12 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<ToneAttr
             break;
     }
     valuesBucket.Put(RINGTONE_COLUMN_DATA, static_cast<string>(toneAttrs->GetUri()));
-    return g_dataShareHelper->Insert(RINGTONEURI, valuesBucket);
+    auto [status, errCode] = g_dataShareHelper->Insert(RINGTONEURI, valuesBucket);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper Insert Failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
+    return status;
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
@@ -739,7 +744,11 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
 {
     DataShare::DataSharePredicates deletePredicates;
     deletePredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
-    int32_t changedRows = g_dataShareHelper->Delete(RINGTONEURI, deletePredicates);
+    auto [changedRows, errCode] = g_dataShareHelper->Delete(RINGTONEURI, deletePredicates);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper Delete Failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
     return changedRows;
 }
 
