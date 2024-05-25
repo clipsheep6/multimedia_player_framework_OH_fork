@@ -157,9 +157,6 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
         ("audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
-    if (audioCaptureFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
-    }
     audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
@@ -181,9 +178,6 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
         ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
-    if (audioDataSourceFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioDataSourceFilter_ == nullptr");
-    }
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
