@@ -75,7 +75,7 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string pl
 
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("StartReportMediaProgress");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StartReportMediaProgress");
     reportProgressIntervalMs_ = updateIntervalMs;
     if (reportMediaProgress_) { // already set
         return;
