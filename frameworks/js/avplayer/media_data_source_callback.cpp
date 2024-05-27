@@ -66,7 +66,7 @@ MediaDataSourceCallback::~MediaDataSourceCallback()
 
 int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
-    MEDIA_LOGD("ReadAt in");
+    MEDIA_LOGD("MediaDataSourceCallback ReadAt in");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
