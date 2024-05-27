@@ -636,6 +636,7 @@ int32_t PlayerServer::Reset()
 
 int32_t PlayerServer::OnReset()
 {
+    MEDIA_LOGD("PlayerServer OnReset in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
