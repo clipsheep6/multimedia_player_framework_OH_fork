@@ -66,7 +66,6 @@ napi_value AudioHapticManagerNapi::CreateAudioLatencyModeObject(napi_env env)
     napi_status status;
     std::string propName;
     int32_t refCount = 1;
-
     status = napi_create_object(env, &result);
     if (status == napi_ok) {
         for (auto &iter: audioLatencyModeMap) {
@@ -204,6 +203,7 @@ napi_value AudioHapticManagerNapi::GetAudioHapticManager(napi_env env, napi_call
     if (status == napi_ok) {
         status = napi_new_instance(env, ctor, 0, nullptr, &result);
         if (status == napi_ok) {
+            MEDIA_LOGI("GetAudioHapticManager: new instance can be obtained.");
             return result;
         } else {
             MEDIA_LOGE("GetAudioHapticManager: new instance can not be obtained.");
