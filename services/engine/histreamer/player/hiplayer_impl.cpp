@@ -132,7 +132,7 @@ Status HiPlayerImpl::Init()
     playerFilterCallback_ = playerFilterCallback;
     MEDIA_LOGD("pipeline init");
     pipeline_->Init(playerEventReceiver, playerFilterCallback, playerId_);
-    MEDIA_LOGD("Init out");
+    MEDIA_LOGD("pipeline Init out");
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
