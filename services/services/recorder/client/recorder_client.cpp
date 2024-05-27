@@ -331,7 +331,7 @@ int32_t RecorderClient::Start()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
-    MEDIA_LOGD("Start");
+    MEDIA_LOGD("RecorderClie Start");
     (void)EnableMonitor();
     return ExecuteWhen(recorderProxy_->Start(), false);
 }
