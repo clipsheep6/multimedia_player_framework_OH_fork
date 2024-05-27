@@ -307,7 +307,7 @@ int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
 int32_t HiPlayerImpl::PrepareAsync()
 {
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
-    MEDIA_LOGD("PrepareAsync");
+    MEDIA_LOGD("HiPlayerImpl PrepareAsync");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
         playStatisticalInfo_.errCode = MSERR_INVALID_OPERATION;
         playStatisticalInfo_.errMsg = "PrepareAsync pipelineStates not initialized or stopped";
