@@ -620,7 +620,7 @@ HWTEST_F(PlayerUnitTest, Player_Local_015, TestSize.Level2)
  */
 HWTEST_F(PlayerUnitTest, Player_Local_016, TestSize.Level2)
 {
-    int32_t ret = player_->SetSource(MEDIA_ROOT + "H265_AAC.mp4");
+    int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
