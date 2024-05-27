@@ -227,7 +227,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
 int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
     MediaTrace trace("HiPlayerImpl::SetMediaSource.");
-    MEDIA_LOGI("SetMediaSource entered media source stream");
+    MEDIA_LOGI("HiPlayerImpl SetMediaSource entered media source stream");
     if (mediaSource == nullptr) {
         playStatisticalInfo_.errCode = MSERR_INVALID_VAL;
         return MSERR_INVALID_VAL;
