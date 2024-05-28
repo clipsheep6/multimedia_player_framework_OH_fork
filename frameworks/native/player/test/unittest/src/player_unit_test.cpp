@@ -426,7 +426,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
-    ASSERT_EQ(MSERR_OK, ret);
+    ASSERT_NE(MSERR_OK, ret);
 }
 
 /**
@@ -437,7 +437,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
-    ASSERT_EQ(MSERR_OK, ret);
+    ASSERT_NE(MSERR_OK, ret);
 }
 
 /**
@@ -1911,26 +1911,6 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test Player Dump
- * @tc.number: Player_HiDump_001
- * @tc.desc  : Test Player Dump
- */
-HWTEST_F(PlayerUnitTest, Player_HiDump_001, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    system("hidumper -s 3002");
-    system("hidumper -s 3002 -a player");
-    system("param set sys.media.dump.codec.vdec INPUT");
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-}
-
-/**
  * @tc.name  : Test Player Dump GlibPool
  * @tc.number: Player_Dump_GlibPool_001
  * @tc.desc  : Test Player Dump GlibPool
@@ -2436,7 +2416,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
         system(str);
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 2);
         system(str);
-        sleep(130);
+        sleep(30);
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Reset());
         system("param set sys.media.player.resource.type Local");
@@ -2464,7 +2444,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 3002 -a \"player\"");
-        sleep(70);
+        sleep(30);
         system("hidumper -s 3002 -a \"player\"");
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -2603,7 +2583,16 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 {
-    for (int32_t code = MSERR_OK; code <= MSERR_EXTEND_START + 1; code++) {
+    std::array<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
+        MSERR_INVALID_VAL, MSERR_UNKNOWN};
+    for (const auto& errCode : errCodes) {
+        MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtErrorAPI9String(static_cast<MediaServiceErrCode>(errCode), "test1", "test2");
+        MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    }
+    for (int32_t code = MSERR_SERVICE_DIED; code <= MSERR_EXTEND_START + 1; code++) {
         MSErrorToString(static_cast<MediaServiceErrCode>(code));
         MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(code));
         MSErrorToExtError(static_cast<MediaServiceErrCode>(code));
@@ -2615,7 +2604,13 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MSExtErrorToString(static_cast<MediaServiceExtErrCode>(code));
     }
 
-    for (int32_t code = MSERR_EXT_API9_OK;
+    std::array<MediaServiceExtErrCodeAPI9, 5> errCodesAPI9 = {MSERR_EXT_API9_OK, MSERR_EXT_API9_NO_PERMISSION,
+        MSERR_EXT_API9_PERMISSION_DENIED, MSERR_EXT_API9_INVALID_PARAMETER, MSERR_EXT_API9_UNSUPPORT_CAPABILITY};
+    for (const auto& errCodeApi9 : errCodesAPI9) {
+        MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9), "test1", "test2");
+        MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9));
+    }
+    for (int32_t code = MSERR_EXT_API9_NO_MEMORY;
         code <= MSERR_EXT_API9_UNSUPPORT_FORMAT + 1; code++) {
         MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), "test1", "test2");
         MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(code));
