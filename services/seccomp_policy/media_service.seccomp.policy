@@ -142,3 +142,4 @@ _newselect;arm
 fsync;all
 msync;all
 process_vm_readv;all
+shutdown;all
