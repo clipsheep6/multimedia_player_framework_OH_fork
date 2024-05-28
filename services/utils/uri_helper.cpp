@@ -236,7 +236,6 @@ bool UriHelper::AccessCheck(uint8_t flag) const
         uint32_t mode = (flag & URI_WRITE) ? O_RDWR : O_RDONLY;
         return ((static_cast<unsigned int>(flags) & mode) != mode) ? false : true;
     }
-
     return true; // Not implemented, defaultly return true.
 }
 
@@ -266,7 +265,6 @@ bool UriHelper::ParseFdUri(std::string_view uri)
 
     MEDIA_LOGD("parse fd uri, fd: %{public}d, offset: %{public}" PRIi64 ", size: %{public}" PRIi64,
                fd_, offset_, size_);
-
     return CorrectFdParam();
 }
 } // namespace Media
