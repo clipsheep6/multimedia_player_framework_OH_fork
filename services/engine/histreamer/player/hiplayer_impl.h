@@ -96,6 +96,7 @@ public:
     int32_t SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
+    int32_t SetPlayRange(int32_t start, int32_t end) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -278,6 +279,9 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     std::string mimeType_;
+
+    int32_t playRangeStartTime_ = -1;
+    int32_t playRangeEndTime_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

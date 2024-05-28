@@ -155,6 +155,13 @@ int32_t PlayerClient::SetRenderFirstFrame(bool display)
     return playerProxy_->SetRenderFirstFrame(display);
 }
 
+int32_t PlayerClient::SetPlayRange(int32_t start, int32_t end)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlayRange(start, end);
+}
+
 int32_t PlayerClient::PrepareAsync()
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
