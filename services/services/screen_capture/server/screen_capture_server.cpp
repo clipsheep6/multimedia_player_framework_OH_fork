@@ -1755,6 +1755,9 @@ int32_t ScreenCaptureServer::ReleaseAudioBufferMix(AVScreenCaptureMixMode type)
             return MSERR_UNKNOWN;
         }
     }
+    if (type == AVScreenCaptureMixMode::MIX_MODE && innerAudioCapture_ != nullptr) {
+        return innerAudioCapture_->ReleaseAudioBuffer();
+    }
     if (type == AVScreenCaptureMixMode::MIC_MODE && micAudioCapture_ != nullptr) {
         return micAudioCapture_->ReleaseAudioBuffer();
     }
