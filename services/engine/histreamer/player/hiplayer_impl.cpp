@@ -401,6 +401,7 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
+    MEDIA_LOGD("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
     if (demuxer_ == nullptr) {
         MEDIA_LOGE("SelectBitRate failed, demuxer_ is null");
         return MSERR_INVALID_OPERATION;
