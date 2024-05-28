@@ -643,7 +643,8 @@ int32_t PlayerServer::OnReset()
         disableStoppedCb_ = true;
         (void)OnStop(true);
     }
-
+    
+    MEDIA_LOGD("PlayerServer OnReset in");
     taskMgr_.ClearAllTask();
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() {
         ChangeState(idleState_);
