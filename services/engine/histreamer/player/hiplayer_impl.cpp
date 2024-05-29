@@ -1373,6 +1373,11 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleResolutionChangeEvent(event);
             break;
         }
+        case EventType::EVENT_SUBTITLE_TEXT_UPDATE: {
+            MEDIA_LOGE("EVENTCALLBACK EVENT_SUBTITLE_TEXT_UPDATE");
+            NotifySubtitleUpdate(event);
+            break;
+        }
         default:
             break;
     }
@@ -1633,6 +1638,12 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
     MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
     videoDecoder_->SetBitrateStart();
 #endif
+}
+
+void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
+{
+    Format format = AnyCast<Format>(event.param);
+    callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
