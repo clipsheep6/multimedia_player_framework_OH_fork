@@ -72,6 +72,8 @@ public:
     virtual sptr<OHOS::SurfaceBuffer> AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
+    virtual int32_t ExcludeWindowContent(int32_t *windowIDs, int32_t windowCount) = 0;
+    virtual int32_t ExcludeAudioContent(AVScreenCaptureFilterableAudioContent audioType) = 0;
     virtual bool IsErrorCallBackEnabled()
     {
         return false;

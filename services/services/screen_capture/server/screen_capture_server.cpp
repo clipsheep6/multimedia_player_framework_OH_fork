@@ -1840,7 +1840,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "ExcludeContent failed, capture is not STARTED, state:%{public}d", captureState_);
+        "ExcludeContent failed, capture is not CREATED, state:%{public}d", captureState_);
 
     MEDIA_LOGI("ScreenCaptureServer::ExcludeContent start");
     contentFilter_ = contentFilter;
@@ -1849,7 +1849,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-        "ExcludeContent failed, capture is not STARTED");
+        "ExcludeContent failed, capture is not CREATED");
     return MSERR_OK;
 }
 
