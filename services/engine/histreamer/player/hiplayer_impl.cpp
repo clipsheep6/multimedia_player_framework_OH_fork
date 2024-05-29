@@ -197,7 +197,7 @@ void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
 {
     MediaTrace trace("HiPlayerImpl::SetSource uri");
-    MEDIA_LOGD("SetSource uri");
+    MEDIA_LOGD("HiPlayerImpl SetSource uri");
     CreateMediaInfo(CallType::AVPLAYER, appUid_, instanceId_);
     playStatisticalInfo_.sourceUrl = "private";
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_URI);
