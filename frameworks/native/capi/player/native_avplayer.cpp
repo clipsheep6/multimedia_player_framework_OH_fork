@@ -399,6 +399,56 @@ OH_AVErrCode OH_AVPlayer_GetPlaybackSpeed(OH_AVPlayer *player, AVPlaybackSpeed *
     return AV_ERR_OK;
 }
 
+OH_AVErrCode OH_AVPlayer_SetAudioRendererInfo(OH_AVPlayer *player, OH_AudioStream_Usage streamUsage)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (streamUsage < OH_AudioStream_Usage::AUDIOSTREAM_USAGE_UNKNOWN ||
+        streamUsage > OH_AudioStream_Usage::AUDIOSTREAM_USAGE_NAVIGATION) {
+        return AV_ERR_INVALID_VAL;
+    }
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+    (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, 0);
+    (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, 0);
+    int32_t ret = playerObj->player_->SetParameter(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetAudioRendererInfo failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetAudioInterruptMode(OH_AVPlayer *player, OH_AudioInterrupt_Mode interruptMode)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (interruptMode < OH_AudioInterrupt_Mode::AUDIOSTREAM_INTERRUPT_MODE_SHARE ||
+        interruptMode > OH_AudioInterrupt_Mode::AUDIOSTREAM_INTERRUPT_MODE_INDEPENDENT) {
+        return AV_ERR_INVALID_VAL;
+    }
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode);
+    int32_t ret = playerObj->player_->SetParameter(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetAudioInterruptMode failed");
+    return AV_ERR_OK;
+}
+
+OH_AVErrCode OH_AVPlayer_SetAudioEffectMode(OH_AVPlayer *player, OH_AudioStream_AudioEffectMode effectMode)
+{
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (effectMode < OH_AudioStream_AudioEffectMode::EFFECT_NONE ||
+        effectMode > OH_AudioStream_AudioEffectMode::EFFECT_DEFAULT) {
+        return AV_ERR_INVALID_VAL;
+    }
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
+    int32_t ret = playerObj->player_->SetParameter(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player SetAudioEffectMode failed");
+    return AV_ERR_OK;
+}
+
 OH_AVErrCode OH_AVPlayer_SelectBitRate(OH_AVPlayer *player, uint32_t bitRate)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
