@@ -279,6 +279,7 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     std::string mimeType_;
+    std::atomic<bool> hasExtSub_{false};
 };
 } // namespace Media
 } // namespace OHOS
