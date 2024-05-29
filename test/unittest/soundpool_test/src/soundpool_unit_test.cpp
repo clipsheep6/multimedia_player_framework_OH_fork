@@ -117,6 +117,7 @@ void SoundPoolUnitTest::loadFd(std::string fileName, int32_t loadNum)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_001 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -144,6 +145,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
             break;
         }
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_001 after");
 }
 
 /**
@@ -154,6 +156,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_002 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -186,6 +189,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
             break;
         }
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_002 after");
 }
 
 /**
@@ -196,11 +200,13 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_003, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_003 before");
     int maxStreams = 3;
     create(maxStreams);
     // test no callback to load
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_003 after");
 }
 
 /**
@@ -211,6 +217,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_003, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_004 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -247,6 +254,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_004 after");
 }
 
 /**
@@ -257,6 +265,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_005 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -284,6 +293,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
             break;
         }
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_005 after");
 }
 
 /**
@@ -294,6 +304,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_006 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -326,6 +337,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
             break;
         }
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_006 after");
 }
 
 /**
@@ -336,11 +348,13 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_007, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_007 before");
     int maxStreams = 3;
     create(maxStreams);
     // test no callback to load
     loadFd(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_007 after");
 }
 
 /**
@@ -351,6 +365,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_007, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_008 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -390,6 +405,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_008 after");
 }
 
 /**
@@ -400,6 +416,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_009 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -431,6 +448,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, soundPool_->Unload(soundIDs_[1]));
     EXPECT_EQ(MSERR_OK, soundPool_->Unload(soundIDs_[2]));
     EXPECT_EQ(MSERR_OK, soundPool_->Unload(soundIDs_[3]));
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_009 after");
 }
 
 /**
@@ -441,6 +459,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_010 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -486,6 +505,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
     EXPECT_EQ(MSERR_NO_MEMORY, unload);
     unload = soundPool_->Unload(soundIDs_[1]);
     EXPECT_EQ(MSERR_NO_MEMORY, unload);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_010 after");
 }
 
 /**
@@ -496,6 +516,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_011, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_011 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -509,6 +530,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_011, TestSize.Level2)
     // test unload 5
     unload = soundPool_->Unload(5);
     EXPECT_EQ(MSERR_NO_MEMORY, unload);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_011 after");
 }
 
 /**
@@ -519,6 +541,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_011, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_012 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -558,6 +581,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_012 after");
 }
 
 /**
@@ -568,13 +592,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_013 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     sleep(waitTime3);
     if (cb == nullptr) {
@@ -614,6 +636,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_013 after");
 }
 
 /**
@@ -624,6 +647,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_014, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_014 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -641,6 +665,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_014, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_014 after");
 }
 
 /**
@@ -651,6 +676,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_014, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_015, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_015 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -668,6 +694,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_015, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_015 after");
 }
 
 /**
@@ -678,6 +705,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_015, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_016 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -713,6 +741,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_016 after");
 }
 
 /**
@@ -723,6 +752,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_017 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -762,6 +792,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
         int32_t stopResult1 = soundPool_->Stop(streamIDs_[playNum_]);
         EXPECT_EQ(MSERR_OK, stopResult1);
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_017 after");
 }
 
 /**
@@ -772,13 +803,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_018 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadFd(g_fileName[loadNum_], loadNum_);
@@ -818,6 +847,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
     if (streamIDs_[1] > 0) {
         EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[1]));
     }
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_018 after");
 }
 
 /**
@@ -828,13 +858,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_019 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadFd(g_fileName[loadNum_], loadNum_);
@@ -876,6 +904,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
     cb->ResetHavePlayedSoundNum();
     EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[0]));
     EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[2]));
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_019 after");
 }
 
 /**
@@ -886,6 +915,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_019, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_020, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_020 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -909,6 +939,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_020, TestSize.Level2)
     }
     int32_t stopResult = soundPool_->Stop(-1);
     EXPECT_EQ(MSERR_INVALID_OPERATION, stopResult);
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_020 after");
 }
 
 /**
@@ -919,6 +950,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_020, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_021 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -959,6 +991,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
     }
     cb->ResetHavePlayedSoundNum();
     EXPECT_EQ(MSERR_OK, soundPool_->Unload(soundIDs_[loadNum_]));
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_021 after");
 }
 
 /**
@@ -969,6 +1002,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_022 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1008,6 +1042,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_022 after");
 }
 
 /**
@@ -1018,6 +1053,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_023 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1057,6 +1093,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_023 after");
 }
 
 /**
@@ -1067,6 +1104,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_024 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1106,6 +1144,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_024 after");
 }
 
 /**
@@ -1116,13 +1155,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_025 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -1163,6 +1200,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_025 after");
 }
 
 /**
@@ -1173,13 +1211,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_026 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -1220,6 +1256,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_026 after");
 }
 
 /**
@@ -1230,6 +1267,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_027 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1272,6 +1310,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_027 after");
 }
 
 /**
@@ -1282,13 +1321,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_028 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -1328,6 +1365,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_028 after");
 }
 
 /**
@@ -1338,13 +1376,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_029 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -1385,6 +1421,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_029 after");
 }
 
 /**
@@ -1395,6 +1432,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_030 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1434,6 +1472,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_030 after");
 }
 
 /**
@@ -1444,6 +1483,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_031 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1485,6 +1525,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_031 after");
 }
 
 /**
@@ -1495,6 +1536,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_032 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1533,6 +1575,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_032 after");
 }
 
 /**
@@ -1543,6 +1586,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_033 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1581,6 +1625,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_033 after");
 }
 
 /**
@@ -1591,6 +1636,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_034 before");
     int maxStreams = 1;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1636,6 +1682,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_034 after");
 }
 
 
@@ -1647,13 +1694,11 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_035 before");
     int maxStreams = 1;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
-    if (ret != 0) {
-        cout << "set callback failed" << endl;
-    }
+    soundPool_->SetSoundPoolCallback(cb);
     loadUrl(g_fileName[loadNum_], loadNum_);
     loadNum_++;
     loadUrl(g_fileName[loadNum_], loadNum_);
@@ -1693,6 +1738,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
         return;
     }
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_035 after");
 }
 
  /**
@@ -1703,6 +1749,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_036, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_036 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1746,6 +1793,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_036, TestSize.Level2)
     }
     sleep(15);
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_036 after");
 }
 
  /**
@@ -1756,6 +1804,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_036, TestSize.Level2)
  */
 HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
 {
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_037 before");
     int maxStreams = 3;
     create(maxStreams);
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
@@ -1799,6 +1848,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
     }
     sleep(15);
     cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_037 after");
 }
 
 } // namespace Media

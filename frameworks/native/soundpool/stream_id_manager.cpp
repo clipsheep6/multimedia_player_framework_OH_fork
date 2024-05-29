@@ -160,7 +160,6 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
             MEDIA_LOGI("StreamIDManager stop playing low priority sound:%{public}d", playingStreamID);
             playingCacheBuffer->Stop(playingStreamID);
-            playingStreamIDs_.pop_back();
             MEDIA_LOGI("StreamIDManager to playing fresh sound:%{public}d.", streamID);
             AddPlayTask(streamID, playParameters);
         } else {
@@ -197,11 +196,6 @@ void StreamIDManager::QueueAndSortPlayingStreamID(int32_t streamID)
             std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (playingCacheBuffer == nullptr) {
-                playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
-                shouldReCombinePlayingQueue = true;
-                break;
-            }
-            if (!playingCacheBuffer->IsRunning()) {
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 shouldReCombinePlayingQueue = true;
                 break;
@@ -305,6 +299,7 @@ int32_t StreamIDManager::GetStreamIDBySoundID(const int32_t soundID)
 
 int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
 {
+    std::lock_guard lock(streamIDManagerLock_);
     int32_t playingSize = static_cast<int32_t>(playingStreamIDs_.size());
     for (int32_t i = 0; i < playingSize - 1; ++i) {
         for (int32_t j = 0; j < playingSize - 1 - i; ++j) {
@@ -317,7 +312,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
             }
         }
     }
-    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+    for (int32_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
         MEDIA_LOGD("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
@@ -334,7 +329,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
             }
         }
     }
-    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+    for (int32_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
         MEDIA_LOGD("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
     }
@@ -364,7 +359,19 @@ int32_t StreamIDManager::GetFreshStreamID(const int32_t soundID, PlayParams play
 
 void StreamIDManager::OnPlayFinished()
 {
-    currentTaskNum_--;
+    {
+        std::lock_guard lock(streamIDManagerLock_);
+        currentTaskNum_--;
+        for (int32_t i = 0; i < playingStreamIDs_.size(); i++) {
+            int32_t playingStreamID = playingStreamIDs_[i];
+            std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
+            if (!playingCacheBuffer->IsRunning()) {
+                MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d", playingStreamID);
+                playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
+                i--;
+            }
+        }
+    }
     if (!willPlayStreamInfos_.empty()) {
         MEDIA_LOGI("StreamIDManager OnPlayFinished will play streams non empty, get the front.");
         StreamIDAndPlayParamsInfo willPlayStreamInfo =  willPlayStreamInfos_.front();
