@@ -2223,6 +2223,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             int channels = 2;
             MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
             bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
+            delete[] mixData;
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
             bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
