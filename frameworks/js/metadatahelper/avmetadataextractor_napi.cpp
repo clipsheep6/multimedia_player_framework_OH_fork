@@ -457,7 +457,7 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
     }
 
     if (asyncContext->deferred) {
-        MEDIA_LOGD("deferred in");
+        MEDIA_LOGD("AVMetadataExtractorNapi deferred in");
         if (asyncContext->status == ERR_OK) {
             napi_resolve_deferred(env, asyncContext->deferred, result[1]);
         } else {
