@@ -421,7 +421,7 @@ napi_value AudioPlayerNapi::Pause(napi_env env, napi_callback_info info)
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Pause");
         return undefinedResult;
     }
-    MEDIA_LOGD("Pause success");
+    MEDIA_LOGD("AudioPlayerNapi Pause success");
     return undefinedResult;
 }
 
