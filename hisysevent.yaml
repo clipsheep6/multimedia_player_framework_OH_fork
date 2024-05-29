@@ -116,7 +116,6 @@ MUXER_FAILURE:
 DRM_SERVICE_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM service start or end information}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   SERVICE_NAME: {type: STRING, desc: Service name}
   ACTION: {type: STRING, desc: Start or end}
   MEMORY: {type: UINT32, desc: Service used memory kb}
@@ -124,7 +123,6 @@ DRM_SERVICE_INFO:
 DRM_LICENSE_DOWNLOAD_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM system provision}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   APP_NAME: {type: STRING, desc: Caller app name}
   INSTANCE_ID: {type: STRING, desc: Distinct player id}
   DRM_NAME: {type: STRING, desc: DRM schema name}
@@ -139,7 +137,6 @@ DRM_LICENSE_DOWNLOAD_INFO:
 DRM_CERTIFICATE_DOWNLOAD_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: DRM system provision}
   MODULE: {type: STRING, desc: Module name}
-  TIME: {type: UINT32, desc: Service start or end time us}
   APP_NAME: {type: STRING, desc: Caller app name}
   INSTANCE_ID: {type: STRING, desc: Distinct player id}
   DRM_NAME: {type: STRING, desc: DRM schema name}
@@ -152,6 +149,7 @@ DRM_CERTIFICATE_DOWNLOAD_INFO:
   CALL_SERVER_TIME: {type: UINT32, desc: Call time}
   SERVER_COST_DURATION: {type: UINT32, desc: Processing time of the server}
   SERVER_RESULT: {type: STRING, desc: Result}
+  
 PLAYER_COMMON_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: Player all info statistics}
   EVENTS: {type: STRING, arrsize: 100, desc: Group of player events}
