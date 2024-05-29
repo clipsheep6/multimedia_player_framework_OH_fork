@@ -163,6 +163,7 @@ bool AudioHapticManagerImpl::CheckAudioStreamUsage(const AudioStandard::StreamUs
         case AudioStandard::STREAM_USAGE_ALARM:
         case AudioStandard::STREAM_USAGE_VOICE_MESSAGE:
         case AudioStandard::STREAM_USAGE_RINGTONE:
+        case AudioStandard::STREAM_USAGE_VOICE_RINGTONE:
         case AudioStandard::STREAM_USAGE_NOTIFICATION:
         case AudioStandard::STREAM_USAGE_ACCESSIBILITY:
         case AudioStandard::STREAM_USAGE_SYSTEM:

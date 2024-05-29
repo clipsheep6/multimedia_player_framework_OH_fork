@@ -74,7 +74,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    MEDIA_LOGD("Init success");
+    MEDIA_LOGD("AVScreenCaptureNapi Init success");
     return exports;
 }
 
@@ -362,6 +362,7 @@ napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callba
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->task_ = AVScreenCaptureNapi::GetSetMicrophoneEnableTask(asyncCtx, enable);
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);

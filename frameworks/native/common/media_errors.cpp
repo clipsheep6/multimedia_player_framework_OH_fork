@@ -69,7 +69,8 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_AUD_INTERRUPT, "audio interrupted"},
     {MSERR_USER_NO_PERMISSION, "user no permission"},
     {MSERR_DATA_SOURCE_ERROR_UNKNOWN, "media data source error unknow"},
-    {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"}
+    {MSERR_DATA_SOURCE_IO_ERROR, "media data source IO failed"},
+    {MSERR_DRM_VERIFICATION_FAILED, "DRM verification failed"}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -171,6 +172,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_PAUSE_FAILED,                        MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_STOP_FAILED,                         MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_SEEK_FAILED,                         MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_DRM_VERIFICATION_FAILED,             MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_NETWORK_TIMEOUT,                     MSERR_EXT_API9_TIMEOUT},
     {MSERR_NOT_FIND_CONTAINER,                  MSERR_EXT_API9_UNSUPPORT_FORMAT},
     {MSERR_UNKNOWN,                             MSERR_EXT_API9_IO},

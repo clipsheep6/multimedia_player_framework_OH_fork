@@ -43,9 +43,11 @@ private:
     static napi_value GetTitle(napi_env env, napi_callback_info info);
     static napi_value Prepare(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
-    static void AsyncStart(napi_env env, void *data);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
+    static void AsyncStart(napi_env env, void *data);
+    static void AsyncStop(napi_env env, void *data);
+    static void AsyncRelease(napi_env env, void *data);
 
     static void CommonAsyncCallbackComplete(napi_env env, napi_status status, void* data);
     static void GetTitleAsyncCallbackComplete(napi_env env, napi_status status, void *data);

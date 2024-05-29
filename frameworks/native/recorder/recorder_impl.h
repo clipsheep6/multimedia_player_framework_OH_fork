@@ -19,9 +19,11 @@
 #include "recorder.h"
 #include "nocopyable.h"
 #include "i_recorder_service.h"
+#include "hitrace/tracechain.h"
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 class RecorderImpl : public Recorder, public NoCopyable {
 public:
     RecorderImpl();
@@ -71,6 +73,7 @@ public:
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
+    HiTraceId traceId_;
 };
 } // namespace Media
 } // namespace OHOS

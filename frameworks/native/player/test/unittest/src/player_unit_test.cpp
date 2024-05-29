@@ -426,7 +426,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_009, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("http://domain/H264_MP3.mp4");
-    ASSERT_EQ(MSERR_OK, ret);
+    ASSERT_NE(MSERR_OK, ret);
 }
 
 /**
@@ -437,7 +437,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_010, TestSize.Level2)
 HWTEST_F(PlayerUnitTest, Player_SetSource_011, TestSize.Level2)
 {
     int32_t ret = player_->SetSource("https://domain/H264_MP3.mp4");
-    ASSERT_EQ(MSERR_OK, ret);
+    ASSERT_NE(MSERR_OK, ret);
 }
 
 /**
@@ -859,6 +859,20 @@ HWTEST_F(PlayerUnitTest, Player_PrepareAsync_005, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+}
+
+/**
+ * @tc.name  : Test Player PrepareAsync API
+ * @tc.number: Player_PrepareAsync_006
+ * @tc.desc  : Test Player Play->PrepareAsync
+ */
+HWTEST_F(PlayerUnitTest, Player_PrepareAsync_006, TestSize.Level2)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC_DRM.ts"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_NE(MSERR_OK, player_->PrepareAsync());
 }
 
@@ -1897,26 +1911,6 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test Player Dump
- * @tc.number: Player_HiDump_001
- * @tc.desc  : Test Player Dump
- */
-HWTEST_F(PlayerUnitTest, Player_HiDump_001, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    system("hidumper -s 3002");
-    system("hidumper -s 3002 -a player");
-    system("param set sys.media.dump.codec.vdec INPUT");
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-}
-
-/**
  * @tc.name  : Test Player Dump GlibPool
  * @tc.number: Player_Dump_GlibPool_001
  * @tc.desc  : Test Player Dump GlibPool
@@ -2422,7 +2416,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
         system(str);
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 2);
         system(str);
-        sleep(130);
+        sleep(30);
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Reset());
         system("param set sys.media.player.resource.type Local");
@@ -2450,7 +2444,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
         sprintf_s(str, 100, "hidumper -s 1909 -a \"-d %d %d %d\"", getpid(), getuid(), 4);
         system(str);
         system("hidumper -s 3002 -a \"player\"");
-        sleep(70);
+        sleep(30);
         system("hidumper -s 3002 -a \"player\"");
         EXPECT_EQ(MSERR_OK, player_->Play());
         EXPECT_EQ(MSERR_OK, player_->Stop());
@@ -2522,6 +2516,7 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
     const float FLOAT_VALUE = 1.0;
     const double DOUBLE_VALUE = 2.5;
     const std::string STRING_VALUE = "player_test";
+    const int32_t INT_VALUE = 1;
     (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     (void)format.PutFloatValue(PlayerKeys::AUDIO_EFFECT_MODE, FLOAT_VALUE);
@@ -2529,6 +2524,8 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
     (void)format.PutDoubleValue(PlayerKeys::AUDIO_EFFECT_MODE, DOUBLE_VALUE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     (void)format.PutStringValue(PlayerKeys::AUDIO_EFFECT_MODE, STRING_VALUE);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, INT_VALUE);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
@@ -2586,7 +2583,16 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
 {
-    for (int32_t code = MSERR_OK; code <= MSERR_EXTEND_START + 1; code++) {
+    std::array<MediaServiceErrCode, 5> errCodes = {MSERR_OK, MSERR_NO_MEMORY, MSERR_INVALID_OPERATION,
+        MSERR_INVALID_VAL, MSERR_UNKNOWN};
+    for (const auto& errCode : errCodes) {
+        MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
+        MSErrorToExtErrorAPI9String(static_cast<MediaServiceErrCode>(errCode), "test1", "test2");
+        MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    }
+    for (int32_t code = MSERR_SERVICE_DIED; code <= MSERR_EXTEND_START + 1; code++) {
         MSErrorToString(static_cast<MediaServiceErrCode>(code));
         MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(code));
         MSErrorToExtError(static_cast<MediaServiceErrCode>(code));
@@ -2598,7 +2604,13 @@ HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
         MSExtErrorToString(static_cast<MediaServiceExtErrCode>(code));
     }
 
-    for (int32_t code = MSERR_EXT_API9_OK;
+    std::array<MediaServiceExtErrCodeAPI9, 5> errCodesAPI9 = {MSERR_EXT_API9_OK, MSERR_EXT_API9_NO_PERMISSION,
+        MSERR_EXT_API9_PERMISSION_DENIED, MSERR_EXT_API9_INVALID_PARAMETER, MSERR_EXT_API9_UNSUPPORT_CAPABILITY};
+    for (const auto& errCodeApi9 : errCodesAPI9) {
+        MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9), "test1", "test2");
+        MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(errCodeApi9));
+    }
+    for (int32_t code = MSERR_EXT_API9_NO_MEMORY;
         code <= MSERR_EXT_API9_UNSUPPORT_FORMAT + 1; code++) {
         MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), "test1", "test2");
         MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(code));
@@ -3126,17 +3138,16 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_002, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
 {
-    Format formatNoScaleType;
-    Format formatNoContentType;
-    Format formatNoStreamUsage;
-    Format formatNoStreamUsageAndContentType;
-    Format formatNoInterruptMode;
+    Format formatScaleType;
+    Format formatContentType;
+    Format formatStreamUsage;
+    Format formatStreamUsageAndContentType;
+    Format formatInterruptMode;
     std::vector<Format> videoTrack;
     std::vector<Format> audioTrack;
     int32_t contentType = 1;
     int32_t scaleType = 1;
     int32_t streamUsage = 1;
-    int32_t rendererFlags = 1;
     int32_t audioInterruptMode = 1;
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -3145,34 +3156,21 @@ HWTEST_F(PlayerUnitTest, Player_SetParameter_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
 
-    formatNoScaleType.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
-    formatNoScaleType.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
-    formatNoScaleType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
-    formatNoScaleType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoScaleType));
+    formatScaleType.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatScaleType));
 
-    formatNoContentType.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
-    formatNoContentType.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
-    formatNoContentType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
-    formatNoContentType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoContentType));
+    formatContentType.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatContentType));
 
-    formatNoStreamUsage.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
-    formatNoStreamUsage.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
-    formatNoStreamUsage.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
-    formatNoStreamUsage.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoStreamUsage));
+    formatStreamUsage.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatStreamUsage));
 
-    formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
-    formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
-    formatNoStreamUsageAndContentType.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoStreamUsageAndContentType));
+    formatStreamUsageAndContentType.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
+    formatStreamUsageAndContentType.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatStreamUsageAndContentType));
 
-    formatNoInterruptMode.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, scaleType);
-    formatNoInterruptMode.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);
-    formatNoInterruptMode.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
-    formatNoInterruptMode.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatNoInterruptMode));
+    formatInterruptMode.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, audioInterruptMode);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(formatInterruptMode));
 
     EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
     EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));

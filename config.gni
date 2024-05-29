@@ -239,6 +239,11 @@ declare_args() {
       defined(global_parts_info.powermgr_power_manager)) {
     multimedia_player_framework_support_power_manager = true
   }
+  multimedia_player_framework_support_json = false
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.third_party_json)) {
+    multimedia_player_framework_support_json = true
+  }
 }
 
 player_framework_defines = []
@@ -329,6 +334,10 @@ if (multimedia_player_framework_support_power_manager) {
 
 if (multimedia_player_framework_support_mediasource) {
   player_framework_defines += [ "SUPPORT_MEDIA_SOURCE" ]
+}
+
+if (multimedia_player_framework_support_json) {
+  player_framework_defines += [ "SUPPORT_JSON" ]
 }
 
 # Config path

@@ -84,7 +84,9 @@
           "bounds_checking_function",
           "libxml2",
           "libuv",
-          "os_account"
+          "os_account",
+          "data_share",
+          "ringtone_library"
         ],
         "third_party": [
           "bounds_checking_function"

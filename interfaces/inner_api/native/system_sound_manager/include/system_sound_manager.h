@@ -18,10 +18,11 @@
 
 #include <string>
 
-#include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
+#include "ability_runtime/context/context.h"
 
 #include "ringtone_player.h"
 #include "system_tone_player.h"
+#include "tone_attrs.h"
 
 namespace OHOS {
 namespace Media {
@@ -108,6 +109,162 @@ public:
      */
     virtual std::string GetSystemToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         SystemToneType systemToneType)= 0;
+
+    /**
+     * @brief Returns the default ringtone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param ringtoneType Indicates the ringtone type.
+     * @return Returns the default ringtone attrs.
+     * @since 12
+     */
+    virtual std::shared_ptr<ToneAttrs> GetDefaultRingtoneAttrs(const std::shared_ptr<AbilityRuntime::Context> &context,
+        RingtoneType ringtoneType) = 0;
+
+    /**
+     * @brief Returns the list of ringtone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param ringtoneType Indicates the ringtone type.
+     * @return Returns the list of ringtone attrs.
+     * @since 12
+     */
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetRingtoneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context, RingtoneType ringtoneType) = 0;
+
+    /**
+     * @brief Returns the default systemtone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param systemToneType Indicates the systemtone type.
+     * @return Returns the default systemtone attrs.
+     * @since 12
+     */
+    virtual std::shared_ptr<ToneAttrs>  GetDefaultSystemToneAttrs(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemtoneType) = 0;
+
+    /**
+     * @brief Returns the list of systemtone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param systemToneType Indicates the systemtone type.
+     * @return Returns the list of systemtone attrs.
+     * @since 12
+     */
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetSystemToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context, SystemToneType systemToneType) = 0;
+
+    /**
+     * @brief  Sets uri of the current alarm tone.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param uri indicates which uri to be set for system tone.
+     * @return Returns {@link MSERR_OK} if set the system tone uri successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri) = 0;
+
+    /**
+     * @brief Gets uri of the current alarm tone.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the alarm tone uri
+     * @since 12
+     */
+    virtual std::string GetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
+
+    /**
+     * @brief Returns the default alarmTone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the default alarmTone attrs.
+     * @since 12
+     */
+    virtual std::shared_ptr<ToneAttrs> GetDefaultAlarmToneAttrs(
+        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
+
+    /**
+     * @brief Returns the list of alarmTone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the list of alarmTone attrs.
+     * @since 12
+     */
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetAlarmToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
+
+    /**
+     * @brief Open the alarm tone file.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param uri Uri of alarm tone to open.
+     * @return Returns the fd of tone.
+     * @since 12
+     */
+    virtual int32_t OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) = 0;
+
+    /**
+     * @brief Close the tone file.
+     *
+     * @param fd File descriptor.
+     * @return Returns {@link MSERR_OK} if close the fd successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t Close(const int32_t &fd) = 0;
+
+    /**
+     * @brief Add customized tone into ringtone library.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneAttrs Tone attributes.
+     * @param externalUri Tone uri in external storage.
+     * @return Returns the tone uri after adding into ringtone library.
+     * @since 12
+     */
+    virtual std::string AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri) = 0;
+
+    /**
+     * @brief Add customized tone into ringtone library.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneAttrs Tone attributes.
+     * @param fd File descriptor.
+     * @return Returns the tone uri after adding into ringtone library.
+     * @since 12
+     */
+    virtual std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::shared_ptr<ToneAttrs> &toneAttrs, const int32_t &fd) = 0;
+
+    /**
+     * @brief Add customized tone into ringtone library.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param toneAttrs Tone attributes.
+     * @param fd File descriptor.
+     * @param offset The offset in the file where the data to be read, in bytes.
+     * @param length The length in bytes of the data to be read.
+     * @return Returns the tone uri after adding into ringtone library.
+     * @since 12
+     */
+    virtual std::string AddCustomizedToneByFdAndOffset(
+        const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
+            const int32_t &fd, const int32_t &offset, const int32_t &length) = 0;
+
+    /**
+     * @brief Remove customized tone in ringtone library.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @param uri tone uri
+     * @return Returns {@link MSERR_OK} if remove the customized tone successfully;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
+        const std::string &uri) = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {

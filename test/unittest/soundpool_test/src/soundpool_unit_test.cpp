@@ -1694,5 +1694,112 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
     }
     cb->ResetHavePlayedSoundNum();
 }
+
+ /**
+ * @tc.name: soundpool_function_036
+ * @tc.desc: function test Priority
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_036, TestSize.Level2)
+{
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    if (ret != 0) {
+        cout << "set callback failed" << endl;
+    }
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[0], loadNum_);
+    sleep(waitTime3);
+    struct PlayParams playParameters;
+    playParameters.priority = 3;
+    if (soundIDs_[0] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    if (soundIDs_[1] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    if (soundIDs_[2] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[2], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    playParameters.priority = 5;
+    if (soundIDs_[3] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[3], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    sleep(15);
+    cb->ResetHavePlayedSoundNum();
+}
+
+ /**
+ * @tc.name: soundpool_function_037
+ * @tc.desc: function test Priority
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
+{
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    if (ret != 0) {
+        cout << "set callback failed" << endl;
+    }
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[1], loadNum_);
+    loadNum_++;
+    loadUrl(g_fileName[0], loadNum_);
+    sleep(waitTime3);
+    struct PlayParams playParameters;
+    playParameters.priority = 3;
+    if (soundIDs_[0] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[0], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    if (soundIDs_[1] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[1], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    if (soundIDs_[2] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[2], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    playNum_++;
+    playParameters.priority = 1;
+    if (soundIDs_[3] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[3], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime2);
+    }
+    sleep(15);
+    cb->ResetHavePlayedSoundNum();
+}
+
 } // namespace Media
 } // namespace OHOS

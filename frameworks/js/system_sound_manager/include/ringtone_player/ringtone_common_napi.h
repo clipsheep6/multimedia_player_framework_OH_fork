@@ -23,23 +23,25 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
-#define THROW_ERROR_ASSERT(env, assertion, code)        \
-    do {                                                \
-        if (!(assertion)) {                             \
-            RingtoneCommonNapi::ThrowError(env, code);    \
-            return nullptr;                             \
-        }                                               \
-    } while (0)
-
 namespace OHOS {
 namespace Media {
+const int32_t  NAPI_ERR_NO_PERMISSION = 201;
+const int32_t  NAPI_ERR_PERMISSION_DENIED = 202;
 const int32_t  NAPI_ERR_INPUT_INVALID = 401;
+const int32_t  NAPI_ERR_URI_ERROR = 20700001;
+const int32_t  NAPI_ERR_OPERATE_NOT_ALLOWED = 5400102;
+const int32_t  NAPI_ERR_IO_ERROR = 5400103;
 const int32_t  NAPI_ERR_INVALID_PARAM = 6800101;
 const int32_t  NAPI_ERR_NO_MEMORY = 6800102;
 const int32_t  NAPI_ERR_UNSUPPORTED = 6800104;
 const int32_t  NAPI_ERR_SYSTEM = 6800301;
 
+const std::string NAPI_ERR_NO_PERMISSION_INFO = "Permission denied";
+const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
 const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter type or number mismatch";
+const std::string NAPI_ERR_URI_ERROR_INFO = "Tone type mismatch";
+const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "Operation is not allowed";
+const std::string NAPI_ERR_IO_ERROR_INFO = "I/O error";
 const std::string NAPI_ERR_INVALID_PARAM_INFO = "invalid parameter";
 const std::string NAPI_ERR_NO_MEMORY_INFO = "allocate memory failed";
 const std::string NAPI_ERR_SYSTEM_INFO = "system error";
@@ -49,7 +51,7 @@ public:
     RingtoneCommonNapi() = delete;
     ~RingtoneCommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
-    static void ThrowError(napi_env env, int32_t code);
+    static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
     static std::string GetMessageByCode(int32_t &code);
 };
 } // namespace Media

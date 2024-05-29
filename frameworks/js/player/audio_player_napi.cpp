@@ -391,7 +391,7 @@ napi_value AudioPlayerNapi::Play(napi_env env, napi_callback_info info)
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Play");
         return undefinedResult;
     }
-    MEDIA_LOGD("Play success");
+    MEDIA_LOGD("AudioPlayerNapi Play success");
     return undefinedResult;
 }
 

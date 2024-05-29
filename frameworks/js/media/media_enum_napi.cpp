@@ -106,6 +106,10 @@ static const std::vector<struct JsEnumInt> g_playbackSpeed = {
     { "SPEED_FORWARD_1_25_X", PlaybackRateMode::SPEED_FORWARD_1_25_X },
     { "SPEED_FORWARD_1_75_X", PlaybackRateMode::SPEED_FORWARD_1_75_X },
     { "SPEED_FORWARD_2_00_X", PlaybackRateMode::SPEED_FORWARD_2_00_X },
+    { "SPEED_FORWARD_0_50_X", PlaybackRateMode::SPEED_FORWARD_0_50_X },
+    { "SPEED_FORWARD_1_50_X", PlaybackRateMode::SPEED_FORWARD_1_50_X },
+    { "SPEED_FORWARD_0_25_X", PlaybackRateMode::SPEED_FORWARD_0_25_X },
+    { "SPEED_FORWARD_0_125_X", PlaybackRateMode::SPEED_FORWARD_0_125_X },
 };
 
 static const std::vector<struct JsEnumInt> g_mediaType = {
@@ -151,8 +155,8 @@ static const std::vector<struct JsEnumInt> g_hdrType = {
 static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
-    { "SEEK_CLOSEST_SYNC", PlayerSeekMode::SEEK_CLOSEST_SYNC },
-    { "SEEK_CLOSEST", PlayerSeekMode::SEEK_CLOSEST },
+    { "SEEK_CLOSEST_SYNC", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
+    { "SEEK_CLOSEST", 2 }, // 2 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
 };
 
 static const std::vector<struct JsEnumInt> g_AVCodecType = {
@@ -276,6 +280,10 @@ static const std::vector<struct JsEnumString> g_containerFormatType = {
     { "CFT_MPEG_4A", ContainerFormatType::CFT_MPEG_4A },
 };
 
+static const std::vector<struct JsEnumString> g_avMimeTypes = {
+    { "APPLICATION_M3U8", "application/m3u8" },
+};
+
 static const std::vector<struct JsEnumString> g_codecMimeType = {
     { "VIDEO_H263", OHOS::Media::Plugins::MimeType::VIDEO_H263 },
     { "VIDEO_AVC", OHOS::Media::Plugins::MimeType::VIDEO_AVC },
@@ -381,6 +389,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumString>&>
     { "MediaDescriptionKey", g_mediaDescriptionKey },
     { "ContainerFormatType", g_containerFormatType },
     { "CodecMimeType", g_codecMimeType },
+    { "AVMimeTypes", g_avMimeTypes },
 };
 
 napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)

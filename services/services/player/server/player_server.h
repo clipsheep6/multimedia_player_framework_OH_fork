@@ -24,6 +24,7 @@
 #include "audio_effect.h"
 #include "account_subscriber.h"
 #include "os_account_manager.h"
+#include "hitrace/tracechain.h"
 
 namespace OHOS {
 namespace Media {
@@ -214,6 +215,9 @@ private:
     std::atomic<bool> inReleasing_ = false;
     std::atomic<int32_t> userId_ = -1;
     std::atomic<bool> isBootCompleted_ = false;
+    uint64_t instanceId_ = 0;
+    std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
+    AVPlayStrategy strategy_;
 };
 } // namespace Media
 } // namespace OHOS

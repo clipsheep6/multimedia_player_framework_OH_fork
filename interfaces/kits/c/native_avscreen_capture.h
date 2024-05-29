@@ -310,6 +310,19 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreenCapture *capture,
     struct OH_AVScreenCapture_ContentFilter *filter);
 
+/**
+ * @brief Add Window content to the screen capture content filter
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @param filter Pointer to an OH_AVScreenCapture_ContentFilter instance
+ * @param Pointer to windowIDs to be added
+ * @param windowCount to be added
+ * @return Returns AV_SCREEN_CAPTURE_ERR_OK if the execution is successful,
+ * otherwise returns a specific error code, refer to {@link OH_AVSCREEN_CAPTURE_ErrCode}
+ * @since 12
+ * @version 1.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
+    struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount);
 #ifdef __cplusplus
 }
 #endif

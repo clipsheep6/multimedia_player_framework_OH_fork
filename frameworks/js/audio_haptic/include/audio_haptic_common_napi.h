@@ -34,6 +34,7 @@ public:
     AudioHapticCommonNapi() = delete;
     ~AudioHapticCommonNapi() = delete;
     static void ThrowError(napi_env env, int32_t code);
+    static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
     static std::string GetMessageByCode(int32_t &code);
     static std::string GetStringArgument(napi_env env, napi_value value);
 };

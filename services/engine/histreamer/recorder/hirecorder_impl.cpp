@@ -14,12 +14,14 @@
  */
 #include "hirecorder_impl.h"
 #include "meta/audio_types.h"
+#include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "media_dfx.h"
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HiviewDFX;
 class RecorderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit RecorderEventReceiver(HiRecorderImpl *hiRecorderImpl)
@@ -75,19 +77,18 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
     pipeline_ = std::make_shared<Pipeline::Pipeline>();
-    int tid = static_cast<pid_t>(::syscall(SYS_gettid));
-    avRecorderTag_ = avRecorderTag_ + "[" + std::to_string(tid) + "]";
 }
 
 HiRecorderImpl::~HiRecorderImpl()
 {
     Stop(false);
+    PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
 int32_t HiRecorderImpl::Init()
 {
     MediaTrace trace("HiRecorderImpl::Init");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Init enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("HiRecorderImpl Init enter.");
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
     recorderId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
@@ -98,8 +99,7 @@ int32_t HiRecorderImpl::Init()
 int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetVideoSource");
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
-        static_cast<int32_t>(source));
+    MEDIA_LOG_I("SetVideoSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(source != VideoSourceType::VIDEO_SOURCE_BUTT,
         (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -114,29 +114,29 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
             videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
                 ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
         }
-        videoEncoderFilter_->SetLogTag(avRecorderTag_);
+        if (videoEncoderFilter_) {
+            videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+        }
         ret = pipeline_->AddHeadFilters({videoEncoderFilter_});
         if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
             videoSourceIsRGBA_ = true;
         } else {
             videoSourceIsRGBA_ = false;
         }
-        MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource VIDEO_SOURCE_SURFACE_YUV.", avRecorderTag_.c_str());
+        MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_YUV.");
     } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
         videoSourceIsYuv_ = false;
         videoSourceIsRGBA_ = false;
         videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
             ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
-        videoCaptureFilter_->SetLogTag(avRecorderTag_);
         ret = pipeline_->AddHeadFilters({videoCaptureFilter_});
-        MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource VIDEO_SOURCE_SURFACE_ES.", avRecorderTag_.c_str());
+        MEDIA_LOG_I("SetVideoSource VIDEO_SOURCE_SURFACE_ES.");
     } else {
         ret = Status::OK;
     }
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret,
-        PUBLIC_LOG_S "AddFilters videoEncoder to pipeline fail", avRecorderTag_.c_str());
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters videoEncoder to pipeline fail");
     if (ret == Status::OK) {
-        MEDIA_LOG_I(PUBLIC_LOG_S "SetVideoSource success.", avRecorderTag_.c_str());
+        MEDIA_LOG_I("SetVideoSource success.");
         videoCount_++;
         videoSourceId_ = tempSourceId;
         sourceId = videoSourceId_;
@@ -148,8 +148,7 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MediaTrace trace("HiRecorderImpl::SetAudioSource");
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, avRecorderTag_.c_str(),
-        static_cast<int32_t>(source));
+    MEDIA_LOG_I("SetAudioSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(CheckAudioSourceType(source), (int32_t)Status::ERROR_INVALID_PARAMETER);
     FALSE_RETURN_V(audioCount_ < static_cast<int32_t>(AUDIO_SOURCE_MAX_COUNT),
@@ -158,16 +157,12 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
         ("audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
-    if (audioCaptureFilter_ == nullptr) {
-        MEDIA_LOG_E(PUBLIC_LOG_S "HiRecorderImpl::audioCaptureFilter_ == nullptr", avRecorderTag_.c_str());
-    }
-    audioCaptureFilter_->SetLogTag(avRecorderTag_);
+    audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret,
-        PUBLIC_LOG_S "AddFilters audioCapture to pipeline fail", avRecorderTag_.c_str());
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioCapture to pipeline fail");
     if (ret == Status::OK) {
-        MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource success.", avRecorderTag_.c_str());
+        MEDIA_LOG_I("SetAudioSource success.");
         audioCount_++;
         audioSourceId_ = tempSourceId;
         sourceId = static_cast<int32_t>(audioSourceId_);
@@ -178,19 +173,16 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
 int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
 {
-    MEDIA_LOG_I("SetAudioDataSource enter.");
+    MEDIA_LOG_I("HiRecorderImpl SetAudioDataSource enter.");
     sourceId = INVALID_SOURCE_ID;
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
         ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
-    if (audioDataSourceFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioDataSourceFilter_ == nullptr");
-    }
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
     if (ret == Status::OK) {
-        MEDIA_LOG_I(PUBLIC_LOG_S "SetAudioSource success.", avRecorderTag_.c_str());
+        MEDIA_LOG_I("SetAudioSource success.");
         audioCount_++;
         audioSourceId_ = tempSourceId;
         sourceId = static_cast<int32_t>(audioSourceId_);
@@ -201,8 +193,7 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
 
 int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetOutputFormat enter. " PUBLIC_LOG_D32, avRecorderTag_.c_str(),
-        static_cast<int32_t>(format));
+    MEDIA_LOG_I("HiRecorderImpl SetOutputFormat enter. " PUBLIC_LOG_D32, static_cast<int32_t>(format));
     outputFormatType_ = format;
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
@@ -210,14 +201,14 @@ int32_t HiRecorderImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetObs enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("SetObs enter.");
     obs_ = obs;
     return (int32_t)Status::OK;
 }
 
 int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "Configure enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("HiRecorderImpl Configure enter.");
     FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
         (int32_t)Status::ERROR_INVALID_OPERATION);
     FALSE_RETURN_V(CheckParamType(sourceId, recParam), (int32_t)Status::ERROR_INVALID_PARAMETER);
@@ -254,7 +245,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "GetSurface enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("HiRecorderImpl GetSurface enter.");
     if (videoEncoderFilter_) {
         producerSurface_ = videoEncoderFilter_->GetInputSurface();
     }
@@ -267,9 +258,9 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Prepare enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Prepare enter.");
     if (lseek(fd_, 0, SEEK_CUR) == -1) {
-        MEDIA_LOG_E(PUBLIC_LOG_S "The fd is invalid.", avRecorderTag_.c_str());
+        MEDIA_LOG_E("The fd is invalid.");
         return (int32_t)Status::ERROR_UNKNOWN;
     }
     if (audioCaptureFilter_) {
@@ -294,18 +285,18 @@ int32_t HiRecorderImpl::Prepare()
     if (videoEncoderFilter_) {
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
-            videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
         }
+        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, PUBLIC_LOG_S "videoEncoderFilter Configure fail", avRecorderTag_.c_str());
+            ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
     if (videoCaptureFilter_) {
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, PUBLIC_LOG_S "videoCaptureFilter Configure fail", avRecorderTag_.c_str());
+            ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
     }
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
@@ -317,7 +308,7 @@ int32_t HiRecorderImpl::Prepare()
 int32_t HiRecorderImpl::Start()
 {
     MediaTrace trace("HiRecorderImpl::Start");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Start enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Start enter.");
     Status ret = Status::OK;
     if (curState_ == StateId::PAUSE) {
         ret = pipeline_->Resume();
@@ -333,7 +324,7 @@ int32_t HiRecorderImpl::Start()
 int32_t HiRecorderImpl::Pause()
 {
     MediaTrace trace("HiRecorderImpl::Pause");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Pause enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Pause enter.");
     Status ret = Status::OK;
     if (curState_ != StateId::READY) {
         ret = pipeline_->Pause();
@@ -347,7 +338,7 @@ int32_t HiRecorderImpl::Pause()
 int32_t HiRecorderImpl::Resume()
 {
     MediaTrace trace("HiRecorderImpl::Resume");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Resume enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Resume enter.");
     Status ret = Status::OK;
     ret = pipeline_->Resume();
     if (ret == Status::OK) {
@@ -359,7 +350,7 @@ int32_t HiRecorderImpl::Resume()
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MediaTrace trace("HiRecorderImpl::Stop");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Stop enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Stop enter.");
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
     if (audioCaptureFilter_) {
@@ -383,21 +374,20 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     if (videoCaptureFilter_) {
         pipeline_->RemoveHeadFilter(videoCaptureFilter_);
     }
-    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ERR_UNKNOWN_REASON,
-        PUBLIC_LOG_S "stop fail", avRecorderTag_.c_str());
+    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ERR_UNKNOWN_REASON, "stop fail");
     return (int32_t)ret;
 }
 
 int32_t HiRecorderImpl::Reset()
 {
     MediaTrace trace("HiRecorderImpl::Reset");
-    MEDIA_LOG_I(PUBLIC_LOG_S "Reset enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("Reset enter.");
     return Stop(false);
 }
 
 int32_t HiRecorderImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "SetParameter enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("SetParameter enter.");
     return Configure(sourceId, recParam);
 }
 
@@ -405,7 +395,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
         case EventType::EVENT_ERROR: {
-            MEDIA_LOG_I(PUBLIC_LOG_S "EVENT_ERROR.", avRecorderTag_.c_str());
+            MEDIA_LOG_I("EVENT_ERROR.");
             OnStateChanged(StateId::ERROR);
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
@@ -435,13 +425,13 @@ void HiRecorderImpl::OnEvent(const Event &event)
 Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
     Pipeline::StreamType outType)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "OnCallback enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("OnCallback enter.");
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
                 audioEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioEncoderFilter>
                     ("audioEncoderFilter", Pipeline::FilterType::FILTERTYPE_AENC);
-                audioEncoderFilter_->SetLogTag(avRecorderTag_);
+                audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                 audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
                 audioEncoderFilter_->Configure(audioEncFormat_);
@@ -451,7 +441,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 if (muxerFilter_ == nullptr) {
                     muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-                    muxerFilter_->SetLogTag(avRecorderTag_);
+                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
@@ -465,7 +455,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 if (muxerFilter_ == nullptr) {
                     muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
                         ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-                    muxerFilter_->SetLogTag(avRecorderTag_);
+                    muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                     muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
                     muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
                     muxerFilter_->SetParameter(muxerFormat_);
@@ -484,7 +474,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "OnAudioCaptureChange enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
@@ -494,8 +484,7 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
     if (audioCaptureFilter_ == nullptr) {
-        MEDIA_LOG_E(PUBLIC_LOG_S "audioCaptureFilter_ is nullptr, cannot get audio capturer change info",
-            avRecorderTag_.c_str());
+        MEDIA_LOG_E("audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
         return (int32_t)Status::ERROR_INVALID_OPERATION;
     }
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
@@ -521,8 +510,7 @@ int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
 int32_t HiRecorderImpl::GetMaxAmplitude()
 {
     if (!audioCaptureFilter_) {
-        MEDIA_LOG_E(PUBLIC_LOG_S "audioCaptureFilter_ is null, cannot get audio max amplitude",
-            avRecorderTag_.c_str());
+        MEDIA_LOG_E("audioCaptureFilter_ is null, cannot get audio max amplitude");
         return (int32_t)Status::ERROR_INVALID_OPERATION;
     }
     return audioCaptureFilter_->GetMaxAmplitude();
@@ -530,7 +518,7 @@ int32_t HiRecorderImpl::GetMaxAmplitude()
 
 void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureAudio enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("ConfigureAudio enter.");
     switch (recParam.type) {
         case RecorderPublicParamType::AUD_SAMPLERATE: {
             AudSampleRate audSampleRate = static_cast<const AudSampleRate&>(recParam);
@@ -571,7 +559,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureVideo enter.", avRecorderTag_.c_str());
+    MEDIA_LOG_I("ConfigureVideo enter.");
     switch (recParam.type) {
         case RecorderPublicParamType::VID_RECTANGLE: {
             VidRectangle vidRectangle = static_cast<const VidRectangle&>(recParam);
@@ -642,7 +630,7 @@ void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_MPEG4);
             break;
         case OHOS::Media::VideoCodecFormat::H265:
-            MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureVideo H265 enter", avRecorderTag_.c_str());
+            MEDIA_LOG_I("ConfigureVideo H265 enter");
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_HEVC);
             break;
         default:
@@ -681,13 +669,13 @@ void HiRecorderImpl::ConfigureRotation(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 {
-    MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureMuxer enter", avRecorderTag_.c_str());
+    MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
             OutFd outFd = static_cast<const OutFd&>(recParam);
             fd_ = dup(outFd.fd);
             muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-            MEDIA_LOG_I(PUBLIC_LOG_S "ConfigureMuxer enter " PUBLIC_LOG_D32, avRecorderTag_.c_str(), fd_);
+            MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
             break;
         }
         case RecorderPublicParamType::MAX_DURATION: {
@@ -830,6 +818,12 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
         }
     }
     return encoderInfoVector;
+}
+
+void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t instanceId)
+{
+    bundleName_ = bundleName;
+    instanceId_ = instanceId;
 }
 } // namespace MEDIA
 } // namespace OHOS

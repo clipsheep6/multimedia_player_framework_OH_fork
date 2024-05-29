@@ -165,6 +165,14 @@ public:
     {
         (void)isInterruptNeeded;
     }
+    virtual void OnDumpInfo(int32_t fd)
+    {
+        (void)fd;
+    }
+    virtual void SetInstancdId(uint64_t instanceId)
+    {
+        (void)instanceId;
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -85,7 +85,7 @@ geteuid;arm64
 getgid;arm64
 getegid;arm64
 gettid;all
-sysinfo;arm64
+sysinfo;all
 socket;all
 socketpair;all
 bind;all
@@ -142,3 +142,4 @@ _newselect;arm
 fsync;all
 msync;all
 process_vm_readv;all
+shutdown;all

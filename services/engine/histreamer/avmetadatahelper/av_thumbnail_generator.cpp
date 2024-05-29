@@ -161,24 +161,27 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
         return;
     }
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
-    mediaDemuxer_->ReadSample(trackIndex_, buffer);
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnInputBufferAvailable decoder is nullptr.");
+    mediaDemuxer_->ReadSample(trackIndex_, buffer);
     videoDecoder_->QueueInputBuffer(index);
 }
 
 void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_ptr<AVBuffer> buffer)
 {
     MEDIA_LOGD("OnOutputBufferAvailable index:%{public}u", index);
-    if (buffer == nullptr || buffer->memory_ == nullptr) {
+    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "Video decoder not exist");
+    if (buffer == nullptr || buffer->memory_ == nullptr || buffer->memory_->GetSurfaceBuffer() == nullptr) {
+        MEDIA_LOGW("Output buffer is nullptr");
+        videoDecoder_->ReleaseOutputBuffer(index, false);
         return;
     }
-    if (buffer->pts_ >= seekTime_ && !hasFetchedFrame_.load() && !stopProcessing_.load()) {
+    if (!hasFetchedFrame_.load() && !stopProcessing_.load()) {
         bufferIndex_ = index;
         surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
         hasFetchedFrame_ = true;
         cond_.notify_all();
+        return;
     }
-    CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnOutputBufferAvailable videoDecoder_ is nullptr");
     videoDecoder_->ReleaseOutputBuffer(index, false);
 }
 
@@ -308,16 +311,11 @@ std::unique_ptr<PixelMap> AVThumbnailGenerator::GetYuvDataAlignStride(const sptr
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
     int32_t stride = surfaceBuffer->GetStride();
-    int32_t outputWidth;
     int32_t outputHeight;
-    outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, outputWidth);
-    outputFormat_.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, outputHeight);
-#if !(defined(__x86_64__) || defined(__aarch64__))
-    MEDIA_LOGI("32Bit OS GetYuvDataAlignStride");
-    if (outputHeight == 0) {
+    auto isOutputFormatValid = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
+    if (!isOutputFormatValid && outputHeight == 0) {
         outputHeight = height;
     }
-#endif
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
         stride, outputHeight);
 

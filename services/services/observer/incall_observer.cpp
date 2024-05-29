@@ -55,23 +55,6 @@ bool InCallObserver::IsInCall()
     return inCall_;
 }
 
-bool InCallObserver::HasOtherCall(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
-{
-    (void)slotId;
-    (void)callState;
-    (void)phoneNumber;
-    std::unique_lock<std::mutex> lock(mutex_);
-    allInCallNum_.store(allInCallNum_.load() - 1);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " HasOtherCall In allInCallNum = %{public}d",
-                   FAKE_POINTER(this), allInCallNum_.load());
-    if (allInCallNum_.load() > 0) {
-        return true;
-    } else {
-        allInCallNum_.store(0);
-        return false;
-    }
-}
-
 bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -105,18 +88,6 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
             MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
         }
     }
-    return true;
-}
-
-bool InCallObserver::OnCallCountUpdated(int32_t slotId, int32_t callState, const std::u16string &phoneNumber)
-{
-    (void)slotId;
-    (void)callState;
-    (void)phoneNumber;
-    std::unique_lock<std::mutex> lock(mutex_);
-    allInCallNum_.store(allInCallNum_.load() + 1);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnCallCountUpdated In allInCallNum = %{public}d",
-            FAKE_POINTER(this), allInCallNum_.load());
     return true;
 }
 
