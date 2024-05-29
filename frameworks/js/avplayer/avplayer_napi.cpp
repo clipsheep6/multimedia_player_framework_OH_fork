@@ -1814,7 +1814,8 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_MOVIE, STREAM_USAGE_GAME,
         STREAM_USAGE_AUDIOBOOK, STREAM_USAGE_NAVIGATION,
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
-        STREAM_USAGE_ULTRASONIC
+        STREAM_USAGE_ULTRASONIC,
+        STREAM_USAGE_VIDEO_COMMUNICATION
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {
