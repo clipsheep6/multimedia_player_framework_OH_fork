@@ -88,7 +88,7 @@ Status AVThumbnailGenerator::InitDecoder()
 {
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
-        MEDIA_LOGD("InitDecoder already.");
+        MEDIA_LOGD("AVThumbnailGenerator InitDecoder already.");
         videoDecoder_->Start();
         return Status::OK;
     }
