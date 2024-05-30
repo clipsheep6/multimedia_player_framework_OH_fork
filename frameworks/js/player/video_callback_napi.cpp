@@ -305,10 +305,10 @@ void VideoCallbackNapi::OnBitRateCollectedCb(const Format &infoBody) const
     cb->callback = refMap_.at(BITRATE_COLLECTED_CALLBACK_NAME);
     cb->callbackName = BITRATE_COLLECTED_CALLBACK_NAME;
 
-    if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BITRATE))) {
+    if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
-        infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_BITRATE), &addr, size);
+        infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES), &addr, size);
         if (addr == nullptr) {
             delete cb;
             return;

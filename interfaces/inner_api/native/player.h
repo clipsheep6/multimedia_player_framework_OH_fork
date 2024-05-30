@@ -108,6 +108,7 @@ public:
     static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
     static constexpr std::string_view PLAYER_DRM_INFO_ADDR = "drm_info_addr";
     static constexpr std::string_view PLAYER_DRM_INFO_COUNT = "drm_info_count";
+    static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
 };
 
 enum PlayerErrorType : int32_t {

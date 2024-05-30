@@ -975,10 +975,10 @@ void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &i
     }
 
     std::vector<int32_t> bitrateVec;
-    if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BITRATE))) {
+    if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
-        infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_BITRATE), &addr, size);
+        infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES), &addr, size);
         CHECK_AND_RETURN_LOG(addr != nullptr, "bitrate addr is nullptr");
 
         MEDIA_LOGI("bitrate size = %{public}zu", size / sizeof(uint32_t));

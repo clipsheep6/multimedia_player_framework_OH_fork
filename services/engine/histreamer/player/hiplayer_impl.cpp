@@ -429,7 +429,7 @@ void HiPlayerImpl::DoInitializeForHttp()
         const int size = mSize;
         uint32_t* bitrates = vBitRates.data();
         Format bitRateFormat;
-        (void)bitRateFormat.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
+        (void)bitRateFormat.PutBuffer(std::string(PlayerKeys::PLAYER_AVAILABLE_BITRATES),
             static_cast<uint8_t *>(static_cast<void *>(bitrates)), size * sizeof(uint32_t));
         callbackLooper_.OnInfo(INFO_TYPE_BITRATE_COLLECT, 0, bitRateFormat);
         MEDIA_LOGI("OnInfo INFO_TYPE_BITRATE_COLLEC");
