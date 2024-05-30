@@ -58,7 +58,7 @@ private:
 
     // var for all
     AudioLatencyMode latencyMode_;
-    AudioStandard::StreamUsage streamUsage_;
+    AudioStandard::StreamUsage streamUsage_ = AudioStandard::STREAM_USAGE_UNKNOWN;
     bool muteAudio_;
     bool muteHaptic_;
     std::string audioUri_;

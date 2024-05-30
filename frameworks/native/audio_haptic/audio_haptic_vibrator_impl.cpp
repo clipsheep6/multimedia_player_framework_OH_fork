@@ -111,7 +111,6 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
             return MSERR_UNSUPPORT_FILE;
         }
     }
-
     int32_t fd = open(hapticSource.hapticUri.c_str(), O_RDONLY);
     if (fd == -1) {
         // open file failed, return.

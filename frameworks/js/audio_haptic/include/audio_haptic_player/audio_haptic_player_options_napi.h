@@ -44,8 +44,8 @@ private:
     static bool sMuteAudio_;
     static bool sMuteHaptics_;
 
-    bool muteAudio_;
-    bool muteHaptics_;
+    bool muteAudio_ = false;
+    bool muteHaptics_ = false;
     napi_env env_;
 };
 } // namespace Media

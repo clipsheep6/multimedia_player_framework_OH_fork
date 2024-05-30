@@ -169,6 +169,10 @@ void SystemSoundManagerImpl::InitDefaultRingtoneUriMap(const std::string &ringto
 
     std::string jsonValue = GetJsonValue(ringtoneJsonPath);
     nlohmann::json ringtoneJson = json::parse(jsonValue, nullptr, false);
+    if (ringtoneJson.is_discarded()) {
+        MEDIA_LOGE("ringtoneJson parsing is false !");
+        return;
+    }
     if (ringtoneJson.contains("preset_ringtone_sim1") && ringtoneJson["preset_ringtone_sim1"].is_string()) {
         std::string defaultRingtoneName = ringtoneJson["preset_ringtone_sim1"];
         defaultRingtoneUriMap_[RINGTONE_TYPE_SIM_CARD_0] =
@@ -215,6 +219,10 @@ void SystemSoundManagerImpl::InitDefaultSystemToneUriMap(const std::string &syst
 
     std::string jsonValue = GetJsonValue(systemToneJsonPath);
     nlohmann::json systemToneJson = json::parse(jsonValue, nullptr, false);
+    if (systemToneJson.is_discarded()) {
+        MEDIA_LOGE("systemToneJson parsing is false !");
+        return;
+    }
     if (systemToneJson.contains("preset_ringtone_sms") && systemToneJson["preset_ringtone_sms"].is_string()) {
         std::string defaultSystemToneName = systemToneJson["preset_ringtone_sms"];
         defaultSystemToneUriMap_[SYSTEM_TONE_TYPE_SIM_CARD_0] =
@@ -257,7 +265,6 @@ std::string SystemSoundManagerImpl::GetFullPath(const std::string &originalUri)
 std::string SystemSoundManagerImpl::GetJsonValue(const std::string &jsonPath)
 {
     std::string jsonValue = "";
-
     ifstream file(jsonPath.c_str());
     if (!file.is_open()) {
         MEDIA_LOGI("file not open! try open first ! ");

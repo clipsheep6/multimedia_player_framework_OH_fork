@@ -98,7 +98,6 @@ int32_t SystemTonePlayerImpl::Prepare()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-
     fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
     if (fileDes_ == -1) {
         // open file failed, try to use default path.
