@@ -91,7 +91,7 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
-    MEDIA_LOG_I("StopReportMediaProgress");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StopReportMediaProgress");
     reportMediaProgress_ = false;
 }
 
