@@ -85,11 +85,11 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
     size_t targetSize = 0;
-    int32_t ret = audioRenderer_->GetBufferSize(targetSize);
+    int32_t ret = audioRenderer->GetBufferSize(targetSize);
     audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_CALLBACK);
-    if (ret == 0 && targetSize != 0 && !audioRenderer_->IsFastRenderer()) {
+    if (ret == 0 && targetSize != 0 && !audioRenderer->IsFastRenderer()) {
         size_t bufferDuration = 20; // 20 -> 20ms
-        audioRenderer_->SetBufferDuration(bufferDuration);
+        audioRenderer->SetBufferDuration(bufferDuration);
         MEDIA_LOGI("Using buffer size:%{public}zu, duration %{public}zu", targetSize, bufferDuration);
     }
     ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
