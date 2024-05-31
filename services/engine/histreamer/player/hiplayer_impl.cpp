@@ -772,6 +772,7 @@ Status HiPlayerImpl::doStartedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
     pipeline_ -> Resume();
+    inEosSeek_ = false;
     return rtv;
 }
 
@@ -953,7 +954,7 @@ int32_t HiPlayerImpl::SetObs(const std::weak_ptr<IPlayerEngineObs>& obs)
 
 int32_t HiPlayerImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
-    if (curState_ == PlayerStateId::EOS) {
+    if (curState_ == PlayerStateId::EOS || inEosSeek_) {
         currentPositionMs = durationMs_.load();
         return TransStatus(Status::OK);
     }
@@ -1590,6 +1591,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     }
     if (!singleLoop_.load()) {
         callbackLooper_.StopReportMediaProgress();
+    } else {
+        inEosSeek_ = true;
     }
     pipeline_->Pause();
     callbackLooper_.DoReportCompletedTime();
