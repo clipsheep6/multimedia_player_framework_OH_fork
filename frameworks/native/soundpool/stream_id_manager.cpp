@@ -312,7 +312,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
             }
         }
     }
-    for (int32_t i = 0; i < playingStreamIDs_.size(); i++) {
+    for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
         int32_t playingStreamID = playingStreamIDs_[i];
         MEDIA_LOGD("StreamIDManager::ReorderStream  playingStreamID:%{public}d", playingStreamID);
     }
@@ -329,7 +329,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
             }
         }
     }
-    for (int32_t i = 0; i < willPlayStreamInfos_.size(); i++) {
+    for (size_t i = 0; i < willPlayStreamInfos_.size(); i++) {
         StreamIDAndPlayParamsInfo willPlayInfo = willPlayStreamInfos_[i];
         MEDIA_LOGD("StreamIDManager::ReorderStream  willPlayStreamID:%{public}d", willPlayInfo.streamID);
     }
@@ -362,7 +362,7 @@ void StreamIDManager::OnPlayFinished()
     {
         std::lock_guard lock(streamIDManagerLock_);
         currentTaskNum_--;
-        for (int32_t i = 0; i < playingStreamIDs_.size(); i++) {
+        for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (!playingCacheBuffer->IsRunning()) {
