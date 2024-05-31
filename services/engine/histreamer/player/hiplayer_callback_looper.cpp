@@ -62,7 +62,7 @@ void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlaye
     if (!taskStarted_) {
         task_->Start();
         taskStarted_ = true;
-        MEDIA_LOG_I("start callback looper");
+        MEDIA_LOG_I("HiPlayerCallbackLooper start callback looper");
     }
 }
 void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
