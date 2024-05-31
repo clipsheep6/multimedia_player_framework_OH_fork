@@ -355,6 +355,7 @@ napi_value AudioHapticManagerNapi::UnregisterSource(napi_env env, napi_callback_
             MEDIA_LOGE("GetRingtoneUri: Failed to get create async work");
             napi_get_undefined(env, &result);
         } else {
+            MEDIA_LOGI("GetRingtoneUri: Succeed to get create async work");
             napi_queue_async_work(env, asyncContext->work);
             asyncContext.release();
         }
