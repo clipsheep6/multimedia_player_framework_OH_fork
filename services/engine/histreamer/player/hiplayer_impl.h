@@ -94,6 +94,7 @@ public:
     // interface from PlayerInterface
     int32_t SetSource(const std::string& uri) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc) override;
+    int32_t AddSubSource(const std::string &url);
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
@@ -172,6 +173,8 @@ private:
     void NotifyPositionUpdate();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void NotifySubtitleUpdate(const Event& event);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
@@ -279,6 +282,7 @@ private:
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
     std::string mimeType_;
+    std::atomic<bool> hasExtSub_{false};
 };
 } // namespace Media
 } // namespace OHOS
