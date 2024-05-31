@@ -114,6 +114,9 @@ void HiPlayerImpl::ReleaseInner()
         videoDecoder_.reset();
     }
 #endif
+    if (subtitleSink_) {
+        subtitleSink_.reset();
+    }
     syncManager_.reset();
     if (demuxer_) {
         pipeline_->RemoveHeadFilter(demuxer_);
@@ -216,6 +219,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
     }
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
@@ -267,10 +271,30 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     }
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
     return ret;
+}
+
+int32_t HiPlayerImpl::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("HiPlayerImpl::AddSubSource uri");
+    MEDIA_LOG_I("AddSubSource entered source uri: " PUBLIC_LOG_S, url.c_str());
+    subUrl_ = url;
+    if (IsFileUrl(url)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("AddSubSource error: GetRealPath error");
+            return result;
+        }
+        subUrl_ = "file://" + realUriPath;
+    }
+
+    hasExtSub_ = true;
+    return TransStatus(Status::OK);
 }
 
 void HiPlayerImpl::ResetIfSourceExisted()
@@ -527,6 +551,9 @@ int32_t HiPlayerImpl::Stop()
     if (audioSink_ != nullptr) {
         audioSink_->Flush();
     }
+    if (subtitleSink_ != nullptr) {
+        subtitleSink_->Flush();
+    }
     for (std::pair<std::string, bool>& item: completeState_) {
         item.second = false;
     }
@@ -781,6 +808,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     if (!Plugins::Us2HstTime(seekPos, seekTimeUs)) { // ms to us
         MEDIA_LOGE("Invalid seekPos: %{public}" PRId64, seekPos);
         return Status::ERROR_INVALID_PARAMETER;
+    }
+    if (subtitleSink_ != nullptr) {
+        subtitleSink_->SetSeekTime(seekTimeUs);
     }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         MEDIA_LOGI("doSeek SEEK_CLOSEST");
@@ -1067,6 +1097,9 @@ int32_t HiPlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
     float speed = TransformPlayRate2Float(mode);
     if (audioSink_ != nullptr) {
         res = audioSink_->SetSpeed(speed);
+    }
+    if (subtitleSink_ != nullptr) {
+        res = subtitleSink_->SetSpeed(speed);
     }
     if (res != Status::OK) {
         MEDIA_LOGE("SetPlaybackSpeed audioSink set speed  error");
@@ -1405,6 +1438,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             HandleBitrateStartEvent(event);
             break;
         }
+        case EventType::EVENT_SUBTITLE_TEXT_UPDATE: {
+            NotifySubtitleUpdate(event);
+            break;
+        }
         default:
             break;
     }
@@ -1473,6 +1510,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
     lock.unlock();
 
+    if (hasExtSub_) {
+        demuxer_->SetSubtitleSource(std::make_shared<MediaSource>(subUrl_));
+    }
     SetBundleName(bundleName_);
     demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());
     return ret;
@@ -1487,6 +1527,9 @@ Status HiPlayerImpl::Resume()
     syncManager_->Resume();
     if (audioSink_ != nullptr) {
         audioSink_->Resume();
+    }
+    if (subtitleSink_ != nullptr) {
+        subtitleSink_->Resume();
     }
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
@@ -1633,6 +1676,12 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
     MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
     videoDecoder_->SetBitrateStart();
 #endif
+}
+
+void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
+{
+    Format format = AnyCast<Format>(event.param);
+    callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
@@ -1796,6 +1845,8 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
     MEDIA_LOGI("HiPlayerImpl::OnCallback filter, outType: %{public}d", outType);
     if (cmd == FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
+            case StreamType::STREAMTYPE_SUBTITLE:
+                return LinkSubtitleSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_RAW_AUDIO:
                 return LinkAudioSinkFilter(filter, outType);
             case StreamType::STREAMTYPE_ENCODED_AUDIO:
@@ -1937,5 +1988,28 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
     return pipeline_->LinkFilters(preFilter, {videoDecoder_}, type);
 }
 #endif
+
+Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type)
+{
+    MediaTrace trace("HiPlayerImpl::LinkSubtitleSinkFilter");
+    if (subtitleSink_ == nullptr) {
+        subtitleSink_ = FilterFactory::Instance().CreateFilter<SubtitleSinkFilter>("player.subtitlesink",
+            FilterType::FILTERTYPE_SSINK);
+        FALSE_RETURN_V(subtitleSink_ != nullptr, Status::ERROR_NULL_POINTER);
+        subtitleSink_->Init(playerEventReceiver_, playerFilterCallback_);
+        std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
+        if (demuxer_ != nullptr) {
+            globalMeta = demuxer_->GetGlobalMetaInfo();
+        }
+        if (globalMeta != nullptr) {
+            globalMeta->SetData(Tag::APP_PID, appPid_);
+            globalMeta->SetData(Tag::APP_UID, appUid_);
+            subtitleSink_->SetParameter(globalMeta);
+        }
+        subtitleSink_->SetSyncCenter(syncManager_);
+    }
+    completeState_.emplace_back(std::make_pair("SubtitleSink", false));
+    return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
+}
 }  // namespace Media
 }  // namespace OHOS
