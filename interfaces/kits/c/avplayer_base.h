@@ -159,6 +159,7 @@ typedef enum AVPlayerOnInfoType {
     AV_INFO_TYPE_AUDIO_OUTPUT_DEVICE_CHANGE = 17,
 
     AV_INFO_TYPE_DRM_INFO_UPDATED = 18,
+    AV_INFO_TYPE_SUBTITLE_UPDATE_INFO = 19,
 } AVPlayerOnInfoType;
 
 /**

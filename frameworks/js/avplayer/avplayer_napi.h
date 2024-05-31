@@ -62,6 +62,7 @@ const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
 const std::string EVENT_DRM_INFO_UPDATE = "mediaKeySystemInfoUpdate";
 const std::string EVENT_SET_DECRYPT_CONFIG_DONE = "setDecryptConfigDone";
 const std::string EVENT_AUDIO_DEVICE_CHANGE = "audioOutputDeviceChangeWithInfo";
+const std::string EVENT_SUBTITLE_UPDATE = "subtitleUpdate";
 const std::string EVENT_ERROR = "error";
 }
 

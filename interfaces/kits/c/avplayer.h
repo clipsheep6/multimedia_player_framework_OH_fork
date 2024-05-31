@@ -40,6 +40,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string>
 #include "native_averrors.h"
 #include "avplayer_base.h"
 #include "native_audiostream_base.h"
@@ -51,7 +52,13 @@ extern "C" {
 
 typedef struct MediaKeySession MediaKeySession;
 typedef struct DRM_MediaKeySystemInfo DRM_MediaKeySystemInfo;
+typedef struct AVplayerSubtitleInfo {
+    std::string text;
+    int32_t pts;
+    int32_t duration;
+} AVplayerSubtitleInfo;
 typedef void (*Player_MediaKeySystemInfoCallback)(OH_AVPlayer *play, DRM_MediaKeySystemInfo* mediaKeySystemInfo);
+typedef void (*OH_AVPlayerOnSubtitleUpdate)(OH_AVPlayer *player, const char *text, int32_t *pts,  int32_t *duration, void *userData);
 
 /**
  * @brief Create a player
@@ -438,6 +445,36 @@ OH_AVErrCode OH_AVPlayer_SetPlayerCallback(OH_AVPlayer *player, AVPlayerCallback
 OH_AVErrCode OH_AVPlayer_SelectTrack(OH_AVPlayer *player, int32_t index);
 
 /**
+ * @brief Add subtitle URL source.
+ *
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param url Subtitle's url
+ * @param mimeType Subtitle's mimetype
+ * @return Returns {@link AV_ERR_OK} if selected successfully; returns an error code defined
+ * in {@link native_averrors.h} otherwise.
+ * @since 12
+ * @version 1.0
+*/
+OH_AVErrCode OH_AVPlayer_AddSubtitleURLSource(OH_AVPlayer *player, const char *url, const char *mimeType);
+
+/**
+ * @brief Add Subtitle FD Source.
+ *
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param fd Resource's fd
+ * @param offset Offset
+ * @param size Size
+ * @param mimeType Mime type
+ * @return Returns {@link AV_ERR_OK} if selected successfully; returns an error code defined
+ * in {@link native_averrors.h} otherwise.
+ * @since 12
+ * @version 1.0
+*/
+OH_AVErrCode OH_AVPlayer_AddSubtitleFDSource(OH_AVPlayer *player, int32_t fd, int64_t offset, int64_t size, const char *mimeType);
+
+/**
  * @brief Deselect the current audio or subtitle track.
  *
  * After audio is deselected, the default track will be played, and after subtitles are deselected,
@@ -482,6 +519,20 @@ OH_AVErrCode OH_AVPlayer_GetCurrentTrack(OH_AVPlayer *player, int32_t trackType,
  */
 OH_AVErrCode OH_AVPlayer_SetMediaKeySystemInfoCallback(OH_AVPlayer *player,
     Player_MediaKeySystemInfoCallback callback);
+
+/**
+ * @brief Method to get subtitle info.
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @param player Pointer to an OH_AVPlayer instance
+ * @param callback object pointer.
+ * @param userData user data.
+ * @return Returns {@link AV_ERR_OK} if the drm info callback is set; returns an error code defined
+ * in {@link native_averrors.h} otherwise.
+ * @since 12
+ * @version 1.0
+ */
+OH_AVErrCode OH_AVPlayer_SetSubtitleCallback(OH_AVPlayer *player,
+    OH_AVPlayerOnSubtitleUpdate callback, void *userData);
 
 /**
  * @brief Obtains media key system info to create media key session.
