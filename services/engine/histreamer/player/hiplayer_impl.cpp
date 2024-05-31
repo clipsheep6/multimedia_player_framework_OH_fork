@@ -216,6 +216,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     if (url_.find("http") == 0 || url_.find("https") == 0) {
         isNetWorkPlay_ = true;
     }
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
@@ -267,10 +268,30 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
     }
     playStatisticalInfo_.sourceType = static_cast<int32_t>(SourceType::SOURCE_TYPE_STREAM);
     dataSrc_ = dataSrc;
+    hasExtSub_ = false;
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     int ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;
     return ret;
+}
+
+int32_t HiPlayerImpl::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("HiPlayerImpl::AddSubSource uri");
+    MEDIA_LOG_I("AddSubSource entered source uri: " PUBLIC_LOG_S, url.c_str());
+    subUrl_ = url;
+    if (IsFileUrl(url)) {
+        std::string realUriPath;
+        int32_t result = GetRealPath(url, realUriPath);
+        if (result != MSERR_OK) {
+            MEDIA_LOG_E("AddSubSource error: GetRealPath error");
+            return result;
+        }
+        subUrl_ = "file://" + realUriPath;
+    }
+
+    hasExtSub_ = true;
+    return TransStatus(Status::OK);
 }
 
 void HiPlayerImpl::ResetIfSourceExisted()
@@ -1405,6 +1426,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             HandleBitrateStartEvent(event);
             break;
         }
+        case EventType::EVENT_SUBTITLE_TEXT_UPDATE: {
+            NotifySubtitleUpdate(event);
+            break;
+        }
         default:
             break;
     }
@@ -1473,6 +1498,9 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
     lock.unlock();
 
+    if (hasExtSub_) {
+        demuxer_->SetSubtitleSource(std::make_shared<MediaSource>(subUrl_));
+    }
     SetBundleName(bundleName_);
     demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());
     return ret;
@@ -1633,6 +1661,12 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
     MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
     videoDecoder_->SetBitrateStart();
 #endif
+}
+
+void HiPlayerImpl::NotifySubtitleUpdate(const Event& event)
+{
+    Format format = AnyCast<Format>(event.param);
+    callbackLooper_.OnInfo(INFO_TYPE_SUBTITLE_UPDATE_INFO, 0, format);
 }
 
 void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)

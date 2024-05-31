@@ -94,6 +94,7 @@ public:
     // interface from PlayerInterface
     int32_t SetSource(const std::string& uri) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc) override;
+    int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
@@ -234,6 +235,8 @@ private:
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
+    std::string subUrl_;
+    bool hasExtSub_ {false};
     std::atomic<int32_t> durationMs_{-1};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
