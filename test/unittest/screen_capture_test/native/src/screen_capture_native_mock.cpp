@@ -184,9 +184,9 @@ int32_t ScreenCaptureNativeMock::ExcludeWindowContent(int32_t *windowIDs, int32_
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
     ScreenCaptureContentFilter filter;
-    std::vector<int32_t> vec;
+    std::vector<uint64_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
-        vec.push_back(static_cast<int32_t>(*(windowIDs + i)));
+        vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
     }
     filter.windowIDsVec = vec;
     return screenCapture_->ExcludeContent(filter);

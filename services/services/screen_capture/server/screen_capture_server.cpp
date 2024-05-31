@@ -1538,8 +1538,9 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
     CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
     for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
-        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}d", contentFilter_.windowIDsVec[i]);
+        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}" PRIu64, contentFilter_.windowIDsVec[i]);
     }
+    Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");
@@ -1839,11 +1840,14 @@ int32_t ScreenCaptureServer::ReleaseVideoBuffer()
 int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::CREATED, MSERR_INVALID_OPERATION,
-        "ExcludeContent failed, capture is not CREATED, state:%{public}d", captureState_);
+    CHECK_AND_RETURN_RET_LOG(captureState_ != AVScreenCaptureState::STOPPED, MSERR_INVALID_OPERATION,
+        "ExcludeContent failed, capture is STOPPED");
 
     MEDIA_LOGI("ScreenCaptureServer::ExcludeContent start");
     contentFilter_ = contentFilter;
+    if (captureState_ == AVScreenCaptureState::STARTED) {
+        Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
+    }
 
     // For the moment, not support:
     // For STREAM, should call AudioCapturer interface to make effect when start
