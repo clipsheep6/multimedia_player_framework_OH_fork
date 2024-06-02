@@ -344,7 +344,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         return errCode;
     }
     DoSetMediaSource(ret);
-    if (ret != Status::OK) {
+    if (ret != Status::OK && !isInterruptNeeded_.load()) {
         MEDIA_LOGE("PrepareAsync error: DoSetSource error");
         playStatisticalInfo_.errMsg = "PrepareAsync error: DoSetSource error";
         auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
@@ -810,9 +810,6 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         MEDIA_LOGE("Invalid seekPos: %{public}" PRId64, seekPos);
         return Status::ERROR_INVALID_PARAMETER;
     }
-    if (subtitleSink_ != nullptr) {
-        subtitleSink_->SetSeekTime(seekTimeUs);
-    }
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         MEDIA_LOGI("doSeek SEEK_CLOSEST");
         if (videoDecoder_ != nullptr) {
@@ -825,6 +822,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
             MEDIA_LOGE("Seek closest failed");
         } else {
             syncManager_->Seek(seekTimeUs);
+        }
+        if (subtitleSink_ != nullptr) {
+            subtitleSink_->NotifySeek();
         }
         seekAgent_.reset();
         return res;
@@ -839,6 +839,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
     }
     if (rtv == Status::OK) {
         syncManager_->Seek(seekTimeUs);
+        if (subtitleSink_ != nullptr) {
+            subtitleSink_->NotifySeek();
+        }
     }
     return rtv;
 }
@@ -2011,7 +2014,6 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
         }
         subtitleSink_->SetSyncCenter(syncManager_);
     }
-    completeState_.emplace_back(std::make_pair("SubtitleSink", false));
     return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
 }
 }  // namespace Media
