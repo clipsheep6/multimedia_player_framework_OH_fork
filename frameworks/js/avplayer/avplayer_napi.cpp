@@ -84,6 +84,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
         DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
         DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
+        DECLARE_NAPI_FUNCTION("addSubtitleFromUrl", JsAddSubtitleUrl),
+        DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
 
