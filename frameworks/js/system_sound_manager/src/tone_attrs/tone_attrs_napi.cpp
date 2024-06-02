@@ -125,10 +125,22 @@ std::shared_ptr<ToneAttrs> ToneAttrsNapi::GetToneAttrs()
     return toneAttrs_;
 }
 
-napi_value ToneAttrsNapi::ThrowErrorAndReturn(napi_env env, const std::string& napiMessage, int32_t napiCode)
+napi_value ToneAttrsNapi::ThrowErrorAndReturn(napi_env env, const std::string& errMsg, int32_t errCode)
 {
-    napi_throw_error(env, (std::to_string(napiCode)).c_str(), napiMessage.c_str());
-    return nullptr;
+    napi_value message = nullptr;
+    napi_value code = nullptr;
+    napi_value errVal = nullptr;
+    napi_value errNameVal = nullptr;
+    napi_value result{};
+    napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
+    napi_create_error(env, nullptr, message, &errVal);
+    napi_create_int32(env, errCode, &code);
+    napi_set_named_property(env, errVal, "code", code);
+    napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &errNameVal);
+    napi_set_named_property(env, errVal, "BusinessError", errNameVal);
+    napi_throw(env, errVal);
+    napi_get_undefined(env, &result);
+    return result;
 }
 
 bool ToneAttrsNapi::VerifySelfSystemPermission()
@@ -181,7 +193,7 @@ napi_value ToneAttrsNapi::SetTitle(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(valueType == napi_string, nullptr, "title is not string");
 
     std::string toneAttrsTitle = CommonNapi::GetStringArgument(env, argv[0]);
-    CHECK_AND_RETURN_RET_LOG(argc == 1,
+    CHECK_AND_RETURN_RET_LOG(argc == 1 && !toneAttrsTitle.empty(),
         ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
         "invalid arguments");
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -230,7 +242,7 @@ napi_value ToneAttrsNapi::SetFileName(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(valueType == napi_string, nullptr, "filename is not string");
 
     std::string toneAttrsFileName = CommonNapi::GetStringArgument(env, argv[0]);
-    CHECK_AND_RETURN_RET_LOG(argc == 1,
+    CHECK_AND_RETURN_RET_LOG(argc == 1 && !toneAttrsFileName.empty(),
         ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
         "invalid arguments");
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -296,9 +308,14 @@ napi_value ToneAttrsNapi::SetCategory(napi_env env, napi_callback_info info)
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, argv[0], &valueType);
 
-    int32_t toneAttrs_category;
-    napi_get_value_int32(env, argv[0], &toneAttrs_category);
-    CHECK_AND_RETURN_RET_LOG(argc == 1,
+    bool isCategoryValid = false;
+    int32_t toneAttrsCategory = TONE_CATEGORY_INVALID;
+    napi_get_value_int32(env, argv[0], &toneAttrsCategory);
+    if (toneAttrsCategory == TONE_CATEGORY_RINGTONE || toneAttrsCategory == TONE_CATEGORY_TEXT_MESSAGE ||
+        toneAttrsCategory == TONE_CATEGORY_NOTIFICATION || toneAttrsCategory == TONE_CATEGORY_ALARM) {
+        isCategoryValid = true;
+    }
+    CHECK_AND_RETURN_RET_LOG(argc == 1 && isCategoryValid,
         ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID),
         "invalid arguments");
     CHECK_AND_RETURN_RET_LOG((status == napi_ok) && (jsThis != nullptr), nullptr, "jsThis is nullptr");
@@ -306,7 +323,7 @@ napi_value ToneAttrsNapi::SetCategory(napi_env env, napi_callback_info info)
     napi_unwrap(env, jsThis, reinterpret_cast<void**>(&toneAttrsNapi));
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi != nullptr, nullptr, "toneAttrsNapi is nullptr");
     CHECK_AND_RETURN_RET_LOG(toneAttrsNapi->toneAttrs_ != nullptr, nullptr, "toneAttrs_ is nullptr");
-    toneAttrsNapi->toneAttrs_->SetCategory(toneAttrs_category);
+    toneAttrsNapi->toneAttrs_->SetCategory(toneAttrsCategory);
     return nullptr;
 }
 
