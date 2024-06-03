@@ -84,6 +84,7 @@ napi_value AudioHapticPlayerNapi::Constructor(napi_env env, napi_callback_info i
             obj->env_ = env;
             if (obj->sAudioHapticPlayer_ != nullptr) {
                 obj->audioHapticPlayer_ = move(obj->sAudioHapticPlayer_);
+                MEDIA_LOGI("Succeed to create sAudioHapticPlayer_ instance.");
             } else {
                 MEDIA_LOGE("Failed to create sAudioHapticPlayer_ instance.");
                 return result;
