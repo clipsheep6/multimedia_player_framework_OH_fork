@@ -362,7 +362,7 @@ void StreamIDManager::OnPlayFinished()
     {
         std::lock_guard lock(streamIDManagerLock_);
         currentTaskNum_--;
-        for (size_t i = 0; i < playingStreamIDs_.size(); i++) {
+        for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
             if (!playingCacheBuffer->IsRunning()) {
