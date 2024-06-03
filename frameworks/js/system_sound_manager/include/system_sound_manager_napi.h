@@ -71,6 +71,7 @@ private:
     static napi_value CreateToneCategoryAlarmObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
     static bool VerifySelfSystemPermission();
+    static bool VerifyRingtonePermission();
 
     static napi_value SetRingtoneUri(napi_env env, napi_callback_info info);
     static void AsyncSetRingtoneUri(napi_env env, void *data);

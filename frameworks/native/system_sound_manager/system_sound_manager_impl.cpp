@@ -792,7 +792,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
     const std::string &externalUri)
 {
-    const std::string fdHead = "fd://";
+    std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd;
     if (srcPath.find(fdHead) != std::string::npos) {
@@ -802,6 +802,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     }
     if (srcFd < 0) {
         MEDIA_LOGE("AddCustomizedTone: fd open error is %{public}s", strerror(errno));
+        fdHead.clear();
+        return fdHead;
     }
     return AddCustomizedToneByFd(context, toneAttrs, srcFd);
 }
