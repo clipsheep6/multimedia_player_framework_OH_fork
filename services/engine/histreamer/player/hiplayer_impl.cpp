@@ -399,7 +399,6 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     InitVideoWidthAndHeight();
     NotifyResolutionChange();
-    NotifyPositionUpdate();
     DoInitializeForHttp();
     OnStateChanged(PlayerStateId::READY);
 }
@@ -762,6 +761,9 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGI("doPreparedSeek.");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (rtv == Status::OK) {
+        rtv = pipeline_->PrepareFrame(true);
+    }
     return rtv;
 }
 
@@ -782,6 +784,9 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (rtv == Status::OK) {
+        rtv = pipeline_->PrepareFrame(true);
+    }
     return rtv;
 }
 
@@ -790,9 +795,17 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGD("doCompletedSeek");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if (rtv != Status::OK) {
+        return rtv;
+    }
+    rtv = pipeline_->PrepareFrame(true);
+    if (rtv != Status::OK) {
+        MEDIA_LOGE("PrepareFrame Failed.");
+        return rtv;
+    }
     if (isStreaming_) {
         MEDIA_LOGD("doCompletedSeek isStreaming_ is true");
-        pipeline_->Resume();
+        rtv = pipeline_->Resume();
         syncManager_->Resume();
     } else {
         callbackLooper_.StopReportMediaProgress();
@@ -1823,15 +1836,6 @@ void HiPlayerImpl::NotifyResolutionChange()
     MEDIA_LOGI("video size change, width %{public}d, height %{public}d", width, height);
     callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
 #endif
-}
-
-void HiPlayerImpl::NotifyPositionUpdate()
-{
-    int32_t currentPosMs = 0;
-    GetCurrentTime(currentPosMs);
-    MEDIA_LOGD("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
-    Format format;
-    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
 void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
