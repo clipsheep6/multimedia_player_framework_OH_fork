@@ -1251,6 +1251,12 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (ret != Status::OK) {
         return ret;
     }
+
+    std::unique_lock<std::mutex> lock(drmMutex_);
+    isDrmProtected_ = demuxer_->IsDrmProtected();
+    MEDIA_LOG_I("Is the source drm-protected : %{public}d", isDrmProtected_);
+    lock.unlock();
+
     SetBundleName(bundleName_);
     demuxer_->OptimizeDecodeSlow(IsEnableOptimizeDecode());
     return ret;
@@ -1380,12 +1386,6 @@ void HiPlayerImpl::HandleDrmInfoUpdatedEvent(const Event& event)
         reinterpret_cast<const uint8_t *>(drmInfoArray), drmInfoSize);
     (void) format.PutIntValue(PlayerKeys::PLAYER_DRM_INFO_COUNT, static_cast<int32_t>(infoCount));
     callbackLooper_.OnInfo(INFO_TYPE_DRM_INFO_UPDATED, static_cast<int32_t>(singleLoop_.load()), format);
-
-    // triger waiting
-    MEDIA_LOG_I("HiPlayerImpl has received drminfo event, and this is drm protected");
-    std::unique_lock<std::mutex> lock(drmMutex_);
-    isDrmProtected_ = true;
-    lock.unlock();
 
     delete []drmInfoArray;
 }
@@ -1619,6 +1619,8 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
             MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected audio failed!");
             return Status::ERROR_INVALID_OPERATION;
         }
+    } else {
+        MEDIA_LOG_D("HiPlayerImpl::LinkAudioDecoderFilter, and it's not drm-protected.");
     }
     return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type);
 }
@@ -1688,6 +1690,8 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
                 MEDIA_LOG_E("HiPlayerImpl Drmcond wait timeout or has been stopped! Play drm protected video failed!");
                 return Status::ERROR_INVALID_OPERATION;
             }
+        } else {
+            MEDIA_LOG_D("HiPlayerImpl::LinkVideoDecoderFilter, and it's not drm-protected.");
         }
     }
     completeState_.emplace_back(std::make_pair("VideoSink", false));
