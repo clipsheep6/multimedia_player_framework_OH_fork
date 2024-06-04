@@ -326,6 +326,15 @@ bool SystemSoundManagerNapi::VerifySelfSystemPermission()
     return false;
 }
 
+bool SystemSoundManagerNapi::VerifyRingtonePermission()
+{
+    Security::AccessToken::FullTokenID selfTokenID = IPCSkeleton::GetSelfTokenID();
+    if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(selfTokenID, "ohos.permission.WRITE_RINGTONE")) {
+        return false;
+    }
+    return true;
+}
+
 void SystemSoundManagerNapi::SetSystemSoundUriAsyncCallbackComp(napi_env env, napi_status status, void* data)
 {
     auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
@@ -392,10 +401,9 @@ void SystemSoundManagerNapi::GetSystemSoundUriAsyncCallbackComp(napi_env env, na
 
 napi_value SystemSoundManagerNapi::GetSystemSoundManager(napi_env env, napi_callback_info info)
 {
-    if (!VerifySelfSystemPermission()) {
-        MEDIA_LOGE("GetSystemSoundManager: System permission validation failed.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
     napi_status status;
     napi_value result = nullptr;
     napi_value ctor;
@@ -1613,8 +1621,8 @@ void SystemSoundManagerNapi::CloseAsyncCallbackComp(napi_env env, napi_status st
 
 napi_value SystemSoundManagerNapi::AddCustomizedTone(napi_env env, napi_callback_info info)
 {
-    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(), ThrowErrorAndReturn(env,
-        NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED), "No system permission");
+    CHECK_AND_RETURN_RET_LOG(VerifyRingtonePermission(), ThrowErrorAndReturn(env,
+        NAPI_ERR_NO_PERMISSION_INFO, NAPI_ERR_NO_PERMISSION), "Permission denied");
     napi_value result = nullptr;
     napi_value thisVar = nullptr;
     size_t argc = ARGS_FIVE;
@@ -1676,7 +1684,7 @@ void SystemSoundManagerNapi::AsyncAddCustomizedTone(napi_env env, void *data)
             context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(), context->externalUri);
         context->status = SUCCESS;
     } else if (context->fd > 0) {
-        if (context->offset > 0 && context->length > 0) {
+        if (context->offset >= 0 && context->length >= 0) {
             context->uri = context->objectInfo->sysSoundMgrClient_->AddCustomizedToneByFdAndOffset(
                 context->abilityContext_, context->toneAttrsNapi->GetToneAttrs(),
                 context->fd, context->offset, context->length);
@@ -1729,9 +1737,8 @@ void SystemSoundManagerNapi::AddCustomizedToneAsyncCallbackComp(napi_env env, na
 
 napi_value SystemSoundManagerNapi::RemoveCustomizedTone(napi_env env, napi_callback_info info)
 {
-    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
-        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-        "No system permission");
+    CHECK_AND_RETURN_RET_LOG(VerifyRingtonePermission(), ThrowErrorAndReturn(env,
+        NAPI_ERR_NO_PERMISSION_INFO, NAPI_ERR_NO_PERMISSION), "Permission denied");
     napi_value result = nullptr;
     napi_value resource = nullptr;
     napi_value thisVar = nullptr;

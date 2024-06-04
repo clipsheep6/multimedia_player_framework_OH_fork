@@ -370,9 +370,8 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
         MEDIA_LOGI("The ringtone uri for ringtoneType %{public}d is empty. Return default uri.", ringtoneType);
         ringtoneUri = defaultRingtoneUriMap_[ringtoneType];
     }
-    const std::string uri = "/data/storage/el2/base/Ringtone";
     const std::string fdHead = "fd://";
-    size_t found = ringtoneUri.find(uri);
+    size_t found = ringtoneUri.find(RINGTONE_CUSTOMIZED_BASE_PATH);
     if (found != std::string::npos) {
         DataShare::DatashareBusinessError businessError;
         DataShare::DataSharePredicates queryPredicates;
@@ -450,9 +449,8 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
         MEDIA_LOGI("The system tone uri for systemToneType %{public}d is empty. Return default uri.", systemToneType);
         systemToneUri = defaultSystemToneUriMap_[systemToneType];
     }
-    const std::string uri = "/data/storage/el2/base/Ringtone";
     const std::string fdHead = "fd://";
-    size_t found = systemToneUri.find(uri);
+    size_t found = systemToneUri.find(RINGTONE_CUSTOMIZED_BASE_PATH);
     if (found != std::string::npos) {
         DataShare::DatashareBusinessError businessError;
         DataShare::DataSharePredicates queryPredicates;
@@ -792,7 +790,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     const std::shared_ptr<AbilityRuntime::Context> &context, const std::shared_ptr<ToneAttrs> &toneAttrs,
     const std::string &externalUri)
 {
-    const std::string fdHead = "fd://";
+    std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd;
     if (srcPath.find(fdHead) != std::string::npos) {
@@ -802,6 +800,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     }
     if (srcFd < 0) {
         MEDIA_LOGE("AddCustomizedTone: fd open error is %{public}s", strerror(errno));
+        fdHead.clear();
+        return fdHead;
     }
     return AddCustomizedToneByFd(context, toneAttrs, srcFd);
 }
