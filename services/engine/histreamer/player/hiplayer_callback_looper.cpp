@@ -62,7 +62,7 @@ void HiPlayerCallbackLooper::StartWithPlayerEngineObs(const std::weak_ptr<IPlaye
     if (!taskStarted_) {
         task_->Start();
         taskStarted_ = true;
-        MEDIA_LOG_I("start callback looper");
+        MEDIA_LOG_I("HiPlayerCallbackLooper start callback looper");
     }
 }
 void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string playerId)
@@ -75,7 +75,7 @@ void HiPlayerCallbackLooper::SetPlayEngine(IPlayerEngine* engine, std::string pl
 
 void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
-    MEDIA_LOG_I("StartReportMediaProgress");
+    MEDIA_LOG_I("HiPlayerCallbackLooper StartReportMediaProgress");
     reportProgressIntervalMs_ = updateIntervalMs;
     if (reportMediaProgress_) { // already set
         return;
@@ -91,7 +91,8 @@ void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
 
 void HiPlayerCallbackLooper::StopReportMediaProgress()
 {
-    MEDIA_LOG_I("StopReportMediaProgress");
+    OHOS::Media::AutoLock lock(loopMutex_);
+    MEDIA_LOG_I("HiPlayerCallbackLooper StopReportMediaProgress");
     reportMediaProgress_ = false;
 }
 
@@ -114,6 +115,9 @@ void HiPlayerCallbackLooper::DoReportCompletedTime()
 void HiPlayerCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
+    if (!reportMediaProgress_) {
+        return;
+    }
     auto obs = obs_.lock();
     if (obs && !isDropMediaProgress_) {
         Format format;

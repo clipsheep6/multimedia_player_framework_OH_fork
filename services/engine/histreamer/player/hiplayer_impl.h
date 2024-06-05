@@ -32,6 +32,7 @@
 #include "media_sync_manager.h"
 #include "pipeline/pipeline.h"
 #include "seek_agent.h"
+#include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
 #ifdef SUPPORT_VIDEO
@@ -94,6 +95,7 @@ public:
     // interface from PlayerInterface
     int32_t SetSource(const std::string& uri) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc) override;
+    int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
@@ -157,6 +159,7 @@ private:
     void HandleIsLiveStreamEvent(bool isLiveStream);
     void HandleErrorEvent(int32_t errorCode);
     void HandleResolutionChangeEvent(const Event& event);
+    void HandleBitrateStartEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
@@ -171,6 +174,8 @@ private:
     void NotifyPositionUpdate();
     Status LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     Status LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    Status LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
+    void NotifySubtitleUpdate(const Event& event);
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
@@ -225,6 +230,7 @@ private:
     std::shared_ptr<DemuxerFilter> demuxer_;
     std::shared_ptr<AudioDecoderFilter> audioDecoder_;
     std::shared_ptr<AudioSinkFilter> audioSink_;
+    std::shared_ptr<SubtitleSinkFilter> subtitleSink_;
 #ifdef SUPPORT_VIDEO
     std::shared_ptr<DecoderSurfaceFilter> videoDecoder_;
 #endif
@@ -233,6 +239,8 @@ private:
     HiPlayerCallbackLooper callbackLooper_{};
     sptr<Surface> surface_ {nullptr};
     std::string url_;
+    std::string subUrl_;
+    bool hasExtSub_ {false};
     std::atomic<int32_t> durationMs_{-1};
     std::shared_ptr<IMediaDataSource> dataSrc_{nullptr};
     std::atomic<int32_t> videoWidth_{0};
@@ -277,6 +285,7 @@ private:
     uint64_t instanceId_ = 0;
     int64_t maxSurfaceSwapLatency_ = 0;
     int64_t playTotalDuration_ = 0;
+    bool inEosSeek_ = false;
     std::string mimeType_;
 };
 } // namespace Media

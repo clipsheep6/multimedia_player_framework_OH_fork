@@ -95,6 +95,7 @@ private:
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
     void InitRingerMode(void);
+    void GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);
@@ -102,6 +103,8 @@ private:
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
+    std::string mimeType_ = "";
+    std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;

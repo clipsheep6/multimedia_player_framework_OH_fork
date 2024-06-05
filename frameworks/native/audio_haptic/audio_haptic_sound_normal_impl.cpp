@@ -78,14 +78,20 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     MEDIA_LOGI("ResetAVPlayer");
     (void)avPlayer_->Reset();
     MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s]", audioUri_.c_str());
-    if (fileDes_ != -1) {
-        (void)close(fileDes_);
-        fileDes_ = -1;
-    }
-    fileDes_ = open(audioUri_.c_str(), O_RDONLY);
-    if (fileDes_ == -1) {
-        MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
-        return MSERR_OPEN_FILE_FAILED;
+    const std::string fdHead = "fd://";
+    if (audioUri_.find(fdHead) != std::string::npos) {
+        fileDes_ = std::stoi(audioUri_.substr(fdHead.size()));
+        MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
+    } else {
+        if (fileDes_ != -1) {
+            (void)close(fileDes_);
+            fileDes_ = -1;
+        }
+        fileDes_ = open(audioUri_.c_str(), O_RDONLY);
+        if (fileDes_ == -1) {
+            MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
+            return MSERR_OPEN_FILE_FAILED;
+        }
     }
     int32_t ret = avPlayer_->SetSource(fileDes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OPEN_FILE_FAILED, "Set source failed %{public}d", ret);

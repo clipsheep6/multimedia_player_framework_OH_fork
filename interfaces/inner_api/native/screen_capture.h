@@ -139,7 +139,7 @@ enum AVScreenCaptureParamValidationState : int32_t {
 
 struct ScreenCaptureContentFilter {
     std::set<AVScreenCaptureFilterableAudioContent> filteredAudioContents;
-    std::vector<int32_t> windowIDsVec;
+    std::vector<uint64_t> windowIDsVec;
 };
 
 struct AudioCaptureInfo {

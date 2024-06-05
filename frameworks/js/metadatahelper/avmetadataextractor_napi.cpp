@@ -88,7 +88,7 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    MEDIA_LOGD("Init success");
+    MEDIA_LOGD("AVMetadataExtractorNapi Init success");
     return exports;
 }
 
@@ -457,7 +457,7 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
     }
 
     if (asyncContext->deferred) {
-        MEDIA_LOGD("deferred in");
+        MEDIA_LOGD("AVMetadataExtractorNapi deferred in");
         if (asyncContext->status == ERR_OK) {
             napi_resolve_deferred(env, asyncContext->deferred, result[1]);
         } else {

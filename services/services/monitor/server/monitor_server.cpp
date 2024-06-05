@@ -49,6 +49,7 @@ MonitorServer::~MonitorServer()
         thread_.reset();
         thread_ = nullptr;
     }
+    objListMap_.clear();
     MEDIA_LOGI("Instances destroy end");
 }
 

@@ -40,7 +40,6 @@ public:
     int32_t Start(const SystemToneOptions &systemToneOptions) override;
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
-
     int32_t NotifyLoadCompleted();
 
 private:

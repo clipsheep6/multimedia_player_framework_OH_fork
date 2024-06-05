@@ -258,7 +258,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     config.dstWidth = param.dstWidth;
 
     auto mem = avMetadataHelperService_->FetchFrameAtTime(timeUs, option, config);
-    auto pixelMap = CreatePixelMap(mem, param.colorFormat, rotation_);
+    auto pixelMap = CreatePixelMap(mem, PixelFormat::NV12, rotation_);
 
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
  

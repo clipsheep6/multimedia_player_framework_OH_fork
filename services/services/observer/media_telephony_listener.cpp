@@ -48,7 +48,6 @@ void MediaTelephonyListener::OnCallStateUpdated(int32_t slotId, int32_t callStat
     if (callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ANSWERED) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ALERTING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_DIALING) ||
-        callState == static_cast<int32_t>(TelCallState::CALL_STATUS_INCOMING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_HOLDING) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_ACTIVE) ||
         callState == static_cast<int32_t>(TelCallState::CALL_STATUS_WAITING)) {

@@ -20,7 +20,7 @@
 #include "securec.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPool"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CacheBuffer"};
 }
 
 namespace OHOS {
@@ -84,8 +84,15 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     }
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer != nullptr, nullptr, "Invalid audioRenderer.");
+    size_t targetSize = 0;
+    int32_t ret = audioRenderer->GetBufferSize(targetSize);
     audioRenderer->SetRenderMode(AudioStandard::AudioRenderMode::RENDER_MODE_CALLBACK);
-    int32_t ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
+    if (ret == 0 && targetSize != 0 && !audioRenderer->IsFastRenderer()) {
+        size_t bufferDuration = 20; // 20 -> 20ms
+        audioRenderer->SetBufferDuration(bufferDuration);
+        MEDIA_LOGI("Using buffer size:%{public}zu, duration %{public}zu", targetSize, bufferDuration);
+    }
+    ret = audioRenderer->SetRendererWriteCallback(shared_from_this());
     if (ret != MSERR_OK) {
         MEDIA_LOGE("audio renderer write callback fail, ret %{public}d.", ret);
     }
@@ -183,6 +190,7 @@ int32_t CacheBuffer::DealPlayParamsBeforePlay(const int32_t streamID, const Play
 {
     std::lock_guard lock(cacheBufferLock_);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
+    audioRenderer_->SetOffloadAllowed(false);
     loop_ = playParams.loop;
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);

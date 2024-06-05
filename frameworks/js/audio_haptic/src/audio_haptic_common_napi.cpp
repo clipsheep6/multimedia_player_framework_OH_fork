@@ -27,7 +27,7 @@ const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter check failed";
 const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "operate not allowed";
 const std::string NAPI_ERR_IO_ERROR_INFO = "input or output error";
 const std::string NAPI_ERR_SERVICE_DIED_INFO = "service died";
-const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupport format";
+const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupported format";
 
 void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code)
 {

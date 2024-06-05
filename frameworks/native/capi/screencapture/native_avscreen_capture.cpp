@@ -858,9 +858,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
     CHECK_AND_RETURN_RET_LOG(windowIDs != nullptr && windowCount > 0 && windowCount < MAX_WINDOWS_LEN,
                              AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window invalid!");
-    std::vector<int32_t> vec;
+    std::vector<uint64_t> vec;
     for (int32_t i = 0; i < windowCount; i++) {
-        vec.push_back(static_cast<int32_t>(*(windowIDs + i)));
+        if (static_cast<uint64_t>(*(windowIDs + i)) >= 0) {
+            vec.push_back(static_cast<uint64_t>(*(windowIDs + i)));
+        }
     }
     contentFilterObj->screenCaptureContentFilter.windowIDsVec = vec;
     return AV_SCREEN_CAPTURE_ERR_OK;

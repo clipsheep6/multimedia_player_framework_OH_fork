@@ -38,6 +38,7 @@ const std::string DEFAULT_SYSTEM_TONE_URI_1 =
     "sys_prod/resource/media/audio/notifications/Rise.ogg";
 const std::string DEFAULT_SYSTEM_TONE_URI_2 =
     "sys_prod/variant/region_comm/china/resource/media/audio/notifications/Rise.ogg";
+const std::string FDHEAD = "fd://";
 
 SystemTonePlayerImpl::SystemTonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &systemSoundMgr, SystemToneType systemToneType)
@@ -98,22 +99,22 @@ int32_t SystemTonePlayerImpl::Prepare()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-
-    fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
-    if (fileDes_ == -1) {
-        // open file failed, try to use default path.
-        int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
-        if (ret == MSERR_OK) {
-            systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
-        } else {
-            return ret;
+    std::string uri = systemToneUri;
+    if (systemToneUri.find(FDHEAD) == std::string::npos) {
+        fileDes_ = open(systemToneUri.c_str(), O_RDONLY);
+        if (fileDes_ == -1) {
+            int32_t ret = ApplyDefaultSystemToneUri(systemToneUri);
+            if (ret == MSERR_OK) {
+                systemSoundMgr_.SetSystemToneUri(context_, systemToneUri, systemToneType_);
+            } else {
+                return ret;
+            }
         }
+        uri = "fd://" + to_string(fileDes_);
     }
-    std::string uri = "fd://" + to_string(fileDes_);
 
     int32_t soundID = player_->Load(uri);
     if (soundID < 0) {
-        MEDIA_LOGE("Prepare: Failed to load system tone uri.");
         return MSERR_OPEN_FILE_FAILED;
     }
     std::unique_lock<std::mutex> lockWait(loadUriMutex_);

@@ -14,6 +14,7 @@
  */
 #include "hirecorder_impl.h"
 #include "meta/audio_types.h"
+#include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
 #include <sys/syscall.h>
 #include "media_dfx.h"
@@ -81,6 +82,7 @@ HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appToken
 HiRecorderImpl::~HiRecorderImpl()
 {
     Stop(false);
+    PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
 int32_t HiRecorderImpl::Init()
@@ -155,9 +157,6 @@ int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId
 
     audioCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioCaptureFilter>
         ("audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
-    if (audioCaptureFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioCaptureFilter_ == nullptr");
-    }
     audioCaptureFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     audioCaptureFilter_->SetAudioSource(source);
     Status ret = pipeline_->AddHeadFilters({audioCaptureFilter_});
@@ -179,9 +178,6 @@ int32_t HiRecorderImpl::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     auto tempSourceId = SourceIdGenerator::GenerateAudioSourceId(audioCount_);
     audioDataSourceFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::AudioDataSourceFilter>
         ("audioDataSourceFilter", Pipeline::FilterType::AUDIO_DATA_SOURCE);
-    if (audioDataSourceFilter_ == nullptr) {
-        MEDIA_LOG_E("HiRecorderImpl::audioDataSourceFilter_ == nullptr");
-    }
     audioDataSourceFilter_->SetAudioDataSource(audioSource);
     Status ret = pipeline_->AddHeadFilters({audioDataSourceFilter_});
     FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters audioDataSource to pipeline fail");
@@ -290,7 +286,7 @@ int32_t HiRecorderImpl::Prepare()
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
-        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::CBR);
+        videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,

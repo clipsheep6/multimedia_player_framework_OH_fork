@@ -1253,7 +1253,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_cb_04, TestSize.Leve
     ASSERT_NE(nullptr, screenCaptureCb_);
 
     std::string name = "screen_capture_with_surface_cb_04";
-    // track enalbed: inner: false, mic: false, video: true(surface mode)
+    // track enalbed: inner: false, mic: false, video: false
     OpenFile(name, false, false, false);
     // check track aquire & release: inner: 1, mic: 1, video: 1
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
