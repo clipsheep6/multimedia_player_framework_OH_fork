@@ -2012,8 +2012,6 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
             globalMeta = demuxer_->GetGlobalMetaInfo();
         }
         if (globalMeta != nullptr) {
-            globalMeta->SetData(Tag::APP_PID, appPid_);
-            globalMeta->SetData(Tag::APP_UID, appUid_);
             subtitleSink_->SetParameter(globalMeta);
         }
         subtitleSink_->SetSyncCenter(syncManager_);
