@@ -65,6 +65,7 @@ PlayerImpl::~PlayerImpl()
 
 void PlayerImpl::ResetSeekVariables()
 {
+    MEDIA_LOGI("ResetSeekVariables entered");
     mCurrentPosition = INT32_MIN;
     mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     mSeekPosition = INT32_MIN;
@@ -206,6 +207,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
         if (retCode != MSERR_OK) {
             ResetSeekVariables();
         }
+        MEDIA_LOGI("Start seek once end");
         return retCode;
     } else {
         MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
@@ -216,6 +218,7 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
 {
+    MEDIA_LOGI("HandleSeekDoneInfo entered");
     if (type == INFO_TYPE_SEEKDONE) {
         CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
@@ -230,6 +233,7 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
         }
         MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
     }
+    MEDIA_LOGI("HandleSeekDoneInfo end");
 }
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)

@@ -770,8 +770,10 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
+        MEDIA_LOGI("PlayerServer::Seek start");
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Seek(mSeconds, mode);
+        MEDIA_LOGI("PlayerServer::Seek end");
     });
 
     auto cancelTask = std::make_shared<TaskHandler<void>>([this, mSeconds]() {
@@ -794,7 +796,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
         "instanceId: %{public}" PRIu64 "", mSeconds, mode, instanceId_);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
-
+    MEDIA_LOGI("PlayerServer HandleSeek end");
     return MSERR_OK;
 }
 
@@ -1388,9 +1390,11 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
         MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error in", FAKE_POINTER(this));
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
             MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
+            MEDIA_LOGI("PlayerServer::PauseIoError start");
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Pause();
             OnErrorCb(errorCode, errorMsg);
+            MEDIA_LOGI("PlayerServer::PauseIoError end");
         });
         taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
         MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error out", FAKE_POINTER(this));
