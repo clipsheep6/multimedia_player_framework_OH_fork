@@ -278,7 +278,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     int32_t srcHeight = pixelMap->GetHeight();
     bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
                      (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
-                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight);
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
         MediaTrace trace("Scale");
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
