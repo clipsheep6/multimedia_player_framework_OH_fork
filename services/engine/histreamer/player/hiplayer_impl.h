@@ -98,6 +98,7 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
+    int32_t SetPlayRange(int32_t start, int32_t end) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -288,6 +289,9 @@ private:
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
     std::string mimeType_;
+
+    int32_t playRangeStartTime_ = -1;
+    int32_t playRangeEndTime_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

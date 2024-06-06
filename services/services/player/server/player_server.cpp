@@ -372,6 +372,30 @@ int32_t PlayerServer::SetRenderFirstFrame(bool display)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetPlayRange(int32_t start, int32_t end)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_INITIALIZED && lastOpStatus_ != PLAYER_PREPARED &&
+        lastOpStatus_ != PLAYER_PAUSED) {
+        MEDIA_LOGE("Can not SetPlayRange, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlayRange, it is live-stream");
+        return MSERR_OK;
+    }
+
+    MEDIA_LOGD("SetPlayRange start: %{public}d, end: %{public}d", start, end);
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->SetPlayRange(start, end);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPlayRange Failed!");
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::PrepareAsync()
 {
     if (inReleasing_.load()) {

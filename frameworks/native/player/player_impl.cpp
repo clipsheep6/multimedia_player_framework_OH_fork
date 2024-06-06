@@ -118,6 +118,14 @@ int32_t PlayerImpl::Play()
     return playerService_->Play();
 }
 
+int32_t PlayerImpl::SetPlayRange(int32_t start, int32_t end)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in, start: %{public}d ms, end: %{public}d",
+        FAKE_POINTER(this), start, end);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SetPlayRange(start, end);
+}
+
 int32_t PlayerImpl::Prepare()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));

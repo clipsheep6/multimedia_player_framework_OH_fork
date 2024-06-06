@@ -39,6 +39,7 @@ const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 t
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
+const int32_t PLAY_RANGE_START_DEFAULT_VALUE = -1; // play range start time default time.
 }
 
 namespace OHOS {
@@ -315,6 +316,13 @@ int32_t HiPlayerImpl::Prepare()
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::SetPlayRange(int32_t start, int32_t end)
+{
+    playRangeStartTime_ = start;
+    playRangeEndTime_ = end;
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
 {
     MEDIA_LOGI("SetRenderFirstFrame in, display: " PUBLIC_LOG_D32, display);
@@ -461,6 +469,12 @@ int32_t HiPlayerImpl::Play()
 {
     MediaTrace trace("HiPlayerImpl::Play");
     MEDIA_LOGI("Play entered.");
+    int32_t duration = 0;
+    GetDuration(duration);
+    // TODO
+    if (playRangeStartTime_ < PLAY_RANGE_START_DEFAULT_VALUE
+        || playRangeStartTime_ > duration) {
+    }
     startTime_ = GetCurrentMillisecond();
     int32_t ret = MSERR_INVALID_VAL;
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {

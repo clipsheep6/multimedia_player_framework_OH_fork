@@ -698,6 +698,24 @@ public:
         (void)display;
         return 0;
     }
+
+    /**
+     * @brief Specify the start and end time to playback.
+     *
+     * This function must be called after {@link Prepare}. If the player state is <b>Prepared</b>,
+     * this function is called to set start and end time.
+     *
+     * @return Returns {@link MSERR_OK} if the set is success; otherwise returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlayRange(int32_t start, int32_t end)
+    {
+        (void)start;
+        (void)end;
+        return 0;
+    }
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

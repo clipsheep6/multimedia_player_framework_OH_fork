@@ -64,6 +64,12 @@ public:
         (void)display;
         return 0;
     }
+    virtual int32_t SetPlayRange(int32_t start, int32_t end)
+    {
+        (void)start;
+        (void)end;
+        return 0;
+    }
     virtual int32_t PrepareAsync() = 0;
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
