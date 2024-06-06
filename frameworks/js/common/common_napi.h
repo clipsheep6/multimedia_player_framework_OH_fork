@@ -354,7 +354,7 @@ public:
     static T *IncreaseRef(T *obj);
     static void DecreaseRef(T *obj);
 
-    ObjectRefMap(T *obj);
+    explicit ObjectRefMap(T *obj);
     ~ObjectRefMap();
     T *GetPtr();
 

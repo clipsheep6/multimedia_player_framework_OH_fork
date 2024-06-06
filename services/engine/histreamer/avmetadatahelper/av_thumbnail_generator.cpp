@@ -250,7 +250,7 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
 bool AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
     int32_t format = surfaceBuffer->GetFormat();
-    int32_t size = surfaceBuffer->GetSize();
+    uint32_t size = surfaceBuffer->GetSize();
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " format:%{public}d, size:%{public}d, "

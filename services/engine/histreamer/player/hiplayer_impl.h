@@ -207,6 +207,7 @@ private:
     Status InitAudioDefaultTrackIndex();
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
+    void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;

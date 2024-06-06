@@ -346,10 +346,9 @@ int32_t PlayerServer::Prepare()
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         return OnPrepare(false);
-    } else {
-        MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t PlayerServer::SetRenderFirstFrame(bool display)
@@ -384,10 +383,9 @@ int32_t PlayerServer::PrepareAsync()
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         return OnPrepare(false);
-    } else {
-        MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t PlayerServer::OnPrepare(bool sync)
@@ -467,10 +465,9 @@ int32_t PlayerServer::Play()
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
         lastOpStatus_ == PLAYER_PAUSED) {
         return OnPlay();
-    } else {
-        MEDIA_LOGE("Can not Play, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGE("Can not Play, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t PlayerServer::OnPlay()
@@ -515,7 +512,8 @@ int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroun
     if (state == PLAYER_PAUSED) {
         isBackgroundChanged_ = true;
         return PlayerServer::Pause();
-    } else if (state == PLAYER_STARTED) {
+    }
+    if (state == PLAYER_STARTED) {
         isBackgroundChanged_ = true;
         return PlayerServer::Play();
     }
@@ -527,12 +525,11 @@ int32_t PlayerServer::Pause()
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer Pause in", FAKE_POINTER(this));
 
-    if (lastOpStatus_ == PLAYER_STARTED) {
-        return OnPause();
-    } else {
+    if (lastOpStatus_ != PLAYER_STARTED) {
         MEDIA_LOGE("Can not Pause, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
+    return OnPause();
 }
 
 int32_t PlayerServer::OnPause()
@@ -571,10 +568,9 @@ int32_t PlayerServer::Stop()
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
         MediaTrace::TraceBegin("PlayerServer::Stop", FAKE_POINTER(this));
         return OnStop(false);
-    } else {
-        MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t PlayerServer::OnStop(bool sync)

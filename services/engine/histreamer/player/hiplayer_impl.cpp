@@ -209,9 +209,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
         std::string realUriPath;
         int32_t result = GetRealPath(uri, realUriPath);
         if (result != MSERR_OK) {
-            MEDIA_LOGE("SetSource error: GetRealPath error");
-            playStatisticalInfo_.errCode = result;
-            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
+            CollectionErrorInfo(result, "SetSource error: GetRealPath error");
             return result;
         }
         url_ = "file://" + realUriPath;
@@ -231,7 +229,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     MediaTrace trace("HiPlayerImpl::SetMediaSource.");
     MEDIA_LOGI("SetMediaSource entered media source stream");
     if (mediaSource == nullptr) {
-        playStatisticalInfo_.errCode = MSERR_INVALID_VAL;
+        CollectionErrorInfo(MSERR_INVALID_VAL, "mediaSource is nullptr");
         return MSERR_INVALID_VAL;
     }
     header_ = mediaSource->header;
@@ -245,9 +243,7 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         std::string realUriPath;
         int32_t result = GetRealPath(url_, realUriPath);
         if (result != MSERR_OK) {
-            MEDIA_LOGE("SetSource error: GetRealPath error");
-            playStatisticalInfo_.errCode = result;
-            playStatisticalInfo_.errMsg = "SetSource error: GetRealPath error";
+            CollectionErrorInfo(result, "SetSource error: GetRealPath error");
             return result;
         }
         url_ = "file://" + realUriPath;
@@ -331,24 +327,19 @@ int32_t HiPlayerImpl::PrepareAsync()
     MediaTrace trace("HiPlayerImpl::PrepareAsync");
     MEDIA_LOGD("HiPlayerImpl PrepareAsync");
     if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
-        playStatisticalInfo_.errCode = MSERR_INVALID_OPERATION;
-        playStatisticalInfo_.errMsg = "PrepareAsync pipelineStates not initialized or stopped";
+        CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAsync pipelineStates not initialized or stopped");
         return MSERR_INVALID_OPERATION;
     }
     auto ret = Init();
     if (ret != Status::OK || isInterruptNeeded_.load()) {
-        MEDIA_LOGE("PrepareAsync error: init error");
         auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        playStatisticalInfo_.errMsg = "PrepareAsync error: init error";
-        playStatisticalInfo_.errCode = errCode;
+        CollectionErrorInfo(errCode, "PrepareAsync error: init error");
         return errCode;
     }
     DoSetMediaSource(ret);
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        MEDIA_LOGE("PrepareAsync error: DoSetSource error");
-        playStatisticalInfo_.errMsg = "PrepareAsync error: DoSetSource error";
         auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
-        playStatisticalInfo_.errCode = errCode;
+        CollectionErrorInfo(errCode, "PrepareAsync error: DoSetSource error");
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return errCode;
     }
@@ -361,20 +352,25 @@ int32_t HiPlayerImpl::PrepareAsync()
     if (ret != Status::OK) {
         MEDIA_LOGE("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransStatus(ret);
-        playStatisticalInfo_.errCode = errCode;
-        playStatisticalInfo_.errMsg = "pipeline PrepareAsync failed";
+        CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
     }
     ret = pipeline_->PrepareFrame(renderFirstFrame_);
     auto code = TransStatus(ret);
     if (ret != Status::OK) {
-        playStatisticalInfo_.errCode = code;
-        playStatisticalInfo_.errMsg = "PrepareFrame failed.";
+        CollectionErrorInfo(code, "PrepareFrame failed.");
+        return code;
     }
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, code, "PrepareFrame failed.");
     UpdatePlayerStateAndNotify();
     MEDIA_LOGI("PrepareAsync End");
     return TransStatus(ret);
+}
+
+void HiPlayerImpl::CollectionErrorInfo(int32_t errCode, const std::string& errMsg)
+{
+    MEDIA_LOGE("Error: " PUBLIC_LOG_S, errMsg.c_str());
+    playStatisticalInfo_.errCode = errCode;
+    playStatisticalInfo_.errMsg = errMsg;
 }
 
 void HiPlayerImpl::DoSetMediaSource(Status& ret)
@@ -489,8 +485,7 @@ int32_t HiPlayerImpl::Play()
             MEDIA_LOGI("InitialPlay, pending to change state of playing");
         }
     } else {
-        playStatisticalInfo_.errCode = ret;
-        playStatisticalInfo_.errMsg = "Play failed";
+        CollectionErrorInfo(ret, "Play failed");
     }
     return ret;
 }
