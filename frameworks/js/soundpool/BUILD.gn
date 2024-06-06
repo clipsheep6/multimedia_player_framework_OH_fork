@@ -74,6 +74,7 @@ ohos_shared_library("media_soundpool") {
 
   external_deps = [
     "ability_runtime:abilitykit_native",
+    "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",

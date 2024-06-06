@@ -190,6 +190,7 @@ ohos_shared_library("media_service") {
   ]
 
   external_deps = [
+    "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
