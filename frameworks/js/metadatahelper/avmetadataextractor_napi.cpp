@@ -926,6 +926,10 @@ void AVMetadataExtractorNapi::PauseListenCurrentResource()
     }
 }
 
+/**
+ * DO NOT hold taskMutex_ before call this function
+ * AVMetadataExtractorNapi::OnErrorCb() hold AVMetadataHelperCallback::mutex_ and wait taskMutex_, may cause dead lock
+*/
 void AVMetadataExtractorNapi::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -276,6 +276,7 @@ private:
     void ClearCallbackReference(const std::string &callbackName);
     void StartListenCurrentResource();
     void PauseListenCurrentResource();
+    void QueueOnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void SetSource(std::string url);
     void AddSubSource(std::string url);
