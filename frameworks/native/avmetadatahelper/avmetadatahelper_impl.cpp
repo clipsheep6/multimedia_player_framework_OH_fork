@@ -21,6 +21,7 @@
 #include "securec.h"
 #include "image_source.h"
 #include "i_media_service.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
@@ -264,10 +265,23 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
  
     const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
                                          .srcPixelFormat = PixelFormat::NV12 };
-    pixelMap =
-        PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
+    {
+        MediaTrace trace("ConvertToArgb");
+        pixelMap =
+            PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
+    }
     if (rotation_ > 0 && pixelMap != nullptr) {
+        MediaTrace trace("Rotate");
         pixelMap->rotate(rotation_);
+    }
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
+                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight);
+    if (needScale) {
+        MediaTrace trace("Scale");
+        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     return pixelMap;
 }
