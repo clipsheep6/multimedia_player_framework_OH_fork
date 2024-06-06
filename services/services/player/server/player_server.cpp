@@ -283,7 +283,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         ret = playerEngine_->SetSource(url);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
-
+    MEDIA_LOGI("player engine SetSource success");
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
 
