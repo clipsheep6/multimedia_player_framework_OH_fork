@@ -508,6 +508,10 @@ int32_t HiPlayerImpl::Pause()
     }
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("already at completed and not allow pause");
+        return TransStatus(Status::OK);
+    }
     OnStateChanged(PlayerStateId::PAUSE);
     if (startTime_ != -1) {
         playTotalDuration_ += GetCurrentMillisecond() - startTime_;
