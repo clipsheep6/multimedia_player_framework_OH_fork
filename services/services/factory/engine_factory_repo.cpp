@@ -39,8 +39,10 @@ using CreateFactoryFunc = IEngineFactory *(*)();
 
 EngineFactoryRepo &EngineFactoryRepo::Instance()
 {
-    static EngineFactoryRepo inst;
-    return inst;
+    static EngineFactoryRepo* inst = nullptr;
+    static std::once_flag once;
+    std::call_once(once, [&] { inst = new EngineFactoryRepo(); });
+    return *inst;
 }
 
 EngineFactoryRepo::~EngineFactoryRepo()
