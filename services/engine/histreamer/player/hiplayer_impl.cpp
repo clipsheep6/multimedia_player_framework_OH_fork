@@ -39,6 +39,8 @@ const float MAX_MEDIA_VOLUME = 1.0f; // standard interface volume is between 0 t
 const int32_t AUDIO_SINK_MAX_LATENCY = 400; // audio sink write latency ms
 const int32_t FRAME_RATE_UNIT_MULTIPLE = 100; // the unit of frame rate is frames per 100s
 const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame after seek in playing.
+const double FRAME_RATE_DEFAULT = -1.0;
+const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
 }
 
 namespace OHOS {
@@ -824,7 +826,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
             videoDecoder_->SetSeekTime(seekTimeUs);
         }
         seekAgent_ = std::make_shared<SeekAgent>(demuxer_);
+        SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
         auto res = seekAgent_->Seek(seekPos);
+        SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
         MEDIA_LOGI("seekAgent_ Seek end");
         if (res != Status::OK) {
             MEDIA_LOGE("Seek closest failed");
@@ -1334,6 +1338,21 @@ int32_t HiPlayerImpl::SetVideoScaleType(OHOS::Media::VideoScaleType videoScaleTy
 #ifdef SUPPORT_VIDEO
     auto meta = std::make_shared<Meta>();
     meta->Set<Tag::VIDEO_SCALE_TYPE>(static_cast<int32_t>(videoScaleType));
+    if (videoDecoder_) {
+        videoDecoder_->SetParameter(meta);
+    }
+    return TransStatus(Status::OK);
+#else
+    return TransStatus(Status::OK);
+#endif
+}
+
+int32_t HiPlayerImpl::SetFrameRateForSeekPerformance(double frameRate)
+{
+    MEDIA_LOG_I("SetFrameRateForSeekPerformance, frameRate: %{public}f", frameRate);
+#ifdef SUPPORT_VIDEO
+    auto meta = std::make_shared<Meta>();
+    meta->Set<Tag::VIDEO_FRAME_RATE>(frameRate);
     if (videoDecoder_) {
         videoDecoder_->SetParameter(meta);
     }

@@ -203,6 +203,7 @@ private:
     void NotifySeek(Status rtv, bool flag, int64_t seekPos);
     int32_t InitDuration();
     int32_t InitVideoWidthAndHeight();
+    int32_t SetFrameRateForSeekPerformance(double frameRate);
     void SetBundleName(std::string bundleName);
     Status InitAudioDefaultTrackIndex();
     bool BreakIfInterruptted();
