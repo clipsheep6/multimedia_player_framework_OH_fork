@@ -1461,7 +1461,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
     VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
-        MEDIA_LOGI("get displayinfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
+        MEDIA_LOGI("get displayInfo width:%{public}d,height:%{public}d,density:%{public}d", display->GetWidth(),
                    display->GetHeight(), display->GetDpi());
         virScrOption.density_ = display->GetDpi();
     }
@@ -1475,8 +1475,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<O
         }
     }
     screenId_ = ScreenManager::GetInstance().CreateVirtualScreen(virScrOption);
-    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenid");
-
+    CHECK_AND_RETURN_RET_LOG(screenId_ >= 0, MSERR_UNKNOWN, "CreateVirtualScreen failed, invalid screenId");
+    for (size_t i = 0; i < contentFilter_.windowIDsVec.size(); i++) {
+        MEDIA_LOGI("After CreateVirtualScreen windowIDsVec value :%{public}d", contentFilter_.windowIDsVec[i]);
+    }
     auto screen = ScreenManager::GetInstance().GetScreenById(screenId_);
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");

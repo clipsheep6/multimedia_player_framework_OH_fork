@@ -269,6 +269,16 @@ int32_t ScreenCaptureServiceStub::ExcludeContent(MessageParcel &data, MessagePar
         contentFilter.filteredAudioContents.insert(
             static_cast<AVScreenCaptureFilterableAudioContent>(data.ReadInt32()));
     }
+    int32_t windowIdSize = data.ReadInt32();
+    CHECK_AND_RETURN_RET_LOG(windowIdSize < MAX_FILTER_CONTENTS_COUNT, MSERR_INVALID_STATE,
+                             "windowID size is exceed max range");
+    if (windowIdSize > 0) {
+        std::vector<int> vec;
+        for (int32_t i = 0; i < windowIdSize; i++) {
+            vec.push_back(data.ReadInt32());
+        }
+        contentFilter.windowIDsVec = vec;
+    }
     int32_t ret = ExcludeContent(contentFilter);
     reply.WriteInt32(ret);
     return MSERR_OK;
