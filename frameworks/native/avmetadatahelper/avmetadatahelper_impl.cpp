@@ -266,8 +266,19 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
                                          .srcPixelFormat = PixelFormat::NV12 };
     pixelMap =
         PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
-    if (rotation_ > 0 && pixelMap != nullptr) {
+    if (pixelMap == nullptr) {
+        return nullptr;
+    }
+    if (rotation_ > 0) {
         pixelMap->rotate(rotation_);
+    }
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
+                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
+    if (needScale) {
+        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     return pixelMap;
 }
