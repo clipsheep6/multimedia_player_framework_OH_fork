@@ -80,6 +80,8 @@ public:
     void CloseFile(void);
     void OpenFile(std::string name, bool isInnerAudioEnabled, bool isMicAudioEnabled, bool isVideoEnabled);
     void OpenFileFd(std::string name);
+    static void SetAccessTokenPermission();
+    static void SetHapPermission();
 
 protected:
     static const std::string SCREEN_CAPTURE_ROOT_DIR;

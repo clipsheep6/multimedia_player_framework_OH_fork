@@ -29,6 +29,7 @@ using namespace testing::ext;
 using namespace std;
 using namespace OHOS::Rosen;
 using namespace OHOS::Media::ScreenCaptureTestParam;
+using namespace Security::AccessToken;
 
 namespace OHOS {
 namespace Media {
@@ -297,10 +298,12 @@ void ScreenCaptureUnitTestCallback::InitCaptureTrackInfo(FILE *file, int32_t fla
 
 const std::string ScreenCaptureUnitTest::SCREEN_CAPTURE_ROOT_DIR = "/data/test/media/";
 
-void ScreenCaptureUnitTest::SetUpTestCase(void)
+void ScreenCaptureUnitTest::SetAccessTokenPermission()
 {
     vector<string> permission;
     permission.push_back("ohos.permission.MICROPHONE");
+    permission.push_back("ohos.permission.READ_MEDIA");
+    permission.push_back("ohos.permission.WRITE_MEDIA");
     uint64_t tokenId = 0;
 
     auto perms = std::make_unique<const char* []>(permission.size());
@@ -333,8 +336,63 @@ void ScreenCaptureUnitTest::SetUpTestCase(void)
     }
 }
 
+void ScreenCaptureUnitTest::SetHapPermission()
+{
+    HapInfoParams info = {
+        .userID = 100, // 100 UserID
+        .bundleName = "com.ohos.test.screencapturetdd",
+        .instIndex = 0, // 0 index
+        .appIDDesc = "com.ohos.test.screencapturetdd",
+        .isSystemApp = true
+    };
 
-void ScreenCaptureUnitTest::TearDownTestCase(void) {}
+    HapPolicyParams policy = {
+        .apl = APL_SYSTEM_BASIC,
+        .domain = "test.domain.screencapturetdd",
+        .permList = { },
+        .permStateList = {
+            {
+                .permissionName = "ohos.permission.MICROPHONE",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.READ_MEDIA",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.WRITE_MEDIA",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            }
+        }
+    };
+    AccessTokenIDEx tokenIdEx = { 0 };
+    tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
+    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
+    if (ret != 0) {
+        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
+    }
+}
+
+void ScreenCaptureUnitTest::SetUpTestCase(void)
+{
+    SetHapPermission();
+}
+
+void ScreenCaptureUnitTest::TearDownTestCase(void)
+{
+    AccessTokenID tokenId = AccessTokenKit::GetHapTokenID(100,
+        "com.ohos.test.screencapturetdd", 0); // 100 UserId 0 Index
+    AccessTokenKit::DeleteToken(tokenId);
+}
 
 void ScreenCaptureUnitTest::SetUp(void)
 {
