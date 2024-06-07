@@ -20,6 +20,7 @@
 #include "ibuffer_consumer_listener.h"
 #include "graphic_common_c.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_description.h"
 #include "meta/meta.h"
@@ -34,6 +35,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVThumbna
 
 namespace OHOS {
 namespace Media {
+constexpr float BYTES_PER_PIXEL_YUV = 1.5;
 constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
 
@@ -86,6 +88,7 @@ void AVThumbnailGenerator::OnError(MediaAVCodec::AVCodecErrorType errorType, int
 
 Status AVThumbnailGenerator::InitDecoder()
 {
+    MediaTrace trace("initDecoder");
     MEDIA_LOGD("Init decoder start.");
     if (videoDecoder_ != nullptr) {
         MEDIA_LOGD("AVThumbnailGenerator InitDecoder already.");
@@ -162,6 +165,7 @@ void AVThumbnailGenerator::OnInputBufferAvailable(uint32_t index, std::shared_pt
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "OnInputBufferAvailable demuxer is nullptr.");
     CHECK_AND_RETURN_LOG(videoDecoder_ != nullptr, "OnInputBufferAvailable decoder is nullptr.");
     mediaDemuxer_->ReadSample(trackIndex_, buffer);
+    MediaTrace::TraceBegin("WaitBuffer", FAKE_POINTER(this));
     videoDecoder_->QueueInputBuffer(index);
 }
 
@@ -175,6 +179,7 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         return;
     }
     if (!hasFetchedFrame_.load() && !stopProcessing_.load()) {
+        MediaTrace::TraceEnd("WaitBuffer", FAKE_POINTER(this));
         if (buffer->memory_->GetSize() != 0 && buffer->memory_->GetSurfaceBuffer() == nullptr) {
             MEDIA_LOGI("Soft decoder, use avBuffer");
             isSoftDecoder_ = true;
@@ -184,6 +189,8 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         surfaceBuffer_ = buffer->memory_->GetSurfaceBuffer();
         hasFetchedFrame_ = true;
         cond_.notify_all();
+        videoDecoder_->Flush();
+        mediaDemuxer_->Flush();
         return;
     }
     videoDecoder_->ReleaseOutputBuffer(index, false);
@@ -227,8 +234,6 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
                 ConvertToAVSharedMemory(avBuffer_);
             }
             videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
-            videoDecoder_->Flush();
-            mediaDemuxer_->Flush();
         } else {
             hasFetchedFrame_ = true;
             videoDecoder_->Flush();
@@ -247,37 +252,21 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     return res;
 }
 
-bool AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer)
+void AVThumbnailGenerator::ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
-    int32_t format = surfaceBuffer->GetFormat();
-    uint32_t size = surfaceBuffer->GetSize();
-    int32_t width = surfaceBuffer->GetWidth();
-    int32_t height = surfaceBuffer->GetHeight();
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " format:%{public}d, size:%{public}d, "
-               "width:%{public}d, height:%{public}d",
-               FAKE_POINTER(this), format, size, width, height);
-
-    std::unique_ptr<PixelMap> pixelMap = GetYuvDataAlignStride(surfaceBuffer);
-    auto fetchedFrameAtTime =
-        std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + pixelMap->GetRowStride() * pixelMap->GetHeight(),
-                                             AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
-
-    int32_t ret = fetchedFrameAtTime->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == static_cast<int32_t>(Status::OK), false,
-                             "Create AVSharedmemory failed, ret:%{public}d", ret);
-    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime->GetBase());
-    frame->width_ = pixelMap->GetWidth();
-    frame->height_ = pixelMap->GetHeight();
-    frame->stride_ = pixelMap->GetRowStride();
-    frame->bytesPerPixel_ = pixelMap->GetPixelBytes();
-    frame->size_ = pixelMap->GetRowStride() * pixelMap->GetHeight();
+    CHECK_AND_RETURN_LOG(surfaceBuffer != nullptr, "surfaceBuffer is nullptr");
+    auto ret = GetYuvDataAlignStride(surfaceBuffer);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Copy frame failed");
+    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
+    frame->width_ = surfaceBuffer->GetWidth();
+    frame->height_ = surfaceBuffer->GetHeight();
+    frame->stride_ = frame->width_ * RATE_UV;
+    frame->bytesPerPixel_ = RATE_UV;
+    frame->size_ = frame->width_ * frame->height_ * BYTES_PER_PIXEL_YUV;
     frame->rotation_ = static_cast<int32_t>(rotation_);
-    fetchedFrameAtTime->Write(pixelMap->GetPixels(), frame->size_, sizeof(OutputFrame));
-    fetchedFrameAtTime_ = fetchedFrameAtTime;
-    return true;
 }
 
-bool AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer)
+void AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer)
 {
     int32_t width;
     int32_t height;
@@ -288,23 +277,19 @@ bool AVThumbnailGenerator::ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &av
         height = height_;
     }
 
-    auto fetchedFrameAtTime = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + avBuffer->memory_->GetSize(),
-                                                                   AVSharedMemory::Flags::FLAGS_READ_WRITE,
-                                                                   "FetchedFrameMemory");
+    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + avBuffer->memory_->GetSize(),
+        AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
 
-    int32_t ret = fetchedFrameAtTime->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == static_cast<int32_t>(Status::OK), false,
-                             "Create AVSharedmemory failed, ret:%{public}d", ret);
-    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime->GetBase());
+    int32_t ret = fetchedFrameAtTime_->Init();
+    CHECK_AND_RETURN_LOG(ret == static_cast<int32_t>(Status::OK), "Create AVSharedmemory failed, ret:%{public}d", ret);
+    OutputFrame *frame = reinterpret_cast<OutputFrame *>(fetchedFrameAtTime_->GetBase());
     frame->width_ = width;
     frame->height_ = height;
     frame->stride_ = width * RATE_UV;
     frame->bytesPerPixel_ = RATE_UV;
     frame->size_ = avBuffer->memory_->GetSize();
     frame->rotation_ = static_cast<int32_t>(rotation_);
-    fetchedFrameAtTime->Write(avBuffer->memory_->GetAddr(), frame->size_, sizeof(OutputFrame));
-    fetchedFrameAtTime_ = fetchedFrameAtTime;
-    return true;
+    fetchedFrameAtTime_->Write(avBuffer->memory_->GetAddr(), frame->size_, sizeof(OutputFrame));
 }
 
 void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12,
@@ -345,30 +330,29 @@ void AVThumbnailGenerator::ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceB
     }
 }
 
-std::unique_ptr<PixelMap> AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer)
+int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
     int32_t width = surfaceBuffer->GetWidth();
     int32_t height = surfaceBuffer->GetHeight();
     int32_t stride = surfaceBuffer->GetStride();
     int32_t outputHeight;
-    auto isOutputFormatValid = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
-    if (!isOutputFormatValid && outputHeight == 0) {
+    auto hasSliceHeight = outputFormat_.GetIntValue(Tag::VIDEO_SLICE_HEIGHT, outputHeight);
+    if (!hasSliceHeight || outputHeight < height) {
         outputHeight = height;
     }
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
                stride, outputHeight);
 
-    InitializationOptions initOpts;
-    initOpts.size = { width, height };
-    initOpts.srcPixelFormat = PixelFormat::NV12;
-    std::unique_ptr<PixelMap> yuvPixelMap = PixelMap::Create(initOpts);
-    uint8_t *dstData = static_cast<uint8_t *>(yuvPixelMap->GetWritablePixels());
+    fetchedFrameAtTime_ =
+        std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
+            AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
+    auto ret = fetchedFrameAtTime_->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d");
+    uint8_t *dstPtr = static_cast<uint8_t *>(sizeof(OutputFrame) + fetchedFrameAtTime_->GetBase());
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
-    uint8_t *dstPtr = dstData;
     int32_t format = surfaceBuffer->GetFormat();
     if (format == static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010)) {
         ConvertP010ToNV12(surfaceBuffer, dstPtr, stride, outputHeight);
-        return yuvPixelMap;
     }
 
     // copy src Y component to dst
@@ -392,8 +376,7 @@ std::unique_ptr<PixelMap> AVThumbnailGenerator::GetYuvDataAlignStride(const sptr
         srcPtr += stride;
         dstPtr += width;
     }
-
-    return yuvPixelMap;
+    return MSERR_OK;
 }
 
 void AVThumbnailGenerator::Reset()
