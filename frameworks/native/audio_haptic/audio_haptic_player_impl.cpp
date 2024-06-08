@@ -27,7 +27,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
-const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 20;
+const int32_t LOAD_WAIT_SECONDS_FOR_LOOP = 40;
 
 std::mutex AudioHapticPlayerFactory::createPlayerMutex_;
 

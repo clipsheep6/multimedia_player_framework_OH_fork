@@ -15,6 +15,8 @@
 
 #include "ringtone_player_impl.h"
 
+#include <sys/stat.h>
+
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -29,6 +31,8 @@ namespace OHOS {
 namespace Media {
 const float HIGH_VOL = 1.0f;
 const float LOW_VOL = 0.0f;
+const std::string AUDIO_FORMAT_STR = ".ogg";
+const std::string HAPTIC_FORMAT_STR = ".json";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     SystemSoundManagerImpl &sysSoundMgr, RingtoneType type)
@@ -55,6 +59,38 @@ RingtonePlayerImpl::~RingtonePlayerImpl()
     }
 }
 
+bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
+{
+    struct stat buffer;
+    return (stat(fileUri.c_str(), &buffer) == 0);
+}
+
+std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri)
+{
+    std::string hapticUri = "";
+    if (audioUri.length() > AUDIO_FORMAT_STR.length() &&
+        audioUri.rfind(AUDIO_FORMAT_STR) == audioUri.length() - AUDIO_FORMAT_STR.length()) {
+        // the end of audio uri is ".ogg"
+        hapticUri = audioUri;
+        hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
+    }
+
+    if (hapticUri == "" || !IsFileExisting(hapticUri)) {
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
+        std::string defaultRingtoneUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
+        if (defaultRingtoneUri.length() > AUDIO_FORMAT_STR.length() &&
+            defaultRingtoneUri.rfind(AUDIO_FORMAT_STR) == defaultRingtoneUri.length() - AUDIO_FORMAT_STR.length()) {
+            // the end of default ringtone uri is ".ogg"
+            hapticUri = defaultRingtoneUri;
+            hapticUri.replace(hapticUri.rfind(AUDIO_FORMAT_STR), AUDIO_FORMAT_STR.length(), HAPTIC_FORMAT_STR);
+        } else {
+            MEDIA_LOGW("The default ringtone uri is invalid!");
+        }
+    }
+
+    return hapticUri;
+}
+
 void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
 {
     if (sourceId_ != -1) {
@@ -63,15 +99,11 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri)
     }
 
     AudioHapticPlayerOptions options = {false, false};
-    // Get the default haptic source uri.
-    std::string hapticUri = "";
-    std::string defaultRingtoneUri = systemSoundMgr_.GetDefaultRingtoneUri(RINGTONE_TYPE_SIM_CARD_0);
-    if (defaultRingtoneUri == "") {
-        MEDIA_LOGW("Default ringtone uri is empty. Play ringtone without vibration");
+    // Get the haptic file uri according to the audio file uri.
+    std::string hapticUri = GetHapticUriForAudioUri(audioUri);
+    if (hapticUri == "") {
+        MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
         options.muteHaptics = true;
-    } else {
-        // the size of "ogg" is 3 and the size of ".ogg" is 4.
-        hapticUri = defaultRingtoneUri.replace(defaultRingtoneUri.find_last_of(".ogg") - 3, 4, ".json");
     }
 
     sourceId_ = audioHapticManager_->RegisterSource(audioUri, hapticUri);
