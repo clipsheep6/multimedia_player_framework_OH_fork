@@ -1854,7 +1854,14 @@ void HiPlayerImpl::NotifyResolutionChange()
 
 void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
 {
-    curState_ = state;
+    {
+        AutoLock lockEos(stateChangeMutex_);
+        if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
+            MEDIA_LOGE("already at completed and not allow pause");
+            return;
+        }
+        curState_ = state;
+    }
     MEDIA_LOGD("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
             TransStateId2PlayerState(state));
     UpdateStateNoLock(TransStateId2PlayerState(state));
