@@ -289,6 +289,8 @@ private:
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
     std::string mimeType_;
+    std::atomic<bool> isAllReceiveEos_{false};
+    OHOS::Media::Mutex stateChangeMutex_{};
 };
 } // namespace Media
 } // namespace OHOS
