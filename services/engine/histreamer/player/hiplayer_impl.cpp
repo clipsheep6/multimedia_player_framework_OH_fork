@@ -807,6 +807,7 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
         rtv = pipeline_->Resume();
         syncManager_->Resume();
     } else {
+        isDoCompletedSeek_ = true;
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();
         OnStateChanged(PlayerStateId::PAUSE);
@@ -1860,7 +1861,9 @@ void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStat
 {
     {
         AutoLock lockEos(stateChangeMutex_);
-        if (((curState_ == PlayerStateId::EOS) || isAllReceiveEos_.load()) && (state == PlayerStateId::PAUSE)) {
+        if (isDoCompletedSeek_.load()) {
+            isDoCompletedSeek_ = false;
+        } else if (((curState_ == PlayerStateId::EOS) || isAllReceiveEos_.load()) && (state == PlayerStateId::PAUSE)) {
             MEDIA_LOGE("already at completed and not allow pause");
             Format format;
             callbackLooper_.OnInfo(INFO_TYPE_PAUSE_DONE, pipelineStates_.load(), format);

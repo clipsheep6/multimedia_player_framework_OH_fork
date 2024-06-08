@@ -290,6 +290,7 @@ private:
     bool inEosSeek_ = false;
     std::string mimeType_;
     std::atomic<bool> isAllReceiveEos_{false};
+    std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
 };
 } // namespace Media
