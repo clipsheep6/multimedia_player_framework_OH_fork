@@ -348,6 +348,7 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
     int32_t format = surfaceBuffer->GetFormat();
     if (format == static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010)) {
         ConvertP010ToNV12(surfaceBuffer, dstPtr, stride, outputHeight);
+        return MSERR_OK;
     }
 
     // copy src Y component to dst
