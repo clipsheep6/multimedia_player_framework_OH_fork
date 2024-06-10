@@ -20,6 +20,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include "cpp/mutex.h"
 #include "ashmem.h"
 #include "avcodec_audio_decoder.h"
 #include "avcodec_errors.h"
@@ -149,19 +150,19 @@ private:
         }
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             soundData = soundData_;
             return MSERR_OK;
         }
 
         size_t GetSoundDataTotalSize() const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             return soundBufferTotalSize_;
         }
         bool IsSoundParserCompleted() const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             return isSoundParserCompleted_.load();
         }
 
@@ -179,7 +180,7 @@ private:
     std::shared_ptr<MediaAVCodec::AVSource> source_;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<SoundDecoderCallback> audioDecCb_;
-    std::mutex soundParserLock_;
+    ffrt::mutex soundParserLock_;
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;

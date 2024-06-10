@@ -54,6 +54,7 @@
           "image_framework",
           "hiview",
           "eventhandler",
+          "ffrt",
           "init",
           "input",
           "memmgr_override",

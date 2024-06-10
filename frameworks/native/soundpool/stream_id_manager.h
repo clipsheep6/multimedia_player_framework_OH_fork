@@ -22,6 +22,7 @@
 #include "isoundpool.h"
 #include "sound_parser.h"
 #include "thread_pool.h"
+#include "cpp/mutex.h"
 
 namespace OHOS {
 namespace Media {
@@ -92,7 +93,7 @@ private:
 
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
     AudioStandard::AudioRendererInfo audioRendererInfo_;
-    std::mutex streamIDManagerLock_;
+    ffrt::mutex streamIDManagerLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     std::map<int32_t, std::shared_ptr<CacheBuffer>> cacheBuffers_;

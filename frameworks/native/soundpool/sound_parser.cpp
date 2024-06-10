@@ -62,7 +62,7 @@ SoundParser::~SoundParser()
 int32_t SoundParser::DoParser()
 {
     MEDIA_LOGE("SoundParser do parser.");
-    std::unique_lock<std::mutex> lock(soundParserLock_);
+    std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(true);
     int32_t result = MSERR_OK;
     result = DoDemuxer(&trackFormat_);
@@ -103,10 +103,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
         if (trackType == MEDIA_TYPE_AUD) {
             MEDIA_LOGI("SoundParser trackType:%{public}d", trackType);
             demuxer_->SelectTrackByID(sourceTrackIndex);
-            int32_t trackBitRateInfo;
             std::string trackMimeTypeInfo;
-            trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_BITRATE, trackBitRateInfo);
-            trackFormat->PutLongValue(MediaDescriptionKey::MD_KEY_BITRATE, static_cast<int64_t>(trackBitRateInfo));
             trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
             if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
                 // resample format
@@ -176,7 +173,7 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
 int32_t SoundParser::Release()
 {
     MEDIA_LOGI("SoundParser Release.");
-    std::unique_lock<std::mutex> lock(soundParserLock_);
+    std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(false);
     int32_t ret = MSERR_OK;
     if (soundParserListener_ != nullptr) soundParserListener_.reset();
