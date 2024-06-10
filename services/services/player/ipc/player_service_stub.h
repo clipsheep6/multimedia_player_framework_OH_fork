@@ -103,7 +103,7 @@ private:
     int32_t Play(MessageParcel &data, MessageParcel &reply);
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t SetRenderFirstFrame(MessageParcel &data, MessageParcel &reply);
-    int32_t SetPlayRange(MessageParcel &data, MessageParcel &reply)
+    int32_t SetPlayRange(MessageParcel &data, MessageParcel &reply);
     int32_t PrepareAsync(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);
     int32_t Stop(MessageParcel &data, MessageParcel &reply);
