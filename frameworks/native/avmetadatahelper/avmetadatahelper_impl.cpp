@@ -272,9 +272,6 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Convert to rgba failed");
     }
 
-    if (rotation_ > 0) {
-        pixelMap->rotate(rotation_);
-    }
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
     bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
@@ -282,6 +279,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
+    }
+    if (rotation_ > 0) {
+        pixelMap->rotate(rotation_);
     }
     return pixelMap;
 }
