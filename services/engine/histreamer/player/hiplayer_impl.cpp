@@ -175,12 +175,10 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
         tempUrlPath = url;
     }
     if (tempUrlPath.find("..") != std::string::npos) {
-        MEDIA_LOGE("invalid url. The Url (%{public}s) path may be invalid.", tempUrlPath.c_str());
         return MSERR_FILE_ACCESS_FAILED;
     }
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
     if (!ret) {
-        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
         return MSERR_OPEN_FILE_FAILED;
     }
     if (access(realUrlPath.c_str(), R_OK) != 0) {
@@ -279,7 +277,6 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
 int32_t HiPlayerImpl::AddSubSource(const std::string &url)
 {
     MediaTrace trace("HiPlayerImpl::AddSubSource uri");
-    MEDIA_LOG_I("AddSubSource entered source uri: " PUBLIC_LOG_S, url.c_str());
     subUrl_ = url;
     if (IsFileUrl(url)) {
         std::string realUriPath;
