@@ -218,8 +218,8 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
 {
-    MEDIA_LOGI("HandleSeekDoneInfo entered");
     if (type == INFO_TYPE_SEEKDONE) {
+        MEDIA_LOGI("HandleSeekDoneInfo entered");
         CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
@@ -233,7 +233,6 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
         }
         MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
     }
-    MEDIA_LOGI("HandleSeekDoneInfo end");
 }
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
