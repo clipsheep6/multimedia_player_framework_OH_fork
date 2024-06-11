@@ -237,7 +237,7 @@ int32_t AVImageGeneratorNapi::GetFetchFrameArgs(std::unique_ptr<AVImageGenerator
         MEDIA_LOGW("failed to get height");
     }
 
-    PixelFormat colorFormat = PixelFormat::RGBA_8888;
+    PixelFormat colorFormat = PixelFormat::NV12;
     int32_t formatVal = 3;
     if (!CommonNapi::GetPropertyInt32(env, params, "colorFormat", formatVal)) {
         MEDIA_LOGW("failed to get colorFormat");

@@ -21,6 +21,7 @@
 #include "securec.h"
 #include "image_source.h"
 #include "i_media_service.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
@@ -262,16 +263,15 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
 
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
  
-    const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
-                                         .srcPixelFormat = PixelFormat::NV12 };
-    pixelMap =
-        PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
-    if (pixelMap == nullptr) {
-        return nullptr;
+    if (param.colorFormat == PixelFormat::RGBA_8888) {
+        MediaTrace trace("ConvertToArgb");
+        const InitializationOptions opts = { .size = { .width = pixelMap->GetWidth(), .height = pixelMap->GetHeight() },
+                                             .srcPixelFormat = PixelFormat::NV12 };
+        pixelMap =
+            PixelMap::Create(reinterpret_cast<const uint32_t *>(pixelMap->GetPixels()), pixelMap->GetByteCount(), opts);
+        CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Convert to rgba failed");
     }
-    if (rotation_ > 0) {
-        pixelMap->rotate(rotation_);
-    }
+
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
     bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
@@ -279,6 +279,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
+    }
+    if (rotation_ > 0) {
+        pixelMap->rotate(rotation_);
     }
     return pixelMap;
 }
