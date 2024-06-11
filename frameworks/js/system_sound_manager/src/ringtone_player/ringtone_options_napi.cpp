@@ -78,6 +78,7 @@ napi_value RingtoneOptionsNapi::Init(napi_env env, napi_value exports)
 
 napi_value RingtoneOptionsNapi::Construct(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGI("Construct enter");
     napi_status status;
     napi_value jsThis = nullptr;
     size_t argCount = 0;
