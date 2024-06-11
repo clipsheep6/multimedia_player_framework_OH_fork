@@ -594,7 +594,7 @@ void HiPlayerImpl::UpdatePlayStatistics()
             MEDIA_LOG_E("GetLagInfo failed with error " PUBLIC_LOG_D32, ret);
         }
     } else {
-        MEDIA_LOG_E("GetLagInfo failed videoDecoder is null");
+        MEDIA_LOG_E("GetLagInfo failed videoDecoder is null error");
     }
 }
 
