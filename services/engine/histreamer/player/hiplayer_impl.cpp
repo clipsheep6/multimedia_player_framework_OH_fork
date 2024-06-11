@@ -331,7 +331,7 @@ int32_t HiPlayerImpl::SetPlayRange(int64_t start, int64_t end)
     if (!IsValidPlayRange(start, end)) {
         MEDIA_LOGE("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
                     start, end);
-        UpdateStateNoLock(PlayerStates::ERROR_INVALID_PARAMETER);
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
 
@@ -509,7 +509,7 @@ int32_t HiPlayerImpl::Play()
     if (!IsValidPlayRange(playRangeStartTime_, playRangeEndTime_)) {
         MEDIA_LOGE("SetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
                     playRangeStartTime_, playRangeEndTime_);
-        UpdateStateNoLock(PlayerStates::ERROR_INVALID_PARAMETER);
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
 
