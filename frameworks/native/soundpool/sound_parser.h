@@ -175,7 +175,7 @@ private:
 
     int32_t DoDemuxer(MediaAVCodec::Format *trackFormat);
     int32_t DoDecode(MediaAVCodec::Format trackFormat);
-    int32_t soundID_;
+    int32_t soundID_ = 0;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<MediaAVCodec::AVSource> source_;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
