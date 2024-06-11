@@ -92,6 +92,7 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
 
 int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
+    MEDIA_LOGD("LoadHistreamerEngine entered.");
     std::unique_lock<std::mutex> lock(mutex_);
     if (isLoadHistreamer_) {
         MEDIA_LOGD("Histreamer is enabled");
