@@ -141,6 +141,13 @@ int32_t PlayerClient::Play()
     return playerProxy_->Play();
 }
 
+int32_t PlayerClient::SetPlayRange(int64_t start, int64_t end)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SetPlayRange(start, end);
+}
+
 int32_t PlayerClient::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);

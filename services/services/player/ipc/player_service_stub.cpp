@@ -83,6 +83,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[PLAY] = { &PlayerServiceStub::Play, "Player::Play" };
     playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
     playerFuncs_[SET_RENDER_FIRST_FRAME] = { &PlayerServiceStub::SetRenderFirstFrame, "Player::SetRenderFirstFrame" };
+    playerFuncs_[SET_PLAY_RANGE] = { &PlayerServiceStub::SetPlayRange, "Player::SetPlayRange" };
     playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
     playerFuncs_[PAUSE] = { &PlayerServiceStub::Pause, "Player::Pause" };
     playerFuncs_[STOP] = { &PlayerServiceStub::Stop, "Player::Stop" };
@@ -263,6 +264,13 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(bool display)
     MediaTrace trace("Stub::SetRenderFirstFrame");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetRenderFirstFrame(display);
+}
+
+int32_t PlayerServiceStub::SetPlayRange(int64_t start, int64_t end)
+{
+    MediaTrace trace("Stub::SetPlayRange");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayRange(display);
 }
 
 int32_t PlayerServiceStub::PrepareAsync()
@@ -588,6 +596,14 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(MessageParcel &data, MessageParce
 {
     bool display = data.ReadBool();
     reply.WriteInt32(SetRenderFirstFrame(display));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayRange(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t start = data.ReadInt64();
+    int64_t end = data.ReadInt64();
+    reply.WriteInt32(SetPlayRange(start, end));
     return MSERR_OK;
 }
 
