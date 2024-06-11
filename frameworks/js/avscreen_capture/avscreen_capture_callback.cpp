@@ -135,7 +135,7 @@ void AVScreenCaptureCallback::OnJsErrorCallBackWork(uv_work_t *work, int status)
     CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
     if (work->data == nullptr) {
         delete work;
-        MEDIA_LOGE("workdata is nullptr");
+        MEDIA_LOGE("workdata is nullptr error");
         return;
     }
     AVScreenCaptureJsCallback *event = reinterpret_cast<AVScreenCaptureJsCallback *>(work->data);
