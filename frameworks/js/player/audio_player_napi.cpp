@@ -194,6 +194,7 @@ napi_value AudioPlayerNapi::CreateAudioPlayerAsync(napi_env env, napi_callback_i
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();
 
+    MEDIA_LOGD("CreateAudioPlayerAsync Out");
     return result;
 }
 
