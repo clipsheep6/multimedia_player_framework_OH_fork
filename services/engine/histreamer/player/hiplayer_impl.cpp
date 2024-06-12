@@ -128,7 +128,7 @@ void HiPlayerImpl::ReleaseInner()
 Status HiPlayerImpl::Init()
 {
     MediaTrace trace("HiPlayerImpl::Init");
-    MEDIA_LOGI("Init");
+    MEDIA_LOGI("Init start");
     std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     playerEventReceiver_ = playerEventReceiver;
     std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);

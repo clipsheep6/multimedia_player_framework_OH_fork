@@ -91,7 +91,7 @@ Status SeekAgent::Seek(int64_t seekPos)
         targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
         MEDIA_LOG_I("Wait end");
     }
-    MEDIA_LOG_I("Start PauseForSeek");
+    MEDIA_LOG_I("PauseForSeek start");
     demuxer_->PauseForSeek();
     st = RemoveBufferFilledListener();
     return st;
