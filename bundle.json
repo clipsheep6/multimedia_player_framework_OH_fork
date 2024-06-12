@@ -145,7 +145,7 @@
               "header_files": [
                 "ringtone_player.h",
                 "system_sound_manager.h",
-                "system_tone_plyaer.h"
+                "system_tone_player.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/system_sound_manager/include"
             }
@@ -164,7 +164,8 @@
         ],
         "test": [
             "//foundation/multimedia/player_framework/test:media_fuzz_test",
-            "//foundation/multimedia/player_framework/test:media_unit_test"
+            "//foundation/multimedia/player_framework/test:media_unit_test",
+            "//foundation/multimedia/player_framework/frameworks/native/system_sound_manager/unittest/sound_manager_test:system_sound_manager_unit_test"
         ]
       }
     }
