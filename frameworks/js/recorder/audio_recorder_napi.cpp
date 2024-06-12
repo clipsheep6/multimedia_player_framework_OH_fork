@@ -204,6 +204,7 @@ napi_value AudioRecorderNapi::CreateAudioRecorderAsync(napi_env env, napi_callba
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
+    MEDIA_LOGD("CreateAudioRecorderAsync Out");
 
     return result;
 }
