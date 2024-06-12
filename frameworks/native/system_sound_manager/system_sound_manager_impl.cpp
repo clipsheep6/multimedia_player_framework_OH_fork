@@ -380,7 +380,7 @@ std::string SystemSoundManagerImpl::GetRingtoneUri(const shared_ptr<Context> &co
         if (ringtoneAsset != nullptr) {
             string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
             Uri ofUri(uriStr);
-            int32_t fd = dataShareHelper->OpenFile(ofUri, "rw");
+            int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
             if (fd > 0) {
                 ringtoneUri = fdHead + to_string(fd);
             }
@@ -464,7 +464,7 @@ std::string SystemSoundManagerImpl::GetSystemToneUri(const std::shared_ptr<Abili
         if (ringtoneAsset != nullptr) {
             string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
             Uri ofUri(uriStr);
-            int32_t fd = dataShareHelper->OpenFile(ofUri, "rw");
+            int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
             if (fd > 0) {
                 systemToneUri = fdHead + to_string(fd);
             }
@@ -898,6 +898,13 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         return result;
     }
     std::lock_guard<std::mutex> lock(uriMutex_);
+    int32_t srcFd = fd;
+    off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
+    if (lseekResult == -1) {
+        MEDIA_LOGE("fd is error");
+        result.clear();
+        return result;
+    }
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         MEDIA_LOGE("dataShareHelper is nullptr");
@@ -907,10 +914,8 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs);
     std::string dstPath = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(sert);
     Uri ofUri(dstPath);
-    int32_t srcFd = fd;
-    lseek(srcFd, offset, SEEK_SET);
     int32_t dstFd = dataShareHelper->OpenFile(ofUri, "rw");
-    if (srcFd < 0 || dstFd < 0 || offset < 0 || length < 0) {
+    if (dstFd < 0) {
         MEDIA_LOGE("AddCustomizedTone: open error is %{public}s", strerror(errno));
         result.clear();
         dataShareHelper->Release();
