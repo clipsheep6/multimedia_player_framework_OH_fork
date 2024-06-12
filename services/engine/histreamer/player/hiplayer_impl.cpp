@@ -1704,6 +1704,7 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
 #ifdef SUPPORT_VIDEO
     uint32_t bitrate = AnyCast<uint32_t>(event.param);
     MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
+    FALSE_RETURN(videoDecoder_ != nullptr);
     videoDecoder_->SetBitrateStart();
 #endif
 }
