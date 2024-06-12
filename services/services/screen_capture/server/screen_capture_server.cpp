@@ -1504,6 +1504,9 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     };
     consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
     CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsConsumer failed");
+    MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE S");
+    consumer_->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
+    MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE E");
     auto producer = consumer_->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
     auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
@@ -2131,6 +2134,11 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
     consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     CHECK_AND_RETURN_LOG(buffer != nullptr, "Acquire SurfaceBuffer failed");
+
+    if ((buffer->GetUsage() & BUFFER_USAGE_MEM_MMZ_CACHE) != 0) {
+        MEDIA_LOGD("ScreenCaptureServer::OnBufferAvailable cache enable");
+        buffer->InvalidateCache();
+    }
 
     void *addr = buffer->GetVirAddr();
     if (addr == nullptr) {
