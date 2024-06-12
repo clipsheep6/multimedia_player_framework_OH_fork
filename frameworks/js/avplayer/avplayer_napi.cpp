@@ -182,7 +182,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::createAVPlayer");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsCreateAVPlayer In");
+    MEDIA_LOGD("JsCreateAVPlayer In starts");
 
     std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env);
 
