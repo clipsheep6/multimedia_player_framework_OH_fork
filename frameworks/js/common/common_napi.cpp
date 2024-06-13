@@ -788,6 +788,45 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
     }
 }
 
+void MediaAsyncContext::SendEvent(napi_env env, MediaAsyncContext *ctx, napi_event_priority prio)
+{
+    auto task = [env, asyncContext]() {
+        MEDIA_LOGD("CompleteCallback In");
+        CHECK_AND_RETURN_LOG(asyncContext != nullptr, "asyncContext is nullptr!");
+        std::string memoryTag = asyncContext->memoryTagHead + asyncContext->memoryTagTail;
+        MEDIA_LOGD("MediaAsyncContext 0x%{public}06" PRIXPTR " memoryTag = %{public}s",
+            FAKE_POINTER(asyncContext), memoryTag.c_str());
+
+        napi_value result = nullptr;
+        napi_get_undefined(env, &result);
+        napi_value args[2] = { nullptr };
+        napi_get_undefined(env, &args[0]);
+        napi_get_undefined(env, &args[1]);
+        if (asyncContext->errFlag) {
+            MEDIA_LOGD("async callback failed");
+            (void)CommonNapi::CreateError(env, asyncContext->errCode, asyncContext->errMessage, result);
+            args[0] = result;
+        } else {
+            MEDIA_LOGD("async callback success");
+            if (asyncContext->JsResult != nullptr) {
+                asyncContext->JsResult->GetJsResult(env, result);
+                CheckCtorResult(env, result, asyncContext, args[0]);
+            }
+            if (!asyncContext->errFlag) {
+                args[1] = result;
+            }
+        }
+
+        Callback(env, asyncContext, args);
+        if (asyncContext->delFlag) {
+            delete asyncContext;
+        }
+    };
+    if (napi_status::napi_ok != napi_send_event(env, task, prio)) {
+        MEDIA_LOGE("failed to SendEvent!");
+    }
+}
+
 bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
