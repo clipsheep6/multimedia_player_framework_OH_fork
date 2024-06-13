@@ -148,6 +148,7 @@ int32_t PlayerImpl::Stop()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    ResetSeekVariables();
     return playerService_->Stop();
 }
 
@@ -155,6 +156,7 @@ int32_t PlayerImpl::Reset()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    ResetSeekVariables();
     return playerService_->Reset();
 }
 
