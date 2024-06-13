@@ -788,7 +788,7 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
     }
 }
 
-void MediaAsyncContext::SendEvent(napi_env env, MediaAsyncContext *ctx, napi_event_priority prio)
+void MediaAsyncContext::SendEvent(napi_env env, MediaAsyncContext *asyncContext, napi_event_priority prio)
 {
     auto task = [env, asyncContext]() {
         MEDIA_LOGD("CompleteCallback In");
