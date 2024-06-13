@@ -1977,7 +1977,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-    if (audioSource_) {
+    if (audioSource_ && audioSource_->GetAppPid() > 0) {
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     captureCallback_ = nullptr;
