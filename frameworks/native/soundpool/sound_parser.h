@@ -190,14 +190,14 @@ private:
     int64_t fileOffset_ = 0;
     int32_t fileReadLength_ = 0;
     std::atomic<bool> rawSoundParserCompleted_ = false;
-    int32_t rawSoundBufferTotalSize_;
+    int32_t rawSoundBufferTotalSize_ = 0;
     std::deque<std::shared_ptr<AudioBufferEntry>> rawAudioBuffers_;
 
     MediaAVCodec::Format trackFormat_;
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;
-    static constexpr int64_t MIN_FD = 3;
+    static constexpr int64_t minFd = 3;
 };
 } // namespace Media
 } // namespace OHOS

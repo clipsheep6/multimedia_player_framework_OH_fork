@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <functional>
 #include <cstdio>
+#include <string>
 #include "isoundpool.h"
 #include "sound_parser.h"
 #include "string_ex.h"
@@ -34,7 +35,7 @@ SoundParser::SoundParser(int32_t soundID, std::string url)
     const std::string fdHead = "fd://";
     int32_t fd = -1;
     StrToInt(url.substr(fdHead.size()), fd);
-    int32_t fdFile = fcntl(fd, F_DUPFD, MIN_FD);
+    int32_t fdFile = fcntl(fd, F_DUPFD, minFd);
 
     MEDIA_LOGI("SoundParser::SoundParser url::%{public}s, fdFile:%{public}d", url.c_str(), fdFile);
     std::shared_ptr<MediaAVCodec::AVSource> source = MediaAVCodec::AVSourceFactory::CreateWithURI(url);
@@ -51,12 +52,12 @@ SoundParser::SoundParser(int32_t soundID, std::string url)
 
 SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length)
 {
-    int32_t fdSource = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
-    int32_t fdFile = fcntl(fd, F_DUPFD, MIN_FD);
+    int32_t fdSource = fcntl(fd, F_DUPFD_CLOEXEC, minFd); // dup(fd) + close on exec to prevent leaks.
+    int32_t fdFile = fcntl(fd, F_DUPFD, minFd);
     offset = offset >= INT64_MAX ? INT64_MAX : offset;
     length = length >= INT64_MAX ? INT64_MAX : length;
     MEDIA_LOGI("SoundParser fd:%{public}d, fdSource:%{public}d, fdFile:%{public}d", fd, fdSource, fdFile);
-    std::shared_ptr<MediaAVCodec::AVSource> source = 
+    std::shared_ptr<MediaAVCodec::AVSource> source =
         MediaAVCodec::AVSourceFactory::CreateWithFD(fdSource, offset, length);
     CHECK_AND_RETURN_LOG(source != nullptr, "Create AVSource failed");
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = MediaAVCodec::AVDemuxerFactory::CreateWithSource(source);
@@ -154,28 +155,28 @@ int32_t SoundParser::GetAudioBuffers(MediaAVCodec::Format *trackFormat)
     trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, trackSampleRate);
     trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, trackChannels);
     trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_BITS_PER_CODED_SAMPLE, trackBitPerSample);
-    MEDIA_LOGI("SoundParser SampleRate:%{public}d , Channels:%{public}d , BitRate:%{public}d",
-        trackSampleRate, trackChannels, trackBitPerSample);
     int32_t bufferLength = trackSampleRate * 20 / 1000 * trackChannels * trackBitPerSample / 8;
-    MEDIA_LOGI("SoundParser bufferLength:%{public}d", bufferLength);
+    MEDIA_LOGI("SoundParser SampleRate:%{public}d, Channels:%{public}d, BitRate:%{public}d, bufferLength:%{public}d",
+        trackSampleRate, trackChannels, trackBitPerSample, bufferLength);
 
     CHECK_AND_RETURN_RET_LOG(filePtr_ != NULL, MSERR_INVALID_VAL, "SoundParser::GetAudioBuffers filePtr_ is null");
 
-    fseek(filePtr_, 0L, SEEK_END);
-    int64_t fileSize = static_cast<int64_t>(ftell(filePtr_));
-    fseek(filePtr_, 0L, SEEK_SET);
+    (void)fseek(filePtr_, 0L, SEEK_END);
+    long fileSize = ftell(filePtr_);
+    CHECK_AND_RETURN_RET_LOG(fileSize > 0, MSERR_INVALID_VAL, "SoundParser::GetAudioBuffers fileSize <= 0");
+    (void)fseek(filePtr_, 0L, SEEK_SET);
 
-    MEDIA_LOGI("SoundParser fileSize:%{public}ld , WAV_HEADER_SIZE:%{public}ld , fileOffset_:%{public}ld",
-        fileSize, WAV_HEADER_SIZE, fileOffset_);
+    MEDIA_LOGI("SoundParser fileSize:%{public}ld , WAV_HEADER_SIZE:%{public}s , fileOffset_:%{public}s",
+        fileSize, std::to_string(WAV_HEADER_SIZE).c_str(), std::to_string(fileOffset_).c_str());
 
-    CHECK_AND_RETURN_RET_LOG(WAV_HEADER_SIZE + fileOffset_ <= fileSize, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(WAV_HEADER_SIZE + fileOffset_ <= static_cast<int64_t>(fileSize), MSERR_INVALID_VAL,
         "SoundParser::GetAudioBuffers offset too large");
-    fseeko64(filePtr_, WAV_HEADER_SIZE + fileOffset_, SEEK_SET);
-    while (true)
-    {
+    (void)fseeko64(filePtr_, WAV_HEADER_SIZE + fileOffset_, SEEK_SET);
+    bool isSuccess = false;
+    while (!isSuccess) {
         if (feof(filePtr_)) {
             MEDIA_LOGI("SoundParser::GetAudioBuffers read WAV end");
-            break;
+            isSuccess = true;
         }
         uint8_t *buf = new(std::nothrow) uint8_t[bufferLength];
         if (buf != nullptr) {
@@ -185,13 +186,15 @@ int32_t SoundParser::GetAudioBuffers(MediaAVCodec::Format *trackFormat)
                 rawSoundBufferTotalSize_ += bufferLength;
             } else {
                 MEDIA_LOGI("SoundParser::GetAudioBuffers read WAV stop");
-                break;
+                isSuccess = true;
             }
         } else {
             MEDIA_LOGI("SoundParser::GetAudioBuffers buff is null");
-            return MSERR_INVALID_VAL;
+            break;
         }
     }
+    MEDIA_LOGI("raw size:%{public}zu , rawTotalSize_:%{public}d", rawAudioBuffers_.size(), rawSoundBufferTotalSize_);
+    CHECK_AND_RETURN_RET_LOG(isSuccess == true, MSERR_INVALID_VAL, "SoundParser::GetAudioBuffers isSuccess == false");
     rawSoundParserCompleted_.store(true);
     
     return MSERR_OK;
