@@ -199,6 +199,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_AUDIO_DEVICE_CHANGE,
     /* return the subtitle info */
     INFO_TYPE_SUBTITLE_UPDATE_INFO,
+    /* return to the end of pause processing */
+    INFO_TYPE_PAUSE_DONE,
 };
 
 enum PlayerStates : int32_t {

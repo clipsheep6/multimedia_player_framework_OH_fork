@@ -108,6 +108,14 @@ int32_t PlayerServer::BaseState::MessageSpeedDone()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::BaseState::MessagePauseDone(int32_t extra)
+{
+    (void)extra;
+    (void)server_.taskMgr_.MarkTaskDone("pause done");
+    MediaTrace::TraceEnd("PlayerServer::Pause", FAKE_POINTER(&server_));
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
 {
     if (extra == PLAYER_PLAYBACK_COMPLETE) {
@@ -160,6 +168,10 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
 
         case INFO_TYPE_TRACK_INFO_UPDATE:
             ret = MessageTrackInfoUpdate();
+            break;
+
+        case INFO_TYPE_PAUSE_DONE:
+            ret = MessagePauseDone(extra);
             break;
 
         default:

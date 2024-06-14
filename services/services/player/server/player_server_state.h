@@ -49,6 +49,7 @@ protected:
     int32_t MessageTrackInfoUpdate();
     int32_t MessageSpeedDone();
     int32_t MessageStateChange(int32_t extra);
+    int32_t MessagePauseDone(int32_t extra);
 
     PlayerServer &server_;
 };
