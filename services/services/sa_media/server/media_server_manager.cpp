@@ -135,12 +135,21 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 
 MediaServerManager::MediaServerManager()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaServerManager::~MediaServerManager()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    dumperTbl_.clear();
+    recorderStubMap_.clear();
+    playerStubMap_.clear();
+    avMetadataHelperStubMap_.clear();
+    avCodecListStubMap_.clear();
+    avCodecStubMap_.clear();
+    recorderProfilesStubMap_.clear();
+    screenCaptureStubMap_.clear();
+    screenCaptureControllerStubMap_.clear();
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
