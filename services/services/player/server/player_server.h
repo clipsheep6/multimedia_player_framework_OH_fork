@@ -218,6 +218,7 @@ private:
     uint64_t instanceId_ = 0;
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
+    std::atomic<bool> isInterruptNeeded_{false};
 };
 } // namespace Media
 } // namespace OHOS

@@ -422,6 +422,7 @@ int32_t PlayerServer::HandlePrepare()
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
+    CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
 
     if (config_.leftVolume < 1.0f) {
         (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
@@ -575,6 +576,7 @@ int32_t PlayerServer::OnStop(bool sync)
 {
     MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    isInterruptNeeded_ = true;
     playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
 
@@ -638,7 +640,9 @@ int32_t PlayerServer::OnReset()
 int32_t PlayerServer::HandleReset()
 {
     (void)playerEngine_->Reset();
-    playerEngine_ = nullptr;
+    std::thread([this]() -> void {
+        playerEngine_ = nullptr;
+    }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
     uriHelper_ = nullptr;
