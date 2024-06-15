@@ -270,7 +270,7 @@ int32_t PlayerServiceStub::SetPlayRange(int64_t start, int64_t end)
 {
     MediaTrace trace("Stub::SetPlayRange");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->SetPlayRange(display);
+    return playerServer_->SetPlayRange(start, end);
 }
 
 int32_t PlayerServiceStub::PrepareAsync()

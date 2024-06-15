@@ -391,6 +391,7 @@ int32_t HiPlayerImpl::PrepareAsync()
     // set play range in initialized status
     if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
         MEDIA_LOGI("seek to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
+        ret = demuxer_->SeekTo(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, playRangeStartTime_);
         if (ret != Status::OK) {
             MEDIA_LOGI("seek failed to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
             return TransStatus(ret);
@@ -516,20 +517,20 @@ int32_t HiPlayerImpl::Play()
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
         if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_CLOSEST, false));
+            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         } else {
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_CLOSEST, false));
+            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
-            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_CLOSEST, false));
+            ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
         syncManager_->Resume();
