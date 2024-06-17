@@ -764,7 +764,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
 
     int32_t mode = SPEED_FORWARD_1_00_X;
     napi_status status = napi_get_value_int32(env, args[0], &mode);
-    if (status != napi_ok || mode < SPEED_FORWARD_0_75_X || mode > SPEED_FORWARD_1_50_X) {
+    if (status != napi_ok || mode < SPEED_FORWARD_0_75_X || mode > SPEED_FORWARD_0_125_X) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the speed mode");
         return result;

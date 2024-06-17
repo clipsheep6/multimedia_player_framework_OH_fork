@@ -39,7 +39,7 @@ const std::pair<Status, int> g_statusPair[] = {
     {Status::ERROR_NO_MEMORY, MSERR_EXT_NO_MEMORY},
     {Status::ERROR_INVALID_STATE, MSERR_INVALID_STATE},
 };
-const std::array<std::pair<PlaybackRateMode, float>, 7> PLAY_RATE_REFS = {
+const std::array<std::pair<PlaybackRateMode, float>, 9> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_75_X, 0.75),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_00_X, 1.0),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_25_X, 1.25),
@@ -47,6 +47,8 @@ const std::array<std::pair<PlaybackRateMode, float>, 7> PLAY_RATE_REFS = {
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_2_00_X, 2.00),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_50_X, 0.50),
     std::make_pair(PlaybackRateMode::SPEED_FORWARD_1_50_X, 1.50),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_25_X, 0.25),
+    std::make_pair(PlaybackRateMode::SPEED_FORWARD_0_125_X, 0.125),
 };
 }  // namespace
 
