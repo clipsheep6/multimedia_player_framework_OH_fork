@@ -1613,7 +1613,7 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     Format format;
     int32_t curPosMs = 0;
     GetCurrentTime(curPosMs);
-    if (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY) {
+    if (durationMs_.load() - curPosMs > 0 && durationMs_.load() - curPosMs < AUDIO_SINK_MAX_LATENCY) {
         MEDIA_LOGI("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
         OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }

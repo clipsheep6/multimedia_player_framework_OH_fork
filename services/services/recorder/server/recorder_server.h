@@ -135,27 +135,27 @@ private:
     std::mutex cbMutex_;
     TaskQueue taskQue_;
     struct ConfigInfo {
-        VideoSourceType videoSource;
-        AudioSourceType audioSource;
-        VideoCodecFormat videoCodec;
-        AudioCodecFormat audioCodec;
-        int32_t width;
-        int32_t height;
-        int32_t frameRate;
-        int32_t bitRate;
+        VideoSourceType videoSource = VIDEO_SOURCE_BUTT;
+        AudioSourceType audioSource = AUDIO_SOURCE_INVALID;
+        VideoCodecFormat videoCodec = VIDEO_CODEC_FORMAT_BUTT;
+        AudioCodecFormat audioCodec = AUDIO_CODEC_FORMAT_BUTT;
+        int32_t width = 0;
+        int32_t height = 0;
+        int32_t frameRate = 0;
+        int32_t bitRate = 0;
         bool isHdr = false;
-        bool enableTemporalScale;
-        double captureRate;
-        int32_t audioSampleRate;
-        int32_t audioChannel;
-        int32_t audioBitRate;
-        int32_t maxDuration;
-        OutputFormatType format;
-        int64_t maxFileSize;
-        float latitude;
-        float longitude;
-        int32_t rotation;
-        int32_t url;
+        bool enableTemporalScale = false;
+        double captureRate = 0.0;
+        int32_t audioSampleRate = 0;
+        int32_t audioChannel = 0;
+        int32_t audioBitRate = 0;
+        int32_t maxDuration = 0;
+        OutputFormatType format = FORMAT_BUTT;
+        int64_t maxFileSize = 0;
+        float latitude = 0.0;
+        float longitude = 0.0;
+        int32_t rotation = 0;
+        int32_t url = -1;
         Meta customInfo;
         std::string genre;
         bool withVideo = false;
@@ -166,7 +166,7 @@ private:
 
     std::atomic<bool> watchdogPause_ = false;
     struct StatisticalEventInfo {
-        int32_t errCode;
+        int32_t errCode = -1;
         std::string errMsg;
         int32_t recordDuration = -1;
         std::string containerMime;
