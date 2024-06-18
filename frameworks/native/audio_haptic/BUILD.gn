@@ -65,6 +65,7 @@ ohos_shared_library("audio_haptic") {
   cflags = [
     "-Wall",
     "-Werror",
+    "-Wno-unused-but-set-variable",
   ]
 
   public_configs = [ ":audio_haptic_client_public_config" ]
