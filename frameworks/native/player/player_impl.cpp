@@ -215,11 +215,16 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return MSERR_OK;
 }
 
-void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
+void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
 {
     if (type == INFO_TYPE_SEEKDONE) {
         MEDIA_LOGI("HandleSeekDoneInfo entered");
         CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
+        if (extra == -1) {
+            MEDIA_LOGI("seek error, need reset seek variables");
+            ResetSeekVariables();
+            return;
+        }
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
             MEDIA_LOGI("Start seek again (%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
@@ -236,9 +241,13 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    HandleSeekDoneInfo(type);
+    HandleSeekDoneInfo(type, extra);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
     if (type == INFO_TYPE_SEEKDONE) {
+        if (extra == -1) {
+            MEDIA_LOGI("seek done error callback, no need report");
+            return;
+        }
         if (!isSeeking_) {
             callback_->OnInfo(type, extra, infoBody);
         } else {
