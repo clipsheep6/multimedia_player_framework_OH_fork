@@ -24,13 +24,21 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
+#include "hisysevent.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl" };
+constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
+static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 }
 
 namespace OHOS {
 namespace Media {
+static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 },
+                                                { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
+static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
+                                                        { Scene::AV_META_SCENE_BATCH_HANDLE, 0 } };
+
 struct PixelMapMemHolder {
     bool isShmem;
     std::shared_ptr<AVSharedMemory> shmem;
@@ -184,6 +192,34 @@ int32_t AVMetadataHelperImpl::SetHelperCallback(const std::shared_ptr<HelperCall
         "metadata helper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
     return avMetadataHelperService_->SetHelperCallback(callback);
+}
+
+void AVMetadataHelperImpl::SetScene(Scene scene)
+{
+    ReportSceneCode(scene);
+}
+
+void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
+{
+    if (scene != Scene::AV_META_SCENE_CLONE && scene != Scene::AV_META_SCENE_BATCH_HANDLE) {
+        return;
+    }
+    auto sceneCode = SCENE_CODE_MAP[scene];
+    auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
+    auto now =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    auto duration = now - std::chrono::milliseconds(lastTsp);
+    if (duration < std::chrono::milliseconds(SCENE_CODE_EFFECTIVE_DURATION_MS)) {
+        return;
+    }
+    SCENE_TIMESTAMP_MAP[scene] = now.count();
+    MEDIA_LOGI("Report scene code %{public}ld", sceneCode);
+    int32_t ret = HiSysEventWrite(
+        PERFORMANCE_STATS, "CPU_SCENE_ENTRY", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PACKAGE_NAME",
+        "media_service", "SCENE_ID", std::to_string(sceneCode).c_str(), "HAPPEN_TIME", now.count());
+    if (ret != MSERR_OK) {
+        MEDIA_LOGW("report error");
+    }
 }
 
 int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
