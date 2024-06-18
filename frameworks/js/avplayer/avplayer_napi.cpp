@@ -1794,7 +1794,7 @@ napi_value AVPlayerNapi::JsGetAudioEffectMode(napi_env env, napi_callback_info i
 
 bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer)
 {
-    int32_t content = -1;
+    int32_t content = CONTENT_TYPE_UNKNOWN;
     int32_t usage = -1;
     int32_t rendererFlags = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "content", content);
