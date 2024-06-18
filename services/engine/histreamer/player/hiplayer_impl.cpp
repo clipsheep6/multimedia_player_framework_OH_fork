@@ -348,6 +348,12 @@ int32_t HiPlayerImpl::PrepareAsync()
         StringnessPlayerState(pipelineStates_).c_str());
     OnStateChanged(PlayerStateId::PREPARING);
     ret = pipeline_->Prepare();
+    if (ret != Status::ERROR_UNSUPPORT_FORMAT) {
+        auto errCode = TransStatus(ret);
+        CollectionErrorInfo(errCode, "PrepareAsync error: unsupport format");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
+        return errCode;
+    }
     if (ret != Status::OK) {
         MEDIA_LOGE("PrepareAsync failed with error " PUBLIC_LOG_D32, ret);
         auto errCode = TransStatus(ret);
