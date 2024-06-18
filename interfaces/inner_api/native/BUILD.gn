@@ -164,6 +164,7 @@ ohos_shared_library("media_client") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "image_framework:image_native",
