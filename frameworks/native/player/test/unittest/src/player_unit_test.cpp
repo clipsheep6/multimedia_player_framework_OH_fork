@@ -1255,6 +1255,123 @@ HWTEST_F(PlayerUnitTest, Player_Seek_004, TestSize.Level2)
 }
 
 /**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_005
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
+}
+
+/**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_006
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_006, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+}
+
+/**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_007
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_007, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+}
+
+/**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_008
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_008, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    int32_t duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
+}
+
+/**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_009
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_009, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
+    int32_t duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_PREVIOUS_SYNC));
+}
+
+/**
+ * @tc.name  : Test Player Seek API
+ * @tc.number: Player_Seek_010
+ * @tc.desc  : Test Player Seek interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Seek_010, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    int32_t duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(0, SEEK_NEXT_SYNC));
+}
+
+/**
  * @tc.name  : Test GetVideoTrackInfo API
  * @tc.number: Player_GetVideoTrackInfo_001
  * @tc.desc  : Test Player GetVideoTrackInfo
