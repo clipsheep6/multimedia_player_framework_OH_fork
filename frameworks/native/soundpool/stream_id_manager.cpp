@@ -23,7 +23,7 @@
 namespace {
     // audiorender max concurrency.
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "StreamIDManager"};
-    static const std::string THREAD_POOL_NAME = "StreamIDManagerThreadPool";
+    static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }
 
