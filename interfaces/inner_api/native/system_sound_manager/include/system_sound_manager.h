@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "foundation/ability/ability_runtime/interfaces/kits/native/appkit/ability_runtime/context/context.h"
+#include "ability_runtime/context/context.h"
 
 #include "ringtone_player.h"
 #include "system_tone_player.h"

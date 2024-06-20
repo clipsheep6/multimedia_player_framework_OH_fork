@@ -66,7 +66,7 @@ ohos_fuzztest("AVmetadataSetSourceFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "drivers_peripheral_display:hdi_gralloc_client",
+    "drivers_interface_display:hdi_gralloc_client",
     "graphic_surface:surface",
     "hilog:libhilog",
     "player_framework:media_client",

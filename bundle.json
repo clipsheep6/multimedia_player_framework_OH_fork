@@ -61,7 +61,7 @@
           "hicollie",
           "media_foundation",
           "drivers_peripheral_codec",
-          "drivers_peripheral_display",
+          "drivers_interface_display",
           "hdf_core",
           "ability_base",
           "ability_runtime",
@@ -85,6 +85,7 @@
           "bounds_checking_function",
           "libxml2",
           "libuv",
+          "os_account",
           "data_share",
           "ringtone_library"
         ],
