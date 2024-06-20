@@ -753,9 +753,6 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGI("doPreparedSeek.");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv == Status::OK) {
-        rtv = pipeline_->PrepareFrame(true);
-    }
     return rtv;
 }
 
@@ -776,9 +773,6 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv == Status::OK) {
-        rtv = pipeline_->PrepareFrame(true);
-    }
     return rtv;
 }
 
@@ -787,17 +781,9 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGD("doCompletedSeek");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv != Status::OK) {
-        return rtv;
-    }
-    rtv = pipeline_->PrepareFrame(true);
-    if (rtv != Status::OK) {
-        MEDIA_LOGE("PrepareFrame Failed.");
-        return rtv;
-    }
     if (isStreaming_) {
         MEDIA_LOGD("doCompletedSeek isStreaming_ is true");
-        rtv = pipeline_->Resume();
+        pipeline_->Resume();
         syncManager_->Resume();
     } else {
         isDoCompletedSeek_ = true;
