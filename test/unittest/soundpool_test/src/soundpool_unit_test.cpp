@@ -138,7 +138,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_001, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 4) {
             cout << "All sound loaded url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -179,7 +178,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_002, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -232,7 +230,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_004, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -286,7 +283,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_005, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 4) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -327,7 +323,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_006, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -380,7 +375,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_008, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -437,7 +431,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_009, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 4) {
             cout << "All sound loaded break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -490,7 +483,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_010, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -557,7 +549,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_012, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -604,7 +595,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_013, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -722,7 +712,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_016, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -767,7 +756,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_017, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -817,7 +805,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_018, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -930,7 +917,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_020, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Fd sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Fd break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -965,7 +951,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_021, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1017,7 +1002,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_022, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1068,7 +1052,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_023, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1119,7 +1102,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1169,7 +1151,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_025, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1225,7 +1206,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_026, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1282,7 +1262,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_027, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1335,7 +1314,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_028, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1390,7 +1368,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_029, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1447,7 +1424,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_030, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1498,7 +1474,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_031, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1551,7 +1526,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_032, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1601,7 +1575,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_033, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 1) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1653,7 +1626,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_034, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
@@ -1708,7 +1680,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_035, TestSize.Level2)
         return;
     }
     while (true) {
-        cout << "Have loaded Url sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
         if (cb->GetHaveLoadedSoundNum() == 2) {
             cout << "All sound loaded Url break. loaded sound num = " << cb->GetHaveLoadedSoundNum()  << endl;
             cb->ResetHaveLoadedSoundNum();
