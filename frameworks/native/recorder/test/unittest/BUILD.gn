@@ -36,7 +36,7 @@ ohos_unittest("recorder_unit_test") {
     "-Werror",
   ]
 
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources = [
       "src/recorder_mock.cpp",
       "src/recorder_unit_test.cpp",

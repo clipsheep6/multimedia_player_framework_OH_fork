@@ -186,29 +186,29 @@ template("ohos_prebuilt_seccomp") {
 }
 
 declare_args() {
-  multimedia_player_framework_support_player = true
-  multimedia_player_framework_support_recorder = true
-  multimedia_player_framework_support_player_js_api9 = true
-  multimedia_player_framework_support_recorder_js_api9 = true
-  multimedia_player_framework_support_metadata = true
-  multimedia_player_framework_support_histreamer = true
-  multimedia_player_framework_support_video = true
-  multimedia_player_framework_support_jsapi = true
-  multimedia_player_framework_support_capi = true
-  multimedia_player_framework_support_test = true
-  multimedia_player_framework_support_xcollie = true
-  multimedia_player_framework_support_jsstack = true
-  multimedia_player_framework_support_seccomp = false
-  multimedia_player_framework_support_screen_capture = true
-  multimedia_player_framework_support_screen_capture_stopbycall = true
-  multimedia_player_framework_support_screen_capture_controller = false
-  multimedia_player_framework_support_jssoundpool = true
-  multimedia_player_framework_support_mediasource = true
-  multimedia_player_framework_check_video_is_hdr_vivid = false
+  player_framework_support_player = true
+  player_framework_support_recorder = true
+  player_framework_support_player_js_api9 = true
+  player_framework_support_recorder_js_api9 = true
+  player_framework_support_metadata = true
+  player_framework_support_histreamer = true
+  player_framework_support_video = true
+  player_framework_support_jsapi = true
+  player_framework_support_capi = true
+  player_framework_support_test = true
+  player_framework_support_xcollie = true
+  player_framework_support_jsstack = true
+  player_framework_support_seccomp = false
+  player_framework_support_screen_capture = true
+  player_framework_support_screen_capture_stopbycall = true
+  player_framework_support_screen_capture_controller = false
+  player_framework_support_jssoundpool = true
+  player_framework_support_mediasource = true
+  player_framework_check_video_is_hdr_vivid = false
   if (defined(build_seccomp) && build_seccomp) {
-    multimedia_player_framework_support_seccomp = true
+    player_framework_support_seccomp = true
   }
-  multimedia_player_framework_support_monitor = true
+  player_framework_support_monitor = true
   use_memmgr_plugin = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.resourceschedule_memmgr_override)) {
@@ -219,76 +219,76 @@ declare_args() {
       defined(global_parts_info.resourceschedule_memmgr)) {
     use_memmgr = true
   }
-  multimedia_player_framework_support_avsession_background = false
+  player_framework_support_avsession_background = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_av_session)) {
-    multimedia_player_framework_support_avsession_background = true
+    player_framework_support_avsession_background = true
   }
-  multimedia_player_framework_support_drm = false
+  player_framework_support_drm = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.multimedia_drm_framework)) {
-    multimedia_player_framework_support_drm = true
+    player_framework_support_drm = true
   }
-  multimedia_player_framework_support_vibrator = false
+  player_framework_support_vibrator = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.sensors_miscdevice)) {
-    multimedia_player_framework_support_vibrator = true
+    player_framework_support_vibrator = true
   }
-  multimedia_player_framework_support_power_manager = false
+  player_framework_support_power_manager = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.powermgr_power_manager)) {
-    multimedia_player_framework_support_power_manager = true
+    player_framework_support_power_manager = true
   }
-  multimedia_player_framework_support_json = false
+  player_framework_support_json = false
   if (defined(global_parts_info) &&
       defined(global_parts_info.third_party_json)) {
-    multimedia_player_framework_support_json = true
+    player_framework_support_json = true
   }
 }
 
 player_framework_defines = []
 
-if (multimedia_player_framework_support_player) {
+if (player_framework_support_player) {
   player_framework_defines += [ "SUPPORT_PLAYER" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_PLAYER" ]
 }
 
-if (multimedia_player_framework_support_player_js_api9) {
+if (player_framework_support_player_js_api9) {
   player_framework_defines += [ "SUPPORT_PLAYER_API9" ]
 }
 
-if (multimedia_player_framework_support_avsession_background) {
+if (player_framework_support_avsession_background) {
   player_framework_defines += [ "SUPPORT_AVSESSION" ]
 }
 
-if (multimedia_player_framework_support_recorder_js_api9) {
+if (player_framework_support_recorder_js_api9) {
   player_framework_defines += [ "SUPPORT_RECORDER_API9" ]
 }
 
-if (multimedia_player_framework_support_recorder) {
+if (player_framework_support_recorder) {
   player_framework_defines += [ "SUPPORT_RECORDER" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_RECORDER" ]
 }
 
-if (multimedia_player_framework_support_metadata) {
+if (player_framework_support_metadata) {
   player_framework_defines += [ "SUPPORT_METADATA" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_METADATA" ]
 }
 
-if (multimedia_player_framework_support_video) {
+if (player_framework_support_video) {
   player_framework_defines += [ "SUPPORT_VIDEO" ]
 } else {
   player_framework_defines += [ "SUPPORT_AUDIO_ONLY" ]
 }
 
-if (multimedia_player_framework_support_xcollie) {
+if (player_framework_support_xcollie) {
   player_framework_defines += [ "HICOLLIE_ENABLE" ]
 }
 
-if (multimedia_player_framework_support_jsstack) {
+if (player_framework_support_jsstack) {
   player_framework_defines += [ "SUPPORT_JSSTACK" ]
 }
 
@@ -296,47 +296,47 @@ if (use_memmgr_plugin || use_memmgr) {
   player_framework_defines += [ "PLAYER_USE_MEMORY_MANAGE" ]
 }
 
-if (multimedia_player_framework_support_monitor) {
+if (player_framework_support_monitor) {
   player_framework_defines += [ "USE_MONITOR" ]
 }
 
-if (multimedia_player_framework_support_screen_capture) {
+if (player_framework_support_screen_capture) {
   player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_SCREEN_CAPTURE" ]
 }
 
-if (multimedia_player_framework_support_screen_capture_controller) {
+if (player_framework_support_screen_capture_controller) {
   player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION" ]
 }
 
-if (multimedia_player_framework_support_jssoundpool) {
+if (player_framework_support_jssoundpool) {
   player_framework_defines += [ "SUPPORT_SOUND_POOL" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_SOUND_POOL" ]
 }
 
-if (multimedia_player_framework_support_drm) {
+if (player_framework_support_drm) {
   player_framework_defines += [ "SUPPORT_DRM" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_DRM" ]
 }
 
-if (multimedia_player_framework_support_vibrator) {
+if (player_framework_support_vibrator) {
   player_framework_defines += [ "SUPPORT_VIBRATOR" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_VIBRATOR" ]
 }
 
-if (multimedia_player_framework_support_power_manager) {
+if (player_framework_support_power_manager) {
   player_framework_defines += [ "SUPPORT_POWER_MANAGER" ]
 }
 
-if (multimedia_player_framework_support_mediasource) {
+if (player_framework_support_mediasource) {
   player_framework_defines += [ "SUPPORT_MEDIA_SOURCE" ]
 }
 
-if (multimedia_player_framework_support_json) {
+if (player_framework_support_json) {
   player_framework_defines += [ "SUPPORT_JSON" ]
 }
 

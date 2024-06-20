@@ -31,15 +31,15 @@ ohos_shared_library("media_engine_histreamer") {
 
   deps = [ "factory:media_engine_histreamer_factory" ]
 
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     deps += [ "recorder:media_engine_histreamer_recorder" ]
   }
 
-  if (multimedia_player_framework_support_player) {
+  if (player_framework_support_player) {
     deps += [ "player:media_engine_histreamer_player" ]
   }
 
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     deps += [ "avmetadatahelper:media_engine_histreamer_avmetadatahelper" ]
   }
 

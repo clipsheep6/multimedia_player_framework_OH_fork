@@ -52,7 +52,7 @@ ohos_fuzztest("RecorderSetAudioChannelsFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",

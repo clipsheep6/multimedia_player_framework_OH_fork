@@ -82,7 +82,7 @@ ohos_shared_library("system_sound_client") {
     "samgr:samgr_proxy",
   ]
 
-  if (multimedia_player_framework_support_vibrator) {
+  if (player_framework_support_vibrator) {
     external_deps += [ "miscdevice:vibrator_interface_native" ]
   }
 

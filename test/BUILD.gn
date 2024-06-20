@@ -17,7 +17,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 group("media_unit_test") {
   testonly = true
   deps = []
-  if (multimedia_player_framework_support_test) {
+  if (player_framework_support_test) {
     deps += [
       "../frameworks/native/avmetadatahelper/test/unittest:avmetadata_unit_test",
       "../frameworks/native/player/test/unittest:player_unit_test",
@@ -37,7 +37,7 @@ group("media_unit_test") {
 group("media_fuzz_test") {
   testonly = true
   deps = []
-  if (multimedia_player_framework_support_test) {
+  if (player_framework_support_test) {
     deps += [ "fuzztest:fuzztest" ]
   }
 }

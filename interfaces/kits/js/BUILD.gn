@@ -18,7 +18,7 @@ import("./../../../multimedia_player_framework_aafwk.gni")
 
 group("napi_packages") {
   deps = []
-  if (multimedia_player_framework_support_jsapi) {
+  if (player_framework_support_jsapi) {
     deps += [
       "./../../../frameworks/js/audio_haptic:audiohaptic_napi",
       "./../../../frameworks/js/system_sound_manager:systemsoundmanager",
@@ -75,12 +75,12 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
   ]
 
-  if (multimedia_player_framework_support_player) {
+  if (player_framework_support_player) {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/player/audio_player_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/player/player_callback_napi.cpp",
     ]
-    if (multimedia_player_framework_support_video) {
+    if (player_framework_support_video) {
       sources += [
         "//foundation/multimedia/player_framework/frameworks/js/player/video_callback_napi.cpp",
         "//foundation/multimedia/player_framework/frameworks/js/player/video_player_napi.cpp",
@@ -88,7 +88,7 @@ ohos_shared_library("media") {
     }
   }
 
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/recorder/audio_recorder_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/recorder/recorder_callback_napi.cpp",
@@ -97,14 +97,14 @@ ohos_shared_library("media") {
     ]
   }
 
-  if (multimedia_player_framework_support_recorder_js_api9) {
+  if (player_framework_support_recorder_js_api9) {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_callback.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_napi.cpp",
     ]
   }
 
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     sources += [
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avimagegenerator_napi.cpp",
       "${multimedia_player_framework_path}/frameworks/js/metadatahelper/avmetadataextractor_napi.cpp",
@@ -113,7 +113,7 @@ ohos_shared_library("media") {
     ]
   }
 
-  if (multimedia_player_framework_support_screen_capture) {
+  if (player_framework_support_screen_capture) {
     sources += [
       "${multimedia_player_framework_path}/frameworks/js/avscreen_capture/avscreen_capture_callback.cpp",
       "${multimedia_player_framework_path}/frameworks/js/avscreen_capture/avscreen_capture_napi.cpp",
@@ -148,7 +148,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
-  if (multimedia_player_framework_support_jssoundpool) {
+  if (player_framework_support_jssoundpool) {
     deps += [
       "${multimedia_player_framework_path}/frameworks/js/soundpool:media_soundpool",
       "${multimedia_player_framework_path}/frameworks/native/soundpool:soundpool_client",
@@ -172,16 +172,16 @@ ohos_shared_library("media") {
     "qos_manager:qos",
   ]
 
-  if (multimedia_player_framework_support_player_js_api9) {
+  if (player_framework_support_player_js_api9) {
     deps += [ "../../../../../../foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer" ]
     external_deps += [ "bounds_checking_function:libsec_shared" ]
   }
 
-  if (multimedia_player_framework_support_video) {
+  if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
   }
 
-  if (multimedia_player_framework_support_jsstack) {
+  if (player_framework_support_jsstack) {
     external_deps += [ "hiview:libxpower_event_js" ]
   }
 

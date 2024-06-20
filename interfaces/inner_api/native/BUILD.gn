@@ -109,7 +109,7 @@ ohos_shared_library("media_client") {
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
     "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
   ]
-  if (multimedia_player_framework_support_player) {
+  if (player_framework_support_player) {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/player/player_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
@@ -118,7 +118,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
     ]
   }
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/recorder_profiles_impl.cpp",
@@ -130,7 +130,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
@@ -138,7 +138,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/helper_listener_stub.cpp",
     ]
   }
-  if (multimedia_player_framework_support_screen_capture) {
+  if (player_framework_support_screen_capture) {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_controller_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_impl.cpp",
@@ -175,11 +175,11 @@ ohos_shared_library("media_client") {
   ]
   public_external_deps = [ "media_foundation:media_foundation" ]
 
-  if (multimedia_player_framework_support_video) {
+  if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
   }
 
-  if (multimedia_player_framework_support_drm) {
+  if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
   }
 

@@ -54,7 +54,7 @@ ohos_fuzztest("AVmetadataStubFuzzTest") {
     "-Wunused-parameter",
     "-DBINDER_IPC_32BIT",
   ]
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     sources = [
       "../../../../test/fuzztest/common/stub_common.cpp",
       "avmetadata_service_proxy_fuzzer.cpp",

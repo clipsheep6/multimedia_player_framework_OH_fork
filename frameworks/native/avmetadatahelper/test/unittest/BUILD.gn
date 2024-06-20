@@ -34,7 +34,7 @@ ohos_unittest("avmetadata_unit_test") {
     "-Werror",
   ]
 
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     sources = [
       "src/avmetadata_mock.cpp",
       "src/avmetadata_unit_test.cpp",
@@ -58,7 +58,7 @@ ohos_unittest("avmetadata_unit_test") {
     "//foundation/window/window_manager/wm:libwm",
   ]
   defines = []
-  if (multimedia_player_framework_check_video_is_hdr_vivid) {
+  if (player_framework_check_video_is_hdr_vivid) {
     defines += [ "CHECKING_VIDEO_IS_HDR_VIVID" ]
   }
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
