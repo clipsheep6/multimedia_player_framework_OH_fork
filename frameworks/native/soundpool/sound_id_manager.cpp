@@ -141,7 +141,7 @@ int32_t SoundIDManager::DoLoad(int32_t soundID)
         soundIDs_.push_back(soundID);
         queueDataValid_.notify_one();
     }
-    ThreadPool::Task soundParsingTask = std::bind(&SoundIDManager::DoParser, this);
+    ThreadPool::Task soundParsingTask = [this] { this->DoParser(); };
     CHECK_AND_RETURN_RET_LOG(soundParserThreadPool_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain ThreadPool");
     CHECK_AND_RETURN_RET_LOG(soundParsingTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain Task");
     soundParserThreadPool_->AddTask(soundParsingTask);

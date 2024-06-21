@@ -259,7 +259,7 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
 
 int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams playParameters)
 {
-    ThreadPool::Task streamPlayTask = std::bind(&StreamIDManager::DoPlay, this, streamID);
+    ThreadPool::Task streamPlayTask = [this, streamID] { this->DoPlay(streamID); };
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain playing ThreadPool");
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain stream play Task");

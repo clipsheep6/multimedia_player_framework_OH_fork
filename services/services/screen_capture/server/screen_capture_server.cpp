@@ -1701,8 +1701,9 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type)
 {
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
-        "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        return MSERR_INVALID_OPERATION;
+    }
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
         int32_t retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
@@ -2330,7 +2331,6 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         }
     } else {
-        MEDIA_LOGE("AudioDataSource AcquireAudioBufferMix failed");
         return MSERR_INVALID_VAL;
     }
     return MSERR_UNKNOWN;
