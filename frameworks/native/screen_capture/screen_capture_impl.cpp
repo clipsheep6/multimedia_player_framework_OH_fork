@@ -221,7 +221,6 @@ int32_t ScreenCaptureImpl::InitCaptureFile(AVScreenCaptureConfig config)
     CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, outputFd) == true && outputFd >= 0, MSERR_INVALID_VAL,
         "open file failed");
     ret = screenCaptureService_->SetOutputFile(outputFd);
-    close(outputFd);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetOutputFile failed");
     ret = screenCaptureService_->InitAudioEncInfo(config.audioInfo.audioEncInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitAudioEncInfo failed");
