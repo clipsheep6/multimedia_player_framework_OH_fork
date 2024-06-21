@@ -23,6 +23,9 @@
 #ifdef SUPPORT_RECORDER
 #include "i_standard_recorder_service.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "i_standard_transcoder_service.h"
+#endif
 #ifdef SUPPORT_PLAYER
 #include "i_standard_player_service.h"
 #endif
@@ -120,6 +123,35 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
 
     recorderProfilesClientList_.push_back(recorderProfiles);
     return recorderProfiles;
+}
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+std::shared_ptr<ITransCoderService> MediaClient::CreateTransCoderService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+ 
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_TRANSCODER, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "transCoder proxy object is nullptr.");
+ 
+    sptr<IStandardTransCoderService> transCoderProxy = iface_cast<IStandardTransCoderService>(object);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy != nullptr, nullptr, "transCoder proxy is nullptr.");
+ 
+    std::shared_ptr<TransCoderClient> transCoder = TransCoderClient::Create(transCoderProxy);
+    CHECK_AND_RETURN_RET_LOG(transCoder != nullptr, nullptr, "failed to create transCoder client.");
+ 
+    transCoderClientList_.push_back(transCoder);
+    return transCoder;
+}
+ 
+int32_t MediaClient::DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoder != nullptr, MSERR_NO_MEMORY, "input transCoder is nullptr.");
+    transCoderClientList_.remove(transCoder);
+    return MSERR_OK;
 }
 #endif
 

@@ -30,5 +30,6 @@
 #include "avimagegenerator_napi.h"
 #include "avscreen_capture_napi.h"
 #include "media_source_napi.h"
+#include "avtranscoder_napi.h"
 
 #endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */

@@ -1,0 +1,86 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+config("media_engine_histreamer_transcoder_config") {
+  visibility = [ ":*" ]
+
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
+
+  cflags = [
+    "-O2",
+    "-fPIC",
+    "-Wall",
+    "-fexceptions",
+    "-fno-rtti",
+    "-Wno-unused-but-set-variable",
+    "-Wno-format",
+  ]
+  cflags_cc = cflags
+
+  include_dirs = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/transcoder",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_HISTREAMER/interface/inner_api",
+    "$MEDIA_PLAYER_AVCODEC/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_AVCODEC/interfaces",
+    "$MEDIA_PLAYER_HISTREAMER/src",
+    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules/source/audio_capture",
+    "$MEDIA_PLAYER_AVCODEC/services/media_engine/modules",
+  ]
+}
+
+ohos_static_library("media_engine_histreamer_transcoder") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  sources = [
+    "hitranscoder_impl.cpp",
+    "hitranscoder_callback_looper.cpp"
+  ]
+
+  configs = [
+    ":media_engine_histreamer_transcoder_config",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils_public_config",
+  ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
+
+  external_deps = [
+    "audio_framework:audio_capturer",
+    "av_codec:av_codec_media_engine_filters",
+    "c_utils:utils",
+    "graphic_surface:surface",
+    "graphic_surface:sync_fence",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "media_foundation:media_foundation",
+    "safwk:system_ability_fwk",
+  ]
+
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
