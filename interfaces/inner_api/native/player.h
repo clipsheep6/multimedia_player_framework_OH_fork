@@ -36,10 +36,10 @@ constexpr uint32_t DRM_MAX_DRM_INFO_COUNT = 200;
 }
 
 struct AVPlayStrategy {
-    uint32_t preferredWidth;
-    uint32_t preferredHeight;
-    uint32_t preferredBufferDuration;
-    bool preferredHdr;
+    uint32_t preferredWidth = 0;
+    uint32_t preferredHeight = 0;
+    uint32_t preferredBufferDuration = 0;
+    bool preferredHdr = false;
 };
 
 struct DrmInfoItem {

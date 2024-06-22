@@ -38,7 +38,7 @@ ohos_unittest("screen_capture_native_unit_test") {
     "-Werror",
   ]
 
-  if (multimedia_player_framework_support_screen_capture) {
+  if (player_framework_support_screen_capture) {
     sources = [
       "native/screen_capture_mock_factory.cpp",
       "native/src/screen_capture_native_mock.cpp",
@@ -99,7 +99,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
     "-Werror",
   ]
 
-  if (multimedia_player_framework_support_screen_capture) {
+  if (player_framework_support_screen_capture) {
     sources = [
       "capi/screen_capture_mock_factory.cpp",
       "capi/src/screen_capture_capi_mock.cpp",

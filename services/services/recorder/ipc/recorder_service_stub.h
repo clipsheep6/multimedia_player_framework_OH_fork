@@ -120,7 +120,7 @@ private:
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
     std::mutex stmutex_;
-    int32_t pid_;
+    int32_t pid_ = 0;
     AudioSourceType audioSourceType_ = AUDIO_SOURCE_INVALID;
     bool needAudioPermissionCheck = false;
     const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,

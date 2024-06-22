@@ -75,7 +75,7 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
 private:
     void ResetSeekVariables();
-    void HandleSeekDoneInfo(PlayerOnInfoType type);
+    void HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra);
     std::recursive_mutex recMutex_;
     int32_t mCurrentPosition = INT32_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;

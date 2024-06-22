@@ -90,7 +90,8 @@ private:
     std::string GetFullPath(const std::string &originalUri);
     std::string GetJsonValue(const std::string &jsonPath);
 
-    int32_t AddCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
+    int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
+        const std::shared_ptr<ToneAttrs> &toneAttrs);
     int32_t WriteUriToDatabase(const std::string &key, const std::string &uri);
     std::string GetUriFromDatabase(const std::string &key);
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);

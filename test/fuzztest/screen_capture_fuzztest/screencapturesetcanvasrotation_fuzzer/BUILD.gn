@@ -51,7 +51,7 @@ ohos_fuzztest("ScreenCaptureSetCanvasRotationFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  if (multimedia_player_framework_support_screen_capture) {
+  if (player_framework_support_screen_capture) {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",

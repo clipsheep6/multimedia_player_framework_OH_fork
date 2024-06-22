@@ -293,6 +293,8 @@ private:
     std::string mimeType_;
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
+    std::atomic<bool> isDoCompletedSeek_{false};
+    OHOS::Media::Mutex stateChangeMutex_{};
 };
 } // namespace Media
 } // namespace OHOS

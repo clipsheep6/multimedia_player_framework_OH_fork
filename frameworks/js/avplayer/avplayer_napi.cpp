@@ -40,6 +40,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
     constexpr size_t MIN_ARG_COUNTS = 1;
     constexpr size_t MAX_ARG_COUNTS = 2;
+    constexpr size_t ARRAY_ARG_COUNTS_TWO = 2;
+    constexpr size_t ARRAY_ARG_COUNTS_THREE = 3;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
 }
 
@@ -689,7 +691,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     MEDIA_LOGI("JsSeek in");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value args[2] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -895,7 +897,6 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::AddSubSource(std::string url)
 {
-    MEDIA_LOGI("input url is %{private}s!", url.c_str());
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
@@ -963,7 +964,7 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value args[3] = { nullptr };
+    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
     size_t argCount = 3; // url: string
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -1103,7 +1104,6 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     // get url from js
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("JsSetUrl url: %{private}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));
@@ -1117,7 +1117,7 @@ napi_value AVPlayerNapi::JsSetDecryptConfig(napi_env env, napi_callback_info inf
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetDecryptConfig In");
-    napi_value args[2] = { nullptr }; // args[0]:MediaKeySession, args[1]:svp
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:MediaKeySession, args[1]:svp
     size_t argCount = 2; // args[0]:int64, args[1]:bool
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -1224,7 +1224,6 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
-    MEDIA_LOGD("JsGetUrl Out Current Url: %{public}s", jsPlayer->url_.c_str());
     return value;
 }
 
@@ -1301,7 +1300,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::JsSetMediaSource");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value args[2] = { nullptr };
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr };
     size_t argCount = 2;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -1795,7 +1794,7 @@ napi_value AVPlayerNapi::JsGetAudioEffectMode(napi_env env, napi_callback_info i
 
 bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer)
 {
-    int32_t content = -1;
+    int32_t content = CONTENT_TYPE_UNKNOWN;
     int32_t usage = -1;
     int32_t rendererFlags = -1;
     (void)CommonNapi::GetPropertyInt32(env, args, "content", content);
@@ -1983,24 +1982,24 @@ std::string AVPlayerNapi::GetCurrentState()
 {
     if (isReleased_.load()) {
         return AVPlayerState::STATE_RELEASED;
-    } else {
-        std::string curState = AVPlayerState::STATE_ERROR;
-        static const std::map<PlayerStates, std::string> stateMap = {
-            {PLAYER_IDLE, AVPlayerState::STATE_IDLE},
-            {PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED},
-            {PLAYER_PREPARED, AVPlayerState::STATE_PREPARED},
-            {PLAYER_STARTED, AVPlayerState::STATE_PLAYING},
-            {PLAYER_PAUSED, AVPlayerState::STATE_PAUSED},
-            {PLAYER_STOPPED, AVPlayerState::STATE_STOPPED},
-            {PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED},
-            {PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR},
-        };
-
-        if (stateMap.find(state_) != stateMap.end()) {
-            curState = stateMap.at(state_);
-        }
-        return curState;
     }
+
+    std::string curState = AVPlayerState::STATE_ERROR;
+    static const std::map<PlayerStates, std::string> stateMap = {
+        {PLAYER_IDLE, AVPlayerState::STATE_IDLE},
+        {PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED},
+        {PLAYER_PREPARED, AVPlayerState::STATE_PREPARED},
+        {PLAYER_STARTED, AVPlayerState::STATE_PLAYING},
+        {PLAYER_PAUSED, AVPlayerState::STATE_PAUSED},
+        {PLAYER_STOPPED, AVPlayerState::STATE_STOPPED},
+        {PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED},
+        {PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR},
+    };
+
+    if (stateMap.find(state_) != stateMap.end()) {
+        curState = stateMap.at(state_);
+    }
+    return curState;
 }
 
 napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
@@ -2200,7 +2199,7 @@ napi_value AVPlayerNapi::JsGetCurrentTrack(napi_env env, napi_callback_info info
     napi_get_undefined(env, &result);
 
     size_t argCount = 2; // 2 param: trackType + callback
-    napi_value args[2] = { nullptr };
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr };
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -2281,7 +2280,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     MEDIA_LOGD("JsSetOnCallback In");
 
     constexpr size_t requireArgc = 2;
-    napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:type, args[1]:callback
     size_t argCount = 2; // args[0]:type, args[1]:callback
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
@@ -2330,7 +2329,7 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     napi_get_undefined(env, &result);
     MEDIA_LOGD("JsClearOnCallback In");
 
-    napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
+    napi_value args[ARRAY_ARG_COUNTS_TWO] = { nullptr }; // args[0]:type, args[1]:callback
     size_t argCount = 2; // args[0]:type, args[1]:callback
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");

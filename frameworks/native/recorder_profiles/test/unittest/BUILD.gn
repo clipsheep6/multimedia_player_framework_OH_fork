@@ -46,7 +46,7 @@ ohos_unittest("recorder_profiles_unit_test") {
     "-Wunused-parameter",
   ]
 
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources = [ "recorder_profiles_unit_test.cpp" ]
   }
 

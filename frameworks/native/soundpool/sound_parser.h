@@ -20,6 +20,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include "cpp/mutex.h"
 #include "ashmem.h"
 #include "avcodec_audio_decoder.h"
 #include "avcodec_errors.h"
@@ -149,19 +150,19 @@ private:
         }
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             soundData = soundData_;
             return MSERR_OK;
         }
 
         size_t GetSoundDataTotalSize() const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             return soundBufferTotalSize_;
         }
         bool IsSoundParserCompleted() const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            std::unique_lock<ffrt::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             return isSoundParserCompleted_.load();
         }
 
@@ -173,23 +174,30 @@ private:
     };
 
     int32_t DoDemuxer(MediaAVCodec::Format *trackFormat);
+    int32_t GetAudioBuffers(MediaAVCodec::Format *trackFormat);
     int32_t DoDecode(MediaAVCodec::Format trackFormat);
-    int32_t soundID_;
+    int32_t soundID_ = 0;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<MediaAVCodec::AVSource> source_;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<SoundDecoderCallback> audioDecCb_;
-    std::mutex soundParserLock_;
+    ffrt::mutex soundParserLock_;
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;
     std::atomic<bool> isParsing_ = false;
+    FILE* filePtr_ = nullptr;
+    int64_t fileOffset_ = 0;
+    int32_t fileReadLength_ = 0;
+    std::atomic<bool> rawSoundParserCompleted_ = false;
+    int32_t rawSoundBufferTotalSize_ = 0;
+    std::deque<std::shared_ptr<AudioBufferEntry>> rawAudioBuffers_;
 
     MediaAVCodec::Format trackFormat_;
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;
-    static constexpr int64_t MIN_FD = 0;
+    static constexpr int64_t minFd = 3;
 };
 } // namespace Media
 } // namespace OHOS

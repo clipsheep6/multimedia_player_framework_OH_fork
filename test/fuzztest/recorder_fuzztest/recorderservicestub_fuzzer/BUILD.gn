@@ -57,7 +57,7 @@ ohos_fuzztest("RecorderServiceStubFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  if (multimedia_player_framework_support_recorder) {
+  if (player_framework_support_recorder) {
     sources = [
       "../../../../test/fuzztest/common/stub_common.cpp",
       "recorderservicestub_fuzzer.cpp",

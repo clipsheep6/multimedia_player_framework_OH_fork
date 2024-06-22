@@ -20,7 +20,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundIDManager"};
-    static const std::string THREAD_POOL_NAME = "SoundParserThreadPool";
+    static const std::string THREAD_POOL_NAME = "OS_SoundMgr";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }
 
@@ -141,7 +141,7 @@ int32_t SoundIDManager::DoLoad(int32_t soundID)
         soundIDs_.push_back(soundID);
         queueDataValid_.notify_one();
     }
-    ThreadPool::Task soundParsingTask = std::bind(&SoundIDManager::DoParser, this);
+    ThreadPool::Task soundParsingTask = [this] { this->DoParser(); };
     CHECK_AND_RETURN_RET_LOG(soundParserThreadPool_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain ThreadPool");
     CHECK_AND_RETURN_RET_LOG(soundParsingTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain Task");
     soundParserThreadPool_->AddTask(soundParsingTask);

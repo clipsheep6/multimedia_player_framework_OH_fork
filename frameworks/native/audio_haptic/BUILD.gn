@@ -58,7 +58,7 @@ ohos_shared_library("audio_haptic") {
     "hilog:libhilog",
   ]
 
-  if (multimedia_player_framework_support_vibrator) {
+  if (player_framework_support_vibrator) {
     external_deps += [ "miscdevice:vibrator_interface_native" ]
   }
 

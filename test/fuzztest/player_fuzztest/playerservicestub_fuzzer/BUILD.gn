@@ -53,7 +53,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "-Wunused-parameter",
     "-DBINDER_IPC_32BIT",
   ]
-  if (multimedia_player_framework_support_player) {
+  if (player_framework_support_player) {
     sources = [ "playerservicestub_fuzzer.cpp" ]
   }
   deps = [ "../../../../services/services:media_service" ]

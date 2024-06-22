@@ -31,7 +31,7 @@ ohos_unittest("soundpool_unit_test") {
     "-Werror",
   ]
 
-  if (multimedia_player_framework_support_jssoundpool) {
+  if (player_framework_support_jssoundpool) {
     sources = [
       "src/soundpool_mock.cpp",
       "src/soundpool_unit_test.cpp",

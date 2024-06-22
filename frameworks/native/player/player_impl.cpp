@@ -82,7 +82,6 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 
 int32_t PlayerImpl::SetSource(const std::string &url)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(url): %{private}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->SetSource(url);
@@ -97,8 +96,6 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerImpl::AddSubSource(const std::string &url)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(url): %{private}s",
-        FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     return playerService_->AddSubSource(url);
@@ -159,6 +156,7 @@ int32_t PlayerImpl::Stop()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    ResetSeekVariables();
     return playerService_->Stop();
 }
 
@@ -166,6 +164,7 @@ int32_t PlayerImpl::Reset()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    ResetSeekVariables();
     return playerService_->Reset();
 }
 
@@ -224,11 +223,16 @@ int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     return MSERR_OK;
 }
 
-void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
+void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
 {
-    MEDIA_LOGI("HandleSeekDoneInfo entered");
     if (type == INFO_TYPE_SEEKDONE) {
+        MEDIA_LOGI("HandleSeekDoneInfo entered");
         CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
+        if (extra == -1) {
+            MEDIA_LOGI("seek error, need reset seek variables");
+            ResetSeekVariables();
+            return;
+        }
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
             MEDIA_LOGI("Start seek again (%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
@@ -241,14 +245,17 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type)
         }
         MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}d, %{public}d)", mCurrentPosition, mCurrentSeekMode);
     }
-    MEDIA_LOGI("HandleSeekDoneInfo end");
 }
 
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    HandleSeekDoneInfo(type);
+    HandleSeekDoneInfo(type, extra);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
     if (type == INFO_TYPE_SEEKDONE) {
+        if (extra == -1) {
+            MEDIA_LOGI("seek done error callback, no need report");
+            return;
+        }
         if (!isSeeking_) {
             callback_->OnInfo(type, extra, infoBody);
         } else {

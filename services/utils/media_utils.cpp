@@ -78,7 +78,7 @@ std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t u
 
     auto result = bms->GetNameForUid(uid, bundleName);
     if (result != ERR_OK) {
-        MEDIA_LOG_E("GetBundleNameForUid fail");
+        MEDIA_LOG_E("Error GetBundleNameForUid fail");
         return "";
     }
     MEDIA_LOG_I("bundle name is %{public}s ", bundleName.c_str());

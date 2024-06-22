@@ -252,7 +252,6 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
     const std::string fdHead = "fd://";
     const std::string httpHead = "http";
     int32_t ret = MSERR_EXT_INVALID_VAL;
-    MEDIA_LOGD("input url is %{public}s!", jsPlayer->url_.c_str());
     if (jsPlayer->url_.find(fdHead) != std::string::npos) {
         std::string inputFd = jsPlayer->url_.substr(fdHead.size());
         int32_t fd = -1;

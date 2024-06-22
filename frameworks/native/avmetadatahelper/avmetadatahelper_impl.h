@@ -37,9 +37,13 @@ public:
     void Release() override;
     int32_t Init();
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
+    void SetScene(Scene scene) override;
 private:
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
+    static std::chrono::milliseconds cloneTimestamp;
+    static std::chrono::milliseconds batchHandleTimestamp;
+    void ReportSceneCode(Scene scene);
 };
 } // namespace Media
 } // namespace OHOS

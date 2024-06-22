@@ -33,7 +33,7 @@ ohos_unittest("player_unit_test") {
     "-Wno-deprecated-declarations",
   ]
 
-  if (multimedia_player_framework_support_player) {
+  if (player_framework_support_player) {
     sources = [
       "src/data_source/media_data_source_test_noseek.cpp",
       "src/data_source/media_data_source_test_seekable.cpp",

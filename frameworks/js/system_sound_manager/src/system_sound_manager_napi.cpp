@@ -39,7 +39,7 @@ const int32_t ARGS_TWO = 2;
 const int32_t ARGS_THREE = 3;
 const int32_t ARGS_FOUR = 4;
 const int32_t ARGS_FIVE = 5;
-const int32_t SIZE = 100;
+const int32_t SIZE = 1024;
 
 /* Constants for tone type */
 const int32_t CARD_0 = 0;

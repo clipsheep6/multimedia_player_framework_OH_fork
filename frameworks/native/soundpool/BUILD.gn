@@ -51,6 +51,7 @@ ohos_shared_library("soundpool_client") {
     "audio_framework:audio_renderer",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "ffrt:libffrt",
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",

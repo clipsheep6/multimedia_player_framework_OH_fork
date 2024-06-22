@@ -16,7 +16,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 group("capi_packages") {
   deps = []
-  if (multimedia_player_framework_support_capi) {
+  if (player_framework_support_capi) {
     deps += [
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:avplayer",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
@@ -123,7 +123,7 @@ ohos_shared_library("avplayer") {
     "media_foundation:media_foundation",
     "window_manager:libdm",
   ]
-  if (multimedia_player_framework_support_drm) {
+  if (player_framework_support_drm) {
     public_external_deps = [
       "drm_framework:drm_framework",
       "drm_framework:native_drm",

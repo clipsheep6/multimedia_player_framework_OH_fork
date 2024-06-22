@@ -1100,17 +1100,18 @@ int32_t ScreenCaptureServer::InitRecorder()
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
     };
-
     int32_t ret;
     AudioCaptureInfo audioInfo;
-
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
         captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
+        captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
+        audioSource_->SetAppPid(appInfo_.appPid);
+        captureCallback_->SetAudioSource(audioSource_);
+        audioSource_->RegisterAudioRendererEventListener(appInfo_.appPid, captureCallback_);
         ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-        MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.innerCapInfo;
@@ -1128,10 +1129,9 @@ int32_t ScreenCaptureServer::InitRecorder()
         MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
         return MSERR_UNKNOWN;
     }
-
+    MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
     ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
-
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "InitRecorderInfo failed");
 
@@ -1504,6 +1504,9 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
     };
     consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
     CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsConsumer failed");
+    MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE S");
+    consumer_->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
+    MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE E");
     auto producer = consumer_->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
     auto producerSurface = OHOS::Surface::CreateSurfaceAsProducer(producer);
@@ -1698,8 +1701,9 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
 int32_t ScreenCaptureServer::AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type)
 {
-    CHECK_AND_RETURN_RET_LOG(captureState_ == AVScreenCaptureState::STARTED, MSERR_INVALID_OPERATION,
-        "AcquireAudioBuffer failed, capture is not STARTED, state:%{public}d, type:%{public}d", captureState_, type);
+    if (captureState_ != AVScreenCaptureState::STARTED) {
+        return MSERR_INVALID_OPERATION;
+    }
     if (type == AVScreenCaptureMixMode::MIX_MODE && micAudioCapture_ != nullptr &&
         innerAudioCapture_ != nullptr) {
         int32_t retInner = innerAudioCapture_->AcquireAudioBuffer(innerAudioBuffer);
@@ -1974,7 +1978,10 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         recorder_ = nullptr;
         StopAudioCapture();
     }
-
+    if (audioSource_ && audioSource_->GetAppPid() > 0) {
+        audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
+    }
+    captureCallback_ = nullptr;
     isConsumerStart_ = false;
     CloseFd();
     return ret;
@@ -2132,6 +2139,11 @@ void ScreenCapBufferConsumerListener::OnBufferAvailable()
     consumer_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     CHECK_AND_RETURN_LOG(buffer != nullptr, "Acquire SurfaceBuffer failed");
 
+    if ((buffer->GetUsage() & BUFFER_USAGE_MEM_MMZ_CACHE) != 0) {
+        MEDIA_LOGD("ScreenCaptureServer::OnBufferAvailable cache enable");
+        buffer->InvalidateCache();
+    }
+
     void *addr = buffer->GetVirAddr();
     if (addr == nullptr) {
         MEDIA_LOGE("Acquire SurfaceBuffer addr invalid");
@@ -2200,6 +2212,79 @@ int32_t ScreenCapBufferConsumerListener::Release()
     return ReleaseBuffer();
 }
 
+void ScreenRendererAudioStateChangeCallback::SetAudioSource(std::shared_ptr<AudioDataSource> audioSource)
+{
+    audioSource_ = audioSource;
+}
+
+void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+    audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
+}
+
+void AudioDataSource::SpeakerStateUpdate(
+    const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
+{
+    for (const std::unique_ptr<AudioRendererChangeInfo> &changeInfo: audioRendererChangeInfos) {
+        if (!changeInfo) {
+            continue;
+        }
+        if (RendererState::RENDERER_RUNNING ==changeInfo->rendererState &&
+            !(changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_WIRED_HEADPHONES ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_SCO ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_BLUETOOTH_A2DP ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_HEADSET ||
+            changeInfo->outputDeviceInfo.deviceType == DEVICE_TYPE_USB_ARM_HEADSET)) {
+            MEDIA_LOGI("add headset map client pid : %{public}d, State Running, deviceType : %{public}d",
+                changeInfo->clientPid, static_cast<int32_t>(changeInfo->outputDeviceInfo.deviceType));
+            extSpeakerSet.insert(changeInfo->clientPid);
+        } else {
+            MEDIA_LOGI("remove headset map client pid : %{public}d", changeInfo->clientPid);
+            auto it = extSpeakerSet.find(changeInfo->clientPid);
+            if (it != extSpeakerSet.end()) {
+                extSpeakerSet.erase(it);
+            }
+        }
+    }
+    if (extSpeakerSet.empty()) {
+        extSpeaker_ = false;
+        MEDIA_LOGI("Speaker Change to HEADSET.");
+    } else {
+        extSpeaker_ = true;
+        MEDIA_LOGI("HEADSET Change to Speaker.");
+    }
+}
+
+void AudioDataSource::SetAppPid(int32_t appid)
+{
+    appPid_ = appid;
+}
+
+int32_t AudioDataSource::GetAppPid()
+{
+    return appPid_ ;
+}
+
+int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
+    const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
+{
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
+    int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
+    std::vector<std::unique_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
+    AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(audioRendererChangeInfos);
+    SpeakerStateUpdate(audioRendererChangeInfos);
+    return ret;
+}
+
+int32_t AudioDataSource::UnregisterAudioRendererEventListener(const int32_t clientPid)
+{
+    MEDIA_LOGI("client id: %{public}d", clientPid);
+    return AudioStreamManager::GetInstance()->UnregisterAudioRendererEventListener(clientPid);
+}
+
 int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
     MEDIA_LOGD("AudioDataSource ReadAt start");
@@ -2223,6 +2308,11 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
                 bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);
             }
+            if (extSpeaker_ && screenCaptureServer_->GetMicWorkingState()) {
+                MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE SPEAKER AND MIC ON");
+                bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
+                return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+            }
             MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC ON");
             char* mixData = new char[innerAudioBuffer->length];
             char* srcData[2] = {nullptr};
@@ -2241,7 +2331,6 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
         }
     } else {
-        MEDIA_LOGE("AudioDataSource AcquireAudioBufferMix failed");
         return MSERR_INVALID_VAL;
     }
     return MSERR_UNKNOWN;

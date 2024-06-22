@@ -129,7 +129,7 @@ void HiPlayerImpl::ReleaseInner()
 Status HiPlayerImpl::Init()
 {
     MediaTrace trace("HiPlayerImpl::Init");
-    MEDIA_LOGI("Init");
+    MEDIA_LOGI("Init start");
     std::shared_ptr<EventReceiver> playerEventReceiver = std::make_shared<PlayerEventReceiver>(this, playerId_);
     playerEventReceiver_ = playerEventReceiver;
     std::shared_ptr<FilterCallback> playerFilterCallback = std::make_shared<PlayerFilterCallback>(this);
@@ -176,12 +176,10 @@ int32_t HiPlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPa
         tempUrlPath = url;
     }
     if (tempUrlPath.find("..") != std::string::npos) {
-        MEDIA_LOGE("invalid url. The Url (%{public}s) path may be invalid.", tempUrlPath.c_str());
         return MSERR_FILE_ACCESS_FAILED;
     }
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
     if (!ret) {
-        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
         return MSERR_OPEN_FILE_FAILED;
     }
     if (access(realUrlPath.c_str(), R_OK) != 0) {
@@ -288,7 +286,6 @@ int32_t HiPlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource>& dataSrc
 int32_t HiPlayerImpl::AddSubSource(const std::string &url)
 {
     MediaTrace trace("HiPlayerImpl::AddSubSource uri");
-    MEDIA_LOG_I("AddSubSource entered source uri: " PUBLIC_LOG_S, url.c_str());
     subUrl_ = url;
     if (IsFileUrl(url)) {
         std::string realUriPath;
@@ -462,10 +459,8 @@ void HiPlayerImpl::SetInterruptState(bool isInterruptNeeded)
 int32_t HiPlayerImpl::SelectBitRate(uint32_t bitRate)
 {
     MEDIA_LOGD("HiPlayerImpl:: Select BitRate %{public}d", bitRate);
-    if (demuxer_ == nullptr) {
-        MEDIA_LOGE("SelectBitRate failed, demuxer_ is null");
-        return MSERR_INVALID_OPERATION;
-    }
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
+        MSERR_INVALID_OPERATION, "SelectBitRate failed, demuxer_ is null");
     Status ret = demuxer_->SelectBitRate(bitRate);
     if (ret == Status::OK) {
         Format bitRateFormat;
@@ -555,10 +550,8 @@ int32_t HiPlayerImpl::Pause()
 {
     MediaTrace trace("HiPlayerImpl::Pause");
     MEDIA_LOGI("Pause in");
-    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGE("completed not allow pause");
-        return TransStatus(Status::OK);
-    }
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
+        TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
     syncManager_->Pause();
     ret = pipeline_->Pause();
@@ -653,7 +646,7 @@ void HiPlayerImpl::UpdatePlayStatistics()
             MEDIA_LOG_E("GetLagInfo failed with error " PUBLIC_LOG_D32, ret);
         }
     } else {
-        MEDIA_LOG_E("GetLagInfo failed videoDecoder is null");
+        MEDIA_LOG_E("GetLagInfo failed videoDecoder is null error");
     }
 }
 
@@ -799,6 +792,8 @@ void HiPlayerImpl::NotifySeek(Status rtv, bool flag, int64_t seekPos)
         MEDIA_LOGE("Seek done, seek error");
         // change player state to PLAYER_STATE_ERROR when seek error.
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        Format format;
+        callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, -1, format);
     }  else if (flag) {
         // only notify seekDone for external call.
         NotifySeekDone(seekPos);
@@ -817,9 +812,6 @@ Status HiPlayerImpl::doPreparedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGI("doPreparedSeek.");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv == Status::OK) {
-        rtv = pipeline_->PrepareFrame(true);
-    }
     return rtv;
 }
 
@@ -840,9 +832,6 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv == Status::OK) {
-        rtv = pipeline_->PrepareFrame(true);
-    }
     return rtv;
 }
 
@@ -851,19 +840,12 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
     MEDIA_LOGD("doCompletedSeek");
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
-    if (rtv != Status::OK) {
-        return rtv;
-    }
-    rtv = pipeline_->PrepareFrame(true);
-    if (rtv != Status::OK) {
-        MEDIA_LOGE("PrepareFrame Failed.");
-        return rtv;
-    }
     if (isStreaming_) {
         MEDIA_LOGD("doCompletedSeek isStreaming_ is true");
-        rtv = pipeline_->Resume();
+        pipeline_->Resume();
         syncManager_->Resume();
     } else {
+        isDoCompletedSeek_ = true;
         callbackLooper_.StopReportMediaProgress();
         callbackLooper_.ManualReportMediaProgressOnce();
         OnStateChanged(PlayerStateId::PAUSE);
@@ -875,10 +857,8 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
     MEDIA_LOGD("doSeek");
     int64_t seekTimeUs = 0;
-    if (!Plugins::Us2HstTime(seekPos, seekTimeUs)) { // ms to us
-        MEDIA_LOGE("Invalid seekPos: %{public}" PRId64, seekPos);
-        return Status::ERROR_INVALID_PARAMETER;
-    }
+    FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(seekPos, seekTimeUs),
+        Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
     if (mode == PlayerSeekMode::SEEK_CLOSEST) {
         MEDIA_LOGI("doSeek SEEK_CLOSEST");
         if (videoDecoder_ != nullptr) {
@@ -920,10 +900,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 int32_t HiPlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOGI("SetVolume in");
-    if (leftVolume < 0 || leftVolume > MAX_MEDIA_VOLUME || rightVolume < 0 || rightVolume > MAX_MEDIA_VOLUME) {
-        MEDIA_LOGE("volume not valid, should be in range [0,100]");
-        return (int32_t)Status::ERROR_INVALID_PARAMETER;
-    }
+    FALSE_RETURN_V_MSG_E(!(leftVolume < 0 || leftVolume > MAX_MEDIA_VOLUME
+        || rightVolume < 0 || rightVolume > MAX_MEDIA_VOLUME),
+        (int32_t)Status::ERROR_INVALID_PARAMETER, "volume not valid, should be in range [0,100]");
     float volume = 0.0f;
     if (leftVolume < 1e-6 && rightVolume >= 1e-6) {  // 1e-6
         volume = rightVolume;
@@ -1055,10 +1034,8 @@ int32_t HiPlayerImpl::GetDuration(int32_t& durationMs)
 
 int32_t HiPlayerImpl::InitDuration()
 {
-    if (demuxer_ == nullptr) {
-        MEDIA_LOGW("Get media duration failed, demuxer is not ready");
-        return TransStatus(Status::ERROR_WRONG_STATE);
-    }
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr,
+        TransStatus(Status::ERROR_WRONG_STATE), "Get media duration failed, demuxer is not ready");
     int64_t duration = 0;
     bool found = false;
     if (demuxer_->GetDuration(duration)) {
@@ -1158,10 +1135,8 @@ int32_t HiPlayerImpl::GetAudioEffectMode(int32_t &effectMode)
     if (audioSink_ != nullptr) {
         res = audioSink_->GetAudioEffectMode(effectMode);
     }
-    if (res != Status::OK) {
-        MEDIA_LOGE("audioSink get AudioEffectMode error");
-        return MSERR_UNKNOWN;
-    }
+    FALSE_RETURN_V_MSG_E(res == Status::OK,
+        MSERR_UNKNOWN, "audioSink get AudioEffectMode error");
     return MSERR_OK;
 }
 
@@ -1766,6 +1741,7 @@ void HiPlayerImpl::HandleBitrateStartEvent(const Event& event)
 #ifdef SUPPORT_VIDEO
     uint32_t bitrate = AnyCast<uint32_t>(event.param);
     MEDIA_LOG_I("HandleBitrateStartEvent in, bitrate is " PUBLIC_LOG_U32, bitrate);
+    FALSE_RETURN(videoDecoder_ != nullptr);
     videoDecoder_->SetBitrateStart();
 #endif
 }
@@ -1913,7 +1889,16 @@ void HiPlayerImpl::NotifyResolutionChange()
 
 void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)
 {
-    curState_ = state;
+    {
+        AutoLock lockEos(stateChangeMutex_);
+        if (isDoCompletedSeek_.load()) {
+            isDoCompletedSeek_ = false;
+        } else if ((curState_ == PlayerStateId::EOS) && (state == PlayerStateId::PAUSE)) {
+            MEDIA_LOGE("already at completed and not allow pause");
+            return;
+        }
+        curState_ = state;
+    }
     MEDIA_LOGD("OnStateChanged " PUBLIC_LOG_D32 " > " PUBLIC_LOG_D32, pipelineStates_.load(),
             TransStateId2PlayerState(state));
     UpdateStateNoLock(TransStateId2PlayerState(state));

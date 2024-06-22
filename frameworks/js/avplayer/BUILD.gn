@@ -84,15 +84,15 @@ ohos_shared_library("media_avplayer") {
     "qos_manager:qos",
   ]
 
-  if (multimedia_player_framework_support_video) {
+  if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]
   }
 
-  if (multimedia_player_framework_support_jsstack) {
+  if (player_framework_support_jsstack) {
     external_deps += [ "hiview:libxpower_event_js" ]
   }
 
-  if (multimedia_player_framework_support_drm) {
+  if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
   }
 

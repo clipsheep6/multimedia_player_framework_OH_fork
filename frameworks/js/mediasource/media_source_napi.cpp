@@ -75,7 +75,11 @@ napi_value MediaSourceNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsMediaSource->env_ = env;
     jsMediaSource->mediaSource_ = std::make_shared<AVMediaSourceTmp>();
-    CHECK_AND_RETURN_RET_LOG(jsMediaSource->mediaSource_ != nullptr, result, "failed to Create MediaSource");
+    if (jsMediaSource->mediaSource_ == nullptr) {
+        delete jsMediaSource;
+        MEDIA_LOGE("Failed to Create MediaSource");
+        return result;
+    }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsMediaSource),
         MediaSourceNapi::Destructor, nullptr, nullptr);

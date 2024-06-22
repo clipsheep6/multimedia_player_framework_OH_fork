@@ -19,6 +19,7 @@
 #include "audio_renderer.h"
 #include "stream_id_manager.h"
 #include "sound_id_manager.h"
+#include "cpp/mutex.h"
 
 namespace OHOS {
 namespace Media {
@@ -60,7 +61,7 @@ private:
     int32_t ReleaseInner();
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
-    std::mutex soundPoolLock_;
+    ffrt::mutex soundPoolLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolFrameWriteCallback> frameWriteCallback_ = nullptr;
     static constexpr int32_t MIN_STREAM_PRIORITY = 0;

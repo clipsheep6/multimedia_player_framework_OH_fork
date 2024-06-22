@@ -113,7 +113,7 @@ struct AVImageGeneratorAsyncContext : public MediaAsyncContext {
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<TaskRet>> task_ = nullptr;
     std::shared_ptr<PixelMap> pixel_ = nullptr;
-    int32_t status;
+    int32_t status = 0;
 };
 } // namespace Media
 } // namespace OHOS

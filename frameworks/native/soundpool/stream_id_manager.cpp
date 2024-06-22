@@ -23,7 +23,7 @@
 namespace {
     // audiorender max concurrency.
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "StreamIDManager"};
-    static const std::string THREAD_POOL_NAME = "StreamIDManagerThreadPool";
+    static const std::string THREAD_POOL_NAME = "OS_StreamMgr";
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
 }
 
@@ -114,6 +114,8 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             std::deque<std::shared_ptr<AudioBufferEntry>> cacheData;
             soundParser->GetSoundData(cacheData);
             size_t cacheDataTotalSize = soundParser->GetSoundDataTotalSize();
+            MEDIA_LOGI("cacheData size:%{public}zu , cacheDataTotalSize:%{public}zu",
+                cacheData.size(), cacheDataTotalSize);
             auto cacheBuffer =
                 std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(), cacheData, cacheDataTotalSize,
                      soundID, streamID);
@@ -257,7 +259,7 @@ void StreamIDManager::QueueAndSortWillPlayStreamID(StreamIDAndPlayParamsInfo fre
 
 int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams playParameters)
 {
-    ThreadPool::Task streamPlayTask = std::bind(&StreamIDManager::DoPlay, this, streamID);
+    ThreadPool::Task streamPlayTask = [this, streamID] { this->DoPlay(streamID); };
     CHECK_AND_RETURN_RET_LOG(streamPlayingThreadPool_ != nullptr, MSERR_INVALID_VAL,
         "Failed to obtain playing ThreadPool");
     CHECK_AND_RETURN_RET_LOG(streamPlayTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain stream play Task");

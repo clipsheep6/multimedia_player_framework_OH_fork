@@ -137,7 +137,7 @@ public:
             int err = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
                 item.second.data(), item.second.size());
             CHECK_AND_RETURN_RET_LOG((err == 0 && ret == 0), AV_ERR_INVALID_VAL, "cast drmInfos nullptr");
-            mediaKeySystemInfo->psshInfo[index++].dataLen = item.second.size();
+            mediaKeySystemInfo->psshInfo[index++].dataLen = static_cast<int32_t>(item.second.size());
         }
         mediaKeySystemInfo->psshCount = index;
         return AV_ERR_OK;
@@ -613,7 +613,7 @@ OH_AVErrCode OH_AVPlayer_GetMediaKeySystemInfo(OH_AVPlayer *player, DRM_MediaKey
         ret = memcpy_s(mediaKeySystemInfo->psshInfo[index].data, item.second.size(),
             item.second.data(), item.second.size());
         CHECK_AND_RETURN_RET_LOG(ret ==0, AV_ERR_INVALID_VAL, "no memory");
-        mediaKeySystemInfo->psshInfo[index++].dataLen = item.second.size();
+        mediaKeySystemInfo->psshInfo[index++].dataLen = static_cast<int32_t>(item.second.size());
     }
 #else
     (void)player;

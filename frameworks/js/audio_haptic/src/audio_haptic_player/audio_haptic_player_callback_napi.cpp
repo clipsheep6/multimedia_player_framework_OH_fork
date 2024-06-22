@@ -165,7 +165,7 @@ void AudioHapticPlayerCallbackNapi::OnInterruptJsCallback(std::unique_ptr<AudioH
 void AudioHapticPlayerCallbackNapi::OnEndOfStream(void)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
-    MEDIA_LOGI("OnEndOfStream in");
+    MEDIA_LOGI("OnEndOfStream in succeed");
     CHECK_AND_RETURN_LOG(endOfStreamCb_ != nullptr, "Cannot find the reference of endOfStream callback");
 
     std::unique_ptr<AudioHapticPlayerJsCallback> cb = std::make_unique<AudioHapticPlayerJsCallback>();

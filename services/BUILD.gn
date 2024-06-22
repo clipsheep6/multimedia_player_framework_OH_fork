@@ -22,10 +22,10 @@ group("media_services_package") {
     "etc:media_service.cfg",
     "services:media_service",
   ]
-  if (multimedia_player_framework_support_seccomp) {
+  if (player_framework_support_seccomp) {
     deps += [ "seccomp_policy:media_seccomp_filter" ]
   }
-  if (multimedia_player_framework_support_screen_capture_controller) {
+  if (player_framework_support_screen_capture_controller) {
     deps += [
       "etc:screen_capture_capsule_image",
       "etc:screen_capture_mic_image",

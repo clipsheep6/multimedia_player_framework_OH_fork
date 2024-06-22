@@ -71,11 +71,11 @@ private:
 
     Status InitDecoder();
     std::shared_ptr<Meta> GetVideoTrackInfo();
-    bool ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer);
-    bool ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer);
+    void ConvertToAVSharedMemory(const sptr<SurfaceBuffer> &surfaceBuffer);
+    void ConvertToAVSharedMemory(std::shared_ptr<AVBuffer> &avBuffer);
     void ConvertP010ToNV12(
         const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth, int32_t strideHeight);
-    std::unique_ptr<PixelMap> GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
+    int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     int32_t width_ = 0;
     int32_t height_ = 0;

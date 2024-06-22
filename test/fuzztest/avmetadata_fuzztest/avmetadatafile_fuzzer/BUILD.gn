@@ -52,7 +52,7 @@ ohos_fuzztest("AVmetadataFileFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  if (multimedia_player_framework_support_metadata) {
+  if (player_framework_support_metadata) {
     sources = [
       "../../../../test/fuzztest/common/aw_common.cpp",
       "../../../../test/fuzztest/common/test_metadata.cpp",
