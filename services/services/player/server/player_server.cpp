@@ -389,7 +389,7 @@ int32_t PlayerServer::SetPlayRange(int64_t start, int64_t end)
     }
 
     if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->SetPlayRange(display);
+        int32_t ret = playerEngine_->SetPlayRange(start, end);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPlayRange Failed!");
     }
     return MSERR_OK;
