@@ -333,6 +333,11 @@ PlayerMock::~PlayerMock()
         previewWindow_->Destroy();
         previewWindow_ = nullptr;
     }
+    
+    if (previewWindowNext_ != nullptr) {
+        previewWindowNext_->Destroy();
+        previewWindowNext_ = nullptr;
+    }
 }
 
 bool PlayerMock::CreatePlayer()
