@@ -388,7 +388,8 @@ int32_t HiPlayerImpl::PrepareAsync()
     // set play range in initialized status
     if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
         MEDIA_LOGI("seek to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
-        ret = demuxer_->SeekTo(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, playRangeStartTime_);
+        ret = demuxer_->SeekTo(playRangeStartTime_, 
+            Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC), playRangeStartTime_);
         if (ret != Status::OK) {
             MEDIA_LOGI("seek failed to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
             return TransStatus(ret);
