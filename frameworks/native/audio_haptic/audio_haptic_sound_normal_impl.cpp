@@ -28,6 +28,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapti
 namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
+const uint32_t MAX_PATH_LENGTH = 2000;
+const uint32_t MAX_REAL_PATH_LENGTH = 2048;
 
 AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const std::string &audioUri, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage)
@@ -79,6 +81,12 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     (void)avPlayer_->Reset();
     MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s]", audioUri_.c_str());
     const std::string fdHead = "fd://";
+
+    char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
+    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
+        (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
+    std::string realPathStr(realPathRes);
+
     if (audioUri_.find(fdHead) != std::string::npos) {
         fileDes_ = std::stoi(audioUri_.substr(fdHead.size()));
         MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
@@ -87,11 +95,8 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
             (void)close(fileDes_);
             fileDes_ = -1;
         }
-        fileDes_ = open(audioUri_.c_str(), O_RDONLY);
-        if (fileDes_ == -1) {
-            MEDIA_LOGE("Prepare: Failed to open the audio uri for avplayer.");
-            return MSERR_OPEN_FILE_FAILED;
-        }
+        fileDes_ = open(realPathStr.c_str(), O_RDONLY);
+        CHECK_AND_RETURN_RET_LOG(fileDes_ != -1, MSERR_OPEN_FILE_FAILED, "Prepare: Failed to open uri for avplayer.");
     }
     int32_t ret = avPlayer_->SetSource(fileDes_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OPEN_FILE_FAILED, "Set source failed %{public}d", ret);
@@ -108,12 +113,9 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     std::unique_lock<std::mutex> lockPrepare(prepareMutex_);
     prepareCond_.wait_for(lockPrepare, std::chrono::seconds(LOAD_WAIT_SECONDS),
         [this]() { return isPrepared_ || isReleased_ || isUnsupportedFile_; });
-    CHECK_AND_RETURN_RET_LOG(!isReleased_, MSERR_INVALID_OPERATION,
-        "The avplayer is released when it is preparing.");
-    CHECK_AND_RETURN_RET_LOG(!isUnsupportedFile_, MSERR_UNSUPPORT_FILE,
-        "Failed to load audio uri: report unsupported file err when preparing avplayer.");
-    CHECK_AND_RETURN_RET_LOG(isPrepared_, MSERR_OPEN_FILE_FAILED,
-        "Failed to load audio uri: time out.");
+    CHECK_AND_RETURN_RET_LOG(!isReleased_, MSERR_INVALID_OPERATION, "The avplayer is released when it is preparing.");
+    CHECK_AND_RETURN_RET_LOG(!isUnsupportedFile_, MSERR_UNSUPPORT_FILE, "Unsupported file when preparing avplayer.");
+    CHECK_AND_RETURN_RET_LOG(isPrepared_, MSERR_OPEN_FILE_FAILED, "Failed to load audio uri: time out.");
 
     // The avplayer has been prepared.
     float actualVolume = volume_ * (muteAudio_ ? 0 : 1);

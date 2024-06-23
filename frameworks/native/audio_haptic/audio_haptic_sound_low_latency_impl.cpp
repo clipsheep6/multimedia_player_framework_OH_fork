@@ -29,6 +29,8 @@ namespace OHOS {
 namespace Media {
 const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one stream for sound pool is playing.
 const int32_t LOAD_WAIT_SECONDS = 2;
+const uint32_t MAX_PATH_LENGTH = 2000;
+const uint32_t MAX_REAL_PATH_LENGTH = 2048;
 
 AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string &audioUri, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage)
@@ -85,11 +87,16 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     }
 
     MEDIA_LOGI("Set audio source to soundpool. audioUri [%{public}s]", audioUri_.c_str());
+    char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
+    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
+        (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
+    std::string realPathStr(realPathRes);
+
     if (fileDes_ != -1) {
         (void)close(fileDes_);
         fileDes_ = -1;
     }
-    fileDes_ = open(audioUri_.c_str(), O_RDONLY);
+    fileDes_ = open(realPathStr.c_str(), O_RDONLY);
     if (fileDes_ == -1) {
         MEDIA_LOGE("Prepare: Failed to open the audio uri for sound pool.");
         return MSERR_OPEN_FILE_FAILED;
@@ -104,12 +111,10 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     std::unique_lock<std::mutex> lockPrepare(prepareMutex_);
     prepareCond_.wait_for(lockPrepare, std::chrono::seconds(LOAD_WAIT_SECONDS),
         [this]() { return isPrepared_ || isReleased_ || isUnsupportedFile_; });
-    CHECK_AND_RETURN_RET_LOG(!isReleased_, MSERR_INVALID_OPERATION,
-        "The sound pool is released when it is preparing.");
+    CHECK_AND_RETURN_RET_LOG(!isReleased_, MSERR_INVALID_OPERATION, "The sound pool is released when it is preparing.");
     CHECK_AND_RETURN_RET_LOG(!isUnsupportedFile_, MSERR_UNSUPPORT_FILE,
         "Failed to load audio uri: report unsupported file err when loading source for sound pool.");
-    CHECK_AND_RETURN_RET_LOG(isPrepared_, MSERR_OPEN_FILE_FAILED,
-        "Failed to load audio uri: time out.");
+    CHECK_AND_RETURN_RET_LOG(isPrepared_, MSERR_OPEN_FILE_FAILED, "Failed to load audio uri: time out.");
 
     // The audio source has been loaded for sound pool
     soundID_ = soundID;
