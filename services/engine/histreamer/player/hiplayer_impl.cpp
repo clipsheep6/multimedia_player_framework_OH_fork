@@ -354,7 +354,9 @@ int32_t HiPlayerImpl::PrepareAsync()
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
     }
-    ret = pipeline_->PrepareFrame(renderFirstFrame_);
+    if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()) {
+        ret = pipeline_->PrepareFrame(renderFirstFrame_);
+    }
     auto code = TransStatus(ret);
     if (ret != Status::OK) {
         CollectionErrorInfo(code, "PrepareFrame failed.");
