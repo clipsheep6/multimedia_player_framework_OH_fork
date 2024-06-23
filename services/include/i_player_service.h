@@ -119,6 +119,23 @@ public:
     }
 
     /**
+     * @brief Specify the start and end time to play
+     * This function must be called after {@link Prepare}.
+     * This function is called to set start and end time
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetPlayRange(int64_t start, int64_t end)
+    {
+        (void)start;
+        (void)end;
+        return 0;
+    }
+
+    /**
      * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
