@@ -1283,6 +1283,7 @@ int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecF
     MEDIA_LOGI("mime %{public}s", mime.c_str());
     const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
         { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
+        { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
         { "", AudioCodecFormat::AUDIO_DEFAULT },
     };
 
@@ -1318,6 +1319,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
     const std::map<std::string, OutputFormatType> extensionToOutputFormat = {
         { "mp4", OutputFormatType::FORMAT_MPEG_4 },
         { "m4a", OutputFormatType::FORMAT_M4A },
+        { "mp3", OutputFormatType::FORMAT_MP3 },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 

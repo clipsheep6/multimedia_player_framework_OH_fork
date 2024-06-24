@@ -544,6 +544,9 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
                     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_AAC);
                     audioEncFormat_->Set<Tag::AUDIO_AAC_PROFILE>(Plugins::AudioAacProfile::LC);
                     break;
+                case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
+                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
+                    break;
                 default:
                     break;
             }
