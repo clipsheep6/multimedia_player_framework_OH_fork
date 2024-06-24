@@ -80,6 +80,9 @@ private:
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
 
+    /* used for hilog output */
+    int32_t captureAudioLogCount_ = 0;
+
     static constexpr uint32_t MAX_THREAD_NAME_LENGTH = 15;
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint32_t SEC_TO_NANOSECOND = 1000000000; // 10^9ns
