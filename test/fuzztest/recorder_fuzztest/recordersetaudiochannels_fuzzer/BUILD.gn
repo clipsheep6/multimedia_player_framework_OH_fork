@@ -27,7 +27,6 @@ ohos_fuzztest("RecorderSetAudioChannelsFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
-    "$MEDIA_PLAYER_GRAPHIC/utils/sync_fence/export",
     "$MEDIA_PLAYER_GRAPHIC/interfaces/innerkits/surface",
   ]
   cflags = [
@@ -65,8 +64,8 @@ ohos_fuzztest("RecorderSetAudioChannelsFuzzTest") {
   ]
   external_deps = [
     "c_utils:utils",
-    "graphic_2d:sync_fence",
     "graphic_surface:surface",
+    "graphic_surface:sync_fence",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
