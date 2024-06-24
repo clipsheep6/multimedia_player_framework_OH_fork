@@ -156,7 +156,7 @@ public:
     virtual int32_t SetAudioEncoder(AudioCodecFormat encoder) = 0;
 
     /**
-     * @brief Sets the encoding bit rate of the audio to record.
+     * @brief Sets the encoding bit rate of the audio to transcoder.
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
      *
@@ -204,7 +204,7 @@ public:
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}
      *
-     * @param callback Indicates the recording listener to register. For details, see {@link TransCoderCallback}.
+     * @param callback Indicates the transcodering listener to register. For details, see {@link TransCoderCallback}.
      * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
      * @since 1.0
      * @version 1.0

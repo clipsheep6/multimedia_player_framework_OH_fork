@@ -27,6 +27,10 @@
 #ifdef SUPPORT_METADATA
 #include "i_avmetadatahelper_engine.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "i_transcoder_engine.h"
+#include "i_transcoder_engine.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +42,7 @@ public:
         SCENE_RECORDER,
         SCENE_AVCODEC,
         SCENE_AVCODECLIST,
+        SCENE_TRANSCODER,
     };
 
     virtual ~IEngineFactory() = default;
@@ -74,6 +79,18 @@ public:
 #ifdef SUPPORT_METADATA
     virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine()
     {
+        return nullptr;
+    }
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+    virtual std::unique_ptr<ITransCoderEngine> CreateTransCoderEngine(int32_t appUid, int32_t appPid,
+        uint32_t appTokenId, uint64_t appFullTokenId)
+    {
+        (void)appUid;
+        (void)appPid;
+        (void)appTokenId;
+        (void)appFullTokenId;
         return nullptr;
     }
 #endif

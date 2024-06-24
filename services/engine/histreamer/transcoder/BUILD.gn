@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Huawei Device Co., Ltd.
+# Copyright (C) 2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,8 +14,13 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-config("media_engine_histreamer_factory_config") {
+config("media_engine_histreamer_transcoder_config") {
   visibility = [ ":*" ]
+
+  defines = [
+    "HST_ANY_WITH_NO_RTTI",
+    "MEDIA_OHOS",
+  ]
 
   cflags = [
     "-O2",
@@ -29,53 +34,43 @@ config("media_engine_histreamer_factory_config") {
   cflags_cc = cflags
 
   include_dirs = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/recorder",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/transcoder",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
   ]
-  defines = [
-    "HST_ANY_WITH_NO_RTTI",
-    "MEDIA_OHOS",
-  ]
-  defines += player_framework_defines
 }
 
-ohos_static_library("media_engine_histreamer_factory") {
-  stack_protector_ret = true
+ohos_static_library("media_engine_histreamer_transcoder") {
   sanitize = {
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
   }
-  sources = [ "hst_engine_factory.cpp" ]
+  sources = [
+    "hitranscoder_callback_looper.cpp",
+    "hitranscoder_impl.cpp",
+  ]
 
   configs = [
-    ":media_engine_histreamer_factory_config",
+    ":media_engine_histreamer_transcoder_config",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx_public_config",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils_public_config",
   ]
 
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player:media_engine_histreamer_player",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   external_deps = [
-    "audio_framework:audio_client",
+    "audio_framework:audio_capturer",
     "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "c_utils:utils",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
-    "image_framework:image_native",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",

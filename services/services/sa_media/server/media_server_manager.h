@@ -49,6 +49,7 @@ public:
         MONITOR,
         SCREEN_CAPTURE,
         SCREEN_CAPTURE_CONTROLLER,
+        TRANSCODER
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -66,6 +67,9 @@ private:
     sptr<IRemoteObject> CreateRecorderStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
 #endif
+#ifdef SUPPORT_TRANSCODER
+    sptr<IRemoteObject> CreateTransCoderStubObject();
+#endif
 #ifdef SUPPORT_METADATA
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
 #endif
@@ -78,6 +82,7 @@ private:
     void DestroyAVCodecStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
     void DestroyAVCodecStubForPid(pid_t pid);
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
@@ -94,6 +99,7 @@ private:
         std::mutex listMutex_;
     };
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> transCoderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;

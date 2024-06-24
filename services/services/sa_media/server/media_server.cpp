@@ -65,6 +65,9 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
         case MediaSystemAbility::MEDIA_RECORDER: {
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
         }
+        case MediaSystemAbility::MEDIA_TRANSCODER: {
+            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::TRANSCODER);
+        }
         case MediaSystemAbility::MEDIA_PLAYER: {
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
         }

@@ -19,6 +19,9 @@
 #include "recorder_service_stub.h"
 #include "recorder_profiles_service_stub.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "transcoder_service_stub.h"
+#endif
 #ifdef SUPPORT_PLAYER
 #include "player_service_stub.h"
 #ifdef PLAYER_USE_MEMORY_MANAGE
@@ -162,6 +165,10 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case RECORDERPROFILES:
             return CreateRecorderProfilesStubObject();
 #endif
+#ifdef SUPPORT_TRANSCODER
+        case TRANSCODER:
+            return CreateTransCoderStubObject();
+#endif
 #ifdef SUPPORT_PLAYER
         case PLAYER:
             return CreatePlayerStubObject();
@@ -258,6 +265,33 @@ sptr<IRemoteObject> MediaServerManager::CreateRecorderProfilesStubObject()
     pid_t pid = IPCSkeleton::GetCallingPid();
     recorderProfilesStubMap_[object] = pid;
     MEDIA_LOGD("The number of recorder_profiles services(%{public}zu).", recorderProfilesStubMap_.size());
+    return object;
+}
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+sptr<IRemoteObject> MediaServerManager::CreateTransCoderStubObject()
+{
+    sptr<TransCoderServiceStub> transCoderStub = TransCoderServiceStub::Create();
+    CHECK_AND_RETURN_RET_LOG(transCoderStub != nullptr, nullptr, "failed to create TransCoderServiceStub");
+ 
+    sptr<IRemoteObject> object = transCoderStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create TransCoderServiceStub");
+ 
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    transCoderStubMap_[object] = pid;
+ 
+    Dumper dumper;
+    dumper.entry_ = [transCoder = transCoderStub](int32_t fd) -> int32_t {
+        return transCoder->DumpInfo(fd);
+    };
+    dumper.pid_ = pid;
+    dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.remoteObject_ = object;
+    dumperTbl_[StubType::TRANSCODER].emplace_back(dumper);
+    MEDIA_LOGD("The number of transCoder services(%{public}zu) pid(%{public}d).",
+        transCoderStubMap_.size(), pid);
+    (void)Dump(-1, std::vector<std::u16string>());
     return object;
 }
 #endif
@@ -404,6 +438,26 @@ void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> 
                 }
             }
             MEDIA_LOGE("find avmetadatahelper object failed, pid(%{public}d).", pid);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void MediaServerManager::DestroyAVTransCoderStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case TRANSCODER: {
+            for (auto it = transCoderStubMap_.begin(); it != transCoderStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy transCoder stub services(%{public}zu) pid(%{public}d).",
+                        transCoderStubMap_.size(), pid);
+                    (void)transCoderStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find transCoder object failed, pid(%{public}d).", pid);
             break;
         }
         default:

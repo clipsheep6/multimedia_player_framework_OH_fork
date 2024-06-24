@@ -48,6 +48,9 @@ static napi_value Export(napi_env env, napi_value exports)
 #ifdef SUPPORT_RECORDER_API9
     OHOS::Media::AVRecorderNapi::Init(env, exports);
 #endif
+#ifdef SUPPORT_TRANSCODER
+    OHOS::Media::AVTransCoderNapi::Init(env, exports);
+#endif
 #ifdef SUPPORT_SOUND_POOL
     OHOS::Media::SoundPoolNapi::Init(env, exports);
 #endif

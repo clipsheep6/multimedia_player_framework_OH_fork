@@ -21,6 +21,9 @@
 #include "i_recorder_service.h"
 #include "i_recorder_profiles_service.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "i_transcoder_service.h"
+#endif
 #ifdef SUPPORT_PLAYER
 #include "i_player_service.h"
 #endif
@@ -85,6 +88,11 @@ public:
      * @version 3.2
      */
     virtual int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) = 0;
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+    virtual std::shared_ptr<ITransCoderService> CreateTransCoderService() = 0;
+    virtual int32_t DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder) = 0;
 #endif
 
 #ifdef SUPPORT_PLAYER
