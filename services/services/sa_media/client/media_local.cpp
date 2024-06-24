@@ -42,6 +42,11 @@ std::shared_ptr<IRecorderService> MediaLocal::CreateRecorderService()
     return RecorderServer::Create();
 }
 
+std::shared_ptr<ITransCoderService> MediaLocal::CreateTransCoderService()
+{
+    return TransCoderServer::Create();
+}
+
 std::shared_ptr<IPlayerService> MediaLocal::CreatePlayerService()
 {
     return PlayerServer::Create();
@@ -75,6 +80,12 @@ std::shared_ptr<IScreenCaptureService> MediaLocal::CreateScreenCaptureService()
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     (void)recorder;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyTransCoderService(std::shared_ptr<ITransCoderService> transCoder)
+{
+    (void)transCoder;
     return MSERR_OK;
 }
 

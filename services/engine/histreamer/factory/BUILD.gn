@@ -34,6 +34,7 @@ config("media_engine_histreamer_factory_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/player",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/recorder",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/transcoder",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
   ]

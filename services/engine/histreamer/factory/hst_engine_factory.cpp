@@ -21,6 +21,9 @@
 #ifdef SUPPORT_RECORDER
 #include "hirecorder_impl.h"
 #endif
+#ifdef SUPPORT_TRANSCODER
+#include "hitranscoder_impl.h"
+#endif
 #ifdef SUPPORT_PLAYER
 #include "hiplayer_impl.h"
 #endif
@@ -38,6 +41,10 @@ public:
 #endif
 #ifdef SUPPORT_RECORDER
     std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+        uint64_t appFullTokenId) override;
+#endif
+#ifdef SUPPORT_TRANSCODER
+    std::unique_ptr<ITransCoderEngine> CreateTransCoderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
         uint64_t appFullTokenId) override;
 #endif
 #ifdef SUPPORT_METADATA
@@ -67,6 +74,20 @@ std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
         return recorder;
     }
     MEDIA_LOG_E("create recorder failed or recorder init failed");
+    return nullptr;
+}
+#endif
+
+#ifdef SUPPORT_TRANSCODER
+std::unique_ptr<ITransCoderEngine> HstEngineFactory::CreateTransCoderEngine(
+    int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
+{
+    MEDIA_LOG_E("CreateTransCoderEngine enter.");
+    auto transCoder = std::make_unique<HiTransCoderImpl>(appUid, appPid, appTokenId, appFullTokenId);
+    if (transCoder && transCoder->Init() == 0) {
+        return transCoder;
+    }
+    MEDIA_LOG_E("create transCoder failed or transCoder init failed");
     return nullptr;
 }
 #endif

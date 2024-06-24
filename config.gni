@@ -188,6 +188,7 @@ template("ohos_prebuilt_seccomp") {
 declare_args() {
   player_framework_support_player = true
   player_framework_support_recorder = true
+  player_framework_support_transcoder = true
   player_framework_support_player_js_api9 = true
   player_framework_support_recorder_js_api9 = true
   player_framework_support_metadata = true
@@ -270,6 +271,12 @@ if (player_framework_support_recorder) {
   player_framework_defines += [ "SUPPORT_RECORDER" ]
 } else {
   player_framework_defines += [ "UNSUPPORT_RECORDER" ]
+}
+
+if (player_framework_support_transcoder) {
+  player_framework_defines += [ "SUPPORT_TRANSCODER" ]
+} else {
+  player_framework_defines += [ "UNSUPPORT_TRANSCODER" ]
 }
 
 if (player_framework_support_metadata) {
