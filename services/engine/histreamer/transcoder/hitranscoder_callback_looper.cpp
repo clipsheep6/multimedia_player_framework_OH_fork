@@ -113,6 +113,9 @@ void HiTransCoderCallbackLooper::DoReportCompletedTime()
 void HiTransCoderCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);
+    if (!reportMediaProgress_) {
+        return;
+    }
     auto obs = obs_.lock();
     if (obs && !isDropMediaProgress_) {
         Format format;
