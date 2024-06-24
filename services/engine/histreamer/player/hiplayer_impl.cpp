@@ -342,6 +342,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return errCode;
     }
+    InitDuration();
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOGI("PrepareAsync in, current pipeline state: " PUBLIC_LOG_S,
@@ -362,6 +363,58 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     UpdatePlayerStateAndNotify();
     MEDIA_LOGI("PrepareAsync End");
+    return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::PrepareAt(int32_t timeMs)
+{
+    MediaTrace trace("HiPlayerImpl::PrepareAt");
+    MEDIA_LOGD("HiPlayerImpl PrepareAt");
+    if (!(pipelineStates_ == PlayerStates::PLAYER_INITIALIZED || pipelineStates_ == PlayerStates::PLAYER_STOPPED)) {
+        CollectionErrorInfo(MSERR_INVALID_OPERATION, "PrepareAt pipelineStates not initialized or stopped");
+        return MSERR_INVALID_OPERATION;
+    }
+    auto ret = Init();
+    if (ret != Status::OK || isInterruptNeeded_.load()) {
+        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        CollectionErrorInfo(errCode, "PrepareAt error: init error");
+        return errCode;
+    }
+    DoSetMediaSource(ret);
+    if (ret != Status::OK && !isInterruptNeeded_.load()) {
+        auto errCode = TransStatus(Status::ERROR_UNSUPPORTED_FORMAT);
+        CollectionErrorInfo(errCode, "PrepareAt error: DoSetSource error");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
+        return errCode;
+    }
+    InitDuration();
+    if (timeMs > durationMs_.load() || !demuxer_->GetSeekable()) {
+        MEDIA_LOGE("The timeMs parameter is invalid");
+        return MSERR_INVALID_VAL;
+    }
+    FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
+    NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
+    MEDIA_LOGI("PrepareAt in, current pipeline state: " PUBLIC_LOG_S,
+        StringnessPlayerState(pipelineStates_).c_str());
+    OnStateChanged(PlayerStateId::PREPARING);
+    ret = pipeline_->Prepare();
+    if (ret != Status::OK) {
+        MEDIA_LOGE("PrepareAt failed with error " PUBLIC_LOG_D32, ret);
+        auto errCode = TransStatus(ret);
+        CollectionErrorInfo(errCode, "pipeline PrepareAt failed");
+        return errCode;
+    }
+    pipeline_ -> Flush();
+    auto rtv = doSeek(timeMs, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
+    NotifySeek(rtv, true, timeMs);
+    ret = pipeline_->PrepareFrame(false);
+    auto code = TransStatus(ret);
+    if (ret != Status::OK) {
+        CollectionErrorInfo(code, "PrepareFrame failed.");
+        return code;
+    }
+    UpdatePlayerStateAndNotify();
+    MEDIA_LOGI("PrepareAt End");
     return TransStatus(ret);
 }
 
@@ -390,7 +443,6 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
 void HiPlayerImpl::UpdatePlayerStateAndNotify()
 {
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
-    InitDuration();
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     InitVideoWidthAndHeight();
     NotifyResolutionChange();

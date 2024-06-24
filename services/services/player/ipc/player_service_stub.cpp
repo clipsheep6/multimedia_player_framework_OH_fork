@@ -84,6 +84,7 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
     playerFuncs_[SET_RENDER_FIRST_FRAME] = { &PlayerServiceStub::SetRenderFirstFrame, "Player::SetRenderFirstFrame" };
     playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
+    playerFuncs_[PREPAREAT] = { &PlayerServiceStub::PrepareAt, "Player::PrepareAt" };
     playerFuncs_[PAUSE] = { &PlayerServiceStub::Pause, "Player::Pause" };
     playerFuncs_[STOP] = { &PlayerServiceStub::Stop, "Player::Stop" };
     playerFuncs_[RESET] = { &PlayerServiceStub::Reset, "Player::Reset" };
@@ -270,6 +271,13 @@ int32_t PlayerServiceStub::PrepareAsync()
     MediaTrace trace("binder::PrepareAsync");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->PrepareAsync();
+}
+
+int32_t PlayerServiceStub::PrepareAt(int32_t timeMs)
+{
+    MediaTrace trace("Stub::PrepareAt");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->PrepareAt(timeMs);
 }
 
 int32_t PlayerServiceStub::Pause()
@@ -595,6 +603,13 @@ int32_t PlayerServiceStub::PrepareAsync(MessageParcel &data, MessageParcel &repl
 {
     (void)data;
     reply.WriteInt32(PrepareAsync());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::PrepareAt(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t timeMs = data.ReadInt32();
+    reply.WriteInt32(PrepareAt(timeMs));
     return MSERR_OK;
 }
 

@@ -65,6 +65,11 @@ public:
         return 0;
     }
     virtual int32_t PrepareAsync() = 0;
+    virtual int32_t PrepareAt(int32_t timeMs)
+    {
+        (void)timeMs;
+        return 0;
+    }
     virtual int32_t Pause() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;

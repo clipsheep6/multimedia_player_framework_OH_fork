@@ -131,6 +131,22 @@ public:
     virtual int32_t PrepareAsync() = 0;
 
     /**
+     * @brief Prepares the playback environment and buffers media data, specifying the playback location.
+     *
+     * This function must be called after {@link SetSource}.
+     *
+     * @return Returns {@link MSERR_OK} if the single display is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t PrepareAt(int32_t timeMs)
+    {
+        (void)timeMs;
+        return 0;
+    }
+
+    /**
      * @brief Pauses playback.
      *
      * @return Returns {@link MSERR_OK} if {@link Pause} is successfully added to the task queue;

@@ -137,6 +137,13 @@ int32_t PlayerImpl::PrepareAsync()
     return playerService_->PrepareAsync();
 }
 
+int32_t PlayerImpl::PrepareAt(int32_t timeMs)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAt in, timeMs is %{public}d", FAKE_POINTER(this), timeMs);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->PrepareAt(timeMs);
+}
+
 int32_t PlayerImpl::Pause()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
