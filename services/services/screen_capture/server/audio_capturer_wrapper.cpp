@@ -185,7 +185,14 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         audioBuffer = std::make_shared<AudioBuffer>(buffer, 0, 0, audioInfo_.audioSource);
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
-        CHECK_AND_CONTINUE_LOG(bufferRead > 0, "CaptureAudio read audio buffer failed, continue");
+        if (bufferRead <= 0) {
+            if (captureAudioLogCount_ % 1000 == 0) {
+                captureAudioLogCount_ = 0;
+                MEDIA_LOGE("CaptureAudio read audio buffer failed, continue");
+            }
+            captureAudioLogCount_++;
+            continue;
+        }
         audioBuffer->length = bufferRead;
         audioCapturer_->GetAudioTime(timestamp, Timestamp::Timestampbase::MONOTONIC);
         int64_t audioTime = timestamp.time.tv_nsec + timestamp.time.tv_sec * SEC_TO_NANOSECOND;
