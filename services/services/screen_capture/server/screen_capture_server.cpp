@@ -1177,7 +1177,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
 
 int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnabled)
 {
-    MEDIA_LOGI("StartScreenCaptureInner S, appUid:%{public}d, appPid:%{pulibc}d, isPrivacyAuthorityEnabled:%{pulibc}d"
+    MEDIA_LOGI("StartScreenCaptureInner S, appUid:%{public}d, appPid:%{public}d, isPrivacyAuthorityEnabled:%{public}d"
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
         isSurfaceMode_, captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
@@ -1230,7 +1230,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     ret = OnStartScreenCapture();
     PostStartScreenCapture(ret == MSERR_OK);
 
-    MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{pulibc}d", appInfo_.appUid, appInfo_.appPid);
+    MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
     return ret;
 }
 
