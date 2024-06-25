@@ -433,7 +433,8 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 audioEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
                 audioEncoderFilter_->SetCodecFormat(audioEncFormat_);
                 audioEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-                audioEncoderFilter_->Configure(audioEncFormat_);
+                FALSE_RETURN_V_MSG_E(audioEncoderFilter_->Configure(audioEncFormat_) == Status::OK,
+                    Status::ERROR_INVALID_DATA, "audioEncoderFilter_ Configure fail");
                 pipeline_->LinkFilters(filter, {audioEncoderFilter_}, outType);
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
