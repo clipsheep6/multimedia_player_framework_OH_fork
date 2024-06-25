@@ -566,6 +566,7 @@ int32_t PlayerServer::Stop()
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
         MediaTrace::TraceBegin("PlayerServer::Stop", FAKE_POINTER(this));
+        disableStoppedCb_ = false;
         return OnStop(false);
     }
     MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -616,9 +617,9 @@ int32_t PlayerServer::Reset()
 int32_t PlayerServer::OnReset()
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    disableStoppedCb_ = true;
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
-        disableStoppedCb_ = true;
         (void)OnStop(true);
     }
 
@@ -653,7 +654,6 @@ int32_t PlayerServer::HandleReset()
     }
     lastErrMsg_.clear();
     errorCbOnce_ = false;
-    disableStoppedCb_ = false;
     disableNextSeekDone_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
