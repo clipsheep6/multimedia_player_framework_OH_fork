@@ -21,14 +21,13 @@ using namespace OHOS::Media;
 using namespace testing::ext;
 using namespace std;
 
-static const std::string g_fileName[7] = {
+static const std::string g_fileName[6] = {
     {"/data/test/test_06.ogg"},
     {"/data/test/test_02.mp3"},
     {"/data/test/test_01.mp3"},
     {"/data/test/test_05.ogg"},
     {"/data/test/test_03.mp3"},
     {"/data/test/test_04.mp3"},
-    {"/data/test/test_07.wav"},
 };
 
 namespace OHOS {
@@ -1821,34 +1820,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_037, TestSize.Level2)
     sleep(15);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_037 after");
-}
-
- /**
- * @tc.name: soundpool_function_038
- * @tc.desc: function test WAV file
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_038, TestSize.Level2)
-{
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_038 before");
-    int maxStreams = 3;
-    create(maxStreams);
-    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
-    soundPool_->SetSoundPoolCallback(cb);
-    loadUrl(g_fileName[6], loadNum_);
-    sleep(waitTime3);
-    struct PlayParams playParameters;
-    if (soundIDs_[0] > 0) {
-        streamIDs_[0] = soundPool_->Play(soundIDs_[0], playParameters);
-        EXPECT_GT(streamIDs_[0], 0);
-        sleep(waitTime2);
-    }
-    sleep(waitTime3);
-    if (streamIDs_[0] > 0) {
-        EXPECT_EQ(MSERR_OK, soundPool_->Stop(streamIDs_[0]));
-    }
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_038 after");
 }
 
 } // namespace Media

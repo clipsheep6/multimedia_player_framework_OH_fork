@@ -306,7 +306,6 @@
             <option name="push" value="res_soundpool/test_04.mp3 -> /data/test" src="res"/>
             <option name="push" value="res_soundpool/test_05.ogg -> /data/test" src="res"/>
             <option name="push" value="res_soundpool/test_06.ogg -> /data/test" src="res"/>
-            <option name="push" value="res_soundpool/test_07.wav -> /data/test" src="res"/>
             <option name="shell" value="restorecon /data/test"/>
         </preparer>
     </target>
