@@ -88,7 +88,8 @@ int32_t SoundPool::Load(const std::string url)
 int32_t SoundPool::Load(int32_t fd, int64_t offset, int64_t length)
 {
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_LOGI("SoundPool::Load fd::%{public}d", fd);
+    MEDIA_LOGI("SoundPool::Load fd::%{public}d, offset::%{public}s, length::%{public}s", fd,
+        std::to_string(offset).c_str(), std::to_string(length).c_str());
     CHECK_AND_RETURN_RET_LOG((fd > 0 && length > 0 && offset >= 0), -1, "Invalid fd param.");
     CHECK_AND_RETURN_RET_LOG(soundIDManager_ != nullptr, -1, "sound id manager have released.");
     return soundIDManager_->Load(fd, offset, length);

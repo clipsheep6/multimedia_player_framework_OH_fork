@@ -40,10 +40,12 @@ SoundParser::SoundParser(int32_t soundID, std::string url)
 
 SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length)
 {
-    fd = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
+    int32_t fdSource = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
     offset = offset >= INT64_MAX ? INT64_MAX : offset;
     length = length >= INT64_MAX ? INT64_MAX : length;
-    std::shared_ptr<MediaAVCodec::AVSource> source = MediaAVCodec::AVSourceFactory::CreateWithFD(fd, offset, length);
+    std::shared_ptr<MediaAVCodec::AVSource> source =
+        MediaAVCodec::AVSourceFactory::CreateWithFD(fdSource, offset, length);
+    (void)close(fdSource);
     CHECK_AND_RETURN_LOG(source != nullptr, "Create AVSource failed");
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = MediaAVCodec::AVDemuxerFactory::CreateWithSource(source);
     CHECK_AND_RETURN_LOG(demuxer != nullptr, "Create AVDemuxer failed");

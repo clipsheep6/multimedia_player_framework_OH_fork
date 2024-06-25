@@ -190,7 +190,7 @@ private:
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;
-    static constexpr int64_t MIN_FD = 0;
+    static constexpr int64_t MIN_FD = 3;
 };
 } // namespace Media
 } // namespace OHOS
