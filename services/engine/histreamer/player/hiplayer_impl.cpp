@@ -195,6 +195,7 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 void HiPlayerImpl::SetInstancdId(uint64_t instanceId)
 {
     instanceId_ = instanceId;
+    MEDIA_LOGD("HiPlayerImpl:: Set InstancdId %{public}d", instanceId);
 }
 
 int32_t HiPlayerImpl::SetSource(const std::string& uri)
