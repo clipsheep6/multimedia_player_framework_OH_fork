@@ -38,6 +38,27 @@ namespace Media {
 using namespace MediaAVCodec;
 thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVTransCoder";
+const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
+	{AVTransCoderState::STATE_IDLE, {
+		AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
+	}},
+	{AVTransCoderState::STATE_PREPARED, {}},
+	{AVTransCoderState::STATE_STARTED, {
+		AVTransCoderOpt::START,
+		AVTransCoderOpt::RESUME
+	}},
+	{AVTransCoderState::STATE_PAUSED, {
+		AVTransCoderOpt::PAUSE
+	}},
+	{AVTransCoderState::STATE_CANCELLED, {
+		AVTransCoderOpt::CANCEL
+	}},
+	{AVTransCoderState::STATE_RELEASED, {
+		AVTransCoderOpt::RELEASE
+	}},
+	{AVTransCoderState::STATE_COMPLETED, {}},
+	{AVTransCoderState::STATE_ERROR, {}},
+};
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
     {AVTransCoderOpt::PAUSE, &AVTransCoderNapi::Pause},
@@ -188,8 +209,6 @@ napi_value AVTransCoderNapi::JsCreateAVTransCoder(napi_env env, napi_callback_in
     return result;
 }
 
-
-// TO DO
 RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
@@ -736,7 +755,7 @@ int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> allowedOpt = stateList.at(curState);
+    std::vector<std::string> allowedOpt = STATE_LIST.at(curState);
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -747,33 +766,11 @@ int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
 
 int32_t AVTransCoderNapi::CheckRepeatOperation(const std::string &opt)
 {
-    const std::map<std::string, std::vector<std::string>> stateCtrl = {
-        {AVTransCoderState::STATE_IDLE, {
-            AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
-        }},
-        {AVTransCoderState::STATE_PREPARED, {}},
-        {AVTransCoderState::STATE_STARTED, {
-            AVTransCoderOpt::START,
-            AVTransCoderOpt::RESUME
-        }},
-        {AVTransCoderState::STATE_PAUSED, {
-            AVTransCoderOpt::PAUSE
-        }},
-        {AVTransCoderState::STATE_CANCELLED, {
-            AVTransCoderOpt::CANCEL
-        }},
-        {AVTransCoderState::STATE_RELEASED, {
-            AVTransCoderOpt::RELEASE
-        }},
-        {AVTransCoderState::STATE_COMPLETED, {}},
-        {AVTransCoderState::STATE_ERROR, {}},
-    };
-
     auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
+    std::vector<std::string> repeatOpt = STATE_CTRL.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!",
             curState.c_str(), opt.c_str());

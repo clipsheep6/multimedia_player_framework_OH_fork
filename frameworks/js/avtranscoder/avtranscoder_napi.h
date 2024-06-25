@@ -52,7 +52,7 @@ constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = 48000;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
 
-const std::map<std::string, std::vector<std::string>> stateList = {
+const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
         AVTransCoderOpt::PREPARE,
         AVTransCoderOpt::RELEASE
