@@ -163,6 +163,14 @@ int32_t PlayerClient::PrepareAsync()
     return playerProxy_->PrepareAsync();
 }
 
+int32_t PlayerClient::PrepareAt(int32_t timeMs)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " PrepareAt in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->PrepareAt(timeMs);
+}
+
 int32_t PlayerClient::Pause()
 {
     MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));

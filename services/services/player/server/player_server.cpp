@@ -40,6 +40,7 @@ using namespace OHOS::QOS;
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
+    constexpr int32_t DEFAULT_PREPARE_TIME = -1;
 }
 
 namespace OHOS {
@@ -386,6 +387,23 @@ int32_t PlayerServer::PrepareAsync()
     return MSERR_INVALID_OPERATION;
 }
 
+int32_t PlayerServer::PrepareAt(int32_t timeMs)
+{
+    if (inReleasing_.load()) {
+        MEDIA_LOGE("Can not PrepareAt, now in releasing");
+        return MSERR_INVALID_OPERATION;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("KPI-TRACE: PlayerServer PrepareAt in");
+
+    if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
+        prepareAtTimeMs = timeMs;
+        return OnPrepare(false);
+    }
+    MEDIA_LOGE("Can not PrepareAt, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
+}
+
 int32_t PlayerServer::OnPrepare(bool sync)
 {
     MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare in");
@@ -420,7 +438,13 @@ int32_t PlayerServer::OnPrepare(bool sync)
 int32_t PlayerServer::HandlePrepare()
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePrepare in");
-    int32_t ret = playerEngine_->PrepareAsync();
+    int32_t ret = MSERR_OK;
+    if (prepareAtTimeMs > DEFAULT_PREPARE_TIME) {
+        playerEngine_->PrepareAt(prepareAtTimeMs);
+        prepareAtTimeMs = DEFAULT_PREPARE_TIME;
+    } else {
+        playerEngine_->PrepareAsync();
+    } 
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
     CHECK_AND_RETURN_RET_LOG(!isInterruptNeeded_, MSERR_OK, "Cancel prepare");
 

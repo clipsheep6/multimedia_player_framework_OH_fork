@@ -43,6 +43,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[PREPARE] = "Player::Prepare";
     playerFuncs_[SET_RENDER_FIRST_FRAME] = "Player::SetRenderFirstFrame";
     playerFuncs_[PREPAREASYNC] = "Player::PrepareAsync";
+    playerFuncs_[PREPAREAT] = "Player::PrepareAt";
     playerFuncs_[PAUSE] = "Player::Pause";
     playerFuncs_[STOP] = "Player::Stop";
     playerFuncs_[RESET] = "Player::Reset";
@@ -273,6 +274,23 @@ int32_t PlayerServiceProxy::PrepareAsync()
     int32_t error = SendRequest(PREPAREASYNC, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "PrepareAsync failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::PrepareAt(int32_t timeMs)
+{
+    MediaTrace trace("Proxy::PrepareAt");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(timeMs);
+    int32_t error = SendRequest(PREPAREAT, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "prepareAt failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

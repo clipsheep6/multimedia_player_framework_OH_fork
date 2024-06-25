@@ -80,6 +80,7 @@ public:
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
     int32_t PrepareAsync() override;
+    int32_t PrepareAt(int32_t timeMs) override;
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t Release() override;
@@ -219,6 +220,7 @@ private:
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
     std::atomic<bool> isInterruptNeeded_{false};
+    int32_t prepareAtTimeMs = -1;
 };
 } // namespace Media
 } // namespace OHOS

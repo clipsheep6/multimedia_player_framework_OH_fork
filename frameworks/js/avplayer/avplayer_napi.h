@@ -86,6 +86,11 @@ private:
      */
     static napi_value JsPrepare(napi_env env, napi_callback_info info);
     /**
+     * prepareAt(callback: AsyncCallback<void>): void
+     * prepareAt(): Promise<void>
+     */
+    static napi_value JsPrepareAt(napi_env env, napi_callback_info info);
+    /**
      * play(callback: AsyncCallback<void>): void
      * play(): Promise<void>
      */
@@ -284,6 +289,7 @@ private:
     void ResetUserParameters();
 
     std::shared_ptr<TaskHandler<TaskRet>> PrepareTask();
+    std::shared_ptr<TaskHandler<TaskRet>> PrepareAtTask(int32_t timeMs);
     std::shared_ptr<TaskHandler<TaskRet>> PlayTask();
     std::shared_ptr<TaskHandler<TaskRet>> PauseTask();
     std::shared_ptr<TaskHandler<TaskRet>> StopTask();
