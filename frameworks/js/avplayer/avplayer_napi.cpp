@@ -630,7 +630,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
                 playerCb_->Release();
             }
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Release Task Out", FAKE_POINTER(this));
-            std::thread(&AVPlayerNapi::StopTaskQue, this).detach();
+            std::thread([this] () -> void { this->StopTaskQue(); }).detach();
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
@@ -910,21 +910,19 @@ void AVPlayerNapi::AddSubSource(std::string url)
         });
         (void)taskQue_->EnqueueTask(task);
     } else if (isFd) {
-        const std::string fdHead = "fd://";
-        std::string inputFd = url.substr(fdHead.size());
         int32_t fd = -1;
-        if (!StrToInt(inputFd, fd) || fd < 0) {
+        int32_t offset = -1;
+        int32_t length = -1;
+        bool canConvert = ConvertFdUrl2Fd(url, fd, offset, length);
+        if (!canConvert) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid parameters, The input parameter is not a fd://+numeric string");
-            return;
+                "invalid parameters, The input parameter is not a fd://+numeric(?offset=+numberic&+numberic) string");
         }
-
-        auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
+        auto task = std::make_shared<TaskHandler<void>>([this, fd, offset, length]() {
             MEDIA_LOGI("AddSubtitleFdSource Task");
-            if (player_ != nullptr) {
-                if (player_->AddSubSource(fd, 0, -1) != MSERR_OK) {
-                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to AddSubtitleFdSource");
-                }
+            CHECK_AND_RETURN(player_ != nullptr);
+            if (player_->AddSubSource(fd, offset, length) != MSERR_OK) {
+                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to AddSubtitleFdSource");
             }
         });
         (void)taskQue_->EnqueueTask(task);
@@ -932,6 +930,29 @@ void AVPlayerNapi::AddSubSource(std::string url)
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, The input parameter is not fd:// or network address");
     }
+}
+
+bool AVPlayerNapi::ConvertFdUrl2Fd(std::string& uri, int32_t& fd, int32_t& offset, int32_t& length)
+{
+    size_t pos1 = uri.find("?");
+    size_t pos2 = uri.find("offset=");
+    size_t pos3 = uri.find("&");
+    if (pos1 == std::string::npos) {
+        std::string inputFd = uri.substr(sizeof("fd://") - 1);
+        return StrToInt(inputFd, fd);
+    } else {
+        std::string fdStr = uri.substr(strlen("fd://"), pos1 - strlen("fd://"));
+        CHECK_AND_RETURN_RET(StrToInt(fdStr, fd) && fd >= 0, false);
+    }
+    if (pos1 != std::string::npos && pos2 != std::string::npos) {
+        std::string offsetStr = uri.substr(pos2 + strlen("offset="), pos3 - pos2 - strlen("offset="));
+        CHECK_AND_RETURN_RET(StrToInt(offsetStr, offset) && offset >= 0, false);
+    }
+    if (pos1 != std::string::npos && pos2 != std::string::npos && pos3 != std::string::npos) {
+        std::string sizeStr = uri.substr(pos3 + sizeof("&size"));
+        CHECK_AND_RETURN_RET(StrToInt(sizeStr, length) && length >= 0, false);
+    }
+    return true;
 }
 
 napi_value AVPlayerNapi::JsAddSubtitleUrl(napi_env env, napi_callback_info info)
