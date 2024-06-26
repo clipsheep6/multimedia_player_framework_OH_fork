@@ -356,11 +356,11 @@ int32_t HiPlayerImpl::PrepareAsync()
     }
     if (demuxer_ != nullptr && demuxer_->IsRenderNextVideoFrameSupported()) {
         ret = pipeline_->PrepareFrame(renderFirstFrame_);
-    }
-    auto code = TransStatus(ret);
-    if (ret != Status::OK) {
-        CollectionErrorInfo(code, "PrepareFrame failed.");
-        return code;
+        auto code = TransStatus(ret);
+        if (ret != Status::OK) {
+            CollectionErrorInfo(code, "PrepareFrame failed.");
+            return code;
+        }
     }
     UpdatePlayerStateAndNotify();
     MEDIA_LOGI("PrepareAsync End");
@@ -775,6 +775,9 @@ Status HiPlayerImpl::doPausedSeek(int64_t seekPos, PlayerSeekMode mode)
     pipeline_ -> Pause();
     pipeline_ -> Flush();
     auto rtv = doSeek(seekPos, mode);
+    if ((rtv == Status::OK) && demuxer_->IsRenderNextVideoFrameSupported()) {
+        rtv = pipeline_->PrepareFrame(true);
+    }
     return rtv;
 }
 
