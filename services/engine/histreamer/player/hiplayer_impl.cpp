@@ -639,6 +639,7 @@ void HiPlayerImpl::AppendPlayerMediaInfo()
 int32_t HiPlayerImpl::Reset()
 {
     MediaTrace trace("HiPlayerImpl::Reset");
+    MEDIA_LOG_I("Reset entered.");
     if (pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         return TransStatus(Status::OK);
     }
