@@ -305,6 +305,7 @@ private:
     void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) override;
     void StopTaskQue();
     void WaitTaskQueStop();
+    bool ConvertFdUrl2Fd(std::string& uri, int32_t& fd, int32_t& offset, int32_t& length);
 
     std::condition_variable stopTaskQueCond_;
     bool taskQueStoped_ = false;
