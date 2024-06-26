@@ -93,7 +93,7 @@ int ScreenCaptureServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (ScreenCaptureServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
+        MEDIA_LOGE("Error: Invalid descriptor");
         return MSERR_INVALID_OPERATION;
     }
 
