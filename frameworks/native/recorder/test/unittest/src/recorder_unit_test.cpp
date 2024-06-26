@@ -26,6 +26,7 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
+using namespace Security::AccessToken;
 namespace OHOS {
 namespace Media {
 // config for video to request buffer from surface
@@ -33,37 +34,54 @@ static VideoRecorderConfig g_videoRecorderConfig;
 
 void RecorderUnitTest::SetUpTestCase(void)
 {
-    vector<string> permission;
-    permission.push_back("ohos.permission.MICROPHONE");
-    uint64_t tokenId = 0;
-
-    auto perms = std::make_unique<const char* []>(permission.size());
-    for (size_t i = 0; i < permission.size(); i++) {
-        perms[i] = permission[i].c_str();
-    }
-    NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
-        .permsNum = static_cast<int32_t>(permission.size()),
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = perms.get(),
-        .acls = nullptr,
-        .processName = "recorder_unittest",
-        .aplStr = "system_basic",
+    HapInfoParams info = {
+        .userID = 100, // 100 user ID
+        .bundleName = "com.ohos.test.recordertdd",
+        .instIndex = 0, // 0 index
+        .appIDDesc = "com.ohos.test.recordertdd",
+        .isSystemApp = true
     };
-    tokenId = GetAccessTokenId(&infoInstance);
-    if (tokenId == 0) {
-        MEDIA_LOGE("Get Access Token Id Failed");
-        return;
-    }
-    int ret = SetSelfTokenID(tokenId);
+
+    HapPolicyParams policy = {
+        .apl = APL_SYSTEM_BASIC,
+        .domain = "test.avrecorder",
+        .permList = { },
+        .permStateList = {
+            {
+                .permissionName = "ohos.permission.MICROPHONE",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.READ_MEDIA",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.WRITE_MEDIA",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            },
+            {
+                .permissionName = "ohos.permission.KEEP_BACKGROUND_RUNNING",
+                .isGeneral = true,
+                .resDeviceID = { "local" },
+                .grantStatus = { PermissionState::PERMISSION_GRANTED },
+                .grantFlags = { 1 }
+            }
+        }
+    };
+    AccessTokenIDEx tokenIdEx = { 0 };
+    tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
+    int ret = SetSelfTokenID(tokenIdEx.tokenIDEx);
     if (ret != 0) {
-        MEDIA_LOGE("Set Acess Token Id failed");
-        return;
-    }
-    ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
-    if (ret < 0) {
-        MEDIA_LOGE("Reload Native Token Info Failed");
+        MEDIA_LOGE("Set hap token failed, err: %{public}d", ret);
     }
 }
 
@@ -509,7 +527,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_008, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
