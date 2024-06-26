@@ -156,13 +156,13 @@ int32_t SoundParser::GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> 
 
 size_t SoundParser::GetSoundDataTotalSize() const
 {
-    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
+    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, 0, "Invalid sound parser listener");
     return soundParserListener_->GetSoundDataTotalSize();
 }
 
 bool SoundParser::IsSoundParserCompleted() const
 {
-    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
+    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, false, "Invalid sound parser listener");
     return soundParserListener_->IsSoundParserCompleted();
 }
 
