@@ -129,6 +129,7 @@ napi_value AudioHapticPlayerOptionsNapi::CreateAudioHapticPlayerOptionsWrapper(n
 
 napi_value AudioHapticPlayerOptionsNapi::IsAudioMute(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGI("Enter IsAudioMute");
     napi_status status;
     AudioHapticPlayerOptionsNapi *audioHapticPlayerOptionsNapi = nullptr;
     size_t argc = 0;
