@@ -103,7 +103,7 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 
     // Start Thread
     CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_OK);
-    clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThreadCtrl, this);
+    clickThread_ = std::make_unique<std::thread>([this] () -> void { this->ClickThreadCtrl(); });
 
     return MSERR_OK;
 }

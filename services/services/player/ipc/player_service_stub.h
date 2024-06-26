@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Media {
+using PlayerStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
 class PlayerServiceStub
     : public IRemoteStub<IStandardPlayerService>,
       public MonitorServerObject,
@@ -133,8 +134,10 @@ private:
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
     int32_t SetDecryptConfig(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaSource(MessageParcel &data, MessageParcel &reply);
-    using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
-    std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;
+
+    std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
+    void FillPlayerFuncPart1();
+    void FillPlayerFuncPart2();
 };
 } // namespace Media
 } // namespace OHOS

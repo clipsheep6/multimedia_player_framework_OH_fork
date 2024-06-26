@@ -29,7 +29,7 @@ AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObj
     avmetaFuncs_[RESOLVE_METADATA] = &AVMetadataServiceProxyFuzzer::ResolveMetadata;
     avmetaFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataServiceProxyFuzzer::ResolveMetadataMap;
     avmetaFuncs_[GET_AVMETADATA] = &AVMetadataServiceProxyFuzzer::GetAVMetadata;
-    avmetaFuncs_[FETCH_ART_PICTURE] = &AVMetadataServiceProxyFuzzer::FetchArtPicture;
+    avmetaFuncs_[FETCH_ALBUM_COVER] = &AVMetadataServiceProxyFuzzer::FetchArtPicture;
     avmetaFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataServiceProxyFuzzer::FetchFrameAtTime;
     avmetaFuncs_[RELEASE] = &AVMetadataServiceProxyFuzzer::Release;
     avmetaFuncs_[DESTROY] = &AVMetadataServiceProxyFuzzer::DestroyStub;
@@ -211,7 +211,7 @@ int32_t AVMetadataServiceProxyFuzzer::FetchArtPicture(uint8_t *inputData, size_t
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(FETCH_ART_PICTURE, data, reply, option);
+    return SendRequest(FETCH_ALBUM_COVER, data, reply, option);
 }
 
 int32_t AVMetadataServiceProxyFuzzer::FetchFrameAtTime(uint8_t *inputData, size_t size, bool isFuzz)

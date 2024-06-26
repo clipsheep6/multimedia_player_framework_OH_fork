@@ -74,50 +74,91 @@ PlayerServiceStub::~PlayerServiceStub()
 
 void PlayerServiceStub::SetPlayerFuncs()
 {
-    playerFuncs_[SET_LISTENER_OBJ] = { &PlayerServiceStub::SetListenerObject, "Player::SetListenerObject" };
-    playerFuncs_[SET_SOURCE] = { &PlayerServiceStub::SetSource, "Player::SetSource" };
-    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { &PlayerServiceStub::SetMediaDataSource, "Player::SetMediaDataSource" };
-    playerFuncs_[SET_FD_SOURCE] = { &PlayerServiceStub::SetFdSource, "Player::SetFdSource" };
-    playerFuncs_[ADD_SUB_SOURCE] = { &PlayerServiceStub::AddSubSource, "Player::AddSubSource" };
-    playerFuncs_[ADD_SUB_FD_SOURCE] = { &PlayerServiceStub::AddSubFdSource, "Player::AddSubFdSource" };
-    playerFuncs_[PLAY] = { &PlayerServiceStub::Play, "Player::Play" };
-    playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
-    playerFuncs_[SET_RENDER_FIRST_FRAME] = { &PlayerServiceStub::SetRenderFirstFrame, "Player::SetRenderFirstFrame" };
-    playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
-    playerFuncs_[PAUSE] = { &PlayerServiceStub::Pause, "Player::Pause" };
-    playerFuncs_[STOP] = { &PlayerServiceStub::Stop, "Player::Stop" };
-    playerFuncs_[RESET] = { &PlayerServiceStub::Reset, "Player::Reset" };
-    playerFuncs_[RELEASE] = { &PlayerServiceStub::Release, "Player::Release" };
-    playerFuncs_[SET_VOLUME] = { &PlayerServiceStub::SetVolume, "Player::SetVolume" };
-    playerFuncs_[SEEK] = { &PlayerServiceStub::Seek, "Player::Seek" };
-    playerFuncs_[GET_CURRENT_TIME] = { &PlayerServiceStub::GetCurrentTime, "Player::GetCurrentTime" };
-    playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
-    playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
-    playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
-    playerFuncs_[SET_MEDIA_SOURCE] = { &PlayerServiceStub::SetMediaSource, "Player::SetMediaSource" };
-#ifdef SUPPORT_VIDEO
-    playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
-#endif
-    playerFuncs_[IS_PLAYING] = { &PlayerServiceStub::IsPlaying, "Player::IsPlaying" };
-    playerFuncs_[IS_LOOPING] = { &PlayerServiceStub::IsLooping, "Player::IsLooping" };
-    playerFuncs_[SET_LOOPING] = { &PlayerServiceStub::SetLooping, "Player::SetLooping" };
-    playerFuncs_[SET_RENDERER_DESC] = { &PlayerServiceStub::SetParameter, "Player::SetParameter" };
-    playerFuncs_[DESTROY] = { &PlayerServiceStub::DestroyStub, "Player::DestroyStub" };
-    playerFuncs_[SET_CALLBACK] = { &PlayerServiceStub::SetPlayerCallback, "Player::SetPlayerCallback" };
-    playerFuncs_[GET_VIDEO_TRACK_INFO] = { &PlayerServiceStub::GetVideoTrackInfo, "Player::GetVideoTrackInfo" };
-    playerFuncs_[GET_AUDIO_TRACK_INFO] = { &PlayerServiceStub::GetAudioTrackInfo, "Player::GetAudioTrackInfo" };
-    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = {
-        &PlayerServiceStub::GetSubtitleTrackInfo, "Player::GetSubtitleTrackInfo"
-    };
-    playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
-    playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
-    playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
-    playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
-    playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
-    playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
-    playerFuncs_[SET_DECRYPT_CONFIG] = { &PlayerServiceStub::SetDecryptConfig, "Player::SetDecryptConfig" };
-
+    FillPlayerFuncPart1();
+    FillPlayerFuncPart2();
     (void)RegisterMonitor(appPid_);
+}
+
+void PlayerServiceStub::FillPlayerFuncPart1()
+{
+    playerFuncs_[SET_LISTENER_OBJ] = { "Player::SetListenerObject",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } };
+    playerFuncs_[SET_SOURCE] = { "Player::SetSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetSource(data, reply); } };
+    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { "Player::SetMediaDataSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMediaDataSource(data, reply); } };
+    playerFuncs_[SET_FD_SOURCE] = { "Player::SetFdSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetFdSource(data, reply); } };
+    playerFuncs_[PLAY] = { "Player::Play",
+        [this](MessageParcel &data, MessageParcel &reply) { return Play(data, reply); } };
+    playerFuncs_[PREPARE] = { "Player::Prepare",
+        [this](MessageParcel &data, MessageParcel &reply) { return Prepare(data, reply); } };
+    playerFuncs_[SET_RENDER_FIRST_FRAME] = { "Player::SetRenderFirstFrame",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetRenderFirstFrame(data, reply); } };
+    playerFuncs_[PREPAREASYNC] = { "Player::PrepareAsync",
+        [this](MessageParcel &data, MessageParcel &reply) { return PrepareAsync(data, reply); } };
+    playerFuncs_[PAUSE] = { "Player::Pause",
+        [this](MessageParcel &data, MessageParcel &reply) { return Pause(data, reply); } };
+    playerFuncs_[STOP] = { "Player::Stop",
+        [this](MessageParcel &data, MessageParcel &reply) { return Stop(data, reply); } };
+    playerFuncs_[RESET] = { "Player::Reset",
+        [this](MessageParcel &data, MessageParcel &reply) { return Reset(data, reply); } };
+    playerFuncs_[RELEASE] = { "Player::Release",
+        [this](MessageParcel &data, MessageParcel &reply) { return Release(data, reply); } };
+    playerFuncs_[SET_VOLUME] = { "Player::SetVolume",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVolume(data, reply); } };
+    playerFuncs_[SEEK] = { "Player::Seek",
+        [this](MessageParcel &data, MessageParcel &reply) { return Seek(data, reply); } };
+    playerFuncs_[GET_CURRENT_TIME] = { "Player::GetCurrentTime",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTime(data, reply); } };
+    playerFuncs_[GET_DURATION] = { "Player::GetDuration",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetDuration(data, reply); } };
+    playerFuncs_[SET_PLAYERBACK_SPEED] = { "Player::SetPlaybackSpeed",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlaybackSpeed(data, reply); } };
+    playerFuncs_[GET_PLAYERBACK_SPEED] = { "Player::GetPlaybackSpeed",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackSpeed(data, reply); } };
+    playerFuncs_[SET_MEDIA_SOURCE] = { "Player::SetMediaSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMediaSource(data, reply); } };
+#ifdef SUPPORT_VIDEO
+    playerFuncs_[SET_VIDEO_SURFACE] = { "Player::SetVideoSurface",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSurface(data, reply); } };
+#endif
+    playerFuncs_[IS_PLAYING] = { "Player::IsPlaying",
+        [this](MessageParcel &data, MessageParcel &reply) { return IsPlaying(data, reply); } };
+    playerFuncs_[IS_LOOPING] = { "Player::IsLooping",
+        [this](MessageParcel &data, MessageParcel &reply) { return IsLooping(data, reply); } };
+    playerFuncs_[SET_LOOPING] = { "Player::SetLooping",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetLooping(data, reply); } };
+}
+
+void PlayerServiceStub::FillPlayerFuncPart2()
+{
+    playerFuncs_[SET_RENDERER_DESC] = { "Player::SetParameter",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetParameter(data, reply); } };
+    playerFuncs_[DESTROY] = { "Player::DestroyStub",
+        [this](MessageParcel &data, MessageParcel &reply) { return DestroyStub(data, reply); } };
+    playerFuncs_[SET_CALLBACK] = { "Player::SetPlayerCallback",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerCallback(data, reply); } };
+    playerFuncs_[GET_VIDEO_TRACK_INFO] = { "Player::GetVideoTrackInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoTrackInfo(data, reply); } };
+    playerFuncs_[GET_AUDIO_TRACK_INFO] = { "Player::GetAudioTrackInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "Player::GetSubtitleTrackInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetSubtitleTrackInfo(data, reply); } };
+    playerFuncs_[GET_VIDEO_WIDTH] = { "Player::GetVideoHeight",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoHeight(data, reply); } };
+    playerFuncs_[GET_VIDEO_HEIGHT] = { "Player::GetVideoHeight",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoHeight(data, reply); } };
+    playerFuncs_[SELECT_BIT_RATE] = { "Player::SelectBitRate",
+        [this](MessageParcel &data, MessageParcel &reply) { return SelectBitRate(data, reply); } };
+    playerFuncs_[SELECT_TRACK] = { "Player::SelectTrack",
+        [this](MessageParcel &data, MessageParcel &reply) { return SelectTrack(data, reply); } };
+    playerFuncs_[DESELECT_TRACK] = { "Player::DeselectTrack",
+        [this](MessageParcel &data, MessageParcel &reply) { return DeselectTrack(data, reply); } };
+    playerFuncs_[GET_CURRENT_TRACK] = { "Player::GetCurrentTrack",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTrack(data, reply); } };
+    playerFuncs_[SET_DECRYPT_CONFIG] = { "Player::SetDecryptConfig",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -156,8 +197,8 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
 
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
-        auto memberFunc = itFunc->second.first;
-        auto funcName = itFunc->second.second;
+        auto memberFunc = itFunc->second.second;
+        auto funcName = itFunc->second.first;
         if (funcName.compare("Player::SetVolume") == 0) {
             MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
                 FAKE_POINTER(this), funcName.c_str());
@@ -169,7 +210,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
                 (void)IpcRecovery(false);
                 int32_t ret = -1;
-                ret = (this->*memberFunc)(data, reply);
+                ret = memberFunc(data, reply);
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);

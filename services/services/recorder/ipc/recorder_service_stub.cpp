@@ -57,46 +57,89 @@ int32_t RecorderServiceStub::Init()
 {
     recorderServer_ = RecorderServer::Create();
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "failed to create RecorderServer");
-
-    recFuncs_[SET_LISTENER_OBJ] = &RecorderServiceStub::SetListenerObject;
-    recFuncs_[SET_VIDEO_SOURCE] = &RecorderServiceStub::SetVideoSource;
-    recFuncs_[SET_VIDEO_ENCODER] = &RecorderServiceStub::SetVideoEncoder;
-    recFuncs_[SET_VIDEO_SIZE] = &RecorderServiceStub::SetVideoSize;
-    recFuncs_[SET_VIDEO_FARAME_RATE] = &RecorderServiceStub::SetVideoFrameRate;
-    recFuncs_[SET_VIDEO_ENCODING_BIT_RATE] = &RecorderServiceStub::SetVideoEncodingBitRate;
-    recFuncs_[GET_SURFACE] = &RecorderServiceStub::GetSurface;
-    recFuncs_[SET_AUDIO_SOURCE] = &RecorderServiceStub::SetAudioSource;
-    recFuncs_[SET_AUDIO_ENCODER] = &RecorderServiceStub::SetAudioEncoder;
-    recFuncs_[SET_AUDIO_SAMPLE_RATE] = &RecorderServiceStub::SetAudioSampleRate;
-    recFuncs_[SET_AUDIO_CHANNELS] = &RecorderServiceStub::SetAudioChannels;
-    recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] = &RecorderServiceStub::SetAudioEncodingBitRate;
-    recFuncs_[SET_DATA_SOURCE] = &RecorderServiceStub::SetDataSource;
-    recFuncs_[SET_MAX_DURATION] = &RecorderServiceStub::SetMaxDuration;
-    recFuncs_[SET_OUTPUT_FORMAT] = &RecorderServiceStub::SetOutputFormat;
-    recFuncs_[SET_OUTPUT_FILE] = &RecorderServiceStub::SetOutputFile;
-    recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
-    recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
-    recFuncs_[SET_USER_CUSTOM_INFO] = &RecorderServiceStub::SetUserCustomInfo;
-    recFuncs_[SET_GENRE] = &RecorderServiceStub::SetGenre;
-    recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
-    recFuncs_[START] = &RecorderServiceStub::Start;
-    recFuncs_[PAUSE] = &RecorderServiceStub::Pause;
-    recFuncs_[RESUME] = &RecorderServiceStub::Resume;
-    recFuncs_[STOP] = &RecorderServiceStub::Stop;
-    recFuncs_[RESET] = &RecorderServiceStub::Reset;
-    recFuncs_[RELEASE] = &RecorderServiceStub::Release;
-    recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
-    recFuncs_[GET_AV_RECORDER_CONFIG] = &RecorderServiceStub::GetAVRecorderConfig;
-    recFuncs_[GET_LOCATION] = &RecorderServiceStub::GetLocation;
-    recFuncs_[SET_VIDEO_IS_HDR] = &RecorderServiceStub::SetVideoIsHdr;
-    recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] = &RecorderServiceStub::SetVideoEnableTemporalScale;
-    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] = &RecorderServiceStub::GetCurrentCapturerChangeInfo;
-    recFuncs_[GET_AVAILABLE_ENCODER] = &RecorderServiceStub::GetAvailableEncoder;
-    recFuncs_[GET_MAX_AMPLITUDE] = &RecorderServiceStub::GetMaxAmplitude;
-
+    FillRecFuncPart1();
+    FillRecFuncPart2();
     pid_ = IPCSkeleton::GetCallingPid();
     (void)RegisterMonitor(pid_);
     return MSERR_OK;
+}
+
+void RecorderServiceStub::FillRecFuncPart1()
+{
+    recFuncs_[SET_LISTENER_OBJ] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); };
+    recFuncs_[SET_VIDEO_SOURCE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSource(data, reply); };
+    recFuncs_[SET_VIDEO_ENCODER] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEncoder(data, reply); };
+    recFuncs_[SET_VIDEO_SIZE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSize(data, reply); };
+    recFuncs_[SET_VIDEO_FARAME_RATE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoFrameRate(data, reply); };
+    recFuncs_[SET_VIDEO_ENCODING_BIT_RATE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEncodingBitRate(data, reply); };
+    recFuncs_[GET_SURFACE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetSurface(data, reply); };
+    recFuncs_[SET_AUDIO_SOURCE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioSource(data, reply); };
+    recFuncs_[SET_AUDIO_ENCODER] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioEncoder(data, reply); };
+    recFuncs_[SET_AUDIO_SAMPLE_RATE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioSampleRate(data, reply); };
+    recFuncs_[SET_AUDIO_CHANNELS] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioChannels(data, reply); };
+    recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetAudioEncodingBitRate(data, reply); };
+    recFuncs_[SET_DATA_SOURCE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetDataSource(data, reply); };
+    recFuncs_[SET_MAX_DURATION] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMaxDuration(data, reply); };
+    recFuncs_[SET_OUTPUT_FORMAT] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFormat(data, reply); };
+    recFuncs_[SET_OUTPUT_FILE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetOutputFile(data, reply); };
+    recFuncs_[SET_LOCATION] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetLocation(data, reply); };
+    recFuncs_[SET_ORIENTATION_HINT] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetOrientationHint(data, reply); };
+    recFuncs_[SET_USER_CUSTOM_INFO] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetUserCustomInfo(data, reply); };
+    recFuncs_[SET_GENRE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetGenre(data, reply); };
+    recFuncs_[PREPARE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Prepare(data, reply); };
+}
+
+void RecorderServiceStub::FillRecFuncPart2()
+{
+    recFuncs_[START] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Start(data, reply); };
+    recFuncs_[PAUSE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Pause(data, reply); };
+    recFuncs_[RESUME] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Resume(data, reply); };
+    recFuncs_[STOP] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Stop(data, reply); };
+    recFuncs_[RESET] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Reset(data, reply); };
+    recFuncs_[RELEASE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return Release(data, reply); };
+    recFuncs_[DESTROY] =
+        [this](MessageParcel &data, MessageParcel &reply) { return DestroyStub(data, reply); };
+    recFuncs_[GET_AV_RECORDER_CONFIG] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetAVRecorderConfig(data, reply); };
+    recFuncs_[GET_LOCATION] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetLocation(data, reply); };
+    recFuncs_[SET_VIDEO_IS_HDR] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoIsHdr(data, reply); };
+    recFuncs_[SET_VIDEO_ENABLE_TEMPORAL_SCALE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableTemporalScale(data, reply); };
+    recFuncs_[GET_AUDIO_CAPTURER_CHANGE_INFO] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentCapturerChangeInfo(data, reply); };
+    recFuncs_[GET_AVAILABLE_ENCODER] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetAvailableEncoder(data, reply); };
+    recFuncs_[GET_MAX_AMPLITUDE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetMaxAmplitude(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -149,7 +192,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         if (memberFunc != nullptr) {
             std::lock_guard<std::mutex> lock(mutex_);
             (void)IpcRecovery(false);
-            int32_t ret = (this->*memberFunc)(data, reply);
+            int32_t ret = memberFunc(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
             }

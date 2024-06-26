@@ -569,27 +569,50 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    onInfoFuncs_[INFO_TYPE_STATE_CHANGE] = &AVPlayerCallback::OnStateChangeCb;
-    onInfoFuncs_[INFO_TYPE_VOLUME_CHANGE] = &AVPlayerCallback::OnVolumeChangeCb;
-    onInfoFuncs_[INFO_TYPE_SEEKDONE] = &AVPlayerCallback::OnSeekDoneCb;
-    onInfoFuncs_[INFO_TYPE_SPEEDDONE] = &AVPlayerCallback::OnSpeedDoneCb;
-    onInfoFuncs_[INFO_TYPE_BITRATEDONE] = &AVPlayerCallback::OnBitRateDoneCb;
-    onInfoFuncs_[INFO_TYPE_POSITION_UPDATE] = &AVPlayerCallback::OnPositionUpdateCb;
-    onInfoFuncs_[INFO_TYPE_DURATION_UPDATE] = &AVPlayerCallback::OnDurationUpdateCb;
-    onInfoFuncs_[INFO_TYPE_BUFFERING_UPDATE] = &AVPlayerCallback::OnBufferingUpdateCb;
-    onInfoFuncs_[INFO_TYPE_MESSAGE] = &AVPlayerCallback::OnMessageCb;
-    onInfoFuncs_[INFO_TYPE_RESOLUTION_CHANGE] = &AVPlayerCallback::OnVideoSizeChangedCb;
-    onInfoFuncs_[INFO_TYPE_INTERRUPT_EVENT] = &AVPlayerCallback::OnAudioInterruptCb;
-    onInfoFuncs_[INFO_TYPE_BITRATE_COLLECT] = &AVPlayerCallback::OnBitRateCollectedCb;
-    onInfoFuncs_[INFO_TYPE_EOS] = &AVPlayerCallback::OnEosCb;
-    onInfoFuncs_[INFO_TYPE_IS_LIVE_STREAM] = &AVPlayerCallback::NotifyIsLiveStream;
-    onInfoFuncs_[INFO_TYPE_SUBTITLE_UPDATE] = &AVPlayerCallback::OnSubtitleUpdateCb;
-    onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
-    onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
-    onInfoFuncs_[INFO_TYPE_DRM_INFO_UPDATED] = &AVPlayerCallback::OnDrmInfoUpdatedCb;
-    onInfoFuncs_[INFO_TYPE_SET_DECRYPT_CONFIG_DONE] = &AVPlayerCallback::OnSetDecryptConfigDoneCb;
-    onInfoFuncs_[INFO_TYPE_SUBTITLE_UPDATE_INFO] = &AVPlayerCallback::OnSubtitleInfoCb;
-    onInfoFuncs_[INFO_TYPE_AUDIO_DEVICE_CHANGE] = &AVPlayerCallback::OnAudioDeviceChangeCb;
+    onInfoFuncs_ = {
+        { INFO_TYPE_STATE_CHANGE,
+            [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
+        { INFO_TYPE_VOLUME_CHANGE,
+            [this](const int32_t extra, const Format &infoBody) { OnVolumeChangeCb(extra, infoBody); } },
+        { INFO_TYPE_SEEKDONE,
+            [this](const int32_t extra, const Format &infoBody) { OnSeekDoneCb(extra, infoBody); } },
+        { INFO_TYPE_SPEEDDONE,
+            [this](const int32_t extra, const Format &infoBody) { OnSpeedDoneCb(extra, infoBody); } },
+        { INFO_TYPE_BITRATEDONE,
+            [this](const int32_t extra, const Format &infoBody) { OnBitRateDoneCb(extra, infoBody); } },
+        { INFO_TYPE_POSITION_UPDATE,
+            [this](const int32_t extra, const Format &infoBody) { OnPositionUpdateCb(extra, infoBody); } },
+        { INFO_TYPE_DURATION_UPDATE,
+            [this](const int32_t extra, const Format &infoBody) { OnDurationUpdateCb(extra, infoBody); } },
+        { INFO_TYPE_BUFFERING_UPDATE,
+            [this](const int32_t extra, const Format &infoBody) { OnBufferingUpdateCb(extra, infoBody); } },
+        { INFO_TYPE_MESSAGE,
+            [this](const int32_t extra, const Format &infoBody) { OnMessageCb(extra, infoBody);} },
+        { INFO_TYPE_RESOLUTION_CHANGE,
+            [this](const int32_t extra, const Format &infoBody) { OnVideoSizeChangedCb(extra, infoBody); } },
+        { INFO_TYPE_INTERRUPT_EVENT,
+            [this](const int32_t extra, const Format &infoBody) { OnAudioInterruptCb(extra, infoBody); } },
+        { INFO_TYPE_BITRATE_COLLECT,
+             [this](const int32_t extra, const Format &infoBody) { OnBitRateCollectedCb(extra, infoBody); } },
+        { INFO_TYPE_EOS,
+            [this](const int32_t extra, const Format &infoBody) { OnEosCb(extra, infoBody); } },
+        { INFO_TYPE_IS_LIVE_STREAM,
+            [this](const int32_t extra, const Format &infoBody) {NotifyIsLiveStream(extra, infoBody); } },
+        { INFO_TYPE_SUBTITLE_UPDATE,
+            [this](const int32_t extra, const Format &infoBody) { OnSubtitleUpdateCb(extra, infoBody); } },
+        { INFO_TYPE_TRACKCHANGE,
+             [this](const int32_t extra, const Format &infoBody) { OnTrackChangedCb(extra, infoBody); } },
+        { INFO_TYPE_TRACK_INFO_UPDATE,
+            [this](const int32_t extra, const Format &infoBody) { OnTrackInfoUpdate(extra, infoBody); } },
+        { INFO_TYPE_DRM_INFO_UPDATED,
+            [this](const int32_t extra, const Format &infoBody) { OnDrmInfoUpdatedCb(extra, infoBody); } },
+         { INFO_TYPE_SET_DECRYPT_CONFIG_DONE,
+            [this](const int32_t extra, const Format &infoBody) { OnSetDecryptConfigDoneCb(extra, infoBody); } },
+        { INFO_TYPE_SUBTITLE_UPDATE_INFO,
+            [this](const int32_t extra, const Format &infoBody) { OnSubtitleInfoCb(extra, infoBody); } },
+        { INFO_TYPE_AUDIO_DEVICE_CHANGE,
+            [this](const int32_t extra, const Format &infoBody) { OnAudioDeviceChangeCb(extra, infoBody); } },
+    };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -668,7 +691,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
-        (this->*onInfoFuncs_[type])(extra, infoBody);
+        onInfoFuncs_[type](extra, infoBody);
     } else {
         MEDIA_LOGD("0x%{public}06" PRIXPTR " OnInfo: no member func supporting, %{public}d",
             FAKE_POINTER(this), type);

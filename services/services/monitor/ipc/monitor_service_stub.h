@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Media {
+using MonitorStubFunc = std::function<int32_t(MessageParcel &data, MessageParcel &reply)>;
 class MonitorServiceStub : public IRemoteStub<IStandardMonitorService>, public NoCopyable {
 public:
     virtual ~MonitorServiceStub();
@@ -32,7 +33,6 @@ public:
     int32_t OnClientDie(int32_t pid);
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    using MonitorStubFunc = int32_t(MonitorServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     int32_t Click() override;
     int32_t EnableMonitor() override;
     int32_t DisableMonitor() override;

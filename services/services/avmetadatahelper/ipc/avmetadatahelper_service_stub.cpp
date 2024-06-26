@@ -55,18 +55,32 @@ int32_t AVMetadataHelperServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create AVMetadataHelper Service");
 
-    avMetadataHelperFuncs_[SET_URI_SOURCE] = &AVMetadataHelperServiceStub::SetUriSource;
-    avMetadataHelperFuncs_[SET_FD_SOURCE] = &AVMetadataHelperServiceStub::SetFdSource;
-    avMetadataHelperFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &AVMetadataHelperServiceStub::SetMediaDataSource;
-    avMetadataHelperFuncs_[RESOLVE_METADATA] = &AVMetadataHelperServiceStub::ResolveMetadata;
-    avMetadataHelperFuncs_[RESOLVE_METADATA_MAP] = &AVMetadataHelperServiceStub::ResolveMetadataMap;
-    avMetadataHelperFuncs_[FETCH_ART_PICTURE] = &AVMetadataHelperServiceStub::FetchArtPicture;
-    avMetadataHelperFuncs_[FETCH_FRAME_AT_TIME] = &AVMetadataHelperServiceStub::FetchFrameAtTime;
-    avMetadataHelperFuncs_[RELEASE] = &AVMetadataHelperServiceStub::Release;
-    avMetadataHelperFuncs_[DESTROY] = &AVMetadataHelperServiceStub::DestroyStub;
-    avMetadataHelperFuncs_[SET_CALLBACK] = &AVMetadataHelperServiceStub::SetHelperCallback;
-    avMetadataHelperFuncs_[SET_LISTENER_OBJ] = &AVMetadataHelperServiceStub::SetListenerObject;
-    avMetadataHelperFuncs_[GET_AVMETADATA] = &AVMetadataHelperServiceStub::GetAVMetadata;
+    avMetadataHelperFuncs_ = {
+        { SET_URI_SOURCE,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetUriSource(data, reply); } },
+        { SET_FD_SOURCE,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetFdSource(data, reply); } },
+        { SET_MEDIA_DATA_SRC_OBJ,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetMediaDataSource(data, reply); } },
+        { RESOLVE_METADATA,
+            [this](MessageParcel &data, MessageParcel &reply) { return ResolveMetadata(data, reply); } },
+        { RESOLVE_METADATA_MAP,
+            [this](MessageParcel &data, MessageParcel &reply) { return ResolveMetadataMap(data, reply); } },
+        { FETCH_ALBUM_COVER,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchArtPicture(data, reply); } },
+        { FETCH_FRAME_AT_TIME,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameAtTime(data, reply); } },
+        { RELEASE,
+            [this](MessageParcel &data, MessageParcel &reply) { return Release(data, reply); } },
+        { DESTROY,
+            [this](MessageParcel &data, MessageParcel &reply) { return DestroyStub(data, reply); } },
+        { SET_CALLBACK,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetHelperCallback(data, reply); } },
+        { SET_LISTENER_OBJ,
+            [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } },
+        { GET_AVMETADATA,
+            [this](MessageParcel &data, MessageParcel &reply) { return GetAVMetadata(data, reply); } },
+    };
     return MSERR_OK;
 }
 
@@ -95,7 +109,7 @@ int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &d
     if (itFunc != avMetadataHelperFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
-            int32_t ret = (this->*memberFunc)(data, reply);
+            int32_t ret = memberFunc(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("Calling memberFunc is failed.");
             }

@@ -47,9 +47,11 @@ sptr<MonitorServiceStub> MonitorServiceStub::GetInstance()
 
 int32_t MonitorServiceStub::Init()
 {
-    monitorFuncs_[MONITOR_CLICK] = &MonitorServiceStub::Click;
-    monitorFuncs_[MONITOR_ENABLE] = &MonitorServiceStub::EnableMonitor;
-    monitorFuncs_[MONITOR_DISABLE] = &MonitorServiceStub::DisableMonitor;
+    monitorFuncs_ = {
+        { MONITOR_CLICK, [this](MessageParcel &data, MessageParcel &reply) { return Click(); } },
+        { MONITOR_ENABLE, [this](MessageParcel &data, MessageParcel &reply) { return EnableMonitor(); } },
+        { MONITOR_DISABLE, [this](MessageParcel &data, MessageParcel &reply) { return DisableMonitor(); } },
+    };
     return MSERR_OK;
 }
 
@@ -80,7 +82,7 @@ int MonitorServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, IPCObjectStub::OnRemoteRequest(code, data, reply, option),
         "MonitorServiceStub: no member func supporting, applying default process");
 
-    int32_t ret = (this->*memberFunc)(data, reply);
+    int32_t ret = memberFunc(data, reply);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "calling memberFunc is failed.");
     return MSERR_OK;
 }

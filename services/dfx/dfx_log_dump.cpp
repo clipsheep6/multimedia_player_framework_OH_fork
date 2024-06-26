@@ -34,7 +34,7 @@ DfxLogDump &DfxLogDump::GetInstance()
 
 DfxLogDump::DfxLogDump()
 {
-    thread_ = std::make_unique<std::thread>(&DfxLogDump::TaskProcessor, this);
+    thread_ = std::make_unique<std::thread>([this] () -> void { this->TaskProcessor(); });
 }
 
 DfxLogDump::~DfxLogDump()

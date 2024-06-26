@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Media {
+using AVMetadataHelperStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
 class AVMetadataHelperServiceStub : public IRemoteStub<IStandardAVMetadataHelperService>, public NoCopyable {
 public:
     static sptr<AVMetadataHelperServiceStub> Create();
@@ -63,7 +64,6 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<IAVMetadataHelperService> avMetadateHelperServer_ = nullptr;
-    using AVMetadataHelperStubFunc = int32_t(AVMetadataHelperServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, AVMetadataHelperStubFunc> avMetadataHelperFuncs_;
     std::shared_ptr<HelperCallback> helperCallback_ = nullptr;
 };

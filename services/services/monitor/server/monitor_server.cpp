@@ -136,7 +136,7 @@ int32_t MonitorServer::EnableMonitor(int32_t pid)
     }
 
     // Start Thread
-    thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
+    thread_ = std::make_unique<std::thread>([this] () -> void { this->MonitorThread(); });
 
     return MSERR_OK;
 }

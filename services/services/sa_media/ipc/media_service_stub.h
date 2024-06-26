@@ -24,12 +24,12 @@
 
 namespace OHOS {
 namespace Media {
+using MediaStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
 class MediaServiceStub : public IRemoteStub<IStandardMediaService>, public NoCopyable {
 public:
     MediaServiceStub();
     virtual ~MediaServiceStub();
 
-    using MediaStubFunc = int32_t(MediaServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 protected:
@@ -41,9 +41,12 @@ private:
     void ClientDied(pid_t pid);
     int32_t DestroyStubForPid(pid_t pid);
 
+    int32_t HandleMediaRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    MediaStubFunc GetMediaStubFunc(uint32_t code);
+
+    std::map<uint32_t, MediaStubFunc> mediaFuncs_;
     std::map<pid_t, sptr<MediaDeathRecipient>> deathRecipientMap_;
     std::map<pid_t, sptr<IStandardMediaListener>> mediaListenerMap_;
-    std::map<uint32_t, MediaStubFunc> mediaFuncs_;
     std::mutex mutex_;
 };
 } // namespace Media
