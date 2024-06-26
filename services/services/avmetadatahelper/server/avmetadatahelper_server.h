@@ -48,6 +48,7 @@ private:
     void ChangeState(const HelperStates state);
     void NotifyErrorCallback(int32_t code, const std::string msg);
     void NotifyInfoCallback(HelperOnInfoType type, int32_t extra);
+    int32_t InitEngine(const std::string &uri);
 
     int32_t appUid_;
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
