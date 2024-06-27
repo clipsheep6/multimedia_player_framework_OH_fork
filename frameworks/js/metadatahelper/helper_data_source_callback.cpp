@@ -189,6 +189,7 @@ void HelperDataSourceCallback::SaveCallbackReference(const std::string &name, st
 
 int32_t HelperDataSourceCallback::GetCallback(const std::string &name, napi_value *callback)
 {
+    MEDIA_LOGD("GetCallback in");
     (void)name;
     if (refMap_.find(HELPER_READAT_CALLBACK_NAME) == refMap_.end()) {
         return MSERR_INVALID_VAL;
