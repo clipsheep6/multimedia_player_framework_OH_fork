@@ -1564,6 +1564,13 @@ void HiPlayerImpl::HandleErrorEvent(int32_t errorCode)
 
 void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 {
+    MEDIA_LOGI("NotifyBufferingStart");
+    syncManager_->Pause();
+    auto = ret = pipeline_->Pause();
+    if (ret != Status::OK) {
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+    }
+    callbackLooper_.StopReportMediaProgress();
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
@@ -1572,6 +1579,12 @@ void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 {
     MEDIA_LOGI("NotifyBufferingEnd");
+    syncManager_->Resume();
+    auto = ret = pipeline_->Resume();
+    if (ret != Status::OK) {
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+    }
+    callbackLooper_.StartReportMediaProgress();
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
@@ -1776,9 +1789,6 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
             Status ret = Status::OK;
             syncManager_->Pause();
             ret = pipeline_->Pause();
-            if (audioSink_ != nullptr) {
-                audioSink_->Pause();
-            }
             if (ret != Status::OK) {
                 UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             }
