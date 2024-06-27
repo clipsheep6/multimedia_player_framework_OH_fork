@@ -73,6 +73,7 @@ void PlayerClient::MediaServerDied()
         playerProxy_ = nullptr;
         listenerStub_ = nullptr;
     }
+    MEDIA_LOGD("PlayerClient:MediaServerDied");
     if (callback_ != nullptr) {
         callback_->OnError(MSERR_SERVICE_DIED,
             "mediaserver is died, please create a new playback instance again");
