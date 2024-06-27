@@ -640,6 +640,7 @@ int32_t PlayerServer::OnReset()
 
 int32_t PlayerServer::HandleReset()
 {
+    MEDIA_LOGD("PlayerServer HandleReset in");
     (void)playerEngine_->Reset();
     std::thread([this]() -> void {
         playerEngine_ = nullptr;
