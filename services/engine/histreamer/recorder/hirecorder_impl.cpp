@@ -474,7 +474,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
 
 void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo)
 {
-    MEDIA_LOG_I("HiRecorderImpl OnAudioCaptureChange enter.");
+    MEDIA_LOG_I("OnAudioCaptureChange enter.");
     auto ptr = obs_.lock();
     if (ptr != nullptr) {
         ptr->OnAudioCaptureChange(ConvertCapturerChangeInfo(capturerChangeInfo));
