@@ -208,7 +208,7 @@ int32_t HiRecorderImpl::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs)
 
 int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recParam)
 {
-    MEDIA_LOG_I("HiRecorderImpl Configure enter.");
+    MEDIA_LOG_I("Configure enter.");
     FALSE_RETURN_V(outputFormatType_ != OutputFormatType::FORMAT_BUTT,
         (int32_t)Status::ERROR_INVALID_OPERATION);
     FALSE_RETURN_V(CheckParamType(sourceId, recParam), (int32_t)Status::ERROR_INVALID_PARAMETER);
