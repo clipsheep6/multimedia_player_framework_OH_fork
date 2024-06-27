@@ -373,8 +373,8 @@ int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encod
     config_.audioCodec = encoder;
     AudEnc audEnc(encoder);
     MEDIA_LOGD("set audio encoder sourceId:%{public}d, encoder:%{public}d", sourceId, encoder);
-    CHECK_AND_RETURN_RET_LOG(!(encoder == AUDIO_MPEG && config_.withVideo), MSERR_INVALID_VAL,
-        "mp3 is not supported for video recording");
+    CHECK_AND_RETURN_RET_LOG(!(encoder == AUDIO_MPEG && config_.format == FORMAT_MPEG_4), MSERR_INVALID_VAL,
+        "mp3 is not supported for mp4 recording");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, audEnc);
     });
