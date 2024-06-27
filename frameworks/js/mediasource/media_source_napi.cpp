@@ -107,7 +107,7 @@ void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finaliz
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsCreateMediaSourceWithUrl In");
+    MEDIA_LOGD("MediaSourceNapi::JsCreateMediaSourceWithUrl In");
     size_t argCount = 2;
     napi_value args[2] = { nullptr };
     napi_value jsMediaSource = nullptr;
