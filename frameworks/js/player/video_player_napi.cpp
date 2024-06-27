@@ -570,7 +570,7 @@ napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("Play In");
+    MEDIA_LOGD("VideoPlayerNapi::Play In");
 
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PLAY;
