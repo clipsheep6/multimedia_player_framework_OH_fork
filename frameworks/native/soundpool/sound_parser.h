@@ -16,6 +16,8 @@
 #ifndef SOUND_PARSER_H
 #define SOUND_PARSER_H
 
+#define PLAYER_FRAMEWORK_SOUNDPOOL
+
 #include <atomic>
 #include <deque>
 #include <memory>

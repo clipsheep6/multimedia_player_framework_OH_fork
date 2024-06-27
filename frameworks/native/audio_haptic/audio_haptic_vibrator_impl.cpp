@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "audio_haptic_vibrator_impl.h"
 
 #include <fcntl.h>

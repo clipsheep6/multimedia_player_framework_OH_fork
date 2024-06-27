@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "video_recorder_napi.h"
 #include "recorder_callback_napi.h"
 #include "media_log.h"

@@ -16,6 +16,8 @@
 #ifndef AUDIO_HAPTIC_PLAYER_NAPI_H
 #define AUDIO_HAPTIC_PLAYER_NAPI_H
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include <map>
 
 #include "audio_info.h"

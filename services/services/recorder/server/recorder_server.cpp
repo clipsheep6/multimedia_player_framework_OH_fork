@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "recorder_server.h"
 #include "map"
 #include "media_log.h"

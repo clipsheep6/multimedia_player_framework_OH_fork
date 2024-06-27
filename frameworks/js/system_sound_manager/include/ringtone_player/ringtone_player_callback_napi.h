@@ -16,6 +16,8 @@
 #ifndef RINGTONE_PLAYER_CALLBACK_NAPI_H
 #define RINGTONE_PLAYER_CALLBACK_NAPI_H
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "ringtone_player.h"
 #include "common_napi.h"
 #include "audio_info.h"

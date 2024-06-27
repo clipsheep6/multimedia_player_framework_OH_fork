@@ -13,6 +13,8 @@
 * limitations under the License.
 */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "tone_attrs_napi.h"
 
 #include "media_log.h"

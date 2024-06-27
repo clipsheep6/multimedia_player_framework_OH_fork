@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "avmetadatahelper_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"

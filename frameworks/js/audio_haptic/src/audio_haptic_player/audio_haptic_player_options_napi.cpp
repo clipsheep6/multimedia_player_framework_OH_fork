@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "audio_haptic_player_options_napi.h"
 #include "media_log.h"
 

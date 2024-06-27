@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "recorder_client.h"
 #include "media_log.h"
 #include "media_errors.h"

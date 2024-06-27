@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "system_sound_manager_napi.h"
 
 #include "access_token.h"

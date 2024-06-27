@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "audio_haptic_manager_impl.h"
 
 #include "audio_haptic_player_impl.h"

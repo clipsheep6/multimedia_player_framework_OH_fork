@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "av_thumbnail_generator.h"
 
 #include "buffer/avbuffer_common.h"

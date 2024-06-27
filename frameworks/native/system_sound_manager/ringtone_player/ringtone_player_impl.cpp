@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "ringtone_player_impl.h"
 
 #include <sys/stat.h>

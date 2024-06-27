@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "audio_recorder_napi.h"
 #include <unistd.h>
 #include <fcntl.h>

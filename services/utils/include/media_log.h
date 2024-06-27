@@ -26,6 +26,33 @@
 namespace OHOS {
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD002B2B
+
+#ifdef PLAYER_FRAMEWORK_RECORDER
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002B2C
+#endif
+
+#ifdef PLAYER_FRAMEWORK_META
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002B2D
+#endif
+
+#ifdef PLAYER_FRAMEWORK_SOUNDPOOL
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002B2E
+#endif
+
+#ifdef PLAYER_FRAMEWORK_SCREEN_CAPTURE
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002B2F
+#endif
+
+#ifdef PLAYER_FRAMEWORK_AUDIO
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD002B20
+#endif
+
+
 #undef LOG_TAG
 #define LOG_TAG LABEL.tag
 

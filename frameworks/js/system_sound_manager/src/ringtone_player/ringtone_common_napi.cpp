@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "ringtone_common_napi.h"
 #include <climits>
 #include "media_log.h"

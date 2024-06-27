@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
+
 #include "avscreen_capture_callback.h"
 #include "scope_guard.h"
 #include "media_log.h"

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
+
 #include "audio_capturer_wrapper.h"
 
 #include "media_log.h"

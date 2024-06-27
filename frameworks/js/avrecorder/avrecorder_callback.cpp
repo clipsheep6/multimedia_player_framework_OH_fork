@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "avrecorder_callback.h"
 #include <uv.h>
 #include "media_errors.h"

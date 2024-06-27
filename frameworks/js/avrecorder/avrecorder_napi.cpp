@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include <climits>
 #include "avrecorder_callback.h"
 #include "media_dfx.h"

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "avmetadata_collector.h"
 
 #include <string>

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_AUDIO
+
 #include "recorder_profiles_ability_singleton.h"
 #include "media_log.h"
 #include "media_errors.h"

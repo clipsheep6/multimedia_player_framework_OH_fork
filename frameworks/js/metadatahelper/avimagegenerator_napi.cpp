@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "avimagegenerator_napi.h"
 #include "media_log.h"
 #include "media_errors.h"

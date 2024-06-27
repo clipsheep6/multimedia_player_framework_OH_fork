@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_SOUNDPOOL
+
 #include "media_errors.h"
 #include "media_log.h"
 #include "ability.h"

@@ -15,6 +15,8 @@
 #ifndef SOUNDPOOL_MANAGER_H
 #define SOUNDPOOL_MANAGER_H
 
+#define PLAYER_FRAMEWORK_SOUNDPOOL
+
 #include <unistd.h>
 #include <unordered_map>
 #include "media_log.h"

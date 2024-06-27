@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_SOUNDPOOL
+
 #include <algorithm>
 #include "parameter.h"
 #include "soundpool.h"

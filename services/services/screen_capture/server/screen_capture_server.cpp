@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
+
 #include "screen_capture_server.h"
 #include "ui_extension_ability_connection.h"
 #include "extension_manager_client.h"

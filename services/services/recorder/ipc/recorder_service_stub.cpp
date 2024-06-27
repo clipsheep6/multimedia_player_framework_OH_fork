@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "recorder_service_stub.h"
 #include <unistd.h>
 #include "recorder_listener_proxy.h"

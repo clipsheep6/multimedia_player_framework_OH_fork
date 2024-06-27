@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#define PLAYER_FRAMEWORK_SOUNDPOOL
+
 #include <unistd.h>
 #include "media_errors.h"
 #include "media_log.h"

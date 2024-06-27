@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "helper_listener_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"

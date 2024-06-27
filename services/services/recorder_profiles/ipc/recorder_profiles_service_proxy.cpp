@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_RECORDER
+
 #include "recorder_profiles_service_proxy.h"
 #include "avsharedmemory_ipc.h"
 #include "media_log.h"

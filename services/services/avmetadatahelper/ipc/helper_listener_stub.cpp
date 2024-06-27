@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define PLAYER_FRAMEWORK_META
+
 #include "helper_listener_stub.h"
 #include "av_common.h"
 #include "avmetadatahelper.h"
