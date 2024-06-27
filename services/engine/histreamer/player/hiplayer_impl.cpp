@@ -195,7 +195,10 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 
 bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
 {
-    if (start > end || start < 0 || end < 0 || start > durationMs_.load() || end > durationMs_.load()) {
+    if (!isSetPlayRange_) {
+        return true;
+    }
+    if (start > end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
         return false;
     }
     return true;
@@ -331,7 +334,7 @@ int32_t HiPlayerImpl::SetPlayRange(int64_t start, int64_t end)
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
-
+    isSetPlayRange_ = true;
     playRangeStartTime_ = start;
     playRangeEndTime_ = end;
 
@@ -384,6 +387,11 @@ int32_t HiPlayerImpl::PrepareAsync()
         CollectionErrorInfo(errCode, "pipeline PrepareAsync failed");
         return errCode;
     }
+
+    if (pipeline_ != nullptr) {
+        pipeline_->SetPlayRange(playRangeStartTime_, playRangeEndTime_);
+    }
+
     if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) { // set play range in initialized status
         MEDIA_LOGI("seek to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
         ret = demuxer_->SeekTo(playRangeStartTime_,
