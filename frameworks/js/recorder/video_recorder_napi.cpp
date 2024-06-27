@@ -391,7 +391,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("Resume In");
+    MEDIA_LOGD("VideoRecorderNapi::Resume In");
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
