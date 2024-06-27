@@ -88,7 +88,7 @@ HiRecorderImpl::~HiRecorderImpl()
 int32_t HiRecorderImpl::Init()
 {
     MediaTrace trace("HiRecorderImpl::Init");
-    MEDIA_LOG_I("HiRecorderImpl Init enter.");
+    MEDIA_LOG_I("Init enter.");
     recorderEventReceiver_ = std::make_shared<RecorderEventReceiver>(this);
     recorderCallback_ = std::make_shared<RecorderFilterCallback>(this);
     recorderId_ = std::string("HiRecorder_") + std::to_string(OHOS::Media::Pipeline::Pipeline::GetNextPipelineId());
