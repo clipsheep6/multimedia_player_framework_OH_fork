@@ -169,6 +169,7 @@ void MonitorClient::ClickThread()
 
 void MonitorClient::ClickThreadCtrl()
 {
+    MEDIA_LOGD("ClickThreadCtrl start");
     while (true) {
         ClickThread();
         std::this_thread::sleep_for(std::chrono::seconds(TIME_INTERVAL));
