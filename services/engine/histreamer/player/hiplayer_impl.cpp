@@ -1566,7 +1566,7 @@ void HiPlayerImpl::NotifyBufferingStart(int32_t param)
 {
     MEDIA_LOGI("NotifyBufferingStart");
     syncManager_->Pause();
-    auto = ret = pipeline_->Pause();
+    auto ret = pipeline_->Pause();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
@@ -1580,7 +1580,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
 {
     MEDIA_LOGI("NotifyBufferingEnd");
     syncManager_->Resume();
-    auto = ret = pipeline_->Resume();
+    auto ret = pipeline_->Resume();
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
