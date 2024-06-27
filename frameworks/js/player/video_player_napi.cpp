@@ -800,7 +800,7 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    MEDIA_LOGD("SetSpeed In");
+    MEDIA_LOGD("VideoPlayerNapi::SetSpeed In");
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_SPEED;
 
