@@ -303,7 +303,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
 
 napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("Start In");
+    MEDIA_LOGD("VideoRecorderNapi::Start In");
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
