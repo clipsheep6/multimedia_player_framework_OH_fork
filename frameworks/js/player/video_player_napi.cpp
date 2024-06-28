@@ -425,7 +425,7 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    MEDIA_LOGD("SetDisplaySurface In");
+    MEDIA_LOGD("VideoPlayerNapi::SetDisplaySurface In");
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
 
     // get args
