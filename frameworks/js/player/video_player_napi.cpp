@@ -1042,7 +1042,7 @@ napi_value VideoPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    MEDIA_LOGD("SetLoop In");
+    MEDIA_LOGD("VideoPlayerNapi::SetLoop In");
     size_t argCount = 1;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
