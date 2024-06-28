@@ -133,6 +133,10 @@ void PlayerServiceStub::FillPlayerFuncPart1()
 
 void PlayerServiceStub::FillPlayerFuncPart2()
 {
+    playerFuncs_[ADD_SUB_SOURCE] = { "Player::AddSubSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return AddSubSource(data, reply); } };
+    playerFuncs_[ADD_SUB_FD_SOURCE] = { "Player::AddSubFdSource",
+        [this](MessageParcel &data, MessageParcel &reply) { return AddSubFdSource(data, reply); } };
     playerFuncs_[SET_RENDERER_DESC] = { "Player::SetParameter",
         [this](MessageParcel &data, MessageParcel &reply) { return SetParameter(data, reply); } };
     playerFuncs_[DESTROY] = { "Player::DestroyStub",
@@ -145,8 +149,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "Player::GetSubtitleTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetSubtitleTrackInfo(data, reply); } };
-    playerFuncs_[GET_VIDEO_WIDTH] = { "Player::GetVideoHeight",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoHeight(data, reply); } };
+    playerFuncs_[GET_VIDEO_WIDTH] = { "Player::GetVideoWidth",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetVideoWidth(data, reply); } };
     playerFuncs_[GET_VIDEO_HEIGHT] = { "Player::GetVideoHeight",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoHeight(data, reply); } };
     playerFuncs_[SELECT_BIT_RATE] = { "Player::SelectBitRate",
