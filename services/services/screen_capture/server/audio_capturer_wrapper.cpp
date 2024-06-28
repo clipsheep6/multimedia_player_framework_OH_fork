@@ -186,11 +186,10 @@ int32_t AudioCapturerWrapper::CaptureAudio()
         memset_s(audioBuffer->buffer, bufferLen, 0, bufferLen);
         int32_t bufferRead = audioCapturer_->Read(*(audioBuffer->buffer), bufferLen, true);
         if (bufferRead <= 0) {
-            if (captureAudioLogCount_ % 1000 == 0) {
-                captureAudioLogCount_ = 0;
+            if (++captureAudioLogCount_ % AC_LOG_SKIP_NUM == 0) {
+                captureAudioLogCount_ = 1;
                 MEDIA_LOGE("CaptureAudio read audio buffer failed, continue");
             }
-            captureAudioLogCount_++;
             continue;
         }
         audioBuffer->length = bufferRead;

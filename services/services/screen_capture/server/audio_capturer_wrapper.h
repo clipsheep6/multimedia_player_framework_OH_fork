@@ -87,6 +87,8 @@ private:
     static constexpr uint32_t MAX_AUDIO_BUFFER_SIZE = 128;
     static constexpr uint32_t SEC_TO_NANOSECOND = 1000000000; // 10^9ns
     static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 200; // 200ms
+    static constexpr int32_t AC_LOG_SKIP_NUM = 1000;
+
 };
 
 class MicAudioCapturerWrapper : public AudioCapturerWrapper {
