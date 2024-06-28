@@ -41,7 +41,7 @@ void WatchDog::EnableWatchDog()
         }
 
         enable_ = true;
-        thread_ = std::make_unique<std::thread>([this] () -> void { this->WatchDogThread(); });
+        thread_ = std::make_unique<std::thread>(&WatchDog::WatchDogThread, this);
         break;
     }
 }

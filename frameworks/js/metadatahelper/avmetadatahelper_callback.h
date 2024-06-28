@@ -69,6 +69,7 @@ private:
     AVMetadataHelperNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
     HelperStates state_ = HELPER_IDLE;
+    std::map<uint32_t, void(AVMetadataHelperCallback::*)(const int32_t extra, const Format &infoBody)> onInfoFuncs_;
 };
 } // namespace Media
 } // namespace OHOS

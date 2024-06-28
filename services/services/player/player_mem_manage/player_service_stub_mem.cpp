@@ -81,10 +81,10 @@ int32_t PlayerServiceStubMem::Init()
         appUid_ = IPCSkeleton::GetCallingUid();
         appPid_ = IPCSkeleton::GetCallingPid();
         memRecallStruct_ = {
-            [this] { this -> ResetFrontGroundForMemManageRecall(); },
-            [this] { this ->ResetBackGroundForMemManageRecall(); },
-            [this] { this->ResetMemmgrForMemManageRecall(); },
-            [this] { this->RecoverByMemManageRecall(); },
+            std::bind(&PlayerServiceStubMem::ResetFrontGroundForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::ResetBackGroundForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::ResetMemmgrForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::RecoverByMemManageRecall, this),
             &playerServer_,
         };
         MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);

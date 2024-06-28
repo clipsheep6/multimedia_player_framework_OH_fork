@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace Media {
-using RecorderStubFunc = std::function<int32_t(MessageParcel &, MessageParcel &)>;
 class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>,
     public MonitorServerObject, public NoCopyable {
 public:
@@ -35,6 +34,7 @@ public:
     virtual ~RecorderServiceStub();
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    using RecorderStubFunc = int32_t(RecorderServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) override;
     int32_t SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder) override;
@@ -115,8 +115,6 @@ private:
     int32_t GetAvailableEncoder(MessageParcel &data, MessageParcel &reply);
     int32_t GetMaxAmplitude(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();
-    void FillRecFuncPart1();
-    void FillRecFuncPart2();
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;

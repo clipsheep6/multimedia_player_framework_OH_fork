@@ -630,7 +630,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
                 playerCb_->Release();
             }
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Release Task Out", FAKE_POINTER(this));
-            std::thread([this] () -> void { this->StopTaskQue(); }).detach();
+            std::thread(&AVPlayerNapi::StopTaskQue, this).detach();
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 

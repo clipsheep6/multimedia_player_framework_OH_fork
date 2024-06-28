@@ -39,8 +39,7 @@ MediaServiceStub::~MediaServiceStub()
 
 void MediaServiceStub::Init()
 {
-    mediaFuncs_[GET_SUBSYSTEM] =
-        [this](MessageParcel &data, MessageParcel &reply) { return GetSystemAbility(data, reply); };
+    mediaFuncs_[GET_SUBSYSTEM] = &MediaServiceStub::GetSystemAbility;
 }
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
@@ -88,27 +87,21 @@ int MediaServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
         MEDIA_LOGE("Invalid descriptor");
         return MSERR_INVALID_OPERATION;
     }
-    return HandleMediaRequest(code, data, reply, option);
-}
 
-int32_t MediaServiceStub::HandleMediaRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
-                                             MessageOption &option)
-{
-    MediaStubFunc func = GetMediaStubFunc(code);
-    if (func) {
-        return func(data, reply);
-    } else {
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto itFunc = mediaFuncs_.find(code);
+    if (itFunc != mediaFuncs_.end()) {
+        auto memberFunc = itFunc->second;
+        if (memberFunc != nullptr) {
+            int32_t ret = (this->*memberFunc)(data, reply);
+            if (ret != MSERR_OK) {
+                MEDIA_LOGE("Calling memberFunc is failed.");
+            }
+            return MSERR_OK;
+        }
     }
-}
+    MEDIA_LOGW("mediaFuncs_: no member func supporting, applying default process");
 
-MediaStubFunc MediaServiceStub::GetMediaStubFunc(uint32_t code)
-{
-    auto it = mediaFuncs_.find(code);
-    if (it != mediaFuncs_.end()) {
-        return it->second;
-    }
-    return nullptr;
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 void MediaServiceStub::ClientDied(pid_t pid)

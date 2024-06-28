@@ -51,7 +51,7 @@ public:
         SET_MEDIA_DATA_SRC_OBJ,
         RESOLVE_METADATA,
         RESOLVE_METADATA_MAP,
-        FETCH_ALBUM_COVER,
+        FETCH_ART_PICTURE,
         FETCH_FRAME_AT_TIME,
         RELEASE,
         DESTROY,

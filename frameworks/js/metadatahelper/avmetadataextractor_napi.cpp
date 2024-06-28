@@ -518,7 +518,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::ReleaseTask()
             extractorCb_->Release();
         }
 
-        std::thread([this] () -> void { this->StopTaskQue(); }).detach();
+        std::thread(&AVMetadataExtractorNapi::StopTaskQue, this).detach();
 
         MEDIA_LOGI("Release Task Out");
         return TaskRet(MSERR_EXT_API9_OK, "Success");

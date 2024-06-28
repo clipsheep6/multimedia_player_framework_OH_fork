@@ -217,7 +217,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchArtPicture()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(FETCH_ALBUM_COVER, data, reply, option);
+    int error = Remote()->SendRequest(FETCH_ART_PICTURE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "FetchArtPicture failed, error: %{public}d", error);
 

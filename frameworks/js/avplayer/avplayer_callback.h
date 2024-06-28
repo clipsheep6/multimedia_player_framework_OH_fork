@@ -36,7 +36,7 @@ public:
     virtual void NotifyIsLiveStream() = 0;
     virtual void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) = 0;
 };
-using OnInfoFunc = std::function<void(const int32_t, const Format &)>;
+
 class AVPlayerCallback : public PlayerCallback {
 public:
     AVPlayerCallback(napi_env env, AVPlayerNotify *listener);
@@ -87,7 +87,7 @@ private:
     std::atomic<bool> isloaded_ = false;
     PlayerStates state_ = PLAYER_IDLE;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    std::map<uint32_t, OnInfoFunc> onInfoFuncs_;
+    std::map<uint32_t, void(AVPlayerCallback::*)(const int32_t extra, const Format &infoBody)> onInfoFuncs_;
 };
 } // namespace Media
 } // namespace OHOS
