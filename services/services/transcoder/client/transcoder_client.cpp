@@ -195,7 +195,7 @@ int32_t TransCoderClient::Start()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
 
-    MEDIA_LOGD("Start");
+    MEDIA_LOGD("TransCoderClient::Start");
     (void)EnableMonitor();
     return ExecuteWhen(transCoderProxy_->Start(), false);
 }
