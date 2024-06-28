@@ -1083,7 +1083,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::set url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("JsSetUrl In");
+    MEDIA_LOGD("AVPlayerNapi::JsSetUrl In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // url: string
