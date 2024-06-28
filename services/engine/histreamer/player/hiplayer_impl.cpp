@@ -828,6 +828,9 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         seekAgent_.reset();
         return res;
     }
+    if (videoDecoder_ != nullptr) {
+        videoDecoder_->ResetSeekInfo();
+    }
     int64_t realSeekTime = seekPos;
     auto seekMode = Transform2SeekMode(mode);
     auto rtv = demuxer_->SeekTo(seekPos, seekMode, realSeekTime);
