@@ -803,7 +803,7 @@ Status HiPlayerImpl::doCompletedSeek(int64_t seekPos, PlayerSeekMode mode)
 
 Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
 {
-    MEDIA_LOGD("doSeek");
+    MEDIA_LOGD("HiPlayerImpl::doSeek");
     int64_t seekTimeUs = 0;
     FALSE_RETURN_V_MSG_E(Plugins::Us2HstTime(seekPos, seekTimeUs),
         Status::ERROR_INVALID_PARAMETER, "Invalid seekPos: %{public}" PRId64, seekPos);
