@@ -83,6 +83,7 @@ private:
     void DequeueAsyncWork();
     static void UvWorkCallBack(uv_work_t *work, int status);
     void OnJsCallBack(VideoPlayerAsyncContext *context) const;
+    void ClearAsyncWorkWithErrorCode(MediaServiceExtErrCode errorCode, bool error, const std::string &msg);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

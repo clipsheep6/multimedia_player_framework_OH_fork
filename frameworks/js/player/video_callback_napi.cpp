@@ -54,6 +54,12 @@ void VideoCallbackNapi::QueueAsyncWork(VideoPlayerAsyncContext *context)
 
 void VideoCallbackNapi::ClearAsyncWork(bool error, const std::string &msg)
 {
+    ClearAsyncWorkWithErrorCode(MSERR_EXT_OPERATE_NOT_PERMIT, error, msg);
+}
+
+void VideoCallbackNapi::ClearAsyncWorkWithErrorCode(MediaServiceExtErrCode extErrCode,
+    bool error, const std::string &msg)
+{
     MEDIA_LOGD("%{public}s", msg.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto it = contextMap_.begin(); it != contextMap_.end(); it++) {
@@ -62,7 +68,7 @@ void VideoCallbackNapi::ClearAsyncWork(bool error, const std::string &msg)
             VideoPlayerAsyncContext *context = contextQue.front();
             contextQue.pop();
             if (error) {
-                context->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, msg);
+                context->SignError(extErrCode, msg);
             }
             VideoCallbackNapi::OnJsCallBack(context);
         }
@@ -111,7 +117,12 @@ void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Forma
 
 void VideoCallbackNapi::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    ClearAsyncWork(true, "The request was aborted because en error occurred, please check event(error)");
+    MediaServiceExtErrCode extErrCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
+    if (extErrCode == MSERR_EXT_UNKNOWN) {
+        extErrCode = MSERR_EXT_OPERATE_NOT_PERMIT;
+    }
+    ClearAsyncWorkWithErrorCode(extErrCode, true,
+        "The request was aborted because en error occurred, please check event(error)");
     return PlayerCallbackNapi::OnError(errorCode, errorMsg);
 }
 
