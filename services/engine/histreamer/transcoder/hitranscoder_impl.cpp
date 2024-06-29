@@ -21,6 +21,7 @@
 namespace OHOS {
 namespace Media {
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
+constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -242,7 +243,9 @@ int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     Status ret = pipeline_->Prepare();
-    videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    if ((videoEncoderFilter_ != nullptr) && (videoDecoderFilter_ != nullptr)) {
+        videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+    }
     return static_cast<int32_t>(ret);
 }
 
@@ -291,6 +294,7 @@ void HiTransCoderImpl::OnEvent(const Event &event)
                 Cancel();
                 auto ptr = obs_.lock();
                 if (ptr != nullptr) {
+                    ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
                     ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
                 }
             });
