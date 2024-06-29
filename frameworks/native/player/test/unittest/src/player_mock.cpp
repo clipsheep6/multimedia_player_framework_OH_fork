@@ -348,6 +348,7 @@ bool PlayerMock::CreatePlayer()
 
 int32_t PlayerMock::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, AVPlayStrategy strategy)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetMediaSource(mediaSource, strategy);
 }
@@ -362,6 +363,7 @@ int32_t PlayerMock::SetSource(const std::string url)
 
 int32_t PlayerMock::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetSource(fd, offset, size);
 }
@@ -398,6 +400,7 @@ int32_t PlayerMock::SetSource(const std::string &path, int64_t offset, int64_t s
 
 int32_t PlayerMock::SetDataSrc(const std::string &path, int32_t size, bool seekable)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     if (seekable) {
         dataSrc_ = MediaDataSourceTestSeekable::Create(path, size);
     } else {
@@ -711,6 +714,7 @@ int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_
 
 std::string PlayerMock::GetSubtitleText(std::string text)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, -1, "callback is nullptr");
     return callback_->SubtitleTextUpdate(text);
 }
 
