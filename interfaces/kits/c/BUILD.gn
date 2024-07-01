@@ -120,7 +120,6 @@ ohos_shared_library("avplayer") {
     "c_utils:utils",
     "graphic_surface:surface",
     "hilog:libhilog",
-    "hitrace:libhitracechain",
     "media_foundation:media_foundation",
     "window_manager:libdm",
   ]
