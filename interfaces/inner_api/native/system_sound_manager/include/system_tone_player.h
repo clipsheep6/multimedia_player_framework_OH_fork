@@ -27,6 +27,13 @@ struct SystemToneOptions {
     bool muteHaptics;
 };
 
+enum ToneHapticsFeature : int32_t {
+    STANDARD = 0,
+    GENTLE,
+};
+
+#define SYS_TONE_PLAYER_MAX_VOLUME 1.0f
+
 class SystemTonePlayer {
 public:
     virtual ~SystemTonePlayer() = default;
@@ -85,6 +92,58 @@ public:
      * @since 11
      */
     virtual int32_t Release() = 0;
+
+    /**
+     * @brief Set audio volume to the system tone
+     *
+     * @param volume Audio volume value
+     * @return Returns {@link MSERR_OK} if the audio volume is set successfully to player;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t SetAudioVolume(float volume) = 0;
+
+    /**
+     * @brief Get audio volume from the system tone
+     *
+     * @param volume Recevie Audio volume value
+     * @return Returns {@link MSERR_OK} if the audio volume is get successfully from player;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetAudioVolume(float &recvValue) = 0;
+
+    /**
+     * @brief Get all supported haptics features
+     *
+     * @param volume Recevie all supported haptics features
+     * @return Returns {@link MSERR_OK} if the  all supported haptics features is get successfully from player;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures) = 0;
+
+    /**
+     * @brief Set haptics feature to the system tone
+     *
+     * @param volume Haptics feature value
+     * @return Returns {@link MSERR_OK} if the haptics feature is set successfully to player;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t SetHapticsFeature(ToneHapticsFeature feature) = 0;
+
+    /**
+     * @brief Get haptics feature from the system tone
+     *
+     * @param volume Receive haptics feature value
+     * @return Returns {@link MSERR_OK} if the haptics feature is get successfully to player;
+     * returns an error code defined in {@link media_errors.h} otherwise.
+     * @since 12
+     */
+    virtual int32_t GetHapticsFeature(ToneHapticsFeature &feature) = 0;
+
+
 };
 } // namespace Media
 } // namespace OHOS
