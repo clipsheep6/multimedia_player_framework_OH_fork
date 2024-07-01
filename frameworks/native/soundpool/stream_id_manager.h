@@ -62,6 +62,8 @@ private:
         {
             if (!streamIDManagerInner_.expired()) {
                 streamIDManagerInner_.lock()->OnPlayFinished();
+                (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundPool",
+                    "StreamIDManager::SoundPoolCallBack OnPlayFinished");
             }
         }
         void OnError(int32_t errorCode)
