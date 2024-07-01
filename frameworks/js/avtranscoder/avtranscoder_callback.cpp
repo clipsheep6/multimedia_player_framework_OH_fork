@@ -78,19 +78,23 @@ void AVTransCoderCallback::SendErrorCallback(int32_t errCode, const std::string 
 void AVTransCoderCallback::SendStateCallback(const std::string &state, const StateChangeReason &reason)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("StateChange, currentState: %{public}s to state: %{public}s", currentState_.c_str(), state.c_str());
     currentState_ = state;
-    if (refMap_.find(AVTransCoderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
+}
+
+void AVTransCoderCallback::SendCompleteCallback()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (refMap_.find(AVTransCoderEvent::EVENT_COMPLETE) == refMap_.end()) {
         MEDIA_LOGW("can not find statechange callback!");
         return;
     }
 
     AVTransCoderJsCallback *cb = new(std::nothrow) AVTransCoderJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_STATE_CHANGE);
-    cb->callbackName = AVTransCoderEvent::EVENT_STATE_CHANGE;
-    cb->reason = reason;
-    cb->state = state;
-    return OnJsStateCallBack(cb);
+    cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_COMPLETE);
+    cb->callbackName = AVTransCoderEvent::EVENT_COMPLETE;
+    return OnJsCompleteCallBack(cb);
 }
 
 void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
@@ -132,13 +136,13 @@ void AVTransCoderCallback::OnError(TransCoderErrorType errorType, int32_t errCod
 void AVTransCoderCallback::OnInfo(int32_t type, int32_t extra)
 {
     if (type == TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED) {
-        SendStateCallback("completed", StateChangeReason::USER);
+        SendCompleteCallback();
     } else if (type == TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE) {
         SendProgressUpdateCallback(extra);
     }
 }
 
-void AVTransCoderCallback::OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const
+void AVTransCoderCallback::OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) const
 {
     ON_SCOPE_EXIT(0) {
         delete jsCb;
@@ -155,14 +159,14 @@ void AVTransCoderCallback::OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const
     };
 
     work->data = reinterpret_cast<void *>(jsCb);
-    int ret = QueueStateWork(loop, work);
+    int ret = QueueCompleteWork(loop, work);
     CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
-int32_t AVTransCoderCallback::QueueStateWork(uv_loop_s *loop, uv_work_t *work) const
+int32_t AVTransCoderCallback::QueueCompleteWork(uv_loop_s *loop, uv_work_t *work) const
 {
     int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
@@ -188,15 +192,8 @@ int32_t AVTransCoderCallback::QueueStateWork(uv_loop_s *loop, uv_work_t *work) c
                 request.c_str());
 
             napi_value args[2] = { nullptr };
-            nstatus = napi_create_string_utf8(ref->env_, event->state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
-                "%{public}s fail to create callback", request.c_str());
 
-            nstatus = napi_create_int32(ref->env_, event->reason, &args[1]);
-            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[1] != nullptr,
-                "%{public}s fail to create callback", request.c_str());
-
-            const size_t argCount = 2;
+            const size_t argCount = 0;
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());

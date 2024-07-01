@@ -90,12 +90,12 @@ const std::map<std::string, std::vector<std::string>> STATE_LIST = {
 };
 
 /**
- * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void
+ * on(type: 'complete', callback: Callback<void>): void
  * on(type: 'error', callback: ErrorCallback): void
- * on(type: 'audioCaptureChange', callback: Callback<AudioCaptureChangeInfo>): void
+ * on(type: 'progressUpdate', callback: Callback<number>): void
  */
 namespace AVTransCoderEvent {
-const std::string EVENT_STATE_CHANGE = "stateChange";
+const std::string EVENT_COMPLETE = "complete";
 const std::string EVENT_ERROR = "error";
 const std::string EVENT_PROGRESS_UPDATE = "progressUpdate";
 }
@@ -152,13 +152,13 @@ private:
      */
     static napi_value JsRelease(napi_env env, napi_callback_info info);
     /**
-     * on(type: 'stateChange', callback: (state: AVTransCoderState, reason: StateChangeReason) => void): void
+     * on(type: 'complete', callback: Callback<void>): void
      * on(type: 'error', callback: ErrorCallback): void
      * on(type: 'progressUpdate', callback: Callback<number>): void
      */
     static napi_value JsSetEventCallback(napi_env env, napi_callback_info info);
     /**
-     * off(type: 'stateChange'): void;
+     * off(type: 'complete'): void;
      * off(type: 'error'): void;
      * off(type: 'progressUpdate'): void
      */

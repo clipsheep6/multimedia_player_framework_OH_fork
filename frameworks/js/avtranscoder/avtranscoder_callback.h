@@ -36,6 +36,7 @@ public:
     void ClearCallbackReference();
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
+    void SendCompleteCallback();
     void SendProgressUpdateCallback(int32_t progress);
     std::string GetState();
 
@@ -54,10 +55,10 @@ private:
         int32_t progress;
     };
     void OnJsErrorCallBack(AVTransCoderJsCallback *jsCb) const;
-    void OnJsStateCallBack(AVTransCoderJsCallback *jsCb) const;
+    void OnJsCompleteCallBack(AVTransCoderJsCallback *jsCb) const;
     void OnJsProgressUpdateCallback(AVTransCoderJsCallback *jsCb) const;
     int32_t QueueErrorWork(uv_loop_s *loop, uv_work_t *work) const;
-    int32_t QueueStateWork(uv_loop_s *loop, uv_work_t *work) const;
+    int32_t QueueCompleteWork(uv_loop_s *loop, uv_work_t *work) const;
     int32_t QueueProgressUpdateWork(uv_loop_s *loop, uv_work_t *work) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
