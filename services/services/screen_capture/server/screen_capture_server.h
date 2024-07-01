@@ -206,10 +206,16 @@ private:
     int32_t appPid_ { 0 };
     bool extSpeaker_ = true;
     std::set<int32_t> extSpeakerSet;
+
+    /* used for hilog output */
+    int32_t readAtLogCount_ = 0;
+
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
     ScreenCaptureServer* screenCaptureServer_;
+
+    static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
 };
 
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {

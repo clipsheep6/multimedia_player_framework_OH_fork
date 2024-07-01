@@ -2306,6 +2306,10 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
         }
         if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
             if (!screenCaptureServer_->GetMicWorkingState()) {
+                if (++readAtLogCount_ % ADS_LOG_SKIP_NUM == 0) {
+                    readAtLogCount_ = 1;
+                    MEDIA_LOGI("AVScreenCaptureMixMode MIX_MODE MIC OFF");
+                }
                 MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC OFF");
                 bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
                 return screenCaptureServer_->ReleaseAudioBufferMix(type_);

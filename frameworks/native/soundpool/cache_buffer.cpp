@@ -273,15 +273,23 @@ int32_t CacheBuffer::Stop(const int32_t streamID)
         if (audioRenderer_ != nullptr && isRunning_.load()) {
             isRunning_.store(false);
             if (audioRenderer_->IsFastRenderer()) {
+                MEDIA_LOGI("audioRenderer fast renderer pause.");
                 audioRenderer_->Pause();
                 audioRenderer_->Flush();
             } else {
+                MEDIA_LOGI("audioRenderer normal stop.");
                 audioRenderer_->Stop();
             }
             cacheDataFrameNum_ = 0;
             havePlayedCount_ = 0;
-            if (callback_ != nullptr) callback_->OnPlayFinished();
-            if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnPlayFinished();
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("cachebuffer callback_ OnPlayFinished.");
+                callback_->OnPlayFinished();
+            }
+            if (cacheBufferCallback_ != nullptr) {
+                MEDIA_LOGI("cachebuffer cacheBufferCallback_ OnPlayFinished.");
+                cacheBufferCallback_->OnPlayFinished();
+            }
         }
         cacheBufferLock_.unlock();
         return MSERR_OK;
