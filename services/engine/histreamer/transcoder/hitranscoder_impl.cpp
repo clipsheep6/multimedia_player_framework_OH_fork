@@ -242,9 +242,28 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
+    int32_t width = 0;
+    int32_t height = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
+    isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
     if ((videoEncoderFilter_ != nullptr) && (videoDecoderFilter_ != nullptr)) {
-        videoDecoderFilter_->SetOutputSurface(videoEncoderFilter_->GetInputSurface());
+        if (isNeedVideoResizeFilter_ && (videoResizeFilter_ != nullptr)) {
+            sptr<Surface> resizeFilterSurface = videoResizeFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(resizeFilterSurface != nullptr,
+                static_cast<int32_t>(Status::ERROR_NULL_POINTER), "resizeFilterSurface is nullptr");
+            videoDecoderFilter_->SetOutputSurface(resizeFilterSurface);
+            sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr,
+                static_cast<int32_t>(Status::ERROR_NULL_POINTER), "encoderFilterSurface is nullptr");
+            videoResizeFilter_->SetOutputSurface(encoderFilterSurface);
+        } else {
+            sptr<Surface> encoderFilterSurface = videoEncoderFilter_->GetInputSurface();
+            FALSE_RETURN_V_MSG_E(encoderFilterSurface != nullptr,
+                static_cast<int32_t>(Status::ERROR_NULL_POINTER), "encoderFilterSurface is nullptr");
+            videoDecoderFilter_->SetOutputSurface(encoderFilterSurface);
+        }
     }
     return static_cast<int32_t>(ret);
 }
@@ -375,6 +394,22 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
     return Status::OK;
 }
 
+Status HiTransCoderImpl::LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
+    Pipeline::StreamType type)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
+    videoResizeFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoResizeFilter>
+        ("videoResizeFilter", Pipeline::FilterType::FILTERTYPE_VIDRESIZE);
+    FALSE_RETURN_V_MSG_E(videoResizeFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "videoResizeFilter_ is nullptr");
+    videoResizeFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+        Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
+    FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoResizeFilter_}, type) == Status::OK,
+        Status::ERROR_UNKNOWN, "Add videoResizeFilter to pipeline fail");
+    return Status::OK;
+}
+
 Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
     Pipeline::StreamType type)
 {
@@ -416,8 +451,13 @@ void HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
-                MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
-                LinkVideoEncoderFilter(filter, outType);
+                if (!isNeedVideoResizeFilter_ || videoResizeFilter_) {
+                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
+                    LinkVideoEncoderFilter(filter, outType);
+                } else {
+                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
+                    LinkVideoResizeFilter(filter, outType);
+                }
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (videoDecoderFilter_) {
