@@ -946,7 +946,6 @@ int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &a
     napi_env env, napi_value args)
 {
     napi_valuetype valueType = napi_undefined;
-    napi_value item = nullptr;
     if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetConfig", "AVTransCoderConfig");
         return MSERR_INVALID_VAL;
@@ -965,7 +964,7 @@ int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &a
     ret = GetVideoConfig(asyncCtx, env, args);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoConfig");
 
-    std::string fileFormat = CommonNapi::GetPropertyString(env, item, "fileFormat");
+    std::string fileFormat = CommonNapi::GetPropertyString(env, args, "fileFormat");
     ret = AVTransCoderNapi::GetOutputFormat(fileFormat, config->fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVTransCoderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
     
