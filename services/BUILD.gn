@@ -33,6 +33,7 @@ group("media_services_package") {
       "etc:screen_capture_notification_image",
       "etc:screen_capture_stop_dark_image",
       "etc:screen_capture_stop_image",
+      "memmgr_override:memmgrclient",
     ]
   }
 }
