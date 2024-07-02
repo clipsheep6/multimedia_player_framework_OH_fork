@@ -79,6 +79,11 @@
             <option name="shell" value="touch /data/test/media/recorder_video_stop_start.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_wrongsize.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_configure.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_015.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_016.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_017.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_018.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_mp3_001.mp3"/>
             <option name="shell" value="touch /data/test/media/recorder_prepare.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetCaptureRate_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetCaptureRate_002.mp4"/>

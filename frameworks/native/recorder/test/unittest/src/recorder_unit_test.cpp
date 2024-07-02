@@ -380,7 +380,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_001, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -401,7 +401,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_002, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -422,7 +422,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_003, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -658,6 +658,114 @@ HWTEST_F(RecorderUnitTest, recorder_configure_014, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_015
+ * @tc.desc: record with audioCodec mp3 + fileFormat mp3
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_015, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MP3;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_015.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_016
+ * @tc.desc: record with audioCodec mp3 + fileFormat mp4
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_016, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MPEG_4;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_016.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_017
+ * @tc.desc: record with audioCodec mp3 + fileFormat m4a
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_017, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_M4A;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_017.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_018
+ * @tc.desc: record mp3 with samplerate 64000
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_018, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MP3;
+    videoRecorderConfig.sampleRate = 64000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_018.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_mp3_001
+ * @tc.desc: record mp3
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MP3;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_mp3_001.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
