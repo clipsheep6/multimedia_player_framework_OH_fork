@@ -200,12 +200,13 @@ public:
     int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
     void SpeakerStateUpdate(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    bool HasSpeakerStream(
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
     int32_t GetAppPid();
 private:
     int32_t appPid_ { 0 };
-    bool extSpeaker_ = true;
-    std::set<int32_t> extSpeakerSet;
+    bool speakerAliveStatus_ = true;
 
     /* used for hilog output */
     int32_t readAtLogCount_ = 0;
