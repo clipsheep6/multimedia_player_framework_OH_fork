@@ -40,12 +40,12 @@ SoundParser::SoundParser(int32_t soundID, std::string url)
 
 SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length)
 {
-    int32_t fdSource = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
+    fdSource_ = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD); // dup(fd) + close on exec to prevent leaks.
     offset = offset >= INT64_MAX ? INT64_MAX : offset;
     length = length >= INT64_MAX ? INT64_MAX : length;
+    MEDIA_LOGI("SoundParser::SoundParser fd:%{public}d, fdSource_:%{public}d,", fd, fdSource_);
     std::shared_ptr<MediaAVCodec::AVSource> source =
-        MediaAVCodec::AVSourceFactory::CreateWithFD(fdSource, offset, length);
-    (void)close(fdSource);
+        MediaAVCodec::AVSourceFactory::CreateWithFD(fdSource_, offset, length);
     CHECK_AND_RETURN_LOG(source != nullptr, "Create AVSource failed");
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = MediaAVCodec::AVDemuxerFactory::CreateWithSource(source);
     CHECK_AND_RETURN_LOG(demuxer != nullptr, "Create AVDemuxer failed");
@@ -63,7 +63,7 @@ SoundParser::~SoundParser()
 
 int32_t SoundParser::DoParser()
 {
-    MEDIA_LOGE("SoundParser do parser.");
+    MEDIA_LOGI("SoundParser do parser.");
     std::unique_lock<ffrt::mutex> lock(soundParserLock_);
     isParsing_.store(true);
     int32_t result = MSERR_OK;
@@ -190,6 +190,11 @@ int32_t SoundParser::Release()
     if (demuxer_ != nullptr) demuxer_.reset();
     if (source_ != nullptr) source_.reset();
     if (callback_ != nullptr) callback_.reset();
+    if (fdSource_ > 0) {
+        MEDIA_LOGI("SoundParser::Release() fdSource_:%{public}d", fdSource_);
+        (void)close(fdSource_);
+        fdSource_ = -1;
+    }
     return ret;
 }
 

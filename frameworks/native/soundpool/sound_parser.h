@@ -187,6 +187,7 @@ private:
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     bool isRawFile_ = false;
     std::atomic<bool> isParsing_ = false;
+    int32_t fdSource_ = -1;
 
     MediaAVCodec::Format trackFormat_;
 
