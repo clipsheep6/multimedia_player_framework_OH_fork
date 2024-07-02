@@ -397,6 +397,7 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     InitVideoWidthAndHeight();
     NotifyResolutionChange();
+    NotifyPositionUpdate();
     DoInitializeForHttp();
     OnStateChanged(PlayerStateId::READY);
 }
@@ -1836,6 +1837,15 @@ void HiPlayerImpl::NotifyResolutionChange()
     MEDIA_LOGI("video size change, width %{public}d, height %{public}d", width, height);
     callbackLooper_.OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
 #endif
+}
+
+void HiPlayerImpl::NotifyPositionUpdate()
+{
+    int32_t currentPosMs = 0;
+    GetCurrentTime(currentPosMs);
+    MEDIA_LOGD("NotifyPositionUpdate currentPosMs: %{public}d", currentPosMs);
+    Format format;
+    callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, currentPosMs, format);
 }
 
 void __attribute__((no_sanitize("cfi"))) HiPlayerImpl::OnStateChanged(PlayerStateId state)

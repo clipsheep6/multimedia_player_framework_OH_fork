@@ -1927,9 +1927,6 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     int32_t currentTime = -1;
     if (jsPlayer->IsControllable()) {
         currentTime = jsPlayer->position_;
-        if (currentTime == -1) {
-            currentTime = 0;
-        }
     }
 
     if (jsPlayer->IsLiveSource() && jsPlayer->dataSrcCb_ == nullptr) {

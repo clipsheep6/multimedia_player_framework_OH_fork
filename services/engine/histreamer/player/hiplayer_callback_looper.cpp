@@ -81,7 +81,8 @@ void HiPlayerCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
         return;
     }
     reportMediaProgress_ = true;
-    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
 void HiPlayerCallbackLooper::ManualReportMediaProgressOnce()
