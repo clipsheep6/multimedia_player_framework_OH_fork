@@ -227,7 +227,6 @@ ohos_shared_library("media_service") {
     "safwk:system_ability_fwk",
     "state_registry:tel_state_registry_api",
     "memmgr:memmgrclient",
-    "samgr:samgr_proxy",
   ]
 
   if (player_framework_support_video) {
