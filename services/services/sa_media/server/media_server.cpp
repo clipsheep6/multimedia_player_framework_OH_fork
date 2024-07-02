@@ -61,15 +61,16 @@ void MediaServer::OnStart()
 void MediaServer::OnStop()
 {
     MEDIA_LOGD("MediaServer OnStop");
-    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),SYSTEM_PROCESS_TYPE,SYSTEM_STATUS_STOP,SA_ID);
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, SA_ID);
 }
 
-void OnAddSystemAbility(int32_t systemAbilityId,const std::string &deviceId)
+void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
-    MEDIA_LOGD("OnAddSystemAbility systemAbilityId:%{public}d",systemAbilityId);
-    if(sysytemAbilityID == MEMORY_MANAGER_SA_ID){
+    MEDIA_LOGD("OnAddSystemAbility systemAbilityId:%{public}d", systemAbilityId);
+    if(sysytemAbilityID == MEMORY_MANAGER_SA_ID)
+    {
         Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
-            SYSTEM_PROCESS_TYPE,SYSTEM_STATUS_START,SA_ID);
+            SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_START, SA_ID);
     }
 }
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,

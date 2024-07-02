@@ -40,7 +40,7 @@ protected:
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
 
 private:
-    void OnAddSystemAbility(int32_t systemAbilityId,const std::string &deviceId) override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
 };
 } // namespace Media
 } // namespace OHOS
