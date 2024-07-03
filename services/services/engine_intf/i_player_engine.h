@@ -24,7 +24,7 @@
 #include "meta/video_types.h"
 #include "nocopyable.h"
 
-#include "foundation/multimedia/drm_framework/services/drm_service/ipc/i_keysession_service.h"
+#include "i_keysession_service.h"
 
 namespace OHOS {
 class Surface;
