@@ -142,6 +142,7 @@ public:
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
+    void NotifySourceInfoCallback(const Event& event);
 
 private:
     enum HiplayerSvpMode : int32_t {
