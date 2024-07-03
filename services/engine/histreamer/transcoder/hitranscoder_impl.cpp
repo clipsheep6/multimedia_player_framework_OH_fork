@@ -152,9 +152,6 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
             audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
-            int32_t mediaBitrate;
-            trackInfos[index]->GetData(Tag::MEDIA_BITRATE, mediaBitrate);
-            audioEncFormat_->Set<Tag::MEDIA_BITRATE>(mediaBitrate);
         }
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
@@ -218,14 +215,12 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-            if (videoRectangle.width != -1 && videoRectangle.height != -1){
+            if (videoRectangle.width != -1){
                 videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
+            } 
+            if (videoRectangle.height != -1){
                 videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
             }
-            int32_t width;
-            videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
-            int32_t height;
-            videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height);
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
