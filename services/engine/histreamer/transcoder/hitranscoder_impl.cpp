@@ -403,7 +403,7 @@ Status HiTransCoderImpl::LinkVideoResizeFilter(const std::shared_ptr<Pipeline::F
     FALSE_RETURN_V_MSG_E(videoResizeFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoResizeFilter_ is nullptr");
     videoResizeFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+    FALSE_RETURN_V_MSG_E(videoResizeFilter_->Configure(videoEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
     FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoResizeFilter_}, type) == Status::OK,
         Status::ERROR_UNKNOWN, "Add videoResizeFilter to pipeline fail");
