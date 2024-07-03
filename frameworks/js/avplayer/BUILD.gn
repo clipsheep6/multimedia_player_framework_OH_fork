@@ -78,10 +78,12 @@ ohos_shared_library("media_avplayer") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "libuv:uv",
     "napi:ace_napi",
     "qos_manager:qos",
+    "samgr:samgr_proxy",
   ]
 
   if (player_framework_support_video) {
