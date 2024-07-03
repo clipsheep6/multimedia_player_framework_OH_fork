@@ -15,6 +15,8 @@
 
 #define PLAYER_FRAMEWORK_SCREEN_CAPTURE
 
+#include "ability_connection.h"
+#include "ability_manager_client.h"
 #include "screen_capture_server.h"
 #include "ui_extension_ability_connection.h"
 #include "extension_manager_client.h"
@@ -34,6 +36,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "hitrace/tracechain.h"
+#include "json/json.h"
 
 using OHOS::Rosen::DMError;
 
@@ -181,10 +184,10 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
 }
 
-int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
+int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
 {
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
-
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d,"
+        "content: %{public}s", sessionId, content.c_str());
     // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> server;
     {
@@ -198,6 +201,18 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
 
     // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> currentServer;
+    Json::Value root;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse( content, root );
+    if (!parsingSuccessful) {
+        MEDIA_LOGE("Error parsing the string");
+        return MSERR_UNKNOWN;
+    }
+    std::string choice = "false";
+    const Json::Value choiceJson = root["choice"];
+    if (!choiceJson.isNull()) {
+        choice = choiceJson.asString();
+    }
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         if (activeSessionId_.load() >= 0) {
@@ -209,6 +224,18 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
                     AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
             }
         }
+        const Json::Value missionIdJson = root["missionid"];
+        const Json::Value displayIdJson = root["displayid"];
+        if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
+            uint64_t missionId = missionIdJson.asInt64();
+            MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
+            server->SetMissionId(missionId);
+        }
+        if (!diplayIdJson.isNull() && diplayIdJson.asInt64() >= 0) {
+            uint64_t displayId = displayIdJson.asInt64();
+            MEDIA_LOGI("Report Select DiplayId: %{public}" PRIu64, displayId);
+            server->SetDisplayId(displayId);
+        }
         activeSessionId_.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
@@ -218,9 +245,20 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         return MSERR_OK;
     } else if (USER_CHOICE_DENY.compare(choice) == 0) {
         return server->OnReceiveUserPrivacyAuthority(false);
+    } else {
+        MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     }
-    MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
     return MSERR_UNKNOWN;
+}
+
+void ScreenCaptureServer::SetDisplayId(uint64_t displayId)
+{
+    captureConfig_.videoInfo.videoCapInfo.displayId = displayId;
+}
+
+void ScreenCaptureServer::SetMissionId(uint64_t missionId)
+{
+    missionIds_.emplace_back(missionId);
 }
 
 void ScreenCaptureServer::SetMetaDataReport()
@@ -1250,12 +1288,29 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += "\"}";
 
     AAFwk::Want want;
+    ErrCode ret = ERR_INVALID_VALUE;
+#ifdef PC_STANDARD
+    if (captureConfig_.captureMode == CAPTURE_HOME_SCREEN) {
+        want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
+        auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
+        ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+            nullptr, -1);
+        MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : PC", ret);
+    } else {
+        AppExecFwk::ElementName element("", "com.huawei.hmos.screenrecorder", "SelectWindowAbility");
+        want.SetElement(element);
+        want.SetParam("params", comStr);
+        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+        MEDIA_LOGI("StartAbility end %{public}d, Device : PC", ret);
+    }
+#else
     want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
     auto connection_ = sptr<UIExtensionAbilityConnection>(new (std::nothrow) UIExtensionAbilityConnection(comStr));
-    auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
+    ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
-    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d", ret);
-    return MSERR_OK;
+    MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : Phone", ret);
+#endif
+    return ret;
 }
 
 int32_t ScreenCaptureServer::StartNotification()

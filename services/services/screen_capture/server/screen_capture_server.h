@@ -268,7 +268,8 @@ public:
     int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
-
+    void SetMissionId(uint64_t missionId);
+    void SetDisplayId(uint64_t displayId);
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t OnStartScreenCapture();
