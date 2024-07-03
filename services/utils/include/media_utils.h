@@ -43,6 +43,7 @@ namespace Media {
     inline PlaybackRateMode __attribute__((visibility("default"))) TransformFloat2PlayRate(float rate);
     double __attribute__((visibility("default"))) ChangeModeToSpeed(const PlaybackRateMode& mode);
     bool __attribute__((visibility("default"))) IsEnableOptimizeDecode();
+    bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t uid);
     constexpr double SPEED_0_75_X = 0.75;
     constexpr double SPEED_1_00_X = 1.00;
     constexpr double SPEED_1_25_X = 1.25;

@@ -54,7 +54,7 @@ const std::array<std::pair<PlaybackRateMode, float>, 9> PLAY_RATE_REFS = {
 
 std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
 {
-    if (uid == 1003) { //1003 is bootanimation uid
+    if (uid == 1003) { // 1003 is bootanimation uid
         return "bootanimation";
     }
     std::string bundleName = "";
@@ -249,6 +249,11 @@ bool __attribute__((visibility("default"))) IsEnableOptimizeDecode()
     char useOptimizeDecode[10] = {0}; // 10: system param usage
     auto res = GetParameter("debug.media_service.optimize_decode", "1", useOptimizeDecode, sizeof(useOptimizeDecode));
     return res == 1 && useOptimizeDecode[0] == '1';
+}
+
+bool __attribute__((visibility("default"))) IsAppEnableRenderFirstFrame(int32_t uid)
+{
+    return uid != 1003; // 1003 is bootanimation uid
 }
 }  // namespace Media
 }  // namespace OHOS
