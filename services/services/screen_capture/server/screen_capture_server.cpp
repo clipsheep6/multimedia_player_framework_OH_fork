@@ -81,6 +81,7 @@ static const std::string BUNDLE_NAME = "com.ohos.systemui";
 static const std::string ABILITY_NAME = "com.ohos.systemui.dialog";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SCREEN_RECORDER_BUNDLE_NAME = "com.ohos.screenrecorder";
+static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
 static const int32_t MDPI = 160;
@@ -184,58 +185,74 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
 }
 
-int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
+int32_t ScreenCaptureServer::GetSpecificServer(int32_t sessionId, std::shared_ptr<ScreenCaptureServer> &server)
 {
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d,"
-        "content: %{public}s", sessionId, content.c_str());
     // To avoid deadlock: first release mutexGlobal_, then be destructed
-    std::shared_ptr<ScreenCaptureServer> server;
     {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         server = GetScreenCaptureServerByIdWithLock(sessionId);
     }
     if (server == nullptr) {
-        MEDIA_LOGE("ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
         return MSERR_UNKNOWN;
     }
+    return MSERR_OK;
+}
 
-    // To avoid deadlock: first release mutexGlobal_, then be destructed
-    std::shared_ptr<ScreenCaptureServer> currentServer;
-    Json::Value root;
+void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
+    const std::string &content, std::string key, std::string &value)
+{
     Json::Reader reader;
-    bool parsingSuccessful = reader.parse( content, root );
+    bool parsingSuccessful = reader.parse(content, root);
     if (!parsingSuccessful) {
         MEDIA_LOGE("Error parsing the string");
-        return MSERR_UNKNOWN;
+        return;
     }
+    const Json::Value keyJson = root[key];
+    if (!keyJson.isNull()) {
+        value = keyJson.asString();
+    }
+}
+
+void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
+{
+    const Json::Value missionIdJson = root["missionid"];
+    if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
+        uint64_t missionId = missionIdJson.asInt64();
+        MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
+        server->SetMissionId(missionId);
+    }
+    const Json::Value displayIdJson = root["displayid"];
+    if (!diplayIdJson.isNull() && diplayIdJson.asInt64() >= 0) {
+        uint64_t displayId = displayIdJson.asInt64();
+        MEDIA_LOGI("Report Select DiplayId: %{public}" PRIu64, displayId);
+        server->SetDisplayId(displayId);
+    }
+}
+
+int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content)
+{
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d,"
+        "content: %{public}s", sessionId, content.c_str());
+    std::shared_ptr<ScreenCaptureServer> server;
+    int32_t serverRet = GetSpecificServer(sessionId,server);
+    CHECK_AND_RETURN_RET_LOG(serverRet == MSERR_OK, serverRet,
+        "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
+    std::shared_ptr<ScreenCaptureServer> currentServer;
+    Json::Value root;
     std::string choice = "false";
-    const Json::Value choiceJson = root["choice"];
-    if (!choiceJson.isNull()) {
-        choice = choiceJson.asString();
-    }
+    GetChoiceFromJson(root, content, std::string("choice"), choice);
     if (USER_CHOICE_ALLOW.compare(choice) == 0) {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         if (activeSessionId_.load() >= 0) {
             currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
-            if (currentServer != nullptr) {
+            if (currentServer != nullptr && currentServer != server) {
                 MEDIA_LOGW("ReportAVScreenCaptureUserChoice uid(%{public}d) is interrupted by uid(%{public}d)",
                     currentServer->appInfo_.appUid, server->appInfo_.appUid);
                 currentServer->StopScreenCaptureByEvent(
                     AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INTERRUPTED_BY_OTHER);
             }
         }
-        const Json::Value missionIdJson = root["missionid"];
-        const Json::Value displayIdJson = root["displayid"];
-        if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
-            uint64_t missionId = missionIdJson.asInt64();
-            MEDIA_LOGI("Report Select MissionId: %{public}" PRIu64, missionId);
-            server->SetMissionId(missionId);
-        }
-        if (!diplayIdJson.isNull() && diplayIdJson.asInt64() >= 0) {
-            uint64_t displayId = displayIdJson.asInt64();
-            MEDIA_LOGI("Report Select DiplayId: %{public}" PRIu64, displayId);
-            server->SetDisplayId(displayId);
-        }
+        PrepareSelectWindow(root, server);
         activeSessionId_.store(SESSION_ID_INVALID);
         int32_t ret = server->OnReceiveUserPrivacyAuthority(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
@@ -1297,7 +1314,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
             nullptr, -1);
         MEDIA_LOGI("ConnectServiceExtensionAbility end %{public}d, Device : PC", ret);
     } else {
-        AppExecFwk::ElementName element("", "com.huawei.hmos.screenrecorder", "SelectWindowAbility");
+        AppExecFwk::ElementName element("", SCREEN_RECORDER_BUNDLE_NAME, SELECT_ABILITY_NAME);
         want.SetElement(element);
         want.SetParam("params", comStr);
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
