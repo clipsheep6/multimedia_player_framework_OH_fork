@@ -136,9 +136,13 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         std::string trackMime;
         trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime);
         if (trackMime.find("video/") == 0) {
-            MEDIA_LOG_I("SetInputFile contain video");
-            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
-            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            int32_t videoWidth;
+            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, videoWidth);
+            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoWidth);
+            int32_t videoHeight;
+            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, videoHeight);
+            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoHeight);
+            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         } else if (trackMime.find("audio/") == 0) {
             int32_t channels;
             trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels);
@@ -147,7 +151,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             int32_t sampleRate;
             trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
-            MEDIA_LOG_I("SetInputFile contain audio %{public}d", channels);
+            audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
@@ -211,8 +215,12 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
         }
         case TransCoderPublicParamType::VIDEO_RECTANGLE: {
             VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+            if (videoRectangle.width != -1) {
+                videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
+            } 
+            if (videoRectangle.height != -1) {
+                videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+            }
             break;
         }
         case TransCoderPublicParamType::VIDEO_BITRATE: {
