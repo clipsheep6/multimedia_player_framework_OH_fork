@@ -217,7 +217,7 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
             VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
             if (videoRectangle.width != -1) {
                 videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-            } 
+            }
             if (videoRectangle.height != -1) {
                 videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
             }
