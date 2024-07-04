@@ -53,6 +53,7 @@
 #include "media_data_source.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
+#include "json/json.h"
 
 namespace OHOS {
 namespace Media {

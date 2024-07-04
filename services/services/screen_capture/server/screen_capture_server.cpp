@@ -36,7 +36,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "hitrace/tracechain.h"
-#include "json/json.h"
 
 using OHOS::Rosen::DMError;
 
@@ -234,7 +233,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d,"
         "content: %{public}s", sessionId, content.c_str());
     std::shared_ptr<ScreenCaptureServer> server;
-    int32_t serverRet = GetSpecificServer(sessionId,server);
+    int32_t serverRet = GetSpecificServer(sessionId, server);
     CHECK_AND_RETURN_RET_LOG(serverRet == MSERR_OK, serverRet,
         "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
     std::shared_ptr<ScreenCaptureServer> currentServer;
@@ -1302,6 +1301,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += std::to_string(appInfo_.appUid).c_str();
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_.c_str();
+
     comStr += "\"}";
 
     AAFwk::Want want;
