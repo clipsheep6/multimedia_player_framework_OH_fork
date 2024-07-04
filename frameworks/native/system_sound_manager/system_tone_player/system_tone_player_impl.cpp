@@ -80,9 +80,52 @@ void SystemTonePlayerImpl::InitPlayer()
     configuredUri_ = "";
 }
 
+static shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper(int32_t systemAbilityId)
+{
+    auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saManager == nullptr) {
+        return nullptr;
+    }
+    auto remoteObj = saManager->GetSystemAbility(systemAbilityId);
+    if (remoteObj == nullptr) {
+        return nullptr;
+    }
+    return DataShare::DataShareHelper::Creator(remoteObj, RINGTONE_URI);
+}
+
+std::string SystemTonePlayerImpl::ChangeUri(const std::string &uri)
+{
+    std::string systemtoneUri = uri;
+    size_t found = uri.find(RINGTONE_CUSTOMIZED_BASE_PATH);
+    if (found != std::string::npos) {
+        std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
+            CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+        CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, uri, "Failed to create dataShareHelper.");
+        DataShare::DatashareBusinessError businessError;
+        DataShare::DataSharePredicates queryPredicates;
+        Uri ringtonePathUri(RINGTONE_PATH_URI);
+        vector<string> columns = {{RINGTONE_COLUMN_TONE_ID}, {RINGTONE_COLUMN_DATA}};
+        queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
+        auto resultSet = dataShareHelper->Query(ringtonePathUri, queryPredicates, columns, &businessError);
+        auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
+        unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
+        if (ringtoneAsset != nullptr) {
+            string uriStr = RINGTONE_PATH_URI + RINGTONE_SLASH_CHAR + to_string(ringtoneAsset->GetId());
+            Uri ofUri(uriStr);
+            int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
+            if (fd > 0) {
+                systemtoneUri = FDHEAD + to_string(fd);
+            }
+        }
+        resultSet == nullptr ? : resultSet->Close();
+        dataShareHelper->Release();
+    }
+    MEDIA_LOGI("SystemTonePlayerImpl::ChangeUri systemtoneUri is %{public}s", systemtoneUri.c_str());
+    return systemtoneUri;
+}
+
 int32_t SystemTonePlayerImpl::Prepare()
 {
-    MEDIA_LOGI("Enter Prepare()");
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_INVALID_STATE, "System tone player instance is null");
 
@@ -101,6 +144,7 @@ int32_t SystemTonePlayerImpl::Prepare()
         (void)close(fileDes_);
         fileDes_ = -1;
     }
+    systemToneUri = ChangeUri(systemToneUri);
     std::string uri = systemToneUri;
     if (systemToneUri.find(FDHEAD) == std::string::npos) {
         fileDes_ = open(systemToneUri.c_str(), O_RDONLY);

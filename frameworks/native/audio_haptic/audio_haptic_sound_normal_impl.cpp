@@ -84,15 +84,14 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
     MEDIA_LOGI("Set audio source to avplayer. audioUri [%{public}s]", audioUri_.c_str());
     const std::string fdHead = "fd://";
 
-    char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
-    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
-        (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
-    std::string realPathStr(realPathRes);
-
     if (audioUri_.find(fdHead) != std::string::npos) {
         fileDes_ = std::stoi(audioUri_.substr(fdHead.size()));
         MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
     } else {
+        char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
+        CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
+            (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
+        std::string realPathStr(realPathRes);
         if (fileDes_ != -1) {
             (void)close(fileDes_);
             fileDes_ = -1;

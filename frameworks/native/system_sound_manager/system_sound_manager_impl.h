@@ -24,6 +24,16 @@
 #include "uri.h"
 #include "want.h"
 
+#include <iostream>
+#include "system_ability_definition.h"
+#include "ringtone_db_const.h"
+#include "ringtone_asset.h"
+#include "ringtone_fetch_result.h"
+#include "iservice_registry.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <cerrno>
+
 #include "audio_system_manager.h"
 
 #include "system_sound_manager.h"
@@ -82,6 +92,7 @@ public:
         const int32_t &length) override;
     int32_t RemoveCustomizedTone(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri) override;
+    std::string GetRingtoneTitle(const std::string &ringtoneUri);
 
 private:
     void InitDefaultUriMap();
@@ -97,6 +108,18 @@ private:
     std::string GetKeyForDatabase(const std::string &systemSoundType, int32_t type);
     void InitRingerMode(void);
     void GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
+    void InitMap();
+    std::string GetRingtoneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &type);
+    int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
+        RingtoneType ringtoneType, const int32_t &num);
+    std::string GetShotToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &type);
+    std::string GetNotificationToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper);
+    int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
+        SystemToneType systemToneType, const int32_t &num);
+    int32_t UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t &toneId);
 
     bool isRingtoneTypeValid(RingtoneType ringtongType);
     bool isSystemToneTypeValid(SystemToneType systemToneType);

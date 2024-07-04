@@ -45,6 +45,7 @@ public:
 private:
     void InitPlayer();
     int32_t ApplyDefaultSystemToneUri(std::string &defaultUri);
+    std::string ChangeUri(const std::string &audioUri);
 
     std::shared_ptr<Media::ISoundPool> player_ = nullptr;
     std::shared_ptr<SystemTonePlayerCallback> callback_ = nullptr;

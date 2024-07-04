@@ -51,6 +51,7 @@ private:
     void InitPlayer(std::string &audioUri);
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
+    std::string ChangeUri(const std::string &audioUri);
 
     float volume_ = 1.0f;
     bool loop_ = false;
