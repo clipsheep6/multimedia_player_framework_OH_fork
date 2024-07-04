@@ -272,7 +272,7 @@ public:
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t OnStartScreenCapture();
-    void PostStartScreenCapture(bool isSuccess);
+    bool PostStartScreenCapture(bool isSuccess);
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorder();
     int32_t StartScreenCaptureFile();
@@ -283,7 +283,7 @@ private:
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
-    void PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
+    bool PostStopScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioCapture();
     int32_t StopVideoCapture();
     int32_t StopScreenCaptureRecorder();
