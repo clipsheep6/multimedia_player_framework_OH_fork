@@ -415,6 +415,7 @@ void PlayerServer::PlaybackCompletedState::HandleStateChange(int32_t newState)
     } else if (newState == PLAYER_STOPPED) {
         MediaTrace::TraceEnd("PlayerServer::Stop", FAKE_POINTER(&server_));
         server_.ChangeState(server_.stoppedState_);
+        server_.lastOpStatus_ = PLAYER_STOPPED;
         (void)server_.taskMgr_.MarkTaskDone("completed->stopped done");
     }
 }
