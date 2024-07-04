@@ -183,7 +183,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
 
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
 {
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice choice: %{public}s", choice.c_str());
 
     // To avoid deadlock: first release mutexGlobal_, then be destructed
     std::shared_ptr<ScreenCaptureServer> server;
@@ -192,7 +192,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         server = GetScreenCaptureServerByIdWithLock(sessionId);
     }
     if (server == nullptr) {
-        MEDIA_LOGE("ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
+        MEDIA_LOGE("ReportAVScreenCaptureUserChoice failed to get instance");
         return MSERR_UNKNOWN;
     }
 
@@ -1162,7 +1162,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     if (state == START_VIDEO) {
         res = PrivacyKit::StartUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
-            MEDIA_LOGE("start using perm error for client %{public}d", appInfo_.appTokenId);
+            MEDIA_LOGE("start using perm error for client");
         }
         res = PrivacyKit::AddPermissionUsedRecord(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN", 1, 0);
         if (res != 0) {
@@ -1171,7 +1171,7 @@ bool ScreenCaptureServer::UpdatePrivacyUsingPermissionState(VideoPermissionState
     } else if (state == STOP_VIDEO) {
         res = PrivacyKit::StopUsingPermission(appInfo_.appTokenId, "ohos.permission.CAPTURE_SCREEN");
         if (res != 0) {
-            MEDIA_LOGE("stop using perm error for client %{public}d", appInfo_.appTokenId);
+            MEDIA_LOGE("stop using perm error for client");
         }
     }
     return true;
