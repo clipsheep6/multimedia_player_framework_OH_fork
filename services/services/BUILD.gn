@@ -13,7 +13,6 @@
 
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
-import("//out/products_ext/hmos_ext_var.gni")
 
 config("media_service_config") {
   visibility = [ ":*" ]
@@ -88,7 +87,7 @@ config("media_service_config") {
 
   defines = []
   defines += player_framework_defines
-  if (config_platform_type == "pc_standard") {
+  if (player_framework_support_pc_device) {
     defines += [ "PC_STANDARD" ]
   }
   if (target_cpu == "arm") {
