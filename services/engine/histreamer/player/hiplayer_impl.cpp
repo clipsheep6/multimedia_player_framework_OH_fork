@@ -1805,7 +1805,7 @@ void HiPlayerImpl::NotifyAudioInterrupt(const Event& event)
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
-    callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, 0, format);
+    callbackLooper_.OnInfo(INFO_TYPE_INTERRUPT_EVENT, hintType, format);
 }
 
 void HiPlayerImpl::NotifyAudioDeviceChange(const Event& event)
