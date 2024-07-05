@@ -1301,7 +1301,6 @@ int32_t ScreenCaptureServer::StartPrivacyWindow()
     comStr += std::to_string(appInfo_.appUid).c_str();
     comStr += "\",\"appLabel\":\"";
     comStr += callingLabel_.c_str();
-
     comStr += "\"}";
 
     AAFwk::Want want;
