@@ -56,7 +56,7 @@ void VideoBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer
 }
 
 SeekAgent::SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer)
-    : demuxer_(demuxer), isAudioTargetArrived_(false), isVideoTargetArrived_(false),
+    : demuxer_(demuxer), isAudioTargetArrived_(true), isVideoTargetArrived_(true),
     seekTargetPos_(-1), isSeeking_(false)
 {
     MEDIA_LOG_I("SeekAgent ctor called.");
@@ -85,8 +85,6 @@ Status SeekAgent::Seek(int64_t seekPos)
     MEDIA_LOG_I("ResumeForSeek end");
     {
         AutoLock lock(targetArrivedLock_);
-        isAudioTargetArrived_ = false;
-        isVideoTargetArrived_ = false;
         demuxer_->ResumeForSeek();
         targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {return isAudioTargetArrived_ && isVideoTargetArrived_;});
         MEDIA_LOG_I("Wait end");
@@ -97,15 +95,9 @@ Status SeekAgent::Seek(int64_t seekPos)
     return st;
 }
 
-Status SeekAgent::SetBufferFilledListener()
+Status SeekAgent::GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds)
 {
-    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
-    producerMap_ = demuxer_->GetBufferQueueProducerMap();
-    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
-
     auto trackInfo = demuxer_->GetStreamMetaInfo();
-    uint32_t videoTrackId = -1;
-    std::vector<uint32_t> audioTrackIds;
     for (uint32_t index = 0; index < trackInfo.size(); index++) {
         auto trackMeta = trackInfo[index];
         std::string mimeType;
@@ -119,6 +111,18 @@ Status SeekAgent::SetBufferFilledListener()
             audioTrackIds.push_back(index);
         }
     }
+    return Status::OK;
+}
+
+Status SeekAgent::SetBufferFilledListener()
+{
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, Status::ERROR_INVALID_PARAMETER, "Invalid demuxer filter instance.");
+    producerMap_ = demuxer_->GetBufferQueueProducerMap();
+    FALSE_RETURN_V_MSG_E(!producerMap_.empty(), Status::ERROR_INVALID_PARAMETER, "producerMap is empty.");
+
+    uint32_t videoTrackId = -1;
+    std::vector<uint32_t> audioTrackIds;
+    GetAllTrackInfo(videoTrackId, audioTrackIds);
 
     auto it = producerMap_.begin();
     while (it != producerMap_.end()) {
@@ -129,6 +133,10 @@ Status SeekAgent::SetBufferFilledListener()
         if (std::find(audioTrackIds.begin(), audioTrackIds.end(), it->first) != audioTrackIds.end()) {
             sptr<IBrokerListener> audioListener
                 = new AudioBufferFilledListener(shared_from_this(), it->second, it->first);
+            {
+                AutoLock lock(targetArrivedLock_);
+                isAudioTargetArrived_ = false;
+            }
             MEDIA_LOG_I("Add Listener audio id : %{public}d", it->first);
             it->second->SetBufferFilledListener(audioListener);
             listenerMap_.insert({it->first, audioListener});
@@ -138,6 +146,10 @@ Status SeekAgent::SetBufferFilledListener()
         if (it->first == videoTrackId) {
             sptr<IBrokerListener> videoListener
                 = new VideoBufferFilledListener(shared_from_this(), it->second, it->first);
+            {
+                AutoLock lock(targetArrivedLock_);
+                isVideoTargetArrived_ = false;
+            }
             MEDIA_LOG_I("Add Listener video id : %{public}d", it->first);
             it->second->SetBufferFilledListener(videoListener);
             listenerMap_.insert({it->first, videoListener});

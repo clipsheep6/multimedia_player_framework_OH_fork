@@ -43,12 +43,13 @@ public:
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
+    Status GetAllTrackInfo(uint32_t &videoTrackId, std::vector<uint32_t> &audioTrackIds);
 
     std::shared_ptr<Pipeline::DemuxerFilter> demuxer_;
     Mutex targetArrivedLock_;
     ConditionVariable targetArrivedCond_;
-    bool isAudioTargetArrived_{false};
-    bool isVideoTargetArrived_{false};
+    bool isAudioTargetArrived_{true};
+    bool isVideoTargetArrived_{true};
 
     int64_t seekTargetPos_{-1};
     std::atomic<bool> isSeeking_{false};
