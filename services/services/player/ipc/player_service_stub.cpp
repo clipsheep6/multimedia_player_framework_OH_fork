@@ -95,8 +95,6 @@ void PlayerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return Prepare(data, reply); } };
     playerFuncs_[SET_RENDER_FIRST_FRAME] = { "Player::SetRenderFirstFrame",
         [this](MessageParcel &data, MessageParcel &reply) { return SetRenderFirstFrame(data, reply); } };
-    playerFuncs_[SET_PLAY_RANGE] = { "Player::SetPlayRange",
-        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
     playerFuncs_[PREPAREASYNC] = { "Player::PrepareAsync",
         [this](MessageParcel &data, MessageParcel &reply) { return PrepareAsync(data, reply); } };
     playerFuncs_[PAUSE] = { "Player::Pause",
@@ -165,6 +163,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTrack(data, reply); } };
     playerFuncs_[SET_DECRYPT_CONFIG] = { "Player::SetDecryptConfig",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
+    playerFuncs_[SET_PLAY_RANGE] = { "Player::SetPlayRange",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
