@@ -95,6 +95,8 @@ void PlayerServiceStub::FillPlayerFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return Prepare(data, reply); } };
     playerFuncs_[SET_RENDER_FIRST_FRAME] = { "Player::SetRenderFirstFrame",
         [this](MessageParcel &data, MessageParcel &reply) { return SetRenderFirstFrame(data, reply); } };
+    playerFuncs_[SET_PLAY_RANGE] = { "Player::SetPlayRange",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
     playerFuncs_[PREPAREASYNC] = { "Player::PrepareAsync",
         [this](MessageParcel &data, MessageParcel &reply) { return PrepareAsync(data, reply); } };
     playerFuncs_[PAUSE] = { "Player::Pause",
@@ -308,6 +310,13 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(bool display)
     MediaTrace trace("Stub::SetRenderFirstFrame");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetRenderFirstFrame(display);
+}
+
+int32_t PlayerServiceStub::SetPlayRange(int64_t start, int64_t end)
+{
+    MediaTrace trace("Stub::SetPlayRange");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayRange(start, end);
 }
 
 int32_t PlayerServiceStub::PrepareAsync()
@@ -636,6 +645,14 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(MessageParcel &data, MessageParce
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStub::SetPlayRange(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t start = data.ReadInt64();
+    int64_t end = data.ReadInt64();
+    reply.WriteInt32(SetPlayRange(start, end));
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::PrepareAsync(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
@@ -762,8 +779,8 @@ int32_t PlayerServiceStub::GetDuration(MessageParcel &data, MessageParcel &reply
     (void)data;
     int32_t duration = -1;
     int32_t ret = GetDuration(duration);
-    reply.WriteInt32(duration);
     reply.WriteInt32(ret);
+    reply.WriteInt32(duration);
     return MSERR_OK;
 }
 

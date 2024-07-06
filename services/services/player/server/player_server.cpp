@@ -256,7 +256,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 {
     MEDIA_LOGI("PlayEngine Init");
     if (lastOpStatus_ != PLAYER_IDLE) {
-        MEDIA_LOGE("current state is: %{public}s, not support SetSource", GetStatusDescription(lastOpStatus_).c_str());
+        MEDIA_LOGE("current state is: %{public}s, not support SetSource",
+            GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
 
@@ -366,6 +367,30 @@ int32_t PlayerServer::SetRenderFirstFrame(bool display)
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->SetRenderFirstFrame(display);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRenderFirstFrame Failed!");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPlayRange(int64_t start, int64_t end)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED
+        && lastOpStatus_ != PLAYER_PREPARED
+        && lastOpStatus_ != PLAYER_PAUSED
+        && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not SetPlayRange, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlayRange, it is live-stream");
+        return MSERR_OK;
+    }
+
+    if (playerEngine_ != nullptr) {
+        int32_t ret = playerEngine_->SetPlayRange(start, end);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetPlayRange Failed!");
     }
     return MSERR_OK;
 }
