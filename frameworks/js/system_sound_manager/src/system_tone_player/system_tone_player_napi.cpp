@@ -515,6 +515,9 @@ void SystemTonePlayerNapi::AsyncRelease(napi_env env, void *data)
     auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
     ObjectRefMap objectGuard(obj);
     auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    CHECK_AND_RETURN_LOG(napiSystemTonePlayer != nullptr, "NapiSystemTonePlayer is nullptr");
+    CHECK_AND_RETURN_LOG(napiSystemTonePlayer->systemTonePlayer_ != nullptr,
+        "NapiSystemTonePlayer->systemTonePlayer_ is nullptr");
     context->status = napiSystemTonePlayer->systemTonePlayer_->Release();
 }
 } // namespace Media
