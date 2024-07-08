@@ -202,7 +202,7 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
 {
     Json::Reader reader;
     bool parsingSuccessful = reader.parse(content, root);
-    if (!parsingSuccessful) {
+    if (!parsingSuccessful || root.type() != Json::objectValue) {
         MEDIA_LOGE("Error parsing the string");
         return;
     }
@@ -214,6 +214,9 @@ void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
 
 void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root, std::shared_ptr<ScreenCaptureServer> &server)
 {
+    if (root.type() != Json::objectValue) {
+        return;
+    }
     const Json::Value missionIdJson = root["missionid"];
     if (!missionIdJson.isNull() && missionIdJson.asInt64() >= 0) {
         uint64_t missionId = missionIdJson.asInt64();
@@ -240,7 +243,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
     Json::Value root;
     std::string choice = "false";
     GetChoiceFromJson(root, content, std::string("choice"), choice);
-    if (USER_CHOICE_ALLOW.compare(choice) == 0) {
+    if (USER_CHOICE_ALLOW.compare(choice) == 0 || USER_CHOICE_ALLOW.compare(content) == 0) {
         std::lock_guard<std::mutex> lock(mutexGlobal_);
         if (activeSessionId_.load() >= 0) {
             currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
@@ -259,7 +262,7 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, 
         activeSessionId_.store(sessionId);
         MEDIA_LOGI("ReportAVScreenCaptureUserChoice user choice is true and start success");
         return MSERR_OK;
-    } else if (USER_CHOICE_DENY.compare(choice) == 0) {
+    } else if (USER_CHOICE_DENY.compare(choice) == 0 || USER_CHOICE_DENY.compare(content) == 0) {
         return server->OnReceiveUserPrivacyAuthority(false);
     } else {
         MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
