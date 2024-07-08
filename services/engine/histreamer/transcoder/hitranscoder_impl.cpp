@@ -94,7 +94,6 @@ int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realU
         MEDIA_LOG_E("invalid url. The Url (%{private}s) path may be invalid.", tempUrlPath.c_str());
         return MSERR_FILE_ACCESS_FAILED;
     }
-    MEDIA_LOG_E("The tempUrlPath (%{public}s) path may be invalid.", tempUrlPath.c_str());
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
     if (!ret) {
         MEDIA_LOG_E("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
@@ -108,7 +107,6 @@ int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realU
 
 int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
 {
-    MEDIA_LOG_I("HiTransCoderImpl::SetInputFile uri: " PUBLIC_LOG_S, url.c_str());
     inputFile_ = url;
     if (url.find("://") == std::string::npos || url.find("file://") == 0) {
         std::string realUriPath;
@@ -140,6 +138,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
         } else if (trackMime.find("audio/") == 0) {
+            MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels;
             trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels);
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
@@ -147,7 +146,6 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
             int32_t sampleRate;
             trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
-            MEDIA_LOG_I("SetInputFile contain audio %{public}d", channels);
         }
     }
     pipeline_->AddHeadFilters({demuxerFilter_});
@@ -156,9 +154,8 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
 
 int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 {
-    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile() %{public}d", fd);
+    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile()");
     fd_ = dup(fd);
-    MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile() %{public}d", fd_);
     return static_cast<int32_t>(Status::OK);
 }
 
@@ -190,7 +187,6 @@ void HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &transC
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_MPEG4);
             break;
         case OHOS::Media::VideoCodecFormat::H265:
-            MEDIA_LOG_I("ConfigureVideo H265 enter");
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_HEVC);
             break;
         default:
@@ -279,6 +275,7 @@ int32_t HiTransCoderImpl::Start()
 int32_t HiTransCoderImpl::Pause()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Pause()");
+    callbackLooper_->StopReportMediaProgress();
     Status ret = pipeline_->Pause();
     return static_cast<int32_t>(ret);
 }
@@ -287,14 +284,15 @@ int32_t HiTransCoderImpl::Resume()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Resume()");
     Status ret = pipeline_->Resume();
+    callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     return static_cast<int32_t>(ret);
 }
 
 int32_t HiTransCoderImpl::Cancel()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Cancel()");
-    Status ret = pipeline_->Stop();
     callbackLooper_->StopReportMediaProgress();
+    Status ret = pipeline_->Stop();
     callbackLooper_->Stop();
     return static_cast<int32_t>(ret);
 }
@@ -317,7 +315,6 @@ void HiTransCoderImpl::OnEvent(const Event &event)
                     ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);
                 }
             });
-            MEDIA_LOG_I("HiTransCoderImpl EVENT_COMPLETE end");
         }
         default:
             break;
@@ -438,33 +435,26 @@ void HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
     if (cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED) {
         switch (outType) {
             case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
-                MEDIA_LOG_I("HiTransCoderImpl::LinkAudioEncoderFilter()");
                 LinkAudioEncoderFilter(filter, outType);
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
                 if (audioDecoderFilter_) {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkMuxerFilter()");
                     LinkMuxerFilter(filter, outType);
                 } else {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkAudioDecoderFilter()");
                     LinkAudioDecoderFilter(filter, outType);
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
                 if (!isNeedVideoResizeFilter_ || videoResizeFilter_) {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoEncoderFilter()");
                     LinkVideoEncoderFilter(filter, outType);
                 } else {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeFilter()");
                     LinkVideoResizeFilter(filter, outType);
                 }
                 break;
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (videoDecoderFilter_) {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkMuxerFilter()");
                     LinkMuxerFilter(filter, outType);
                 } else {
-                    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoDecoderFilter()");
                     LinkVideoDecoderFilter(filter, outType);
                 }
                 break;
