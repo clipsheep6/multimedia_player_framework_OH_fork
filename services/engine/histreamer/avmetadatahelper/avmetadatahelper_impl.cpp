@@ -146,6 +146,20 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     return thumbnailGenerator_->FetchFrameAtTime(timeUs, option, param);
 }
 
+int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+{
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
+    return metadataCollector_->GetTimeByFrameIndex(index, time);
+}
+
+int32_t AVMetadataHelperImpl::GetFrameIndexByTime(int64_t time, uint32_t &index)
+{
+    auto res = InitMetadataCollector();
+    CHECK_AND_RETURN_RET_LOG(res == Status::OK, MSERR_INVALID_STATE, "Create collector failed");
+    return metadataCollector_->GetFrameIndexByTime(time, index);
+}
+
 void AVMetadataHelperImpl::Reset()
 {
     if (metadataCollector_ != nullptr) {

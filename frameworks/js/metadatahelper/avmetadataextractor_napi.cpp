@@ -70,7 +70,8 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("fetchMetadata", JsResolveMetadata),
         DECLARE_NAPI_FUNCTION("fetchAlbumCover", JsFetchArtPicture),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
-
+        DECLARE_NAPI_FUNCTION("getTimeByFrameIndex", JSGetTimeByFrameIndex),
+        DECLARE_NAPI_FUNCTION("getFrameIndexByTime", JSGetFrameIndexByTime),
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
         DECLARE_NAPI_GETTER_SETTER("dataSrc", JsGetDataSrc, JsSetDataSrc),
@@ -463,6 +464,7 @@ void AVMetadataExtractorNapi::CommonCallbackRoutine(napi_env env, AVMetadataExtr
         if (asyncContext->status == ERR_OK) {
             napi_resolve_deferred(env, asyncContext->deferred, result[1]);
         } else {
+            MEDIA_LOGI("winddraw callback error");
             napi_reject_deferred(env, asyncContext->deferred, result[0]);
         }
     } else {
@@ -966,6 +968,176 @@ AVMetadataExtractorNapi* AVMetadataExtractorNapi::GetJsInstanceWithParameter(nap
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && extractor != nullptr, nullptr, "failed to napi_unwrap");
 
     return extractor;
+}
+
+napi_value AVMetadataExtractorNapi::JSGetTimeByFrameIndex(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVMetadataExtractorNapi::JSGetTimeByFrameIndex");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("frame to time");
+
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    AVMetadataExtractorNapi* extractor
+        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+
+    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+
+    if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
+        auto res = napi_get_value_uint32(env, args[0], &promiseCtx->index_);
+        if (res != napi_ok || static_cast<int32_t>(promiseCtx->index_) < 0) {
+            extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+            return result;
+        }
+    }
+
+    promiseCtx->napi = extractor;
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    promiseCtx->task_ = extractor->GetTimeByFrameIndexTask(promiseCtx);
+
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JSGetTimeByFrameIndex", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            if (promiseCtx->task_) {
+                auto result = promiseCtx->task_->GetResult();
+                if (result.Value().first != MSERR_EXT_API9_OK) {
+                    MEDIA_LOGE("JSGetTimeByFrameIndex get result SignError");
+                    promiseCtx->SignError(result.Value().first, result.Value().second);
+                }
+            }
+        },
+        GetTimeByFrameIndexComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetTimeByFrameIndexTask(
+    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
+        &timeStamp = promiseCtx->timeStamp_]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
+            auto res = helper_->GetTimeByFrameIndex(index, timeStamp);
+            CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "failed to GetTimeByFrameIndex"));
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized, unsupport get time by frame index operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_status status, void *data)
+{
+    napi_value result = nullptr;
+    auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+
+    if (status == napi_ok && context->errCode == napi_ok) {
+        napi_create_int64(env, context->timeStamp_, &result);
+        context->status = ERR_OK;
+    } else {
+        context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
+        napi_get_undefined(env, &result);
+        MEDIA_LOGI("winddraw error complete");
+    }
+    CommonCallbackRoutine(env, context, result);
+}
+
+napi_value AVMetadataExtractorNapi::JSGetFrameIndexByTime(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVMetadataExtractorNapi::JSGetFrameIndexByTime");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("time to frame");
+
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    AVMetadataExtractorNapi* extractor
+        = AVMetadataExtractorNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance");
+
+    auto promiseCtx = std::make_unique<AVMetadataExtractorAsyncContext>(env);
+
+    if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
+        auto res = napi_get_value_int64(env, args[0], &promiseCtx->timeStamp_);
+        if (res != napi_ok) {
+            extractor->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
+            return result;
+        }
+    }
+    promiseCtx->napi = extractor;
+    promiseCtx->task_ = extractor->GetFrameIndexByTimeTask(promiseCtx);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JSGetFrameIndexByTime", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVMetadataExtractorAsyncContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            if (promiseCtx->task_) {
+                auto result = promiseCtx->task_->GetResult();
+                if (result.Value().first != MSERR_EXT_API9_OK) {
+                    MEDIA_LOGE("JSGetFrameIndexByTime get result SignError");
+                    promiseCtx->SignError(result.Value().first, result.Value().second);
+                }
+            }
+        },
+        GetFrameIndexByTimeComplete, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    promiseCtx.release();
+    return result;
+}
+
+std::shared_ptr<TaskHandler<TaskRet>> AVMetadataExtractorNapi::GetFrameIndexByTimeTask(
+    std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx)
+{
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, &index = promiseCtx->index_,
+        &timeStamp = promiseCtx->timeStamp_]() {
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        auto state = GetCurrentState();
+        if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
+            auto res = helper_->GetFrameIndexByTime(timeStamp, index);
+            CHECK_AND_RETURN_RET(res == MSERR_OK, TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,
+                "failed to getFrameIndexByTime"));
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not initialized, unsupport get time by frame index operation");
+        }
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
+    });
+    (void)taskQue_->EnqueueTask(task);
+    return task;
+}
+
+void AVMetadataExtractorNapi::GetFrameIndexByTimeComplete(napi_env env, napi_status status, void *data)
+{
+    napi_value result = nullptr;
+    auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+
+    if (status == napi_ok && context->errCode == napi_ok) {
+        napi_create_uint32(env, context->index_, &result);
+        context->status = ERR_OK;
+    } else {
+        context->status = context->errCode == napi_ok ? MSERR_INVALID_VAL : context->errCode;
+        napi_get_undefined(env, &result);
+    }
+    CommonCallbackRoutine(env, context, result);
 }
 } // namespace Media
 } // namespace OHOS

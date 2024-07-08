@@ -142,6 +142,18 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperClient::FetchFrameAtTime(int64_t
     return avMetadataHelperProxy_->FetchFrameAtTime(timeUs, option, param);
 }
 
+int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->GetTimeByFrameIndex(index, time);
+}
+
+int32_t AVMetadataHelperClient::GetFrameIndexByTime(int64_t time, uint32_t &index)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->GetFrameIndexByTime(time, index);
+}
+
 void AVMetadataHelperClient::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);

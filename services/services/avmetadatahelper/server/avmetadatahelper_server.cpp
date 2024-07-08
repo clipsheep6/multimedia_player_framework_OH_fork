@@ -207,6 +207,20 @@ int32_t AVMetadataHelperServer::SetHelperCallback(const std::shared_ptr<HelperCa
     return MSERR_OK;
 }
 
+int32_t AVMetadataHelperServer::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    return avMetadataHelperEngine_->GetTimeByFrameIndex(index, time);
+}
+
+int32_t AVMetadataHelperServer::GetFrameIndexByTime(int64_t time, uint32_t &index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    return avMetadataHelperEngine_->GetFrameIndexByTime(time, index);
+}
+
 void AVMetadataHelperServer::ChangeState(const HelperStates state)
 {
     switch (state) {

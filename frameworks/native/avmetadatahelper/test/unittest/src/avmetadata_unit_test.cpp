@@ -610,5 +610,19 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
     ASSERT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 }
+
+/**
+    * @tc.number    : SetSource_API_0600
+    * @tc.name      : SetSource invalid.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
+{
+    std::string uri = "file:///data/test/invalid.mp4";
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex());
+}
 } // namespace Media
 } // namespace OHOS

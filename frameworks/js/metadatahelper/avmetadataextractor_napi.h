@@ -64,6 +64,10 @@ private:
     static void CommonCallbackRoutine(napi_env env, AVMetadataExtractorAsyncContext* &asyncContext,
                                       const napi_value &valueParam);
     static void ResolveMetadataComplete(napi_env env, napi_status status, void *data);
+    static void GetTimeByFrameIndexComplete(napi_env env, napi_status status, void *data);
+    static void GetFrameIndexByTimeComplete(napi_env env, napi_status status, void *data);
+    static napi_value JSGetTimeByFrameIndex(napi_env env, napi_callback_info info);
+    static napi_value JSGetFrameIndexByTime(napi_env env, napi_callback_info info);
 
     AVMetadataExtractorNapi();
     ~AVMetadataExtractorNapi() override;
@@ -84,6 +88,10 @@ private:
     void SetAVFileDescriptorTask(std::shared_ptr<AVMetadataHelper>& avHelper, AVFileDescriptor& fileDescriptor);
     void SetDataSrcTask(std::shared_ptr<AVMetadataHelper>& avHelper,
         std::shared_ptr<HelperDataSourceCallback>& dataSrcCb);
+    std::shared_ptr<TaskHandler<TaskRet>> GetTimeByFrameIndexTask(
+        std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx);
+    std::shared_ptr<TaskHandler<TaskRet>> GetFrameIndexByTimeTask(
+        std::unique_ptr<AVMetadataExtractorAsyncContext> &promiseCtx);
 
     std::string GetCurrentState();
     void NotifyState(HelperStates state) override;
@@ -123,6 +131,8 @@ struct AVMetadataExtractorAsyncContext : public MediaAsyncContext {
     std::shared_ptr<Meta> metadata_ = nullptr;
     std::shared_ptr<PixelMap> artPicture_ = nullptr;
     int32_t status;
+    int64_t timeStamp_;
+    uint32_t index_;
 };
 } // namespace Media
 } // namespace OHOS

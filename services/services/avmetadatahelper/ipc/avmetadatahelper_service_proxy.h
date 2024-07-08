@@ -37,6 +37,8 @@ public:
     void Release() override;
     int32_t SetHelperCallback() override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;
+    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override;
 private:
     static inline BrokerDelegator<AVMetadataHelperServiceProxy> delegator_;
 };

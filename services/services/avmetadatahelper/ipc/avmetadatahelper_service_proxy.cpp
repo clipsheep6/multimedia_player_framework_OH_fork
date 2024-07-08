@@ -275,6 +275,42 @@ int32_t AVMetadataHelperServiceProxy::SetHelperCallback()
 
     return reply.ReadInt32();
 }
+
+int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteUint32(index);
+
+    int32_t error = Remote()->SendRequest(GET_TIME_BY_FRAME_INDEX, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetTimeByFrameIndex failed, error: %{public}d", error);
+    time = reply.ReadInt64();
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(int64_t time, uint32_t &index)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteInt64(time);
+
+    int32_t error = Remote()->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetHelperCallback failed, error: %{public}d", error);
+    index = reply.ReadUint32();
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS
 
