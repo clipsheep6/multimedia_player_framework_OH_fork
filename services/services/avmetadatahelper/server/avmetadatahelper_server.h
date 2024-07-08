@@ -42,6 +42,8 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     void Release() override;
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
+    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;
+    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override;
 
 private:
     const std::string &GetStatusDescription(int32_t status);

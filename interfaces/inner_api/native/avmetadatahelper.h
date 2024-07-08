@@ -453,6 +453,20 @@ public:
      * in {@link media_errors.h} otherwise.
      */
     virtual int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) = 0;
+
+    /**
+     * Get timestamp according to frame index.
+     * @param timeUs : Index of the frame.
+     * @returns returns time
+     */
+    virtual int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) = 0;
+
+    /**
+     * Get frame index according to the given timestamp.
+     * @param timeUs : Timestamp of the frame, in microseconds.
+     * @returns Returns frame
+     */
+    virtual int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) = 0;
 };
 
 class __attribute__((visibility("default"))) AVMetadataHelperFactory {

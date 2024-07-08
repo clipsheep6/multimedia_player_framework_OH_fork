@@ -38,6 +38,8 @@ public:
     int32_t Init();
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
     void SetScene(Scene scene) override;
+    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;
+    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override;
 private:
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;

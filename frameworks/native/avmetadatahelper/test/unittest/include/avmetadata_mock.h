@@ -100,6 +100,8 @@ public:
     void FrameToFile(std::shared_ptr<PixelMap> frame, const char *fileName, int64_t timeUs, int32_t queryOption);
     void SurfaceToFile(std::shared_ptr<AVSharedMemory> frame, const char *fileName);
     void FrameToJpeg(std::shared_ptr<PixelMap> frame, const char *fileName, int64_t timeUs, int32_t queryOption);
+    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time);
+    int32_t GetFrameIndexByTime(int64_t time, uint32_t &index);
 private:
     int32_t RGB565ToRGB888(const unsigned short *rgb565Buf, int rgb565Size, unsigned char *rgb888Buf, int rgb888Size);
 };

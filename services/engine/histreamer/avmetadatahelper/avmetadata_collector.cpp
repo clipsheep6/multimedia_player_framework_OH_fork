@@ -95,6 +95,29 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::ExtractMetadata()
     return collectedMeta_;
 }
 
+Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
+{
+    if (hasVideo_) {
+        trackId = videoTrackId_;
+        return Status::OK;
+    }
+    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
+    size_t trackCount = trackInfos.size();
+    CHECK_AND_RETURN_RET_LOG(trackCount > 0, Status::ERROR_INVALID_DATA, "GetTargetTrackInfo trackCount is invalid");
+    for (size_t index = 0; index < trackCount; index++) {
+        std::string trackMime = "";
+        if (!(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime))) {
+            continue;
+        }
+        if (trackMime.find("video/") == 0) {
+            videoTrackId_ = index;
+            hasVideo_ = true;
+            return Status::OK;
+        }
+    }
+    return Status::ERROR_INVALID_DATA;
+}
+
 std::shared_ptr<Meta> AVMetaDataCollector::GetAVMetadata()
 {
     if (collectedAVMetaData_ != nullptr) {
@@ -229,6 +252,25 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
     return nullptr;
 }
 
+int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, int64_t &timeMs)
+{
+    uint32_t trackId = 0;
+    CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetPresentationTimeUsByFrameIndex(trackId, index, timeMs) == Status::OK,
+        MSERR_UNSUPPORT_FILE, "Get time by frame failed");
+    timeMs = Plugins::Us2Ms(timeMs);
+    return MSERR_OK;
+}
+
+int32_t AVMetaDataCollector::GetFrameIndexByTime(int64_t timeMs, uint32_t &index)
+{
+    uint32_t trackId = 0;
+    CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetFrameIndexByPresentationTimeUs(
+        trackId, Plugins::Ms2Us(timeMs), index) == Status::OK, MSERR_UNSUPPORT_FILE, "Get frame by time failed");
+    return MSERR_OK;
+}
+
 void AVMetaDataCollector::ConvertToAVMeta(const std::shared_ptr<Meta> &innerMeta, Metadata &avmeta) const
 {
     for (const auto &[avKey, innerKey] : AVMETA_KEY_TO_X_MAP) {
@@ -345,6 +387,8 @@ void AVMetaDataCollector::Reset()
 {
     mediaDemuxer_->Reset();
     collectedMeta_.clear();
+    videoTrackId_ = 0;
+    hasVideo_ = false;
     collectedArtPicture_ = nullptr;
 }
 

@@ -41,6 +41,8 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetHelperCallback() = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) = 0;
+    virtual int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) = 0;
 
     /**
      * IPC code ID
@@ -58,6 +60,8 @@ public:
         SET_CALLBACK,
         SET_LISTENER_OBJ,
         GET_AVMETADATA,
+        GET_TIME_BY_FRAME_INDEX,
+        GET_FRAME_INDEX_BY_TIME,
         MAX_IPC_ID,
     };
 

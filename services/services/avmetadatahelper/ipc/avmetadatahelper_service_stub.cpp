@@ -82,6 +82,10 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return SetListenerObject(data, reply); } },
         { GET_AVMETADATA,
             [this](MessageParcel &data, MessageParcel &reply) { return GetAVMetadata(data, reply); } },
+        { GET_TIME_BY_FRAME_INDEX,
+            [this](MessageParcel &data, MessageParcel &reply) { return GetTimeByFrameIndex(data, reply); } },
+        { GET_FRAME_INDEX_BY_TIME,
+            [this](MessageParcel &data, MessageParcel &reply) { return GetFrameIndexByTime(data, reply); } },
     };
     return MSERR_OK;
 }
@@ -115,7 +119,7 @@ int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &d
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("Calling memberFunc is failed.");
             }
-            return MSERR_OK;
+            return ret;
         }
     }
     MEDIA_LOGW("AVMetadataHelperServiceStub: no member func supporting, applying default process");
@@ -215,6 +219,21 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(const sptr<IRemoteObject>
 
     helperCallback_ = callback;
     return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(uint32_t index, int64_t &time)
+{
+    MEDIA_LOGI("GetTimeByFrameIndex");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->GetTimeByFrameIndex(index, time);
+}
+
+int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(int64_t time, uint32_t &index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->GetFrameIndexByTime(time, index);
 }
 
 int32_t AVMetadataHelperServiceStub::SetUriSource(MessageParcel &data, MessageParcel &reply)
@@ -342,6 +361,26 @@ int32_t AVMetadataHelperServiceStub::SetListenerObject(MessageParcel &data, Mess
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetListenerObject(object));
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t index = data.ReadUint32();
+    int64_t time = 0;
+    auto res = GetTimeByFrameIndex(index, time);
+    CHECK_AND_RETURN_RET(res == MSERR_OK, res);
+    reply.WriteInt64(time);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t time = data.ReadInt64();
+    uint32_t index = 0;
+    auto res = GetFrameIndexByTime(time, index);
+    CHECK_AND_RETURN_RET(res == MSERR_OK, res);
+    reply.WriteUint32(index);
     return MSERR_OK;
 }
 } // namespace Media

@@ -610,5 +610,22 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
     ASSERT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 }
+
+/**
+    * @tc.number    : GetTimeByFrameIndex_API_0100
+    * @tc.name      : SetSource invalid.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
+}
 } // namespace Media
 } // namespace OHOS

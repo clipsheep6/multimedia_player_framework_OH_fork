@@ -72,6 +72,8 @@ public:
     std::shared_ptr<Meta> GetAVMetadata();
     std::string ExtractMetadata(int32_t key);
     std::shared_ptr<AVSharedMemory> GetArtPicture();
+    int32_t GetTimeByFrameIndex(uint32_t index, int64_t &timeMs);
+    int32_t GetFrameIndexByTime(int64_t timeMs, uint32_t &index);
     void Reset();
     void Destroy();
 
@@ -81,6 +83,8 @@ private:
     std::shared_ptr<AVSharedMemory> collectedArtPicture_;
     std::shared_ptr<Meta> customInfo_;
     std::shared_ptr<Meta> collectedAVMetaData_;
+    uint32_t videoTrackId_ = 0;
+    std::atomic<bool> hasVideo_ = false;
 
     std::unordered_map<int32_t, std::string> GetMetadata(
         const std::shared_ptr<Meta> &globalInfo, const std::vector<std::shared_ptr<Meta>> &trackInfos);
@@ -91,6 +95,7 @@ private:
     void SetEmptyStringIfNoData(Metadata &avmeta, int32_t avKey) const;
     bool SetStringByValueType(const std::shared_ptr<Meta> &innerMeta,
         Metadata &avmeta, int32_t avKey, std::string innerKey) const;
+    Status GetVideoTrackId(uint32_t &trackId);
 };
 }  // namespace Media
 }  // namespace OHOS
