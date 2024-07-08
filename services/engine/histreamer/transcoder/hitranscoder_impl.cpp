@@ -136,12 +136,11 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         std::string trackMime;
         trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime);
         if (trackMime.find("video/") == 0) {
-            int32_t videoWidth;
-            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, videoWidth);
-            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoWidth);
-            int32_t videoHeight;
-            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, videoHeight);
-            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoHeight);
+            MEDIA_LOG_I("SetInputFile contain video");
+            trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
+            trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            videoEncFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
+            videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
             videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         } else if (trackMime.find("audio/") == 0) {
             int32_t channels;
