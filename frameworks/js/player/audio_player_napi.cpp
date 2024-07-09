@@ -137,6 +137,7 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
 void AudioPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
+    MEDIA_LOGD("Destructor in");
     (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
