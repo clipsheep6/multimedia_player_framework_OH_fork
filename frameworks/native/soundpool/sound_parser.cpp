@@ -69,11 +69,15 @@ int32_t SoundParser::DoParser()
     int32_t result = MSERR_OK;
     result = DoDemuxer(&trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
+        MEDIA_LOGI("DoDemuxer failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
+        return MSERR_INVALID_VAL;
     }
     result = DoDecode(trackFormat_);
     if (result != MSERR_OK && callback_ != nullptr) {
+        MEDIA_LOGI("DoDecode failed, call callback");
         callback_->OnError(MSERR_UNSUPPORT_FILE);
+        return MSERR_INVALID_VAL;
     }
     return MSERR_OK;
 }
@@ -143,6 +147,7 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         audioDecCb_->SetDecodeCallback(soundParserListener_);
         if (callback_ != nullptr) audioDecCb_->SetCallback(callback_);
         ret = audioDec_->Start();
+        MEDIA_LOGI("SoundParser::DoDecode, audioDec_ started");
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to Start audioDecorder.");
     }
     return MSERR_OK;

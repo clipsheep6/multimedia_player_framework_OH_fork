@@ -130,7 +130,10 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
         havePlayedCount_ = 0;
         if (!audioRenderer_->Start()) {
             MEDIA_LOGE("audioRenderer Start failed");
-            if (callback_ != nullptr) callback_->OnError(MSERR_INVALID_VAL);
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
+                callback_->OnError(MSERR_INVALID_VAL);
+            }
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
@@ -151,6 +154,7 @@ int32_t CacheBuffer::ReCombineCacheData()
     CHECK_AND_RETURN_RET_LOG(cacheDataTotalSize_ + bufferSize > 1, MSERR_INVALID_VAL, "Invalid bufferSize");
     unsigned long reCombineCacheDataSize = (cacheDataTotalSize_ + bufferSize - 1) / bufferSize;
     std::shared_ptr<AudioBufferEntry> preAudioBuffer = cacheData_.front();
+    MEDIA_LOGI("ReCombine preBuffer size:%{public}d, bufferSize:%{public}zu", preAudioBuffer->size, bufferSize);
     size_t preAudioBufferIndex = 0;
     for (size_t reCombineCacheDataNum = 0; reCombineCacheDataNum < reCombineCacheDataSize; reCombineCacheDataNum++) {
         uint8_t *reCombineBuf = new(std::nothrow) uint8_t[bufferSize];

@@ -116,6 +116,8 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             std::deque<std::shared_ptr<AudioBufferEntry>> cacheData;
             soundParser->GetSoundData(cacheData);
             size_t cacheDataTotalSize = soundParser->GetSoundDataTotalSize();
+            MEDIA_LOGI("cacheData size:%{public}zu , cacheDataTotalSize:%{public}zu",
+                cacheData.size(), cacheDataTotalSize);
             auto cacheBuffer =
                 std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(), cacheData, cacheDataTotalSize,
                      soundID, streamID);
