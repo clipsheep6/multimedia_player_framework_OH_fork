@@ -627,6 +627,8 @@ int32_t HiPlayerImpl::Stop()
         stopWaitingDrmConfig_ = true;
         drmConfigCond_.notify_all();
     }
+    playRangeStartTime_ = PLAY_RANGE_DEFAULT_VALUE;
+    playRangeEndTime_ = PLAY_RANGE_DEFAULT_VALUE;
     AppendPlayerMediaInfo();
     OnStateChanged(PlayerStateId::STOPPED);
     ReportMediaInfo(instanceId_);
