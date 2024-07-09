@@ -55,6 +55,18 @@
             <option name="shell" value="restorecon /data/media/log"/>
         </preparer>
     </target>
+    <target name="transcoder_unit_test">
+        <preparer>
+            <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test/media/transcoder_src" src="res"/>
+            <option name="push" value="test_videofile/01.mp3 -> /data/test/media/transcoder_src" src="res"/>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test/media/transcoder_src" src="res"/>            
+            <option name="shell" value="mkdir /data/test/media/transcoder_dst"/>
+            <option name="shell" value="touch /data/test/media/transcoder_dst/AVC_Baseline@L1.2_81.0Kbps_320x240_dst.mp4"/>
+            <option name="shell" value="touch /data/test/media/transcoder_dst/01_dst.mp3"/>
+            <option name="shell" value="touch /data/test/media/transcoder_dst/ChineseColor_H264_AAC_480p_15fps_dst.mp4"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
     <target name="recorder_unit_test">
         <preparer>
             <option name="push" value="res_recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
