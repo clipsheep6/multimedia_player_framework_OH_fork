@@ -24,6 +24,7 @@ group("media_unit_test") {
       "../frameworks/native/recorder/test/unittest:recorder_unit_test",
       "../frameworks/native/recorder_profiles/test/unittest:recorder_profiles_unit_test",
       "../frameworks/native/system_sound_manager/unittest/sound_manager_test:system_sound_manager_unit_test",
+      "../frameworks/native/transcoder/test/unittest:transcoder_unit_test",
       "unittest/audio_haptic_test:audio_haptic_unit_test",
       "unittest/dfx_test:player_framework_dfx_test",
       "unittest/observer_test:incallobserver_unit_test",
