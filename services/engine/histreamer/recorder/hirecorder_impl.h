@@ -19,7 +19,6 @@
 #include "i_recorder_engine.h"
 #include "recorder_utils.h"
 #include "recorder_param.h"
-#include "common/log.h"
 #include "filter/filter_factory.h"
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"

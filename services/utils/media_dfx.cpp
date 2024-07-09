@@ -19,9 +19,9 @@
 #include "hitrace_meter.h"
 #include "hitrace/tracechain.h"
 #include "ipc_skeleton.h"
+#include "media_log.h"
 #include "media_utils.h"
 #include "hitrace/tracechain.h"
-#include "common/log.h"
 #include "common/media_core.h"
 #include "meta/any.h"
 #include <cstdint>
@@ -30,6 +30,7 @@ namespace {
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;
     constexpr int64_t MAX_MAP_SIZE = 100;
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDFX"};
 
     std::mutex collectMut_;
     std::mutex reportMut_;
@@ -48,10 +49,10 @@ namespace {
         std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> metaAppIdPair;
         {
             std::lock_guard<std::mutex> lock(collectMut_);
-            MEDIA_LOG_I("CollectReportMediaInfo, instanceId is : %{public}" PRIu64, instanceId);
+            MEDIA_LOGI("CollectReportMediaInfo, instanceId is : %{public}" PRIu64, instanceId);
             auto idMapIt = idMap_.find(instanceId);
             if (idMapIt == idMap_.end()) {
-                MEDIA_LOG_W("Not found instanceId in idMap, instanceId is : %{public}" PRIu64, instanceId);
+                MEDIA_LOGW("Not found instanceId in idMap, instanceId is : %{public}" PRIu64, instanceId);
                 return false;
             }
             ct = idMapIt->second.first;
@@ -59,12 +60,12 @@ namespace {
             idMap_.erase(idMapIt);
             auto ctUidToMediaInfo = mediaInfoMap_.find(ct);
             if (ctUidToMediaInfo == mediaInfoMap_.end()) {
-                MEDIA_LOG_W("Not found calltype, calltype is : %{public}d", static_cast<OHOS::Media::CallType>(ct));
+                MEDIA_LOGW("Not found calltype, calltype is : %{public}d", static_cast<OHOS::Media::CallType>(ct));
                 return false;
             }
             auto uidToMediaInfo = ctUidToMediaInfo->second.find(uid);
             if (uidToMediaInfo == ctUidToMediaInfo->second.end()) {
-                MEDIA_LOG_W("Not found uid in mediaInfoMap_, uid is : %{public}" PRId32, uid);
+                MEDIA_LOGW("Not found uid in mediaInfoMap_, uid is : %{public}" PRId32, uid);
                 return false;
             }
             auto& instanceList = uidToMediaInfo->second;
@@ -94,9 +95,9 @@ namespace {
 
     int32_t StatisticsEventReport()
     {
-        MEDIA_LOG_I("StatisticsEventReport.");
+        MEDIA_LOGI("StatisticsEventReport.");
         if (reportMediaInfoMap_.empty()) {
-            MEDIA_LOG_I("reportMediaInfoMap_ is empty, can't report");
+            MEDIA_LOGI("reportMediaInfoMap_ is empty, can't report");
             return OHOS::Media::MSERR_INVALID_OPERATION;
         }
         OHOS::Media::MediaEvent event;
@@ -198,9 +199,9 @@ void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::Hiv
 void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap)
 {
-    MEDIA_LOG_I("MediaEvent::CommonStatisicsEventWrite");
+    MEDIA_LOGI("MediaEvent::CommonStatisicsEventWrite");
     if (infoMap.empty()) {
-        MEDIA_LOG_I("Player infoMap is empty.");
+        MEDIA_LOGI("Player infoMap is empty.");
         return;
     }
     std::vector<std::string> infoArr;
@@ -258,7 +259,7 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
                 metaInfoJson[it->first] = isTrue ? "true" : "false";
             }
         } else {
-            MEDIA_LOG_I("not found type matched with it->first: %{public}s", it->first.c_str());
+            MEDIA_LOGI("not found type matched with it->first: %{public}s", it->first.c_str());
         }
     }
 }
@@ -267,7 +268,7 @@ void MediaEvent::ParseOneEvent(const std::pair<uint64_t, std::shared_ptr<OHOS::M
 void MediaEvent::StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::vector<std::string>& infoArr)
 {
-    MEDIA_LOG_I("MediaEvent::StatisicsHiSysEventWrite");
+    MEDIA_LOGI("MediaEvent::StatisicsHiSysEventWrite");
     std::string eventName;
     switch (callType) {
         case CallType::AVPLAYER:
@@ -341,14 +342,14 @@ void FaultScreenCaptureEventWrite(const std::string& appName, uint64_t instanceI
 
 int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
 {
-    MEDIA_LOG_I("CreateMediaInfo uid is: %{public}" PRId32 " instanceId is: %{public}" PRIu64, uid, instanceId);
+    MEDIA_LOGI("CreateMediaInfo uid is: %{public}" PRId32 " instanceId is: %{public}" PRIu64, uid, instanceId);
     std::lock_guard<std::mutex> lock(collectMut_);
     auto instanceIdMap = idMap_.find(instanceId);
     if (instanceIdMap != idMap_.end()) {
-        MEDIA_LOG_I("instanceId already exists id idMap_");
+        MEDIA_LOGI("instanceId already exists id idMap_");
         return MSERR_INVALID_VAL;
     } else {
-        MEDIA_LOG_I("CreateMediaInfo not found instanceId in idMap_, add the instanceId to idMap_");
+        MEDIA_LOGI("CreateMediaInfo not found instanceId in idMap_, add the instanceId to idMap_");
         std::pair<CallType, int32_t> insertToMapPair(callType, uid);
         idMap_[instanceId] = insertToMapPair;
     }
@@ -359,41 +360,41 @@ int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)
         auto it = ctUidToMediaInfo->second.find(uid);
         if (it != ctUidToMediaInfo->second.end()) {
             it->second.push_back(metaAppIdPair);
-            MEDIA_LOG_I("CreateMediaInfo: Successfully inserted metaAppIdPair for uid ");
+            MEDIA_LOGI("CreateMediaInfo: Successfully inserted metaAppIdPair for uid ");
         } else {
             ctUidToMediaInfo->second[uid].push_back(metaAppIdPair);
-            MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for uid and inserted metaAppIdPair.");
+            MEDIA_LOGI("CreateMediaInfo: Successfully created new list for uid and inserted metaAppIdPair.");
         }
     } else {
         mediaInfoMap_[callType][uid].push_back(metaAppIdPair);
-        MEDIA_LOG_I("CreateMediaInfo: Successfully created new list for callType and uid ");
+        MEDIA_LOGI("CreateMediaInfo: Successfully created new list for callType and uid ");
     }
     return MSERR_OK;
 }
 
 int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
 {
-    MEDIA_LOG_I("AppendMediaInfo.");
+    MEDIA_LOGI("AppendMediaInfo.");
     if (meta == nullptr || meta->Empty()) {
-        MEDIA_LOG_I("Insert meta is empty.");
+        MEDIA_LOGI("Insert meta is empty.");
         return MSERR_INVALID_OPERATION;
     }
     std::lock_guard<std::mutex> lock(collectMut_);
     auto idMapIt = idMap_.find(instanceId);
     if (idMapIt == idMap_.end()) {
-        MEDIA_LOG_I("Not found instanceId when append meta, instanceId is : %{public}" PRIu64, instanceId);
+        MEDIA_LOGI("Not found instanceId when append meta, instanceId is : %{public}" PRIu64, instanceId);
         return MSERR_INVALID_VAL;
     }
     CallType ct = idMapIt->second.first;
     int32_t uid = idMapIt->second.second;
     auto ctUidToMediaInfo = mediaInfoMap_.find(ct);
     if (ctUidToMediaInfo == mediaInfoMap_.end()) {
-        MEDIA_LOG_I("Not found calltype when append meta, calltype is : %{public}d", static_cast<CallType>(ct));
+        MEDIA_LOGI("Not found calltype when append meta, calltype is : %{public}d", static_cast<CallType>(ct));
         return MSERR_INVALID_OPERATION;
     }
     auto it = ctUidToMediaInfo->second.find(uid);
     if (it == ctUidToMediaInfo->second.end()) {
-        MEDIA_LOG_I("Not found uid when append meta, uid is : %{public}" PRId32, uid);
+        MEDIA_LOGI("Not found uid when append meta, uid is : %{public}" PRId32, uid);
         return MSERR_INVALID_OPERATION;
     }
     auto& instanceList = it->second;
@@ -412,15 +413,15 @@ int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId)
 
 int32_t ReportMediaInfo(uint64_t instanceId)
 {
-    MEDIA_LOG_I("Report.");
-    MEDIA_LOG_I("Delete media info instanceId is: %{public}" PRIu64, instanceId);
+    MEDIA_LOGI("Report.");
+    MEDIA_LOGI("Delete media info instanceId is: %{public}" PRIu64, instanceId);
     if (!CollectReportMediaInfo(instanceId)) {
-        MEDIA_LOG_I("Collect media info fail.");
+        MEDIA_LOGI("Collect media info fail.");
         return MSERR_INVALID_OPERATION;
     }
     std::lock_guard<std::mutex> lock(reportMut_);
     if (g_reachMaxMapSize) {
-        MEDIA_LOG_I("Event data size exceeds 100, report the event");
+        MEDIA_LOGI("Event data size exceeds 100, report the event");
         g_reachMaxMapSize = false;
         return StatisticsEventReport();
     }
@@ -428,7 +429,7 @@ int32_t ReportMediaInfo(uint64_t instanceId)
     auto diff = currentTime - currentTime_;
     auto hour = std::chrono::duration_cast<std::chrono::hours>(diff).count();
     if (hour >= HOURS_BETWEEN_REPORTS) {
-        MEDIA_LOG_I("Over 4 hours, report the event");
+        MEDIA_LOGI("Over 4 hours, report the event");
         return StatisticsEventReport();
     }
     return MSERR_OK;
