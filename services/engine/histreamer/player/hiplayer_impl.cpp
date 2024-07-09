@@ -395,6 +395,9 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
 {
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     InitDuration();
+    if (durationMs_ <= 0) {
+        HandleIsLiveStreamEvent(true);
+    }
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     InitVideoWidthAndHeight();
     NotifyResolutionChange();
