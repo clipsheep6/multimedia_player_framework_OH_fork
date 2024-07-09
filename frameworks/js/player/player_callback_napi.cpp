@@ -275,6 +275,7 @@ void PlayerCallbackNapi::OnAudioInterruptCb(const Format &infoBody) const
 
 void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
 {
+    MEDIA_LOGD("OnJsCallBack in");
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
