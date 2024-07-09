@@ -27,6 +27,8 @@
 #include <cstdint>
 
 namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "MediaDfx" };
+
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;
     constexpr int64_t MAX_MAP_SIZE = 100;

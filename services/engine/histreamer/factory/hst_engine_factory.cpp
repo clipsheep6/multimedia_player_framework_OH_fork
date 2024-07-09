@@ -28,6 +28,8 @@
 #include "hiplayer_impl.h"
 #endif
 
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "HstEngineFactory" };
+
 namespace OHOS {
 namespace Media {
 class HstEngineFactory : public IEngineFactory {

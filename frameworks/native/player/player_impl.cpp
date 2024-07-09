@@ -65,7 +65,6 @@ PlayerImpl::~PlayerImpl()
 
 void PlayerImpl::ResetSeekVariables()
 {
-    MEDIA_LOGI("ResetSeekVariables entered");
     mCurrentPosition = INT32_MIN;
     mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
     mSeekPosition = INT32_MIN;

@@ -2021,7 +2021,7 @@ napi_value AVPlayerNapi::JsGetWidth(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get width");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetWidth In");
+    MEDIA_LOGI("JsGetWidth");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -2033,7 +2033,6 @@ napi_value AVPlayerNapi::JsGetWidth(napi_env env, napi_callback_info info)
 
     napi_value value = nullptr;
     (void)napi_create_int32(env, width, &value);
-    MEDIA_LOGI("JsGetWidth Out");
     return value;
 }
 
@@ -2042,7 +2041,7 @@ napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::get height");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsGetHeight In");
+    MEDIA_LOGI("JsGetHeight");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
@@ -2054,7 +2053,6 @@ napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
 
     napi_value value = nullptr;
     (void)napi_create_int32(env, height, &value);
-    MEDIA_LOGI("JsGetHeight Out");
     return value;
 }
 

@@ -19,6 +19,8 @@
 #include <sys/syscall.h>
 #include "media_dfx.h"
 
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_RECORDER, "HiRecorder" };
+
 namespace OHOS {
 namespace Media {
 using namespace OHOS::HiviewDFX;
