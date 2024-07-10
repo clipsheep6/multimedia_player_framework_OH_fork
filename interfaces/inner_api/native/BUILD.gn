@@ -190,7 +190,7 @@ ohos_shared_library("media_client") {
   }
 
   if (player_framework_support_drm) {
-    external_deps += [ "drm_framework:drm_framework" ]
+    public_external_deps += [ "drm_framework:drm_framework" ]
   }
 
   innerapi_tags = [ "platformsdk" ]
