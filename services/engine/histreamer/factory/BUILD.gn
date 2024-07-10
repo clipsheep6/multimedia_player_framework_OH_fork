@@ -72,6 +72,7 @@ ohos_static_library("media_engine_histreamer_factory") {
     "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
     "c_utils:utils",
+    "drm_framework:drm_framework",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
