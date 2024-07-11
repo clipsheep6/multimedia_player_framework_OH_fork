@@ -79,6 +79,7 @@ public:
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
+    int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t PrepareAsync() override;
     int32_t Stop() override;
     int32_t Reset() override;
