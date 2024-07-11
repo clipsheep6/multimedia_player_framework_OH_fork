@@ -259,6 +259,11 @@ std::string PlayerCallbackTest::SubtitleTextUpdate(std::string text)
     return text_;
 }
 
+PlayerStates PlayerCallbackTest::GetState()
+{
+    return state_;
+}
+
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     if (!trackDoneFlag_) {
@@ -730,6 +735,11 @@ sptr<Surface> PlayerMock::GetVideoSurfaceNext()
     surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
     Rosen::RSTransaction::FlushImplicitTransaction();
     return surfaceNode->GetSurface();
+}
+
+PlayerStates PlayerMock::GetState()
+{
+    return callback_->GetState();
 }
 } // namespace Media
 } // namespace OHOS

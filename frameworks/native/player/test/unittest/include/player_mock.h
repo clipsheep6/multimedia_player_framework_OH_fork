@@ -104,6 +104,7 @@ public:
     int32_t TrackSync(bool &trackChange);
     int32_t TrackInfoUpdateSync();
     std::string SubtitleTextUpdate(std::string text);
+    PlayerStates GetState();
 private:
     void HandleTrackChangeCallback(int32_t extra, const Format &infoBody);
     void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
@@ -154,6 +155,7 @@ public:
     int32_t AddSubSource(const std::string &path, int64_t offset, int64_t size);
     std::string GetSubtitleText(std::string text);
     sptr<Surface> GetVideoSurfaceNext();
+    PlayerStates GetState();
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
