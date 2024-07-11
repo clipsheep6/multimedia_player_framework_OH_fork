@@ -232,6 +232,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
+    static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 

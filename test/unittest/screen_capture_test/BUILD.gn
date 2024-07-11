@@ -48,6 +48,7 @@ ohos_unittest("screen_capture_native_unit_test") {
     ]
   }
 
+  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -110,7 +111,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
   }
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
-
+  public_deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service" ]
   external_deps = [
     "ability_base:base",
     "ability_base:want",

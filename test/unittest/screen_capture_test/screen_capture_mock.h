@@ -53,6 +53,14 @@ public:
         AVScreenCaptureBufferType bufferType, int64_t timestamp) = 0;
 };
 
+class ScreenCaptureMonitorListener : public ScreenCaptureMonitor::IScreenCaptureMonitorListener {
+public:
+    ScreenCaptureMonitorListener(){}
+    ~ScreenCaptureMonitorListener(){}
+    void OnScreenCaptureStarted(int32_t pid) override;
+    void OnScreenCaptureFinished(int32_t pid) override;
+};
+
 class ScreenCaptureMock {
 public:
     virtual ~ScreenCaptureMock() = default;
@@ -87,7 +95,6 @@ public:
         return false;
     }
 };
-
 class __attribute__((visibility("default"))) ScreenCaptureMockFactory {
 public:
     static std::shared_ptr<ScreenCaptureMock> CreateScreenCapture();
