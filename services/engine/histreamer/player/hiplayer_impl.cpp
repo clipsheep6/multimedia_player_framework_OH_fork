@@ -395,6 +395,9 @@ void HiPlayerImpl::UpdatePlayerStateAndNotify()
 {
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
     InitDuration();
+    if (durationMs_ <= 0) {
+        HandleIsLiveStreamEvent(true);
+    }
     NotifyDurationUpdate(PlayerKeys::PLAYER_CACHED_DURATION, durationMs_.load());
     InitVideoWidthAndHeight();
     NotifyResolutionChange();
@@ -1460,21 +1463,9 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifySubtitleUpdate(event);
             break;
         }
-        case EventType::EVENT_SOURCE_INFO: {
-            NotifySourceInfoCallback(event);
-            break;
-        }
         default:
             break;
     }
-}
-
-void HiPlayerImpl::NotifySourceInfoCallback(const Event& event)
-{
-    Format format;
-    SourceInfo info = AnyCast<SourceInfo>(event.param);
-    MEDIA_LOG_I("NotifySourceInfoCallback: duration = " PUBLIC_LOG_D32, static_cast<int32_t>(info.duration));
-    callbackLooper_.OnInfo(INFO_TYPE_DURATION_UPDATE, static_cast<int32_t>(info.duration), format);
 }
 
 void HiPlayerImpl::HandleInitialPlayingStateChange(const EventType& eventType)
