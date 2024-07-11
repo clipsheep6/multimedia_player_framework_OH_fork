@@ -779,8 +779,8 @@ int32_t PlayerServiceStub::GetDuration(MessageParcel &data, MessageParcel &reply
     (void)data;
     int32_t duration = -1;
     int32_t ret = GetDuration(duration);
-    reply.WriteInt32(ret);
     reply.WriteInt32(duration);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 

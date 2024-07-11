@@ -375,7 +375,6 @@ int32_t PlayerServer::SetPlayRange(int64_t start, int64_t end)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (lastOpStatus_ != PLAYER_INITIALIZED
-        && lastOpStatus_ != PLAYER_PREPARED
         && lastOpStatus_ != PLAYER_PAUSED
         && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not SetPlayRange, currentState is %{public}s",

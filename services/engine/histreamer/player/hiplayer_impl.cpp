@@ -195,10 +195,10 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 
 bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
 {
-    if (!isSetPlayRange_) {
+    if (!isSetPlayRange_ || (pipelineStates_ == PlayerStates::PLAYER_INITIALIZED)) {
         return true;
     }
-    if (start > end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
+    if (start >= end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
         return false;
     }
     return true;
