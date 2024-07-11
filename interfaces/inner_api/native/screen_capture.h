@@ -298,7 +298,7 @@ public:
 private:
     ScreenCaptureMonitor();
     ~ScreenCaptureMonitor();
-    vector<sptr<IScreenCaptureMonitorListener>> listeners_;
+    std::vector<sptr<IScreenCaptureMonitorListener>> listeners_;
     std::mutex mutex_;
     bool Init();
     bool isScreenCaptureMonitorDied_ = true;
