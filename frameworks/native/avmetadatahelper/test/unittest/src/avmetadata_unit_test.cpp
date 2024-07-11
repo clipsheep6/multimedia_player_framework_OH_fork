@@ -625,7 +625,7 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
     ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     int64_t time = 0;
-    ASSERT_NE(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
+    ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
 }
 } // namespace Media
 } // namespace OHOS
