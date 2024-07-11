@@ -163,6 +163,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetCurrentTrack(data, reply); } };
     playerFuncs_[SET_DECRYPT_CONFIG] = { "Player::SetDecryptConfig",
         [this](MessageParcel &data, MessageParcel &reply) { return SetDecryptConfig(data, reply); } };
+    playerFuncs_[SET_PLAY_RANGE] = { "Player::SetPlayRange",
+        [this](MessageParcel &data, MessageParcel &reply) { return SetPlayRange(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -308,6 +310,13 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(bool display)
     MediaTrace trace("Stub::SetRenderFirstFrame");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetRenderFirstFrame(display);
+}
+
+int32_t PlayerServiceStub::SetPlayRange(int64_t start, int64_t end)
+{
+    MediaTrace trace("Stub::SetPlayRange");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetPlayRange(start, end);
 }
 
 int32_t PlayerServiceStub::PrepareAsync()
@@ -633,6 +642,14 @@ int32_t PlayerServiceStub::SetRenderFirstFrame(MessageParcel &data, MessageParce
 {
     bool display = data.ReadBool();
     reply.WriteInt32(SetRenderFirstFrame(display));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetPlayRange(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t start = data.ReadInt64();
+    int64_t end = data.ReadInt64();
+    reply.WriteInt32(SetPlayRange(start, end));
     return MSERR_OK;
 }
 
