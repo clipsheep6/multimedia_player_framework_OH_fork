@@ -59,6 +59,7 @@ public:
     ~ScreenCaptureMonitorListener() = default;
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
+    int32_t stateFlag_ = 0; // 0 init
 };
 
 class ScreenCaptureMock {
