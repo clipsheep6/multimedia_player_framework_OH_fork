@@ -90,7 +90,7 @@ void ScreenCaptureMonitor::NotifyAllListener(int32_t pid, bool onStart)
     MEDIA_LOGI("0x%{public}06" PRIXPTR "NotifyAllListener in start or stop %{public}d",
         FAKE_POINTER(this), static_cast<int32_t>(onStart));
     for (auto iter = listeners_.begin(); iter!=listeners_.end(); iter++) {
-        if(onStart) {
+        if (onStart) {
             (*iter)->OnScreenCaptureStarted(pid);
         } else {
             (*iter)->OnScreenCaptureFinished(pid);

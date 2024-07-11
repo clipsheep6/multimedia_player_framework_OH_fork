@@ -55,8 +55,8 @@ public:
 
 class ScreenCaptureMonitorListener : public ScreenCaptureMonitor::IScreenCaptureMonitorListener {
 public:
-    ScreenCaptureMonitorListener(){}
-    ~ScreenCaptureMonitorListener(){}
+    ScreenCaptureMonitorListener() {}
+    ~ScreenCaptureMonitorListener() = default;
     void OnScreenCaptureStarted(int32_t pid) override;
     void OnScreenCaptureFinished(int32_t pid) override;
 };
