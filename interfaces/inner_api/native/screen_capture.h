@@ -276,6 +276,33 @@ private:
     ScreenCaptureFactory() = default;
     ~ScreenCaptureFactory() = default;
 };
+class ScreenCaptureMonitor {
+public:
+    class IScreenCaptureMonitorListener : public virtual RefBase {
+    public:
+        /**
+         * @brief Notify when screen capture started.
+         */
+        virtual void OnScreenCaptureStarted(int32_t pid);
+        /**
+         * @brief Notify when screen capture finished.
+         */
+        virtual void OnScreenCaptureFinished(int32_t pid);
+    };
+    static ScreenCaptureMonitor& GetInstance();
+    int32_t isScreenCaptureWorking();
+    void RegisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener);
+    void UnregisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener);
+    void NotifyAllListener(int32_t pid, bool onStart);
+
+private:
+    ScreenCaptureMonitor();
+    ~ScreenCaptureMonitor();
+    std::vector<sptr<IScreenCaptureMonitorListener>> listeners_;
+    std::mutex mutex_;
+    bool Init();
+    bool isScreenCaptureMonitorDied_ = true;
+};
 } // namespace Media
 } // namespace OHOS
 #endif // SCREEN_CAPTURE_H

@@ -181,6 +181,23 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
     return std::static_pointer_cast<OHOS::Media::IScreenCaptureService>(serverTemp);
 }
 
+int32_t ScreenCaptureServer::GetRunningScreenCaptureInstancePid(int32_t &pid)
+{
+    MEDIA_LOGI("GetRunningScreenCaptureInstancePid in");
+    std::shared_ptr<ScreenCaptureServer> currentServer;
+    if (activeSessionId_.load() >= 0) {
+        currentServer = GetScreenCaptureServerByIdWithLock(activeSessionId_.load());
+        if (currentServer != nullptr) {
+            MEDIA_LOGI("GetRunningScreenCaptureInstancePid uid(%{public}d) pid(%{public}d)",
+                currentServer->appInfo_.appUid, currentServer->appInfo_.appPid);
+            pid = currentServer->appInfo_.appPid;
+        }
+    } else {
+        return MSERR_UNKNOWN;
+    }
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice)
 {
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s", sessionId, choice.c_str());
@@ -989,6 +1006,7 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         ResSchedReportData(value, payload);
         captureState_ = AVScreenCaptureState::STARTED;
         screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
+        ScreenCaptureMonitor::GetInstance().NotifyAllListener(appInfo_.appPid, true);
     } else {
         MEDIA_LOGE("PostStartScreenCapture handle failure");
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -2008,6 +2026,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     if (captureState_ == AVScreenCaptureState::CREATED || captureState_ == AVScreenCaptureState::STARTING) {
         CloseFd();
         captureState_ = AVScreenCaptureState::STOPPED;
+        ScreenCaptureMonitor::GetInstance().NotifyAllListener(appInfo_.appPid, false);
         isSurfaceMode_ = false;
         surface_ = nullptr;
         SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
@@ -2065,6 +2084,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     if (sessionId_ == activeSessionId_.load()) {
         activeSessionId_.store(SESSION_ID_INVALID);
     }
+    ScreenCaptureMonitor::GetInstance().NotifyAllListener(appInfo_.appPid, false);
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()

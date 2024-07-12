@@ -36,6 +36,19 @@ namespace Media {
 namespace {
     constexpr int32_t FLIE_CREATE_FLAGS = 0777;
 }
+
+void ScreenCaptureMonitorListener::OnScreenCaptureStarted(int32_t pid)
+{
+    MEDIA_LOGI("OnScreenCaptureStarted %{public}d", pid);
+    stateFlag_ = 1;   // 1 started
+}
+
+void ScreenCaptureMonitorListener::OnScreenCaptureFinished(int32_t pid)
+{
+    MEDIA_LOGI("OnScreenCaptureFinished %{public}d", pid);
+    stateFlag_ = 2;   // 2 stopped
+}
+
 void ScreenCaptureUnitTestCallback::OnError(int32_t errorCode)
 {
     ASSERT_FALSE(screenCapture_->IsErrorCallBackEnabled());
@@ -1034,15 +1047,23 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_specified_window_cb_07, TestSize.
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
     // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
-
+    sptr<ScreenCaptureMonitor::IScreenCaptureMonitorListener> scmListener = new ScreenCaptureMonitorListener();
+    ScreenCaptureMonitor::GetInstance().RegisterScreenCaptureMonitorListener(scmListener);
+    EXPECT_EQ(0, static_cast<ScreenCaptureMonitorListener *>(scmListener.GetRefPtr())->stateFlag_); // 0 init
     screenCapture_->SetMicrophoneEnabled(true); // Enable Mic
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
+    ScreenCaptureMonitor::GetInstance().NotifyAllListener(1001, true); // 1001 fake pid
+    EXPECT_EQ(1, static_cast<ScreenCaptureMonitorListener *>(scmListener.GetRefPtr())->stateFlag_);  // 1 started
     sleep(RECORDER_TIME);
     EXPECT_EQ(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED, screenCaptureCb_->GetScreenCaptureState());
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
     CloseFile();
+    ScreenCaptureMonitor::GetInstance().NotifyAllListener(1001, false); // 1001 fake pid
+    EXPECT_EQ(2, static_cast<ScreenCaptureMonitorListener *>(scmListener.GetRefPtr())->stateFlag_);  // 2 stopped
+    ScreenCaptureMonitor::GetInstance().UnregisterScreenCaptureMonitorListener(scmListener);
+    delete scmListener;
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_specified_window_cb_07 after");
 }
 
