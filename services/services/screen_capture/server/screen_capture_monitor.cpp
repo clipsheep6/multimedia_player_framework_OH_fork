@@ -72,7 +72,7 @@ void ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener(sptr<IScreenCapt
     listeners_.emplace_back(listener);
 }
 
-void ScreenCaptureMonitor::UnRegisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener)
+void ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR "UnregisterScreenCaptureMonitorListener in", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);

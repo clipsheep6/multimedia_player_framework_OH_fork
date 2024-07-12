@@ -292,7 +292,7 @@ public:
     static ScreenCaptureMonitor& GetInstance();
     int32_t isScreenCaptureWorking();
     void RegisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener);
-    void UnRegisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener);
+    void UnregisterScreenCaptureMonitorListener(sptr<IScreenCaptureMonitorListener> listener);
     void NotifyAllListener(int32_t pid, bool onStart);
 
 private:
