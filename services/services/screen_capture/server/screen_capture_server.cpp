@@ -2320,30 +2320,7 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
             return MSERR_INVALID_VAL;
         }
         if (type_ == AVScreenCaptureMixMode::MIX_MODE) {
-            if (!screenCaptureServer_->GetMicWorkingState()) {
-                if (++readAtLogCount_ % ADS_LOG_SKIP_NUM == 0) {
-                    readAtLogCount_ = 1;
-                    MEDIA_LOGI("AVScreenCaptureMixMode MIX_MODE MIC OFF");
-                }
-                MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC OFF");
-                bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
-                return screenCaptureServer_->ReleaseAudioBufferMix(type_);
-            }
-            if (speakerAliveStatus_ && screenCaptureServer_->GetMicWorkingState()) {
-                MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE SPEAKER AND MIC ON");
-                bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
-                return screenCaptureServer_->ReleaseAudioBufferMix(type_);
-            }
-            MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC ON");
-            char* mixData = new char[innerAudioBuffer->length];
-            char* srcData[2] = {nullptr};
-            srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
-            srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
-            int channels = 2;
-            MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
-            bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
-            delete[] mixData;
-            return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+            return MixModeBufferWrite(innerAudioBuffer, micAudioBuffer, bufferMem);
         } else if (type_ == AVScreenCaptureMixMode::INNER_MODE) {
             bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
             return screenCaptureServer_->ReleaseAudioBufferMix(type_);
@@ -2355,6 +2332,35 @@ int32_t AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t lengt
         return MSERR_INVALID_VAL;
     }
     return MSERR_UNKNOWN;
+}
+
+int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+    std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem)
+{
+    if (!screenCaptureServer_->GetMicWorkingState()) {
+        if (++readAtLogCount_ % ADS_LOG_SKIP_NUM == 0) {
+            readAtLogCount_ = 1;
+            MEDIA_LOGI("AVScreenCaptureMixMode MIX_MODE MIC OFF");
+        }
+        MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC OFF");
+        bufferMem->Write(reinterpret_cast<uint8_t*>(innerAudioBuffer->buffer), innerAudioBuffer->length, 0);
+        return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+    }
+    if (speakerAliveStatus_ && screenCaptureServer_->GetMicWorkingState()) {
+        MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE SPEAKER AND MIC ON");
+        bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), innerAudioBuffer->length, 0);
+        return screenCaptureServer_->ReleaseAudioBufferMix(type_);
+    }
+    MEDIA_LOGD("AVScreenCaptureMixMode MIX_MODE MIC ON");
+    char* mixData = new char[innerAudioBuffer->length];
+    char* srcData[2] = {nullptr};
+    srcData[0] = reinterpret_cast<char*>(innerAudioBuffer->buffer);
+    srcData[1] = reinterpret_cast<char*>(micAudioBuffer->buffer);
+    int channels = 2;
+    MixAudio(srcData, mixData, channels, innerAudioBuffer->length);
+    bufferMem->Write(reinterpret_cast<uint8_t*>(mixData), innerAudioBuffer->length, 0);
+    delete[] mixData;
+    return screenCaptureServer_->ReleaseAudioBufferMix(type_);
 }
 
 int32_t AudioDataSource::GetSize(int64_t &size)

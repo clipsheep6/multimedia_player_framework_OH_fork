@@ -205,6 +205,8 @@ public:
     void SetAppPid(int32_t appid);
     int32_t GetAppPid();
 private:
+    int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem);
     int32_t appPid_ { 0 };
     bool speakerAliveStatus_ = true;
 

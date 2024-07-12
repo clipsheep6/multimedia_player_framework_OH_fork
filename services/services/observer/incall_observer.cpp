@@ -98,7 +98,6 @@ bool InCallObserver::Init()
         UnRegisterObserver();
         RegisterObserver();
         isTelephonyStateListenerDied_ = false;
-        return true;
     } else {
         MEDIA_LOGI("InCallObserver exist : %{public}d", isTelephonyStateListenerDied_);
     }
