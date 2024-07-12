@@ -45,6 +45,11 @@ private:
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
+    static napi_value SetAudioVolume(napi_env env, napi_callback_info info);
+    static napi_value GetAudioVolume(napi_env env, napi_callback_info info);
+    static napi_value GetSupportHapticsFeatures(napi_env env, napi_callback_info info);
+    static napi_value SetHapticsFeature(napi_env env, napi_callback_info info);
+    static napi_value GetHapticsFeature(napi_env env, napi_callback_info info);
     static void AsyncStart(napi_env env, void *data);
     static void AsyncStop(napi_env env, void *data);
     static void AsyncRelease(napi_env env, void *data);
@@ -70,6 +75,9 @@ struct SystemTonePlayerAsyncContext {
     std::string title;
     int32_t streamID;
     SystemToneOptions systemToneOptions {false, false};
+    float volume;
+    std::vector<ToneHapticsFeature> toneHapticsFeatures;
+    ToneHapticsFeature toneHapticsFeature;
 };
 } // namespace Media
 } // namespace OHOS
