@@ -3400,5 +3400,50 @@ HWTEST_F(PlayerUnitTest, Player_State_Machine_008, TestSize.Level0)
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
 }
+
+/**
+ * @tc.name  : Test SetPlayRange [0, 600]
+ * @tc.number: Player_SetPlayRange_001
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_001, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test SetPlayRange [0, 600]
+ * @tc.number: Player_SetPlayRange_002
+ * @tc.desc  : Test Player SetPlayRange interface
+ */
+HWTEST_F(PlayerUnitTest, Player_SetPlayRange_002, TestSize.Level0)
+{
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayRange(0, 600));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
 } // namespace Media
 } // namespace OHOS

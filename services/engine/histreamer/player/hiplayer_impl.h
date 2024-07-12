@@ -98,6 +98,7 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t SetRenderFirstFrame(bool display) override;
+    int32_t SetPlayRange(int64_t start, int64_t end) override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -179,6 +180,7 @@ private:
     void DoInitializeForHttp();
     bool EnableBufferingBySysParam() const;
     bool IsFileUrl(const std::string &url) const;
+    bool IsValidPlayRange(int64_t start, int64_t end) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     void SetDefaultAudioRenderInfo();
     void AppendPlayerMediaInfo();
@@ -209,6 +211,7 @@ private:
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
+    Status DoSetPlayRange();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -289,6 +292,9 @@ private:
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
     std::string mimeType_;
+    bool isSetPlayRange_ = false;
+    int64_t playRangeStartTime_ = -1;
+    int64_t playRangeEndTime_ = -1;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
 };

@@ -741,5 +741,12 @@ PlayerStates PlayerMock::GetState()
 {
     return callback_->GetState();
 }
+
+int32_t PlayerMock::SetPlayRange(int64_t start, int64_t end)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetPlayRange(start, end);
+}
 } // namespace Media
 } // namespace OHOS
