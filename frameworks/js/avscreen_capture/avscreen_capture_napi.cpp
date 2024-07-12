@@ -237,8 +237,7 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
         return result;
     }
     std::string choice = CommonNapi::GetStringArgument(env, args[1]);
-    MEDIA_LOGI("JsReportAVScreenCaptureUserChoice sessionId: %{public}d, choice: %{public}s",
-        sessionId, choice.c_str());
+    MEDIA_LOGI("JsReportAVScreenCaptureUserChoice choice: %{public}s", choice.c_str());
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
