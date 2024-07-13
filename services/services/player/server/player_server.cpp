@@ -642,8 +642,8 @@ int32_t PlayerServer::HandleReset()
 {
     MEDIA_LOGD("PlayerServer HandleReset in");
     (void)playerEngine_->Reset();
-    std::thread([this]() -> void {
-        playerEngine_ = nullptr;
+    std::thread([playerEngine = std::move(playerEngine_)]() mutable -> void {
+        std::unique_ptr<IPlayerEngine> engine = std::move(playerEngine);
     }).detach();
     dataSrc_ = nullptr;
     config_.looping = false;
