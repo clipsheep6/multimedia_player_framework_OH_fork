@@ -1292,20 +1292,23 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             audioTrackInfo.PutStringValue("codec_mime", mime);
             audioTrackInfo.PutIntValue("track_type", static_cast<int32_t>(OHOS::Media::Plugins::MediaType::AUDIO));
             audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(trackIndex));
-            int64_t bitRate;
+            int64_t bitRate = 0;
             trackInfo->GetData(Tag::MEDIA_BITRATE, bitRate);
             playStatisticalInfo_.audioBitrate = static_cast<int32_t>(bitRate);
             audioTrackInfo.PutLongValue("bitrate", bitRate);
-            int32_t audioChannels;
+            int32_t audioChannels = 0;
             trackInfo->GetData(Tag::AUDIO_CHANNEL_COUNT, audioChannels);
             playStatisticalInfo_.audioChannelCount = audioChannels;
             audioTrackInfo.PutIntValue("channel_count", audioChannels);
-            int32_t audioSampleRate;
+            int32_t audioSampleRate = 0;
             trackInfo->GetData(Tag::AUDIO_SAMPLE_RATE, audioSampleRate);
             playStatisticalInfo_.audioSampleRate = audioSampleRate;
             audioTrackInfo.PutIntValue("sample_rate", audioSampleRate);
-            int32_t sampleDepth;
-            trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
+            int32_t sampleDepth = 0;
+            bool isHasData = trackInfo->GetData(Tag::AUDIO_BITS_PER_CODED_SAMPLE, sampleDepth);
+            if (!isHasData || sampleDepth <= 0) {
+                trackInfo->GetData(Tag::AUDIO_BITS_PER_RAW_SAMPLE, sampleDepth);
+            }
             audioTrackInfo.PutIntValue("sample_depth", sampleDepth);
             audioTrack.emplace_back(std::move(audioTrackInfo));
         }
