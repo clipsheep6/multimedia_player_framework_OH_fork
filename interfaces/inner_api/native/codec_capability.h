@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Media {
+constexpr size_t ENCODER_CAPABILITY_DATA_SIZE_LIMIT = 100; // 100 size limit
 class CodecRange {
 public:
     int32_t minVal;
@@ -104,6 +105,10 @@ public:
         height.Unmarshalling(parcel);
         channels.Unmarshalling(parcel);
         size_t size = parcel.ReadUint64();
+        // it may change in the future, Restricted by security requirements
+        if (size > ENCODER_CAPABILITY_DATA_SIZE_LIMIT) {
+            return;
+        }
         for (size_t i = 0; i < size; i++) {
             sampleRate.push_back(parcel.ReadInt32());
         }

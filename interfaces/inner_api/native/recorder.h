@@ -31,6 +31,7 @@
 namespace OHOS {
 namespace Media {
 using ConfigMap = std::map<std::string, int32_t>;
+constexpr size_t DEVICE_INFO_SIZE_LIMIT = 30; // 30 from audioCapture
 /**
  * @brief Enumerates video source types.
  *
@@ -270,8 +271,15 @@ struct DeviceStreamInfo {
         encoding = parcel.ReadInt32();
         format = parcel.ReadInt32();
         size_t size = parcel.ReadUint64();
+        // it may change in the future, Restricted by security requirements
+        if (size > DEVICE_INFO_SIZE_LIMIT) {
+            return;
+        }
         for (size_t i = 0; i < size; i++) {
             samplingRate.insert(parcel.ReadInt32());
+        }
+        if (size > DEVICE_INFO_SIZE_LIMIT) {
+            return;
         }
         size = parcel.ReadUint64();
         for (size_t i = 0; i < size; i++) {
