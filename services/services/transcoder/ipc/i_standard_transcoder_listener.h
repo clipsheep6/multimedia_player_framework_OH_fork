@@ -27,7 +27,7 @@ namespace Media {
 class IStandardTransCoderListener : public IRemoteBroker {
 public:
     virtual ~IStandardTransCoderListener() = default;
-    virtual void OnError(int32_t errorType, int32_t errorCode) = 0;
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
     /**
      * IPC code ID

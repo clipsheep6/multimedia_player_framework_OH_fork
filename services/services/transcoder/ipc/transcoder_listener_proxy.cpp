@@ -34,7 +34,7 @@ TransCoderListenerProxy::~TransCoderListenerProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void TransCoderListenerProxy::OnError(int32_t errorType, int32_t errorCode)
+void TransCoderListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -43,8 +43,8 @@ void TransCoderListenerProxy::OnError(int32_t errorType, int32_t errorCode)
     bool token = data.WriteInterfaceToken(TransCoderListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
 
-    data.WriteInt32(errorType);
     data.WriteInt32(errorCode);
+    data.WriteString(errorMsg);
     int error = Remote()->SendRequest(TransCoderListenerMsg::ON_ERROR, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
@@ -75,10 +75,10 @@ TransCoderListenerCallback::~TransCoderListenerCallback()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void TransCoderListenerCallback::OnError(TransCoderErrorType errorType, int32_t errorCode)
+void TransCoderListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     if (listener_ != nullptr) {
-        listener_->OnError(errorType, errorCode);
+        listener_->OnError(errorCode, errorMsg);
     }
 }
 

@@ -18,6 +18,7 @@
 #include "avtranscoder_napi.h"
 #include "transcoder.h"
 #include "av_common.h"
+#include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "common_napi.h"
@@ -34,14 +35,14 @@ public:
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &name);
     void ClearCallbackReference();
-    void SendErrorCallback(int32_t errCode, const std::string &msg);
+    void SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
     void SendCompleteCallback();
     void SendProgressUpdateCallback(int32_t progress);
     std::string GetState();
 
 protected:
-    void OnError(TransCoderErrorType errorType, int32_t errCode) override;
+    void OnError(int32_t errCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:

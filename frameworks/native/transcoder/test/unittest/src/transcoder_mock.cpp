@@ -31,9 +31,9 @@ using namespace OHOS::Media;
 using namespace testing::ext;
 using namespace OHOS::Media::TranscoderTestParam;
 
-void TransCoderCallbackTest::OnError(TransCoderErrorType errorType, int32_t errorCode)
+void TransCoderCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
+    cout << "Error received, errorType:" << errorCode << " errorCode:" << errorMsg << endl;
 }
 
 void TransCoderCallbackTest::OnInfo(int32_t type, int32_t extra)
