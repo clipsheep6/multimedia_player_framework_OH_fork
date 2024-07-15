@@ -1063,7 +1063,7 @@ void PlayerServer::PreparedHandleEos()
             (void)currState->ResumeForSeek();
         });
         int ret = taskMgr_.LaunchTask(resumeForSeekTask, PlayerServerTaskType::STATE_CHANGE, "resume for seek");
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "HandleEosResumeForSeek failed");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "HandleEosResumeForSeek failed");
         lastOpStatus_ = PLAYER_STARTED;
     } else {
         lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
@@ -1083,7 +1083,7 @@ void PlayerServer::PausedHandleEos()
             (void)currState->ResumeForSeek();
         });
         int ret = taskMgr_.LaunchTask(resumeForSeekTask, PlayerServerTaskType::STATE_CHANGE, "resume for seek");
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "HandleEosResumeForSeek failed");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "HandleEosResumeForSeek failed");
 
         lastOpStatus_ = PLAYER_STARTED;
     }
