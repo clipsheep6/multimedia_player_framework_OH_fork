@@ -47,7 +47,23 @@ AccountSubscriber::AccountSubscriber(const EventFwk::CommonEventSubscribeInfo &s
 
 AccountSubscriber::~AccountSubscriber()
 {
+    std::lock_guard<std::mutex> lock(userMutex_);
+    userMap_.clear();
     MEDIA_LOGI("free instance");
+}
+
+void AccountSubscriber::DispatchEvent(int32_t userId, const std::string &action)
+{
+    std::lock_guard<std::mutex> lock(userMutex_);
+    auto mapIt = userMap_.find(userId);
+    if (mapIt == userMap_.end()) {
+        return;
+    }
+    for (auto receiver : mapIt->second) {
+        if (receiver) {
+            receiver->OnCommonEventReceived(action);
+        }
+    }
 }
 
 void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
@@ -57,18 +73,12 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
     int32_t userId = eventData.GetCode();
     MEDIA_LOGI("receive action %{public}s, userId %{public}d", action.c_str(), userId);
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_BACKGROUND) {
-        std::lock_guard<std::mutex> lock(userMutex_);
-        auto mapIt = userMap_.find(userId);
-        if (mapIt == userMap_.end()) {
-            return;
-        }
-        std::shared_ptr<CommonEventReceiver> receiver = nullptr;
-        for (size_t i = 0; i < mapIt->second.size(); i++) {
-            receiver = mapIt->second[i];
-            if (receiver != nullptr) {
-                receiver->OnCommonEventReceived(action);
-            }
-        }
+        // prevent dead lock caused by NewUnSubscribeCommonEvent and OnReceiveEvent run parallelly.
+        std::shared_ptr<AccountSubscriber> subscriber = shared_from_this();
+        std::thread([subscriber, userId, action]() -> void {
+            MEDIA_LOGI("dispatch event action %{public}s, userId %{public}d", action.c_str(), userId);
+            subscriber->DispatchEvent(userId, action);
+        }).detach();
     }
 }
 

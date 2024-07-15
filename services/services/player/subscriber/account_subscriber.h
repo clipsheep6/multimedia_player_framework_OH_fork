@@ -41,6 +41,7 @@ public:
     static std::shared_ptr<AccountSubscriber> GetInstance();
 private:
     AccountSubscriber() = default;
+    void DispatchEvent(int32_t userId, const std::string &action);
 
     static std::shared_ptr<AccountSubscriber> instance_;
     std::mutex userMutex_;
