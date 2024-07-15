@@ -241,19 +241,25 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
 void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     HandleSeekDoneInfo(type, extra);
-    CHECK_AND_RETURN_LOG(callback_ != nullptr, "Callback_ is nullptr.");
+    std::shared_ptr<PlayerCallback> callback;
+    {
+        std::unique_lock<std::mutex> lock(cbMutex_);
+        callback = callback_;
+    }
+
+    CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
     if (type == INFO_TYPE_SEEKDONE) {
         if (extra == -1) {
             MEDIA_LOGI("seek done error callback, no need report");
             return;
         }
         if (!isSeeking_) {
-            callback_->OnInfo(type, extra, infoBody);
+            callback->OnInfo(type, extra, infoBody);
         } else {
             MEDIA_LOGD("Is seeking to (%{public}d, %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
         }
     } else {
-        callback_->OnInfo(type, extra, infoBody);
+        callback->OnInfo(type, extra, infoBody);
     }
 }
 
@@ -374,7 +380,11 @@ int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cal
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayerCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
-    callback_ = callback;
+    {
+        std::unique_lock<std::mutex> lock(cbMutex_);
+        callback_ = callback;
+    }
+
     std::shared_ptr<PlayerCallback> playerCb = std::make_shared<PlayerImplCallback>(callback, shared_from_this());
     return playerService_->SetPlayerCallback(playerCb);
 }
@@ -439,8 +449,14 @@ void PlayerImplCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 
 void PlayerImplCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    CHECK_AND_RETURN_LOG(playerCb_ != nullptr, "playerCb_ does not exist..");
-    playerCb_->OnError(errorCode, errorMsg);
+    std::shared_ptr<PlayerCallback> playerCb;
+    {
+        std::unique_lock<std::mutex> lock(playerImplCbMutex_);
+        playerCb = playerCb_;
+    }
+
+    CHECK_AND_RETURN_LOG(playerCb != nullptr, "playerCb does not exist..");
+    playerCb->OnError(errorCode, errorMsg);
 }
 
 } // namespace Media

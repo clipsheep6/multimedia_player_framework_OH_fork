@@ -86,6 +86,7 @@ private:
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;
     HiviewDFX::HiTraceId traceId_;
+    std::mutex cbMutex_;
 };
 
 class PlayerImplCallback : public PlayerCallback {
@@ -98,6 +99,7 @@ public:
 private:
     std::shared_ptr<PlayerCallback> playerCb_;
     std::weak_ptr<PlayerImpl> player_;
+    std::mutex playerImplCbMutex_;
 };
 } // namespace Media
 } // namespace OHOS
