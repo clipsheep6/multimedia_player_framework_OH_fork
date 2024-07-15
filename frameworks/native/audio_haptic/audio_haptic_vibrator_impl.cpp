@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_haptic_vibrator_impl.h"
 
 #include <fcntl.h>
@@ -24,7 +22,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticVibratorImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticVibratorImpl"};
 #ifdef SUPPORT_VIBRATOR
 constexpr int32_t MIN_WAITING_TIME_FOR_VIBRATOR = 1200; // ms
 constexpr uint64_t MILLISECONDS_FOR_ONE_SECOND = 1000; // ms

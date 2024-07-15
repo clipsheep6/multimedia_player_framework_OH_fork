@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "screen_capture_server.h"
 #include "ui_extension_ability_connection.h"
 #include "extension_manager_client.h"
@@ -44,7 +42,7 @@ const std::string DUMP_PATH = "/data/media/screen_capture.bin";
 namespace OHOS {
 namespace Media {
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
 static std::map<int32_t, std::weak_ptr<OHOS::Media::ScreenCaptureServer>> serverMap;
 std::atomic<int32_t> activeSessionId_(-1);
 

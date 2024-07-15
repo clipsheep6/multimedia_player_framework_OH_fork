@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_RECORDER
-
 #include "avrecorder_callback.h"
 #include <uv.h>
 #include "media_errors.h"
@@ -22,7 +20,7 @@
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVRecorderCallback"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
 }
 
 namespace OHOS {

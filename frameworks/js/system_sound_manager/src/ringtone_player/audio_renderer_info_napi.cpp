@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_renderer_info_napi.h"
 #include "media_log.h"
 
 using namespace std;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRendererInfoNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioRendererInfoNapi"};
 }
 
 namespace OHOS {

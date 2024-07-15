@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_RECORDER
-
 #include "video_recorder_napi.h"
 #include "recorder_callback_napi.h"
 #include "media_log.h"
@@ -29,7 +27,7 @@
 #endif
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "VideoRecorderNapi"};
 }
 
 namespace OHOS {

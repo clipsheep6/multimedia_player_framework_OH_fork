@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_haptic_player_options_napi.h"
 #include "media_log.h"
 
 using namespace std;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticPlayerOptionsNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticPlayerOptionsNapi"};
 }
 
 namespace OHOS {

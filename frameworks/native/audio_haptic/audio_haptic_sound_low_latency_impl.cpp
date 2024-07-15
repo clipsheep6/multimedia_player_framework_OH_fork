@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_haptic_sound_low_latency_impl.h"
 
 #include <fcntl.h>
@@ -24,7 +22,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticSoundLowLatencyImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticSoundLowLatencyImpl"};
 }
 
 namespace OHOS {

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_RECORDER
-
 #include "recorder_profiles_service_stub.h"
 #include <unistd.h>
 #include "avsharedmemory_ipc.h"
@@ -23,7 +21,7 @@
 #include "media_server_manager.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderProfilesServiceStub"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderProfilesServiceStub"};
 }
 
 namespace OHOS {

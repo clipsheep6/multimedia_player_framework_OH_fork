@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "audio_capturer_wrapper.h"
 
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureACW"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureACW"};
 }
 
 namespace OHOS {

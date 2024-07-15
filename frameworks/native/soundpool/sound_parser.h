@@ -16,8 +16,6 @@
 #ifndef SOUND_PARSER_H
 #define SOUND_PARSER_H
 
-#define PLAYER_FRAMEWORK_SOUNDPOOL
-
 #include <atomic>
 #include <deque>
 #include <memory>
@@ -47,12 +45,12 @@ public:
     public:
         SoundDecodeListener()
         {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundDecodeListener",
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundDecodeListener",
                 "Construction SoundDecodeListener");
         }
         virtual ~SoundDecodeListener()
         {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundDecodeListener",
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundDecodeListener",
                 "Destruction SoundDecodeListener");
         }
         virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
@@ -65,10 +63,10 @@ public:
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
-        (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundDecoderCallback",
+        (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundDecoderCallback",
             "%{public}s:%{public}d", __func__, __LINE__);
         if (listener == nullptr) {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundDecodeListener", "Invalid listener");
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundDecodeListener", "Invalid listener");
             return MSERR_INVALID_VAL;
         }
         listener_ = listener;

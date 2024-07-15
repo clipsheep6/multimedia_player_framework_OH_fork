@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "recorder_profiles_ability_singleton.h"
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderProfilesAbilitySingleton"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER,
+                                                   "RecorderProfilesAbilitySingleton"};
 }
 
 namespace OHOS {

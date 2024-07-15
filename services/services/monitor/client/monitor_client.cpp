@@ -146,7 +146,7 @@ void MonitorClient::ClickThread()
                 return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
             });
 
-            CHECK_AND_RETURN_LOG(!clientDestroy_, "clientDestroy, Normal exit")
+            CHECK_AND_RETURN_LOG(!clientDestroy_, "clientDestroy, Normal exit");
 
             if (objSet_.empty()) {
                 MEDIA_LOGI("0x%{public}06" PRIXPTR " objSet empty.", FAKE_POINTER(this));

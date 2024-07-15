@@ -49,26 +49,26 @@ private:
         explicit CacheBufferCallBack(const std::weak_ptr<StreamIDManager> streamIDManager)
             : streamIDManagerInner_(streamIDManager)
         {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundPool",
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
                 "Construction StreamIDManager::SoundPoolCallBack");
         }
         virtual ~CacheBufferCallBack() = default;
         void OnLoadCompleted(int32_t soundID)
         {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundPool",
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
                 "StreamIDManager::SoundPoolCallBack OnLoadCompleted");
         }
         void OnPlayFinished()
         {
             if (!streamIDManagerInner_.expired()) {
                 streamIDManagerInner_.lock()->OnPlayFinished();
-                (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundPool",
+                (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
                     "StreamIDManager::SoundPoolCallBack OnPlayFinished");
             }
         }
         void OnError(int32_t errorCode)
         {
-            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, "SoundPool",
+            (void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN_SOUNDPOOL, "SoundPool",
                 "StreamIDManager::SoundPoolCallBack OnError");
         }
 

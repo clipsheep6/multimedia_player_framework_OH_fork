@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,141 +24,140 @@
 #endif
 
 namespace OHOS {
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2B
 
-#ifdef PLAYER_FRAMEWORK_RECORDER
 #undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2C
-#endif
-
-#ifdef PLAYER_FRAMEWORK_META
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2D
-#endif
-
-#ifdef PLAYER_FRAMEWORK_SOUNDPOOL
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2E
-#endif
-
-#ifdef PLAYER_FRAMEWORK_SCREEN_CAPTURE
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B2F
-#endif
-
-#ifdef PLAYER_FRAMEWORK_AUDIO
-#undef LOG_DOMAIN
-#define LOG_DOMAIN 0xD002B20
-#endif
-
+#define LOG_DOMAIN               0xD002B2B
+#undef LOG_DOMAIN_RECORDER
+#define LOG_DOMAIN_RECORDER      0xD002B2C
+#undef LOG_DOMAIN_METADATA
+#define LOG_DOMAIN_METADATA      0xD002B2D
+#undef LOG_DOMAIN_SCREENCAPTURE
+#define LOG_DOMAIN_SCREENCAPTURE 0xD002B2E
+#undef LOG_DOMAIN_SOUNDPOOL
+#define LOG_DOMAIN_SOUNDPOOL     0xD002B3B
+#undef LOG_DOMAIN_AUDIO_NAPI
+#define LOG_DOMAIN_AUDIO_NAPI    0xD002B20
 
 #undef LOG_TAG
 #define LOG_TAG LABEL.tag
 
 #define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define MEDIA_LOG(func, fmt, args...)                                                       \
-    do {                                                                                      \
-        if (LABEL.tag != nullptr) {                                                           \
-            (void)func(LOG_CORE, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args);  \
-        }                                                                                   \
+#define MEDIA_LOG(func, fmt, args...)                                                            \
+    do {                                                                                         \
+        if (LABEL.tag != nullptr) {                                                              \
+            (void)func(LABEL, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \
+        }                                                                                        \
     } while (0)
 
 #ifdef OHOS_MEDIA_LOG_DFX
-#define DUMP_LOG(level, fmt, args...)                                                       \
-    do {                                                                                      \
-        (void)OHOS::Media::DfxLogDump::GetInstance().SaveLog(level, LABEL,                    \
-            "{%s():%d} " fmt, __FUNCTION__, __LINE__, ##args);                                \
+#define DUMP_LOG(level, fmt, args...)                                                                                \
+    do {                                                                                                             \
+        (void)OHOS::Media::DfxLogDump::GetInstance().SaveLog(level, LABEL, "{%s():%d} " fmt, __FUNCTION__, __LINE__, \
+                                                             ##args);                                                \
     } while (0);
-#define MEDIA_LOGD(fmt, ...)                                                                  \
-    DUMP_LOG("LOGD", fmt, ##__VA_ARGS__)                                                    \
-    MEDIA_LOG(HILOG_DEBUG, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGI(fmt, ...)                                                                  \
-    DUMP_LOG("LOGI", fmt, ##__VA_ARGS__)                                                    \
-    MEDIA_LOG(HILOG_INFO, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGW(fmt, ...)                                                                  \
-    DUMP_LOG("LOGW", fmt, ##__VA_ARGS__)                                                    \
-    MEDIA_LOG(HILOG_WARN, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGE(fmt, ...)                                                                  \
-    DUMP_LOG("LOGE", fmt, ##__VA_ARGS__)                                                    \
-    MEDIA_LOG(HILOG_ERROR, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGF(fmt, ...)                                                                  \
-    DUMP_LOG("LOGF", fmt, ##__VA_ARGS__)                                                    \
-    MEDIA_LOG(HILOG_FATAL, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGD(fmt, ...)             \
+    DUMP_LOG("LOGD", fmt, ##__VA_ARGS__) \
+    MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Debug, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGI(fmt, ...)             \
+    DUMP_LOG("LOGI", fmt, ##__VA_ARGS__) \
+    MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Info, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGW(fmt, ...)             \
+    DUMP_LOG("LOGW", fmt, ##__VA_ARGS__) \
+    MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Warn, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGE(fmt, ...)             \
+    DUMP_LOG("LOGE", fmt, ##__VA_ARGS__) \
+    MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Error, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGF(fmt, ...)             \
+    DUMP_LOG("LOGF", fmt, ##__VA_ARGS__) \
+    MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Fatal, fmt, ##__VA_ARGS__)
 #else
-#define MEDIA_LOGD(fmt, ...) MEDIA_LOG(HILOG_DEBUG, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGI(fmt, ...) MEDIA_LOG(HILOG_INFO, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGW(fmt, ...) MEDIA_LOG(HILOG_WARN, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGE(fmt, ...) MEDIA_LOG(HILOG_ERROR, fmt, ##__VA_ARGS__)
-#define MEDIA_LOGF(fmt, ...) MEDIA_LOG(HILOG_FATAL, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGD(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Debug, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGI(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Info, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGW(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Warn, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGE(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Error, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGF(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Fatal, fmt, ##__VA_ARGS__)
 #endif
 
-#define CHECK_AND_RETURN(cond)                      \
-    do {                                            \
+#define MEDIA_LOG_PRERELEASE(op, fmt, args...)                                                     \
+    do {                                                                                           \
+        op(LOG_ONLY_PRERELEASE, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \
+    } while (0)
+
+#define MEDIA_LOGI_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_INFO, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGW_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_WARN, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGE_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_ERROR, fmt, ##__VA_ARGS__)
+#define MEDIA_LOGF_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_FATAL, fmt, ##__VA_ARGS__)
+
+#define CHECK_AND_RETURN(cond)                                         \
+    do {                                                               \
+        if (!(cond)) {                                                 \
+            MEDIA_LOGE_NO_RELEASE("%{public}s, check failed!", #cond); \
+            return;                                                    \
+        }                                                              \
+    } while (0)
+
+#define CHECK_AND_RETURN_RET(cond, ret)                                                       \
+    do {                                                                                      \
+        if (!(cond)) {                                                                        \
+            MEDIA_LOGE_NO_RELEASE("%{public}s, check failed! ret = %{public}s", #cond, #ret); \
+            return ret;                                                                       \
+        }                                                                                     \
+    } while (0)
+
+#define CHECK_AND_RETURN_RET_LOG(cond, ret, fmt, ...) \
+    do {                                              \
         if (!(cond)) {                                \
-            MEDIA_LOGE("%{public}s, check failed!", #cond); \
-            return;                                 \
-        }                                           \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__);           \
+            return ret;                               \
+        }                                             \
     } while (0)
 
-#define CHECK_AND_RETURN_RET(cond, ret)                           \
-    do {                                                          \
-        if (!(cond)) {                                              \
-            MEDIA_LOGE("%{public}s, check failed! ret = %{public}s", #cond, #ret); \
-            return ret;                                           \
-        }                                                         \
+#define CHECK_AND_RETURN_LOG(cond, fmt, ...) \
+    do {                                     \
+        if (!(cond)) {                       \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__);  \
+            return;                          \
+        }                                    \
     } while (0)
 
-#define CHECK_AND_RETURN_RET_LOG(cond, ret, fmt, ...)  \
-    do {                                               \
-        if (!(cond)) {                                 \
-            MEDIA_LOGE(fmt, ##__VA_ARGS__);            \
-            return ret;                                \
-        }                                              \
-    } while (0);
+#define CHECK_AND_BREAK_LOG(cond, fmt, ...) \
+    if (1) {                                \
+        if (!(cond)) {                      \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__); \
+            break;                          \
+        }                                   \
+    } else                                  \
+        void(0)
 
-#define CHECK_AND_RETURN_LOG(cond, fmt, ...)           \
-    do {                                               \
-        if (!(cond)) {                                 \
-            MEDIA_LOGE(fmt, ##__VA_ARGS__);            \
-            return;                                    \
-        }                                              \
-    } while (0);
+#define CHECK_AND_BREAK(cond)                                          \
+    if (1) {                                                           \
+        if (!(cond)) {                                                 \
+            MEDIA_LOGE_NO_RELEASE("%{public}s, check failed!", #cond); \
+            break;                                                     \
+        }                                                              \
+    } else                                                             \
+        void(0)
 
-#define CHECK_AND_BREAK_LOG(cond, fmt, ...)            \
-    if (1) {                                           \
-        if (!(cond)) {                                 \
-            MEDIA_LOGE(fmt, ##__VA_ARGS__);            \
-            break;                                     \
-        }                                              \
-    } else void (0)
+#define CHECK_AND_CONTINUE(cond)                                       \
+    if (1) {                                                           \
+        if (!(cond)) {                                                 \
+            MEDIA_LOGE_NO_RELEASE("%{public}s, check failed!", #cond); \
+            continue;                                                  \
+        }                                                              \
+    } else                                                             \
+        void(0)
 
-#define CHECK_AND_BREAK(cond)                          \
-    if (1) {                                           \
-        if (!(cond)) {                                 \
-            MEDIA_LOGE("%{public}s, check failed!", #cond); \
-            break;                                     \
-        }                                              \
-    } else void (0)
-
-#define CHECK_AND_CONTINUE(cond)                          \
-    if (1) {                                           \
-        if (!(cond)) {                                 \
-            MEDIA_LOGE("%{public}s, check failed!", #cond); \
-            continue;                                     \
-        }                                              \
-    } else void (0)
-
-#define CHECK_AND_CONTINUE_LOG(cond, fmt, ...)                  \
-    if (1) {                                                    \
-        if (!(cond)) {                                          \
-            MEDIA_LOGE(fmt, ##__VA_ARGS__);                     \
-            continue;                                           \
-        }                                                       \
-    } else void (0)
+#define CHECK_AND_CONTINUE_LOG(cond, fmt, ...) \
+    if (1) {                                   \
+        if (!(cond)) {                         \
+            MEDIA_LOGE(fmt, ##__VA_ARGS__);    \
+            continue;                          \
+        }                                      \
+    } else                                     \
+        void(0)
 
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
-} // namespace OHOS
-#endif // OHOS_MEDIA_LOG_H
+}  // namespace OHOS
+#endif  // OHOS_MEDIA_LOG_H

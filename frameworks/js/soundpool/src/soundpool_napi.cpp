@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SOUNDPOOL
-
 #include "media_errors.h"
 #include "media_log.h"
 #include "ability.h"
@@ -22,7 +20,7 @@
 #include "soundpool_napi.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SoundPoolNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPoolNapi"};
 }
 
 namespace OHOS {

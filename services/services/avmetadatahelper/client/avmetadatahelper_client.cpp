@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "avmetadatahelper_client.h"
 #include "helper_listener_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperClient"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperClient"};
 }
 
 namespace OHOS {

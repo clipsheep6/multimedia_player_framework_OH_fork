@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_RECORDER
-
 #include "recorder_profiles_server.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -22,7 +20,7 @@
 #include "recorder_profiles_ability_singleton.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderProfilesServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderProfilesServer"};
 }
 
 namespace OHOS {

@@ -16,8 +16,6 @@
 #ifndef SOUNDPOOL_CALLBACK_NAPI_H
 #define SOUNDPOOL_CALLBACK_NAPI_H
 
-#define PLAYER_FRAMEWORK_SOUNDPOOL
-
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "common_napi.h"

@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SOUNDPOOL
-
 #include "cache_buffer.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "securec.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CacheBuffer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "CacheBuffer"};
 }
 
 namespace OHOS {

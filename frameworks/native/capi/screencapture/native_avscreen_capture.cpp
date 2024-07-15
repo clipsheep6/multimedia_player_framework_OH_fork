@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "native_avscreen_capture.h"
 
 #include <mutex>
@@ -33,7 +31,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeScreenCapture"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "NativeScreenCapture"};
 }
 
 typedef struct NativeWindow OHNativeWindow;

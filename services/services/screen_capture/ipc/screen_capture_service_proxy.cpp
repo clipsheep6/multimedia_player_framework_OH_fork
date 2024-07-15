@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_SCREEN_CAPTURE
-
 #include "screen_capture_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -22,7 +20,7 @@
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureServiceProxy"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServiceProxy"};
 }
 
 namespace OHOS {

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "system_sound_manager_napi.h"
 
 #include "access_token.h"
@@ -52,7 +50,7 @@ const int TYPEERROR = -2;
 const int ERROR = -1;
 const int SUCCESS = 0;
 
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemSoundManagerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundManagerNapi"};
 }
 
 namespace OHOS {

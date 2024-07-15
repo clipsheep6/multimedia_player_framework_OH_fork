@@ -21,6 +21,7 @@
 using namespace OHOS;
 using namespace OHOS::Media;
 using namespace AVMetadataTestParam;
+
 namespace OHOS {
 namespace Media {
 AVMetadataMock::AVMetadataMock()

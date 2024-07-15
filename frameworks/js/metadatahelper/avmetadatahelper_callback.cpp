@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "avmetadatahelper_callback.h"
 #include <uv.h>
 #include "media_errors.h"
@@ -23,7 +21,7 @@
 #include "event_queue.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperCallback"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperCallback"};
 }
 
 namespace OHOS {

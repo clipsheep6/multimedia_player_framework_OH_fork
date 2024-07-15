@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "avmetadataextractor_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -35,7 +33,7 @@
 using namespace OHOS::AudioStandard;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataExtractorNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataExtractorNapi"};
 }
 
 namespace OHOS {

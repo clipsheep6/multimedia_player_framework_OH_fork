@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "system_tone_player_napi.h"
 
 #include "media_log.h"
@@ -29,7 +27,7 @@ const int32_t PARAM1 = 1;
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
 
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SystemTonePlayerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemTonePlayerNapi"};
 }
 
 namespace OHOS {

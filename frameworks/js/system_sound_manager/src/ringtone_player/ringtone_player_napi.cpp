@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "ringtone_player_napi.h"
 
 #include "audio_renderer_info_napi.h"
@@ -34,7 +32,7 @@ const int32_t ARGS_TWO = 2;
 
 const std::string AUDIO_INTERRUPT_CALLBACK_NAME = "audioInterrupt";
 
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RingtonePlayerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "RingtonePlayerNapi"};
 
 const int SUCCESS = 0;
 }

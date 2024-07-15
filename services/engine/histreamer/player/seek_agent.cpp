@@ -20,7 +20,9 @@
 #include "meta/media_types.h"
 #include "meta/meta.h"
 
+namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "SeekAgent" };
+}
 
 namespace OHOS {
 namespace Media {

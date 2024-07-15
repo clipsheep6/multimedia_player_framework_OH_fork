@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "avmetadatahelper_impl.h"
 
 #include "common/media_source.h"
@@ -26,7 +24,7 @@
 #include "osal/task/pipeline_threadpool.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetadataHelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperImpl" };
 }
 
 namespace OHOS {

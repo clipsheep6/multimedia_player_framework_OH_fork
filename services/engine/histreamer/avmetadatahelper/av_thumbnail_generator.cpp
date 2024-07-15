@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "av_thumbnail_generator.h"
 
 #include "buffer/avbuffer_common.h"
@@ -31,7 +29,7 @@
 #include "uri_helper.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVThumbnailGenerator" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVThumbnailGenerator" };
 }
 
 namespace OHOS {

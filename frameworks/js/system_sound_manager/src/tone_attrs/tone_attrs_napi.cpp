@@ -13,8 +13,6 @@
 * limitations under the License.
 */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "tone_attrs_napi.h"
 
 #include "media_log.h"
@@ -29,7 +27,7 @@
 using OHOS::Security::AccessToken::AccessTokenKit;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ToneAttrsNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "ToneAttrsNapi"};
 }
 
 namespace OHOS {

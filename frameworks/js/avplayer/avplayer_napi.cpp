@@ -37,11 +37,10 @@
 using namespace OHOS::AudioStandard;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
-    constexpr size_t MIN_ARG_COUNTS = 1;
-    constexpr size_t MAX_ARG_COUNTS = 2;
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVPlayerNapi" };
+    constexpr uint32_t MIN_ARG_COUNTS = 1;
+    constexpr uint32_t MAX_ARG_COUNTS = 2;
     constexpr size_t ARRAY_ARG_COUNTS_TWO = 2;
-    constexpr size_t ARRAY_ARG_COUNTS_THREE = 3;
     constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
 }
 
@@ -591,10 +590,10 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::WaitTaskQueStop()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "WaitTaskQueStop In", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " WaitTaskQueStop In", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "WaitTaskQueStop Out", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " WaitTaskQueStop Out", FAKE_POINTER(this));
 }
 
 void AVPlayerNapi::StopTaskQue()
@@ -897,6 +896,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::AddSubSource(std::string url)
 {
+    MEDIA_LOGI("input url is %{private}s!", url.c_str());
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
@@ -964,12 +964,12 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value args[ARRAY_ARG_COUNTS_THREE] = { nullptr };
+    napi_value args[3] = { nullptr };
     size_t argCount = 3; // url: string
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-    int32_t fd_s = -1;
-    napi_status status = napi_get_value_int32(env, args[0], &fd_s);
+    int32_t subtitleFd = -1;
+    napi_status status = napi_get_value_int32(env, args[0], &subtitleFd);
     if (status != napi_ok) {
         MEDIA_LOGE("JsAddSubtitleAVFileDescriptor status != napi_ok");
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
@@ -992,9 +992,9 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
             "invalid parameters, please check JsAddSubtitleAVFileDescriptor");
         return result;
     }
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, fd_s, offset, length]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, subtitleFd, offset, length]() {
         if (jsPlayer->player_ != nullptr) {
-            if (jsPlayer->player_->AddSubSource(fd_s, offset, length) != MSERR_OK) {
+            if (jsPlayer->player_->AddSubSource(subtitleFd, offset, length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
             }
         }
@@ -1083,7 +1083,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::set url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("AVPlayerNapi::JsSetUrl In");
+    MEDIA_LOGD("JsSetUrl In");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // url: string
@@ -1104,6 +1104,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
     // get url from js
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGD("JsSetUrl url: %{private}s", jsPlayer->url_.c_str());
     jsPlayer->SetSource(jsPlayer->url_);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetUrl Out", FAKE_POINTER(jsPlayer));
@@ -1224,6 +1225,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
     napi_value value = nullptr;
     (void)napi_create_string_utf8(env, jsPlayer->url_.c_str(), NAPI_AUTO_LENGTH, &value);
 
+    MEDIA_LOGD("JsGetUrl Out Currelt Url: %{private}s", jsPlayer->url_.c_str());
     return value;
 }
 
@@ -1818,7 +1820,8 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         STREAM_USAGE_AUDIOBOOK, STREAM_USAGE_NAVIGATION,
         STREAM_USAGE_DTMF, STREAM_USAGE_ENFORCED_TONE,
         STREAM_USAGE_ULTRASONIC,
-        STREAM_USAGE_VIDEO_COMMUNICATION
+        STREAM_USAGE_VIDEO_COMMUNICATION,
+        STREAM_USAGE_ULTRASONIC
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {

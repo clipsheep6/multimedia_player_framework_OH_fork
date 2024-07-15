@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "helper_listener_stub.h"
 #include "av_common.h"
 #include "avmetadatahelper.h"
@@ -23,7 +21,7 @@
 #include "media_parcel.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HelperListenerStub"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "HelperListenerStub"};
 }
 
 namespace OHOS {

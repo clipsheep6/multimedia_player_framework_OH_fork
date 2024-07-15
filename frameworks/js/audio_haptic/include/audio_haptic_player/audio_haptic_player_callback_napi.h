@@ -16,8 +16,6 @@
 #ifndef AUDIO_HAPTIC_PLAYER_CALLBACK_NAPI_H
 #define AUDIO_HAPTIC_PLAYER_CALLBACK_NAPI_H
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_info.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"

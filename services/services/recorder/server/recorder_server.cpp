@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_RECORDER
-
 #include "recorder_server.h"
 #include "map"
 #include "media_log.h"
@@ -31,7 +29,7 @@
 #endif
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderServer"};
     const std::map<OHOS::Media::RecorderServer::RecStatus, std::string> RECORDER_STATE_MAP = {
         {OHOS::Media::RecorderServer::REC_INITIALIZED, "initialized"},
         {OHOS::Media::RecorderServer::REC_CONFIGURED, "configured"},

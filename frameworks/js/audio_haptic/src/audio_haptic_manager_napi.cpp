@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_haptic_manager_napi.h"
 
 #include "audio_haptic_player_napi.h"
@@ -34,7 +32,7 @@ const int32_t SIZE = 100;
 const int ERROR = -1;
 const int SUCCESS = 0;
 
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticManagerNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticManagerNapi"};
 }
 
 namespace OHOS {

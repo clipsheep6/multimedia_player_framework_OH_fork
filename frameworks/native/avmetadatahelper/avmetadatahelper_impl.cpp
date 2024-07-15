@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_META
-
 #include "avmetadatahelper_impl.h"
 
 #include <sys/stat.h>
@@ -29,7 +27,7 @@
 #include "hisysevent.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
 constexpr int32_t SCENE_CODE_EFFECTIVE_DURATION_MS = 20000;
 static constexpr char PERFORMANCE_STATS[] = "PERFORMANCE";
 }

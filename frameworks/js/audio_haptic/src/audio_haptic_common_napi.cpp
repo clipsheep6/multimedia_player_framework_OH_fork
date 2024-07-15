@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-#define PLAYER_FRAMEWORK_AUDIO
-
 #include "audio_haptic_common_napi.h"
 
 #include "media_log.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioHapticCommonNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "AudioHapticCommonNapi"};
 }
 
 namespace OHOS {
@@ -29,7 +27,7 @@ const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter check failed";
 const std::string NAPI_ERR_OPERATE_NOT_ALLOWED_INFO = "operate not allowed";
 const std::string NAPI_ERR_IO_ERROR_INFO = "input or output error";
 const std::string NAPI_ERR_SERVICE_DIED_INFO = "service died";
-const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupported format";
+const std::string NAPI_ERR_UNSUPPORTED_FORMAT_INFO = "unsupport format";
 
 void AudioHapticCommonNapi::ThrowError(napi_env env, int32_t code)
 {
