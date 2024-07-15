@@ -47,7 +47,6 @@
         "player_framework_support_jssoundpool",
         "player_framework_support_mediasource",
         "player_framework_check_video_is_hdr_vivid",
-        "player_framework_support_seccomp",
         "player_framework_support_monitor",
         "player_framework_support_avsession_background",
         "player_framework_support_drm",
