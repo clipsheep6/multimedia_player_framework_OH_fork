@@ -173,6 +173,10 @@ public:
     {
         (void)instanceId;
     }
+    virtual int32_t ResumeForSeek()
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

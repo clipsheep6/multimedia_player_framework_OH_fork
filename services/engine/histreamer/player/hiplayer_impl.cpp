@@ -462,6 +462,28 @@ void HiPlayerImpl::DoInitializeForHttp()
     }
 }
 
+int32_t HiPlayerImpl::ResumeForSeek()
+{
+    MediaTrace trace("HiPlayerImpl::ResumeForSeek");
+    MEDIA_LOG_I("ResumeForSeek entered");
+    int32_t ret = MSERR_INVALID_VAL;
+    pipeline_ -> Pause();
+    pipeline_ -> Flush();
+    doSeek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
+    if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
+        Format format;
+        callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, 0, format);
+        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+    }
+    ret = TransStatus(Resume());
+    if ((ret == MSERR_OK) && !isInitialPlay_) {
+        OnStateChanged(PlayerStateId::PLAYING);
+    }
+    inEosSeek_ = false;
+    MEDIA_LOG_I("ResumeForSeek exit");
+    return ret;
+}
+
 int32_t HiPlayerImpl::Play()
 {
     MediaTrace trace("HiPlayerImpl::Play");

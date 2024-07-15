@@ -44,6 +44,10 @@ protected:
     }
     void ReportInvalidOperation() const;
     virtual void HandleEos() {}
+    virtual int32_t ResumeForSeek()
+    {
+        return 0;
+    }
     int32_t MessageSeekDone(int32_t extra);
     int32_t MessageTrackDone(int32_t extra);
     int32_t MessageTrackInfoUpdate();
@@ -95,6 +99,8 @@ public:
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
+    int32_t ResumeForSeek() override;
 };
 
 class PlayerServer::PlayingState : public PlayerServer::BaseState {
@@ -129,6 +135,8 @@ public:
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
+    int32_t ResumeForSeek() override;
 };
 
 class PlayerServer::StoppedState : public PlayerServer::BaseState {

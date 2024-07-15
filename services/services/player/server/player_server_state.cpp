@@ -251,6 +251,16 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
     }
 }
 
+void PlayerServer::PreparedState::HandleEos()
+{
+    server_.PreparedHandleEos();
+}
+
+int32_t PlayerServer::PreparedState::ResumeForSeek()
+{
+    return server_.HandleResumeForSeek();
+}
+
 int32_t PlayerServer::PlayingState::Play()
 {
     (void)server_.taskMgr_.MarkTaskDone("double play");
@@ -368,6 +378,16 @@ void PlayerServer::PausedState::HandleStateChange(int32_t newState)
         server_.ChangeState(server_.stoppedState_);
         (void)server_.taskMgr_.MarkTaskDone("paused->stopped done");
     }
+}
+
+void PlayerServer::PausedState::HandleEos()
+{
+    server_.PausedHandleEos();
+}
+
+int32_t PlayerServer::PausedState::ResumeForSeek()
+{
+    return server_.HandleResumeForSeek();
 }
 
 int32_t PlayerServer::StoppedState::Prepare()

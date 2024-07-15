@@ -135,6 +135,7 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int32_t ResumeForSeek() override;
 
     // internal interfaces
     void OnEvent(const Event &event);

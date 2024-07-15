@@ -196,6 +196,9 @@ private:
     int32_t SetAudioEffectMode(const int32_t effectMode);
 
     void HandleEos();
+    void PreparedHandleEos();
+    void PausedHandleEos();
+    int32_t HandleResumeForSeek();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
