@@ -352,6 +352,10 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MediaTrace trace("HiRecorderImpl::Stop");
     MEDIA_LOG_I("Stop enter.");
+    if (curState_ == StateId::INIT) {
+        MEDIA_LOG_I("Stop exit.the reason is state = INIT");
+        return static_cast<int32_t>(Status::OK);
+    }
     Status ret = Status::OK;
     outputFormatType_ = OutputFormatType::FORMAT_BUTT;
     if (audioCaptureFilter_) {
