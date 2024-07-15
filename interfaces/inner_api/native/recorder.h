@@ -278,10 +278,10 @@ struct DeviceStreamInfo {
         for (size_t i = 0; i < size; i++) {
             samplingRate.insert(parcel.ReadInt32());
         }
+        size = parcel.ReadUint64();
         if (size > DEVICE_INFO_SIZE_LIMIT) {
             return;
         }
-        size = parcel.ReadUint64();
         for (size_t i = 0; i < size; i++) {
             channels.insert(parcel.ReadInt32());
         }
