@@ -44,9 +44,9 @@ int TransCoderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
 
     switch (code) {
         case TransCoderListenerMsg::ON_ERROR: {
-            int errorType = data.ReadInt32();
-            int errorCode = data.ReadInt32();
-            OnError(static_cast<TransCoderErrorType>(errorType), errorCode);
+            int32_t errorCode = data.ReadInt32();
+            std::string errorMsg = data.ReadString();
+            OnError(errorCode, errorMsg);
             return MSERR_OK;
         }
         case TransCoderListenerMsg::ON_INFO: {
@@ -62,10 +62,10 @@ int TransCoderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     }
 }
 
-void TransCoderListenerStub::OnError(int32_t errorType, int32_t errorCode)
+void TransCoderListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     if (callback_ != nullptr) {
-        callback_->OnError(static_cast<TransCoderErrorType>(errorType), errorCode);
+        callback_->OnError(errorCode, errorMsg);
     }
 
     std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();

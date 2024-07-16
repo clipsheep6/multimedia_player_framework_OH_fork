@@ -67,7 +67,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnError(TransCoderErrorType errorType, int32_t errorCode) = 0;
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
 
     /**
      * @brief Called when an information event occurs during transcodering. This callback is used to report
