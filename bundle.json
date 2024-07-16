@@ -75,7 +75,6 @@
           "graphic_surface",
           "hisysevent",
           "c_utils",
-          "zlib",
           "access_token",
           "image_framework",
           "hiview",
