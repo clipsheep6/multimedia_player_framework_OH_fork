@@ -58,8 +58,10 @@ void AVTransCoderCallback::ClearCallbackReference()
     MEDIA_LOGI("ClearCallback!");
 }
 
-void AVTransCoderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
+void AVTransCoderCallback::SendErrorCallback(MediaServiceExtErrCodeAPI9 errCode, const std::string &msg)
 {
+    std::string message = MSExtAVErrorToString(errCode) + msg;
+    MEDIA_LOGE("SendErrorCallback:errorCode %{public}d, errorMsg %{public}s", errCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVTransCoderEvent::EVENT_ERROR) == refMap_.end()) {
         MEDIA_LOGW("can not find error callback!");
@@ -71,7 +73,7 @@ void AVTransCoderCallback::SendErrorCallback(int32_t errCode, const std::string 
     cb->autoRef = refMap_.at(AVTransCoderEvent::EVENT_ERROR);
     cb->callbackName = AVTransCoderEvent::EVENT_ERROR;
     cb->errorCode = errCode;
-    cb->errorMsg = msg;
+    cb->errorMsg = message;
     return OnJsErrorCallBack(cb);
 }
 
@@ -112,24 +114,11 @@ void AVTransCoderCallback::SendProgressUpdateCallback(int32_t progress)
     return OnJsProgressUpdateCallback(cb);
 }
 
-void AVTransCoderCallback::OnError(TransCoderErrorType errorType, int32_t errCode)
+void AVTransCoderCallback::OnError(int32_t errCode, const std::string &errorMsg)
 {
-    MEDIA_LOGI("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    if (errCode == MSERR_DATA_SOURCE_IO_ERROR) {
-        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
-            "The video input stream timed out. Please confirm that the input stream is normal.");
-    } else if (errCode == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR) {
-        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
-            "Read data from audio timeout, please confirm whether the audio module is normal.");
-    } else if (errCode == MSERR_DATA_SOURCE_ERROR_UNKNOWN) {
-        SendErrorCallback(MSERR_EXT_API9_IO, "Video input data is abnormal."
-            " Please confirm that the pts, width, height, size and other data are normal.");
-    } else if (errCode == MSERR_AUD_INTERRUPT) {
-        SendErrorCallback(MSERR_EXT_API9_AUDIO_INTERRUPTED,
-            "Record failed by audio interrupt.");
-    } else {
-        SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
-    }
+    MEDIA_LOGE("AVTransCoderCallback::OnError: %{public}d, %{public}s", errCode, errorMsg.c_str());
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    SendErrorCallback(errorCodeApi9, errorMsg);
     SendStateCallback(AVTransCoderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 

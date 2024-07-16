@@ -27,7 +27,7 @@ public:
     TransCoderListenerStub();
     virtual ~TransCoderListenerStub();
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback);
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);

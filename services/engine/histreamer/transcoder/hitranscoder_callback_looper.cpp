@@ -155,6 +155,7 @@ void HiTransCoderCallbackLooper::DoReportError(const Any &error)
         auto ptr = AnyCast<std::pair<TransCoderErrorType, int32_t>>(&error);
         MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
             static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
+        obs->OnError(ptr->first, ptr->second);
     }
 }
 

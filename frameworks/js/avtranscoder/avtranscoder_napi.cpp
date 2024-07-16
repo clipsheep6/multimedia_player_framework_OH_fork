@@ -820,7 +820,7 @@ void AVTransCoderNapi::ErrorCallback(int32_t errCode, const std::string &operate
 
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
     std::string msg = MSExtErrorAPI9ToString(err, operate, "") + add;
-    napiCb->SendErrorCallback(errCode, msg);
+    napiCb->SendErrorCallback(err, msg);
 }
 
 void AVTransCoderNapi::StateCallback(const std::string &state)

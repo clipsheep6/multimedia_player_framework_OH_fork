@@ -109,11 +109,12 @@ const std::string& TransCoderServer::GetStatusDescription(OHOS::Media::TransCode
 
 void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
 {
+    (void)errorType;
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "TransCoder");
     CHECK_AND_RETURN(transCoderCb_ != nullptr);
-    transCoderCb_->OnError(static_cast<TransCoderErrorType>(errorType), errorCode);
+    transCoderCb_->OnError(errorCode, lastErrMsg_);
 }
 
 void TransCoderServer::OnInfo(TransCoderOnInfoType type, int32_t extra)

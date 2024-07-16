@@ -28,7 +28,7 @@ public:
     explicit TransCoderListenerCallback(const sptr<IStandardTransCoderListener> &listener);
     virtual ~TransCoderListenerCallback();
 
-    void OnError(TransCoderErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
@@ -40,7 +40,7 @@ public:
     explicit TransCoderListenerProxy(const sptr<IRemoteObject> &impl);
     virtual ~TransCoderListenerProxy();
 
-    void OnError(int32_t errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:

@@ -68,7 +68,7 @@ private:
 class TransCoderCallbackTest : public TransCoderCallback, public NoCopyable {
 public:
     ~TransCoderCallbackTest() {}
-    void OnError(TransCoderErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(int32_t type, int32_t extra) override;
 };
 }
