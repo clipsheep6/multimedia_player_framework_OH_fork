@@ -114,13 +114,13 @@ bool AudioCapturerWrapper::GetIsMuted()
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
 {
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_GAME);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
-    usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_ALARM);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_MOVIE);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_GAME);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
+    usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
 }
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)

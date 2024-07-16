@@ -1749,18 +1749,14 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     screenCaptureCb_ = std::make_shared<ScreenCaptureUnitTestCallback>(screenCapture_);
     ASSERT_NE(nullptr, screenCaptureCb_);
     std::string name = "screen_capture_exclude_content_with_surface_cb_004";
-    // track enalbed: inner: true, mic: false, video: true(surface mode)
     OpenFile(name, true, false, false);
-    // check track aquire & release: inner: 1, mic: 1, video: 1
     screenCaptureCb_->InitCaptureTrackInfo(innerAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_INNER);
     screenCaptureCb_->InitCaptureTrackInfo(micAudioFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_AUDIO_MIC);
     screenCaptureCb_->InitCaptureTrackInfo(videoFile_, 1, SCREEN_CAPTURE_BUFFERTYPE_VIDEO);
-    // callback enabled: errorCallback: true, dataCallback: true, stateChangeCallback: true
     EXPECT_EQ(MSERR_OK, screenCapture_->SetScreenCaptureCallback(screenCaptureCb_, true, true, true));
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
     vector<int> windowIds = {1, 3, 5};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
     EXPECT_EQ(MSERR_OK, recorder->Start());

@@ -28,11 +28,7 @@ namespace OHOS {
 namespace Media {
 class UIExtensionAbilityConnection : public AAFwk::AbilityConnectionStub {
 public:
-    explicit UIExtensionAbilityConnection(const std::string &commandStr)
-    {
-        commandStr_ = commandStr;
-    }
-
+    explicit UIExtensionAbilityConnection(const std::string &commandStr) : commandStr_(commandStr) {}
     virtual ~UIExtensionAbilityConnection() = default;
 
     void OnAbilityConnectDone(const AppExecFwk::ElementName &element,
