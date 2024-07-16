@@ -46,6 +46,8 @@ public:
         contentFilter_(filter) {}
     virtual ~AudioCapturerWrapper();
     int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
+    int32_t Pause();
+    int32_t Resume();
     int32_t Stop();
     void SetIsMuted(bool isMuted);
     bool GetIsMuted();

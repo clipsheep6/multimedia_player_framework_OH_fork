@@ -68,6 +68,48 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     return MSERR_OK;
 }
 
+int32_t AudioCapturerWrapper::Pause()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    if (isRunning_.load()) {
+        isRunning_.store(false);
+        if (readAudioLoop_ != nullptr && readAudioLoop_->joinable()) {
+            readAudioLoop_->join();
+            readAudioLoop_.reset();
+            readAudioLoop_ = nullptr;
+        }
+        if (audioCapturer_ != nullptr) {
+            audioCapturer_->Pause();
+        }
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    return MSERR_OK;
+}
+
+int32_t AudioCapturerWrapper::Resume()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isRunning_.load()) {
+        MEDIA_LOGE("Resume failed, is running, threadName:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_UNKNOWN, "Resume failed, audioCapturer_ is nullptr");
+
+    if (!audioCapturer_->Start()) {
+        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
+        audioCapturer_->Release();
+        audioCapturer_ = nullptr;
+        OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
+        return MSERR_UNKNOWN;
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+
+    isRunning_.store(true);
+    readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
+    return MSERR_OK;
+}
+
 int32_t AudioCapturerWrapper::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);

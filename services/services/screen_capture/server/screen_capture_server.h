@@ -210,9 +210,6 @@ private:
     int32_t appPid_ { 0 };
     bool speakerAliveStatus_ = true;
 
-    /* used for hilog output */
-    int32_t readAtLogCount_ = 0;
-
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
     AVScreenCaptureMixMode type_;
@@ -268,8 +265,11 @@ public:
     int32_t AcquireAudioBufferMix(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, AVScreenCaptureMixMode type);
     int32_t ReleaseAudioBufferMix(AVScreenCaptureMixMode type);
+    int32_t ReleaseMicAudioBuffer();
+    int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
+    int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -321,6 +321,7 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
+    int32_t OnSpeakerAliveStatusChanged();
 
 private:
     std::mutex mutex_;
@@ -330,6 +331,7 @@ private:
     bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
+    bool speakerAliveStatus_ = true;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -363,7 +365,9 @@ private:
     sptr<OHOS::Surface> surface_ = nullptr;
     bool isSurfaceMode_ = false;
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
+    bool isInnerAudioCaptureWorking_ = false;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
+    bool isMicAudioCaptureWorking_ = false;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
