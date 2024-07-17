@@ -27,6 +27,8 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
+constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
+constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -160,7 +162,12 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
-    for (size_t index = 0; index < trackCount; index++) {
+    return ConfigureMetaData(trackInfos);
+}
+
+Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    for (size_t index = 0; index < trackInfos.size(); index++) {
         std::string trackMime;
         if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
             MEDIA_LOG_E("trackInfos index: %{public}d, get trackMime failed", index);
@@ -176,9 +183,16 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             } else {
                 MEDIA_LOG_W("Get input video width or height failed");
             }
+            bool isHdr = false;
+            trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+            if (isHdr) {
+                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
+            } else {
+                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
+            }
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
-            int32_t channels;
+            int32_t channels = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
             } else {
@@ -186,7 +200,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             }
             audioEncFormat_->Set<Tag::AUDIO_CHANNEL_COUNT>(channels);
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
-            int32_t sampleRate;
+            int32_t sampleRate = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate)) {
                 MEDIA_LOG_D("Audio sampleRate: %{public}d", sampleRate);
             } else {

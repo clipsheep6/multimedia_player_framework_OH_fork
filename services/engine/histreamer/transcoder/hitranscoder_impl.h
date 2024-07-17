@@ -70,6 +70,7 @@ private:
     void CancelTransCoder();
     void HandleErrorEvent(int32_t errorCode);
     Status ConfigureVideoAudioMetaData();
+    Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
 
     int32_t appUid_{0};
