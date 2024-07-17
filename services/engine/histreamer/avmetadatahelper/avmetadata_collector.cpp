@@ -250,22 +250,21 @@ std::shared_ptr<AVSharedMemory> AVMetaDataCollector::GetArtPicture()
     return nullptr;
 }
 
-int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, int64_t &timeMs)
+int32_t AVMetaDataCollector::GetTimeByFrameIndex(uint32_t index, int64_t &timeUs)
 {
     uint32_t trackId = 0;
     CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");
-    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetPresentationTimeUsByFrameIndex(trackId, index, timeMs) == Status::OK,
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetPresentationTimeUsByFrameIndex(trackId, index, timeUs) == Status::OK,
         MSERR_UNSUPPORT_FILE, "Get time by frame failed");
-    timeMs = Plugins::Us2Ms(timeMs);
     return MSERR_OK;
 }
 
-int32_t AVMetaDataCollector::GetFrameIndexByTime(int64_t timeMs, uint32_t &index)
+int32_t AVMetaDataCollector::GetFrameIndexByTime(int64_t timeUs, uint32_t &index)
 {
     uint32_t trackId = 0;
     CHECK_AND_RETURN_RET_LOG(GetVideoTrackId(trackId) == Status::OK, MSERR_UNSUPPORT_FILE, "No video track!");
-    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetFrameIndexByPresentationTimeUs(
-        trackId, Plugins::Ms2Us(timeMs), index) == Status::OK, MSERR_UNSUPPORT_FILE, "Get frame by time failed");
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_->GetFrameIndexByPresentationTimeUs(trackId, timeUs, index) == Status::OK,
+        MSERR_UNSUPPORT_FILE, "Get frame by time failed");
     return MSERR_OK;
 }
 
