@@ -746,7 +746,7 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     }
     int64_t seekStartTime = GetCurrentMillisecond();
     if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(true, false);
+        audioSink_->SetIsTransitent(true);
     }
     FALSE_RETURN_V_MSG_E(durationMs_.load() > 0, Status::ERROR_INVALID_PARAMETER,
         "Seek, invalid operation, source is unseekable or invalid");
@@ -754,42 +754,35 @@ Status HiPlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeek
     int64_t seekPos = std::max(static_cast<int64_t>(0), std::min(mSeconds, static_cast<int64_t>(durationMs_.load())));
     auto rtv = seekPos >= 0 ? Status::OK : Status::ERROR_INVALID_PARAMETER;
     if (rtv == Status::OK) {
-        rtv = SelectSeekType(seekPos, mode);
+        switch (pipelineStates_) {
+            case PlayerStates::PLAYER_STARTED: {
+                rtv = doStartedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PAUSED: {
+                rtv = doPausedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
+                rtv = doCompletedSeek(seekPos, mode);
+                break;
+            }
+            case PlayerStates::PLAYER_PREPARED: {
+                rtv = doPreparedSeek(seekPos, mode);
+                break;
+            }
+            default:
+                MEDIA_LOG_I("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
+                rtv = Status::ERROR_WRONG_STATE;
+                break;
+        }
     }
     NotifySeek(rtv, notifySeekDone, seekPos);
     if (audioSink_ != nullptr) {
-        audioSink_->SetIsTransitent(false, false);
+        audioSink_->SetIsTransitent(false);
     }
     isSeek_ = false;
     UpdateMaxSeekLatency(mode, seekStartTime);
-    return rtv;
-}
-
-Status HiPlayerImpl::SelectSeekType(int64_t seekPos, PlayerSeekMode mode)
-{
-    Status rtv = Status::OK;
-    switch (pipelineStates_) {
-        case PlayerStates::PLAYER_STARTED: {
-            rtv = doStartedSeek(seekPos, mode);
-            break;
-        }
-        case PlayerStates::PLAYER_PAUSED: {
-            rtv = doPausedSeek(seekPos, mode);
-            break;
-        }
-        case PlayerStates::PLAYER_PLAYBACK_COMPLETE: {
-            rtv = doCompletedSeek(seekPos, mode);
-            break;
-        }
-        case PlayerStates::PLAYER_PREPARED: {
-            rtv = doPreparedSeek(seekPos, mode);
-            break;
-        }
-        default:
-            MEDIA_LOG_I("Seek in error pipelineStates: " PUBLIC_LOG_D32, static_cast<int32_t>(pipelineStates_));
-            rtv = Status::ERROR_WRONG_STATE;
-            break;
-    }
     return rtv;
 }
 
@@ -1847,9 +1840,6 @@ void HiPlayerImpl::NotifySeekDone(int32_t seekPos)
                 return !syncManager_->InSeeking();
             });
     }
-    if (audioSink_ != nullptr) {
-        audioSink_->WaitSeekCompleted();
-    }
     MEDIA_LOG_D("NotifySeekDone seekPos: %{public}d", seekPos);
     callbackLooper_.OnInfo(INFO_TYPE_POSITION_UPDATE, seekPos, format);
     callbackLooper_.OnInfo(INFO_TYPE_SEEKDONE, seekPos, format);
@@ -2041,7 +2031,6 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
         FilterType::FILTERTYPE_ASINK);
     FALSE_RETURN_V(audioSink_ != nullptr, Status::ERROR_NULL_POINTER);
     audioSink_->Init(playerEventReceiver_, playerFilterCallback_);
-    audioSink_->SetPlayerId(playerId_);
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
