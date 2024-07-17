@@ -568,7 +568,7 @@ public:
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance create", FAKE_POINTER(this));
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
@@ -649,7 +649,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
 
 AVPlayerCallback::~AVPlayerCallback()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -689,7 +689,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
+    MEDIA_LOGD("%{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
         onInfoFuncs_[type](extra, infoBody);
     } else {
@@ -710,8 +710,7 @@ void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &inf
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
-        FAKE_POINTER(this), state);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "%{public}d", FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);
@@ -779,8 +778,7 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t currentPositon = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
-        FAKE_POINTER(this), currentPositon);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " %{public}d", FAKE_POINTER(this), currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
         return;
@@ -799,7 +797,7 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t speedMode = extra;
-    MEDIA_LOGI("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
+    MEDIA_LOGI("%{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find speeddone callback!");
         return;
@@ -819,7 +817,7 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t bitRate = extra;
-    MEDIA_LOGI("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
+    MEDIA_LOGI("%{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate callback!");
         return;
@@ -839,7 +837,7 @@ void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t position = extra;
-    MEDIA_LOGD("OnPositionUpdateCb is called, position: %{public}d", position);
+    MEDIA_LOGD("%{public}d", position);
 
     if (listener_ != nullptr) {
         listener_->NotifyPosition(position);
@@ -863,8 +861,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
-        FAKE_POINTER(this), duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " %{public}d", FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);

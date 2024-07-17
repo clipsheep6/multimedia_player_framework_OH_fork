@@ -28,7 +28,7 @@ namespace Media {
 PlayerListenerProxy::PlayerListenerProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerListener>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerListenerProxy::~PlayerListenerProxy()
@@ -78,7 +78,7 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerListenerCallback::~PlayerListenerCallback()

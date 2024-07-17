@@ -47,7 +47,7 @@ int32_t PlayerImpl::Init()
 
 PlayerImpl::PlayerImpl()
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
     ResetSeekVariables();
     traceId_ = HiviewDFX::HiTraceChain::Begin("PlayerImpl", HITRACE_FLAG_DEFAULT);
 }

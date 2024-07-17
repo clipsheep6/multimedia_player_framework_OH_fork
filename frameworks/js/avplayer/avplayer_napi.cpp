@@ -51,12 +51,12 @@ const std::string CLASS_NAME = "AVPlayer";
 
 AVPlayerNapi::AVPlayerNapi()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 AVPlayerNapi::~AVPlayerNapi()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " destroy", FAKE_POINTER(this));
 }
 
 napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
@@ -175,7 +175,6 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             delete jsPlayer;
         }).detach();
     }
-    MEDIA_LOGI("Destructor success");
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -266,9 +265,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPrepare EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->PrepareTask();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPrepare EnqueueTask out", FAKE_POINTER(jsPlayer));
     }
 
     napi_value resource = nullptr;
@@ -344,9 +341,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
         promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
             "In live mode, replay not be allowed.");
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPlay EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->PlayTask();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPlay EnqueueTask Out", FAKE_POINTER(jsPlayer));
     }
 #ifdef SUPPORT_JSSTACK
     HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
@@ -417,9 +412,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not playing, unsupport pause operation");
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPause EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->PauseTask();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPause EnqueueTask Out", FAKE_POINTER(jsPlayer));
     }
 
     napi_value resource = nullptr;
@@ -489,9 +482,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport stop operation");
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsStop EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->StopTask();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsStop EnqueueTask Out", FAKE_POINTER(jsPlayer));
     }
 
     napi_value resource = nullptr;
@@ -559,9 +550,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is released, unsupport reset operation");
     } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsReset EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->ResetTask();
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " JsReset EnqueueTask Out", FAKE_POINTER(jsPlayer));
         if (jsPlayer->dataSrcCb_ != nullptr) {
             jsPlayer->dataSrcCb_->ClearCallbackReference();
             jsPlayer->dataSrcCb_ = nullptr;
@@ -590,7 +579,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::WaitTaskQueStop()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " WaitTaskQueStop In", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " WaitTaskQueStop In", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
     stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; });
     MEDIA_LOGI("0x%{public}06" PRIXPTR " WaitTaskQueStop Out", FAKE_POINTER(this));
@@ -657,9 +646,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsRelease EnqueueTask In", FAKE_POINTER(jsPlayer));
     promiseCtx->asyncTask = jsPlayer->ReleaseTask();
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsRelease EnqueueTask Out", FAKE_POINTER(jsPlayer));
     if (jsPlayer->dataSrcCb_ != nullptr) {
         jsPlayer->dataSrcCb_->ClearCallbackReference();
         jsPlayer->dataSrcCb_ = nullptr;
@@ -795,9 +782,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Speed Task Out", FAKE_POINTER(jsPlayer));
     });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetSpeed EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetSpeed Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 
@@ -888,9 +873,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Task Out", FAKE_POINTER(jsPlayer));
     });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSelectBitrate Out", FAKE_POINTER(jsPlayer));
     return result;
 }
 
@@ -1234,7 +1217,7 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
     MediaTrace trace("AVPlayerNapi::set fd");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetAVFileDescriptor In");
+    MEDIA_LOGI("JsSetAVFileDescriptor");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1; // url: string
@@ -1272,8 +1255,6 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-
-    MEDIA_LOGI("JsSetAVFileDescriptor Out");
     return result;
 }
 
@@ -1603,7 +1584,7 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
     MediaTrace trace("AVPlayerNapi::set videoScaleType");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSetVideoScaleType In");
+    MEDIA_LOGI("JsSetVideoScaleType");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
@@ -1640,7 +1621,6 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("JsSetVideoScaleType Out");
     return result;
 }
 
@@ -1850,9 +1830,7 @@ void AVPlayerNapi::SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t
         }
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Task Out", FAKE_POINTER(jsPlayer));
     });
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek EnqueueTask In", FAKE_POINTER(jsPlayer));
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSeek Out", FAKE_POINTER(jsPlayer));
 }
 
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
@@ -2306,7 +2284,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " set callbackName: %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " %{public}s", FAKE_POINTER(jsPlayer), callbackName.c_str());
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
@@ -2314,9 +2292,6 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     jsPlayer->SaveCallbackReference(callbackName, autoRef);
-
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsSetOnCallback callbackName: %{public}s success",
-        FAKE_POINTER(jsPlayer), callbackName.c_str());
     return result;
 }
 

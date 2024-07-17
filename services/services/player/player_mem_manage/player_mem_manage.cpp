@@ -44,7 +44,7 @@ PlayerMemManage& PlayerMemManage::GetInstance()
 
 PlayerMemManage::PlayerMemManage()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerMemManage::~PlayerMemManage()

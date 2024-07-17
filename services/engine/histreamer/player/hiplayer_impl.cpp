@@ -51,7 +51,6 @@ class PlayerEventReceiver : public EventReceiver {
 public:
     explicit PlayerEventReceiver(HiPlayerImpl* hiPlayerImpl, std::string playerId)
     {
-        MEDIA_LOG_I("PlayerEventReceiver ctor called.");
         hiPlayerImpl_ = hiPlayerImpl;
         task_ = std::make_unique<Task>("PlayerEventReceiver", playerId, TaskType::GLOBAL,
             OHOS::Media::TaskPriority::HIGH, false);
@@ -72,7 +71,6 @@ class PlayerFilterCallback : public FilterCallback {
 public:
     explicit PlayerFilterCallback(HiPlayerImpl* hiPlayerImpl)
     {
-        MEDIA_LOG_I("PlayerFilterCallback ctor called.");
         hiPlayerImpl_ = hiPlayerImpl;
     }
 
@@ -1392,7 +1390,7 @@ int32_t HiPlayerImpl::SetAudioInterruptMode(const int32_t interruptMode)
 
 void HiPlayerImpl::OnEvent(const Event &event)
 {
-    MEDIA_LOG_I("OnEvent entered, event type is: %{public}d", event.type);
+    MEDIA_LOG_I("player onEvent %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_IS_LIVE_STREAM: {
             HandleIsLiveStreamEvent(AnyCast<bool>(event.param));
@@ -1425,7 +1423,7 @@ void HiPlayerImpl::OnEvent(const Event &event)
             break;
         }
         case EventType::EVENT_VIDEO_RENDERING_START: {
-            MEDIA_LOG_I("video first frame reneder received");
+            MEDIA_LOG_D("video first frame reneder received");
             Format format;
             playStatisticalInfo_.startLatency = static_cast<int32_t>(AnyCast<uint64_t>(event.param));
             callbackLooper_.OnInfo(INFO_TYPE_MESSAGE, PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START, format);
@@ -1445,7 +1443,6 @@ void HiPlayerImpl::OnEvent(const Event &event)
 
 void HiPlayerImpl::OnEventSub(const Event &event)
 {
-    MEDIA_LOG_I("OnEvent entered, event type is: %{public}d", event.type);
     switch (event.type) {
         case EventType::EVENT_AUDIO_DEVICE_CHANGE : {
             NotifyAudioDeviceChange(event);
@@ -1456,12 +1453,12 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             break;
         }
         case EventType::BUFFERING_END : {
-            MEDIA_LOG_I("BUFFERING_END PLAYING");
+            MEDIA_LOG_D("BUFFERING_END PLAYING");
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
             break;
         }
         case EventType::BUFFERING_START : {
-            MEDIA_LOG_I("BUFFERING_START PAUSE");
+            MEDIA_LOG_D("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
             break;
         }
@@ -1725,7 +1722,7 @@ void HiPlayerImpl::UpdateStateNoLock(PlayerStates newState, bool notifyUpward)
     }
     pipelineStates_ = newState;
     if (pipelineStates_ == PlayerStates::PLAYER_IDLE || pipelineStates_ == PlayerStates::PLAYER_PREPARING) {
-        MEDIA_LOG_W("do not report idle and preparing since av player doesn't need report idle and preparing");
+        MEDIA_LOG_D("do not report idle and preparing since av player doesn't need report idle and preparing");
         return;
     }
     if (notifyUpward) {

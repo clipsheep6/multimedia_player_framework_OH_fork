@@ -63,12 +63,12 @@ private:
 MediaDataCallback::MediaDataCallback(const sptr<IStandardMediaDataSource> &ipcProxy)
     : callbackProxy_(ipcProxy)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 MediaDataCallback::~MediaDataCallback()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 
@@ -105,7 +105,7 @@ int32_t MediaDataCallback::GetSize(int64_t &size)
 MediaDataSourceProxy::MediaDataSourceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardMediaDataSource>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 MediaDataSourceProxy::~MediaDataSourceProxy()

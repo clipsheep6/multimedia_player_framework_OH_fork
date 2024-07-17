@@ -241,7 +241,7 @@ void ScreenCaptureServer::SetMetaDataReport()
 
 ScreenCaptureServer::ScreenCaptureServer()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
     InitAppInfo();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
     CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid(), instanceId_);
@@ -2112,7 +2112,7 @@ void ScreenCaptureServer::ReleaseInner()
 ScreenCaptureObserverCallBack::ScreenCaptureObserverCallBack(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
     screenCaptureServer_ = screenCaptureServer;
 }
 

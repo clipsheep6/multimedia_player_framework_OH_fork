@@ -31,7 +31,6 @@ AudioBufferFilledListener::AudioBufferFilledListener(std::shared_ptr<SeekAgent> 
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
     : seekAgent_(seekAgent), producer_(producer), trackId_(trackId)
 {
-    MEDIA_LOG_I("AudioBufferFilledListener ctor called.");
 }
 
 void AudioBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer)
@@ -47,7 +46,6 @@ VideoBufferFilledListener::VideoBufferFilledListener(std::shared_ptr<SeekAgent> 
     sptr<AVBufferQueueProducer> producer, int32_t trackId)
     : seekAgent_(seekAgent), producer_(producer), trackId_(trackId)
 {
-    MEDIA_LOG_I("VideoBufferFilledListener ctor called.");
 }
 
 void VideoBufferFilledListener::OnBufferFilled(std::shared_ptr<AVBuffer>& buffer)
@@ -63,7 +61,6 @@ SeekAgent::SeekAgent(std::shared_ptr<Pipeline::DemuxerFilter> demuxer)
     : demuxer_(demuxer), isAudioTargetArrived_(true), isVideoTargetArrived_(true),
     seekTargetPos_(-1), isSeeking_(false)
 {
-    MEDIA_LOG_I("SeekAgent ctor called.");
 }
 
 SeekAgent::~SeekAgent()

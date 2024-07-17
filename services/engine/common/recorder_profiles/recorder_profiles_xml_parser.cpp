@@ -94,7 +94,7 @@ RecorderProfilesXmlParser::RecorderProfilesXmlParser()
 {
     capabilityKeys_ = {"format", "codecMime", "bitrate", "width", "height", "frameRate",
         "sampleRate", "channels", "quality", "duration", "name", "hasVideo"};
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 RecorderProfilesXmlParser::~RecorderProfilesXmlParser()

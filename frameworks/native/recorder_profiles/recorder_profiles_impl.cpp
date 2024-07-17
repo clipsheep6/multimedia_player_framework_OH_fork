@@ -50,7 +50,7 @@ int32_t RecorderProfilesImpl::Init()
 
 RecorderProfilesImpl::RecorderProfilesImpl()
 {
-    MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 RecorderProfilesImpl::~RecorderProfilesImpl()

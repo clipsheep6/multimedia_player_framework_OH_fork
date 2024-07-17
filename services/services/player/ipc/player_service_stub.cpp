@@ -54,7 +54,7 @@ PlayerServiceStub::PlayerServiceStub()
     : taskQue_("PlayerRequest")
 {
     (void)taskQue_.Start();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerServiceStub::~PlayerServiceStub()
@@ -204,11 +204,9 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
         auto memberFunc = itFunc->second.second;
         auto funcName = itFunc->second.first;
         if (funcName.compare("Player::SetVolume") == 0) {
-            MEDIA_LOGD("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
-                FAKE_POINTER(this), funcName.c_str());
+            MEDIA_LOGD("0x%{public}06" PRIXPTR " %{public}s", FAKE_POINTER(this), funcName.c_str());
         } else {
-            MEDIA_LOGI("0x%{public}06" PRIXPTR " Stub: OnRemoteRequest task: %{public}s is received",
-                FAKE_POINTER(this), funcName.c_str());
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " %{public}s", FAKE_POINTER(this), funcName.c_str());
         }
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {

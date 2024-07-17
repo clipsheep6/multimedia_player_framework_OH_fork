@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 AVScreenCaptureCallback::AVScreenCaptureCallback(napi_env env) : env_(env)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "create", FAKE_POINTER(this));
 }
 
 AVScreenCaptureCallback::~AVScreenCaptureCallback()

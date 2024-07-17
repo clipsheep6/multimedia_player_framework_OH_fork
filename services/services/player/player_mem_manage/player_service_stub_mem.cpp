@@ -58,7 +58,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 
 PlayerServiceStubMem::PlayerServiceStubMem()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerServiceStubMem::~PlayerServiceStubMem()

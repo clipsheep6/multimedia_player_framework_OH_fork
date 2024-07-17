@@ -58,7 +58,7 @@ int32_t RecorderImpl::GetLocation(Location &location)
 
 RecorderImpl::RecorderImpl()
 {
-    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
     traceId_ = HiTraceChain::Begin("AVRecorder", HITRACE_FLAG_DEFAULT);
 }
 

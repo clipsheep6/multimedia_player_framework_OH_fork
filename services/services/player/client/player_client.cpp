@@ -36,7 +36,7 @@ std::shared_ptr<PlayerClient> PlayerClient::Create(const sptr<IStandardPlayerSer
 PlayerClient::PlayerClient(const sptr<IStandardPlayerService> &ipcProxy)
     : playerProxy_(ipcProxy)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 PlayerClient::~PlayerClient()

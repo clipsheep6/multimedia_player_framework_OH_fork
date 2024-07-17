@@ -37,7 +37,7 @@ const std::string CLASS_NAME = "VideoRecorder";
 
 VideoRecorderNapi::VideoRecorderNapi()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "create", FAKE_POINTER(this));
 }
 
 VideoRecorderNapi::~VideoRecorderNapi()

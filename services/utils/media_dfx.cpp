@@ -27,7 +27,7 @@
 #include <cstdint>
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiStreamer" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HST" };
 
     constexpr uint32_t MAX_STRING_SIZE = 256;
     constexpr int64_t HOURS_BETWEEN_REPORTS = 4;

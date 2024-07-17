@@ -26,7 +26,7 @@ namespace Media {
 ScreenCaptureListenerProxy::ScreenCaptureListenerProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardScreenCaptureListener>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 ScreenCaptureListenerProxy::~ScreenCaptureListenerProxy()
@@ -96,7 +96,7 @@ void ScreenCaptureListenerProxy::OnStateChange(AVScreenCaptureStateCode stateCod
 ScreenCaptureListenerCallback::ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener)
     : listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 ScreenCaptureListenerCallback::~ScreenCaptureListenerCallback()

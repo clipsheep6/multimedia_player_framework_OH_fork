@@ -33,7 +33,7 @@ constexpr uint64_t NS_TO_MS = 1000000;
 
 MonitorServer::MonitorServer()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 MonitorServer::~MonitorServer()

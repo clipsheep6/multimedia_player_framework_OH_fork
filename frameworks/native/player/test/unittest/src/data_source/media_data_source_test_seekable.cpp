@@ -45,7 +45,7 @@ MediaDataSourceTestSeekable::MediaDataSourceTestSeekable(const std::string &uri,
     : uri_(uri),
       fixedLen_(size)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 MediaDataSourceTestSeekable::~MediaDataSourceTestSeekable()

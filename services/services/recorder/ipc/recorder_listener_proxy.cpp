@@ -26,7 +26,7 @@ namespace Media {
 RecorderListenerProxy::RecorderListenerProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardRecorderListener>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 RecorderListenerProxy::~RecorderListenerProxy()
@@ -81,7 +81,7 @@ void RecorderListenerProxy::OnAudioCaptureChange(const AudioRecorderChangeInfo &
 RecorderListenerCallback::RecorderListenerCallback(const sptr<IStandardRecorderListener> &listener)
     : listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 RecorderListenerCallback::~RecorderListenerCallback()

@@ -173,7 +173,7 @@ int32_t AVMetadataHelperImpl::Init()
 
 AVMetadataHelperImpl::AVMetadataHelperImpl()
 {
-    MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 AVMetadataHelperImpl::~AVMetadataHelperImpl()

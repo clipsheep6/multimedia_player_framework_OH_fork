@@ -37,7 +37,7 @@ std::shared_ptr<RecorderProfilesClient> RecorderProfilesClient::Create(
 RecorderProfilesClient::RecorderProfilesClient(const sptr<IStandardRecorderProfilesService> &ipcProxy)
     : recorderProfilesProxy_(ipcProxy)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
 }
 
 RecorderProfilesClient::~RecorderProfilesClient()
