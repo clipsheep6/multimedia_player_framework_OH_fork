@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 AppStateListener::AppStateListener()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AppStateListener::~AppStateListener()

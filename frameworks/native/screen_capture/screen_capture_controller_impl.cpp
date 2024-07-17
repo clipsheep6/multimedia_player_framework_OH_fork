@@ -46,7 +46,7 @@ void ScreenCaptureControllerImpl::ReportAVScreenCaptureUserChoice(int32_t sessio
 
 ScreenCaptureControllerImpl::ScreenCaptureControllerImpl()
 {
-    MEDIA_LOGD("ScreenCaptureControllerImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("ScreenCaptureControllerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 ScreenCaptureControllerImpl::~ScreenCaptureControllerImpl()

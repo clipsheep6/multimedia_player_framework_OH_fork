@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 RecorderListenerStub::RecorderListenerStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 RecorderListenerStub::~RecorderListenerStub()

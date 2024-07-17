@@ -138,7 +138,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 
 MediaServerManager::MediaServerManager()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaServerManager::~MediaServerManager()

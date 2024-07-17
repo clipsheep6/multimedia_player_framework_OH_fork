@@ -106,7 +106,7 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 
 PlayerServer::PlayerServer()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     instanceId_ = HiviewDFX::HiTraceChain::GetId().GetChainId();
 }
 

@@ -63,7 +63,7 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 RecorderServer::RecorderServer()
     : taskQue_("RecorderServer")
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
     CreateMediaInfo(AVRECORDER, IPCSkeleton::GetCallingUid(), instanceId_);

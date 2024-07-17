@@ -82,7 +82,7 @@ VideoCaps::VideoCaps(CapabilityData &capabilityData)
 {
     InitParams();
     LoadLevelParams();
-    MEDIA_LOGD("VideoCaps:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("VideoCaps:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 VideoCaps::~VideoCaps()
@@ -395,7 +395,7 @@ bool VideoCaps::IsSupportDynamicIframe()
 AudioCaps::AudioCaps(CapabilityData &capabilityData)
     : data_(capabilityData)
 {
-    MEDIA_LOGD("AudioCaps:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("AudioCaps:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AudioCaps::~AudioCaps()
@@ -456,7 +456,7 @@ Range AudioCaps::GetSupportedComplexity()
 AVCodecInfo::AVCodecInfo(CapabilityData &capabilityData)
     : data_(capabilityData)
 {
-    MEDIA_LOGD("AVCodecInfo:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("AVCodecInfo:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AVCodecInfo::~AVCodecInfo()

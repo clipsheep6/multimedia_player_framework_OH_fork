@@ -26,7 +26,7 @@ namespace Media {
 TransCoderListenerProxy::TransCoderListenerProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardTransCoderListener>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 TransCoderListenerProxy::~TransCoderListenerProxy()
@@ -67,7 +67,7 @@ void TransCoderListenerProxy::OnInfo(int32_t type, int32_t extra)
 TransCoderListenerCallback::TransCoderListenerCallback(const sptr<IStandardTransCoderListener> &listener)
     : listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 TransCoderListenerCallback::~TransCoderListenerCallback()

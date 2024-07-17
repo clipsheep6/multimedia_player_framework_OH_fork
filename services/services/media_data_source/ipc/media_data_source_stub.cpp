@@ -54,7 +54,7 @@ private:
 MediaDataSourceStub::MediaDataSourceStub(const std::shared_ptr<IMediaDataSource> &dataSrc)
     : dataSrc_(dataSrc)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaDataSourceStub::~MediaDataSourceStub()

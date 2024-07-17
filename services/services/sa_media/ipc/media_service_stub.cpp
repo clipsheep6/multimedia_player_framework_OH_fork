@@ -30,7 +30,7 @@ MediaServiceStub::MediaServiceStub()
     deathRecipientMap_.clear();
     mediaListenerMap_.clear();
     Init();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaServiceStub::~MediaServiceStub()

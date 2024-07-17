@@ -39,7 +39,7 @@ std::shared_ptr<ScreenCaptureControllerClient> ScreenCaptureControllerClient::Cr
 ScreenCaptureControllerClient::ScreenCaptureControllerClient(const sptr<IStandardScreenCaptureController> &ipcProxy)
     : screenCaptureControllerProxy_(ipcProxy)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 ScreenCaptureControllerClient::~ScreenCaptureControllerClient()

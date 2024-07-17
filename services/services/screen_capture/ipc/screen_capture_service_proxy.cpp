@@ -28,7 +28,7 @@ namespace Media {
 ScreenCaptureServiceProxy::ScreenCaptureServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardScreenCaptureService>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 ScreenCaptureServiceProxy::~ScreenCaptureServiceProxy()

@@ -57,7 +57,7 @@ int32_t ScreenCaptureImpl::SetScreenCaptureCallback(const std::shared_ptr<Screen
 
 ScreenCaptureImpl::ScreenCaptureImpl()
 {
-    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     traceId_ = HiTraceChain::Begin("AVScreenCapture", HITRACE_FLAG_DEFAULT);
 }
 

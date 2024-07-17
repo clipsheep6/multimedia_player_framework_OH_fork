@@ -55,7 +55,7 @@ MediaDataSourceCallback::MediaDataSourceCallback(napi_env env, int64_t fileSize)
     : env_(env),
       size_(fileSize)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaDataSourceCallback::~MediaDataSourceCallback()

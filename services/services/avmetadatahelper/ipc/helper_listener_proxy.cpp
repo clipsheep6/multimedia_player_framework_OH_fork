@@ -29,7 +29,7 @@ namespace Media {
 HelperListenerProxy::HelperListenerProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardHelperListener>(impl)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 HelperListenerProxy::~HelperListenerProxy()
@@ -70,7 +70,7 @@ void HelperListenerProxy::OnInfo(HelperOnInfoType type, int32_t extra, const For
 
 HelperListenerCallback::HelperListenerCallback(const sptr<IStandardHelperListener> &listener) : listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 HelperListenerCallback::~HelperListenerCallback()

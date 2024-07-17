@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Media {
 MonitorServiceStub::MonitorServiceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MonitorServiceStub::~MonitorServiceStub()
