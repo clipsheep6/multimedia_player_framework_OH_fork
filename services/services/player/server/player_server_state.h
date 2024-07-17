@@ -31,6 +31,10 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t Stop();
+    virtual int32_t ResumeForSeek()
+    {
+        return 0;
+    }
 
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
@@ -92,9 +96,11 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t ResumeForSeek() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
 };
 
 class PlayerServer::PlayingState : public PlayerServer::BaseState {
@@ -126,9 +132,11 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t ResumeForSeek() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
 };
 
 class PlayerServer::StoppedState : public PlayerServer::BaseState {

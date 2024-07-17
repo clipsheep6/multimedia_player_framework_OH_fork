@@ -1075,6 +1075,51 @@ void PlayerServer::HandleEos()
     }
 }
 
+void PlayerServer::PreparedHandleEos()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("PlayerServer PreparedHandleEos in");
+    if (config_.looping.load()) {
+        (void)taskMgr_.MarkTaskDone("play->completed done");
+        auto resumeForSeekTask = std::make_shared<TaskHandler<void>>([this]() {
+            MediaTrace::TraceBegin("PlayerServer::resumeForSeek", FAKE_POINTER(this));
+            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+            (void)currState->ResumeForSeek();
+        });
+        int ret = taskMgr_.LaunchTask(resumeForSeekTask, PlayerServerTaskType::STATE_CHANGE, "resume for seek");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "HandleEosResumeForSeek failed");
+        lastOpStatus_ = PLAYER_STARTED;
+    } else {
+        lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+        ChangetSate(playbackCompletedState_);
+        (void)taskMgr_.MarkTaskDone("prepared->completed done");
+    }
+}
+
+void PlayerServer::PausedHandleEos()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("PlayerServer PausedHandleEos in");
+    if (config_.looping.load()) {
+        auto resumeForSeekTask = std::make_shared<TaskHandler<void>>([this]() {
+            MediaTrace::TraceBegin("PlayerServer::resumeForSeek", FAKE_POINTER(this));
+            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+            (void)currState->ResumeForSeek();
+        });
+        int ret = taskMgr_.LaunchTask(resumeForSeekTask, PlayerServerTaskType::STATE_CHANGE, "resume for seek");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "HandleEosResumeForSeek failed");
+
+        lastOpStatus_ = PLAYER_STARTED;
+    }
+}
+
+int32_t PlayerServer::HandleResumeForSeek()
+{
+    int32_t ret = playerEngine_->ResumeForSeek();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine ResumeForSeek Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
