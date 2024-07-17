@@ -95,6 +95,7 @@ public:
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
 };
 
 class PlayerServer::PlayingState : public PlayerServer::BaseState {
@@ -129,6 +130,7 @@ public:
 
 protected:
     void HandleStateChange(int32_t newState) override;
+    void HandleEos() override;
 };
 
 class PlayerServer::StoppedState : public PlayerServer::BaseState {

@@ -1075,6 +1075,16 @@ void PlayerServer::HandleEos()
     }
 }
 
+void PlayerServer::PreparedHandleEos()
+{
+    MEDIA_LOGI("PlayerServer PreparedHandleEos in");
+    if (!config_.looping.load()) {
+        lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+        ChangeState(playbackCompletedState_);
+        (void)taskMgr_.MarkTaskDone("play->completed done");
+    }
+}
+
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
