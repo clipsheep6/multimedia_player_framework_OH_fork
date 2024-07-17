@@ -173,9 +173,12 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
                 trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
                 MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
                     inputVideoWidth_, inputVideoHeight_);
+                videoEncFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
+                videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
             } else {
                 MEDIA_LOG_W("Get input video width or height failed");
             }
+            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         } else if (trackMime.find("audio/") == 0) {
             MEDIA_LOG_I("SetInputFile contain audio");
             int32_t channels;
@@ -193,6 +196,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
+            audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
     return Status::OK;
@@ -247,16 +251,12 @@ Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &tran
 Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam)
 {
     VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-    if (videoRectangle.width <= 0 || videoRectangle.height <= 0) {
-        MEDIA_LOG_E("Invalid videoRectangle.width %{public}d, videoRectangle.height %{public}d",
-            videoRectangle.width, videoRectangle.height);
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-        return Status::ERROR_INVALID_PARAMETER;
-    }
-    MEDIA_LOG_I("videoRectangle.width %{public}d, videoRectangle.height %{public}d",
-        videoRectangle.width, videoRectangle.height);
-    videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-    videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+    if (videoRectangle.width != -1) {
+        videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
+        }
+    if (videoRectangle.height != -1) {
+        videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+        }
     return Status::OK;
 }
 
