@@ -716,7 +716,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             return result;
         }
         status = napi_get_value_int32(env, args[1], &mode);
-        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CLOSEST) {
+        if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CONTINOUS) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
             return result;
         }
@@ -743,6 +743,9 @@ PlayerSeekMode AVPlayerNapi::TransferSeekMode(int32_t mode)
             break;
         case 2: // Seek to the closest frame of the given timestamp. 2 refers SeekMode in @ohos.multimedia.media.d.ts
             seekMode = PlayerSeekMode::SEEK_CLOSEST;
+            break;
+        case 3: // Seek continous of the given timestamp. 3 refers SeekMode in @ohos.multimedia.media.d.ts
+            seekMode = PlayerSeekMode::SEEK_CONTINOUS;
             break;
         default:
             seekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;

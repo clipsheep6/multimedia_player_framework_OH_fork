@@ -2116,5 +2116,56 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
     }
     return pipeline_->LinkFilters(preFilter, {subtitleSink_}, type);
 }
+
+int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+{
+    std::lock_guard<std::mutex> lock(seekContinousMutex_);
+    FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
+    FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
+    FALSE_RETURN_V(seekContinousBatchNo_.load() <= seekContinousBatchNo, TransStatus(Status::OK));
+    if (seekContinousBatchNo_.load() == seekContinousBatchNo) {
+        FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, TransStatus(Status::OK));
+        lastSeekContinousPos_ = mSeconds;
+        draggingPlayerAgent_->UpdateSeekPos(mSeconds);
+        MEDIA_LOG_I("HiPlayerImpl::SeekContinous in " PUBLIC_LOG_D32, mSeconds);
+        return TransStatus(Status::OK);
+    }
+    seekContinousBatchNo_.store(seekContinousBatchNo);
+    auto res = StartSeekContinous();
+    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(Status::ERROR_UNKNOWN),
+        "StartSeekContinous failed");
+    lastSeekContinousPos_ = mSeconds;
+    draggingPlayerAgent_->UpdateSeekPos(mSeconds);
+    MEDIA_LOG_I("HiPlayerImpl::SeekContinous start " PUBLIC_LOG_D32, mSeconds);
+    return TransStatus(Status::OK);
+}
+
+Status HiPlayerImpl::StartSeekContinous()
+{
+    FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
+    draggingPlayerAgent_ = DraggingPlayerAgent::Create();
+    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, Status::OK);
+    Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
+    if (res != Status::OK) {
+        draggingPlayerAgent_ = nullptr;
+    }
+    return res;
+}
+
+int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
+{
+    std::lock_guard<std::mutex> lock(seekContinousMutex_);
+    FALSE_RETURN_V(demuxer_ && videoDecoder_, TransStatus(Status::OK));
+    FALSE_RETURN_V(!isNetWorkPlay_, TransStatus(Status::OK));
+    seekContinousBatchNo_.store(seekContinousBatchNo);
+    if (draggingPlayerAgent_ != nullptr) {
+        draggingPlayerAgent_->Release();
+        draggingPlayerAgent_ = nullptr;
+    }
+    if (align) {
+        Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
+    }
+    return TransStatus(Status::OK);
+}
 }  // namespace Media
 }  // namespace OHOS

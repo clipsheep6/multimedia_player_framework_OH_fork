@@ -201,6 +201,12 @@ private:
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnErrorCb(int32_t errorCode, const std::string &errorMsg);
 
+    int32_t CheckSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t SeekContinous(int32_t mSeconds);
+    int32_t HandleSeekContinous(int32_t mSeconds, int64_t batchNo);
+    int32_t ExitSeekContinous(bool align);
+    void UpdateContinousBatchNo();
+
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
@@ -221,6 +227,9 @@ private:
     std::shared_ptr<AVMediaSource> mediaSource_ = nullptr;
     AVPlayStrategy strategy_;
     std::atomic<bool> isInterruptNeeded_{false};
+    std::mutex seekContinousMutex_;
+    std::atomic<bool> isInSeekContinous_ {false};
+    std::atomic<int64_t> seekContinousBatchNo_ {-1};
 };
 } // namespace Media
 } // namespace OHOS

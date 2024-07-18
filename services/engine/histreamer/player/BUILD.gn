@@ -37,6 +37,15 @@ config("media_engine_histreamer_player_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
   ]
   defines = []
+
+  if (target_cpu == "arm64" || is_emulator) {
+    dragging_player_path = "\"/system/lib64\""
+  } else {
+    dragging_player_path = "\"/system/lib\""
+  }
+
+  defines += [ "DRAGGING_PLAYER_PATH=${dragging_player_path}" ]
+
   defines += player_framework_defines
 }
 
@@ -51,6 +60,7 @@ ohos_static_library("media_engine_histreamer_player") {
     debug = false
   }
   sources = [
+    "dragging_player_agent.cpp",
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
     "seek_agent.cpp",

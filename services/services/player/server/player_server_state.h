@@ -31,6 +31,7 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t Stop();
+    virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
 
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
@@ -92,6 +93,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -108,6 +110,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -127,6 +130,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -152,6 +156,7 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;

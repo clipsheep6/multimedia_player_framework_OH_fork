@@ -73,6 +73,15 @@ int32_t PlayerServer::BaseState::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    (void)mSeconds;
+    (void)batchNo;
+
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
 int32_t PlayerServer::BaseState::MessageSeekDone(int32_t extra)
 {
     int32_t ret = MSERR_OK;
@@ -233,6 +242,11 @@ int32_t PlayerServer::PreparedState::SetPlaybackSpeed(PlaybackRateMode mode)
     return server_.HandleSetPlaybackSpeed(mode);
 }
 
+int32_t PlayerServer::PreparedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    return server_.HandleSeekContinous(mSeconds, batchNo);
+}
+
 void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
 {
     if (newState == PLAYER_STARTED) {
@@ -280,6 +294,15 @@ int32_t PlayerServer::PlayingState::Stop()
 int32_t PlayerServer::PlayingState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
+}
+
+int32_t PlayerServer::PlayingState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    MEDIA_LOGE("not supported SeekContinous in PlayingState, please pause in player server");
+    (void)mSeconds;
+    (void)batchNo;
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
 }
 
 void PlayerServer::PlayingState::HandleStateChange(int32_t newState)
@@ -362,6 +385,11 @@ int32_t PlayerServer::PausedState::SetPlaybackSpeed(PlaybackRateMode mode)
     return server_.HandleSetPlaybackSpeed(mode);
 }
 
+int32_t PlayerServer::PausedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    return server_.HandleSeekContinous(mSeconds, batchNo);
+}
+
 void PlayerServer::PausedState::HandleStateChange(int32_t newState)
 {
     if (newState == PLAYER_STARTED) {
@@ -409,6 +437,11 @@ int32_t PlayerServer::PlaybackCompletedState::Play()
 int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
+}
+
+int32_t PlayerServer::PlaybackCompletedState::SeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    return server_.HandleSeekContinous(mSeconds, batchNo);
 }
 
 int32_t PlayerServer::PlaybackCompletedState::Stop()

@@ -35,6 +35,7 @@
 #include "subtitle_sink_filter.h"
 #include "meta/meta.h"
 #include <chrono>
+#include "dragging_player_agent.h"
 #ifdef SUPPORT_VIDEO
 #include "decoder_surface_filter.h"
 #endif
@@ -143,6 +144,8 @@ public:
     void OnStateChanged(PlayerStateId state);
     Status OnCallback(std::shared_ptr<Filter> filter, const FilterCallBackCommand cmd,
                     StreamType outType);
+    int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
+    int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -212,6 +215,7 @@ private:
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
     Status DoSetPlayRange();
+    Status StartSeekContinous();
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -297,6 +301,11 @@ private:
     int64_t playRangeEndTime_ = -1;
     std::atomic<bool> isDoCompletedSeek_{false};
     OHOS::Media::Mutex stateChangeMutex_{};
+
+    std::mutex seekContinousMutex_;
+    std::atomic<int64_t> seekContinousBatchNo_ {-1};
+    std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
+    int64_t lastSeekContinousPos_ {-1};
 };
 } // namespace Media
 } // namespace OHOS

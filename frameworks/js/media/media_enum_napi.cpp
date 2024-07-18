@@ -157,6 +157,7 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
     { "SEEK_CLOSEST_SYNC", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
     { "SEEK_CLOSEST", 2 }, // 2 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
+    { "SEEK_CONTINOUS", PlayerSeekMode::SEEK_CONTINOUS },
 };
 
 static const std::vector<struct JsEnumInt> g_AVCodecType = {

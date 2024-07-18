@@ -179,6 +179,19 @@ public:
     {
         (void)instanceId;
     }
+    virtual int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo)
+    {
+        (void)mSeconds;
+        (void)seekContinousBatchNo;
+        return 0;
+    }
+
+    virtual int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo)
+    {
+        (void)align;
+        (void)seekContinousBatchNo;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -174,6 +174,19 @@ int32_t PlayerServerTaskMgr::SeekTask(const std::shared_ptr<ITaskHandler> &task,
     return MSERR_OK;
 }
 
+int32_t PlayerServerTaskMgr::SeekContinousTask(const std::shared_ptr<ITaskHandler> &task, const std::string &taskName)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
+    if (currTwoPhaseTask_ == nullptr) {
+        return EnqueueTask(task, PlayerServerTaskType::SEEKING, taskName);
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
+        FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    pendingTwoPhaseTasks_.push_back({ PlayerServerTaskType::SEEKING, task, nullptr, taskName });
+    return MSERR_OK;
+}
+
 int32_t PlayerServerTaskMgr::MarkTaskDone(const std::string &taskName)
 {
     std::unique_lock<std::mutex> lock(mutex_);

@@ -521,6 +521,7 @@ int32_t PlayerServer::OnPlay()
 
 int32_t PlayerServer::HandlePlay()
 {
+    ExitSeekContinous(true);
     int32_t ret = playerEngine_->Play();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
 
@@ -604,7 +605,6 @@ int32_t PlayerServer::OnStop(bool sync)
     isInterruptNeeded_ = true;
     playerEngine_->SetInterruptState(true);
     taskMgr_.ClearAllTask();
-
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
@@ -621,6 +621,7 @@ int32_t PlayerServer::OnStop(bool sync)
 
 int32_t PlayerServer::HandleStop()
 {
+    ExitSeekContinous(false);
     int32_t ret = playerEngine_->Stop();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Stop Failed!");
 
@@ -757,6 +758,7 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
         case SEEK_NEXT_SYNC:
         case SEEK_CLOSEST_SYNC:
         case SEEK_CLOSEST:
+        case SEEK_CONTINOUS:
             break;
         default:
             MEDIA_LOGE("Unknown seek mode %{public}d", mode);
@@ -768,29 +770,15 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
 int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-
-    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-
-    if (IsValidSeekMode(mode) != true) {
-        MEDIA_LOGE("Seek failed, inValid mode");
-        return MSERR_INVALID_VAL;
-    }
-
-    if (isLiveStream_) {
-        MEDIA_LOGE("Can not Seek, it is live-stream");
-        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
-        return MSERR_INVALID_OPERATION;
-    }
+    int32_t checkRet = CheckSeek(mSeconds, mode);
+    CHECK_AND_RETURN_RET_LOG(checkRet == MSERR_OK, checkRet, "check seek faild");
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
 
+    if (mode == SEEK_CONTINOUS) {
+        return SeekContinous(mSeconds);
+    }
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
         MEDIA_LOGI("PlayerServer::Seek start");
@@ -817,6 +805,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 {
     MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, mSeconds: %{public}d, "
         "instanceId: %{public}" PRIu64 "", mSeconds, mode, instanceId_);
+    ExitSeekContinous(false);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     MEDIA_LOGI("PlayerServer HandleSeek end");
@@ -1587,6 +1576,89 @@ std::shared_ptr<CommonEventReceiver> PlayerServer::GetCommonEventReceiver()
 bool PlayerServer::IsBootCompleted()
 {
     return isBootCompleted_.load();
+}
+
+int32_t PlayerServer::CheckSeek(int32_t mSeconds, PlayerSeekMode mode)
+{
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    MEDIA_LOGI("KPI-TRACE: PlayerServer Seek in");
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (IsValidSeekMode(mode) != true) {
+        MEDIA_LOGE("Seek failed, inValid mode");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not Seek, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SeekContinous(int32_t mSeconds)
+{
+    if (lastOpStatus_ == PLAYER_STARTED) {
+        OnPause();
+    }
+    {
+        std::lock_guard<std::mutex> lock(seekContinousMutex_);
+        if (!isInSeekContinous_.load()) {
+            UpdateContinousBatchNo();
+            isInSeekContinous_.store(true);
+        }
+    }
+    int64_t seekContinousBatchNo = seekContinousBatchNo_.load();
+
+    auto seekContinousTask = std::make_shared<TaskHandler<void>>([this, mSeconds, seekContinousBatchNo]() {
+        MediaTrace::TraceBegin("PlayerServer::SeekContinous", FAKE_POINTER(this));
+        MEDIA_LOGI("PlayerServer::Seek start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->SeekContinous(mSeconds, seekContinousBatchNo);
+        MEDIA_LOGI("PlayerServer::SeekContinous end");
+        taskMgr_.MarkTaskDone("seek continous done");
+    });
+
+    int32_t ret = taskMgr_.SeekContinousTask(seekContinousTask, "seek continous");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SeekContinous failed");
+
+    MEDIA_LOGI("Queue seekTask end, position %{public}d", mSeconds);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleSeekContinous(int32_t mSeconds, int64_t batchNo)
+{
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleSeek in, mSeconds: %{public}d, "
+        "instanceId: %{public}" PRIu64 "", mSeconds, instanceId_);
+    int32_t ret = playerEngine_->SeekContinous(mSeconds, batchNo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
+    MEDIA_LOGI("PlayerServer HandleSeek end");
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::ExitSeekContinous(bool align)
+{
+    {
+        std::lock_guard<std::mutex> lock(seekContinousMutex_);
+        if (!isInSeekContinous_.load()) {
+            return MSERR_OK;
+        }
+        UpdateContinousBatchNo();
+        isInSeekContinous_.store(false);
+    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->ExitSeekContinous(align, seekContinousBatchNo_.load());
+}
+
+void PlayerServer::UpdateContinousBatchNo()
+{
+    seekContinousBatchNo_++;
 }
 } // namespace Media
 } // namespace OHOS
