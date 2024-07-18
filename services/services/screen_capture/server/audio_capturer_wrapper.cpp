@@ -51,6 +51,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         return MSERR_UNKNOWN;
     }
 
+    appInfo_ = appInfo;
     std::shared_ptr<AudioCapturer> audioCapturer = CreateAudioCapturer(appInfo);
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
     if (!audioCapturer->Start()) {
@@ -153,6 +154,28 @@ bool AudioCapturerWrapper::GetIsMuted()
     return isMuted_.load();
 }
 
+int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter)
+{
+    MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig start");
+    contentFilter_ = filter;
+    AudioPlaybackCaptureConfig config;
+    SetInnerStreamUsage(config.filterOptions.usages);
+    if (contentFilter_.filteredAudioContents.find(
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
+        contentFilter_.filteredAudioContents.end()) {
+        config.filterOptions.pids.push_back(appInfo_.appPid);
+        config.filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
+        MEDIA_LOGI("UpdateAudioCapturerConfig exclude current app audio");
+    }
+    CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_INVALID_VAL,
+        "AudioCapturerWrapper::UpdateAudioCapturerConfig audioCapturer_ is nullptr");
+    int32_t ret = audioCapturer_->UpdatePlaybackCaptureConfig(config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL,
+        "AudioCapturerWrapper::UpdateAudioCapturerConfig failed");
+    MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig success");
+    return MSERR_OK;
+}
+
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
 {
     // If do not call this function, the audio framework use MUSIC/MOVIE/GAME/AUDIOBOOK
@@ -163,6 +186,11 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_AUDIOBOOK);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_NAVIGATION);
     usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN);
+    if (contentFilter_.filteredAudioContents.find(
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
+        contentFilter_.filteredAudioContents.end()) {
+        usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+    }
 }
 
 std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const OHOS::AudioStandard::AppInfo &appInfo)
@@ -179,12 +207,6 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
-    }
-    if (contentFilter_.filteredAudioContents.find(
-        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO) ==
-        contentFilter_.filteredAudioContents.end()) {
-        capturerOptions.playbackCaptureConfig.filterOptions.usages.push_back(
-            OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
     }
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=

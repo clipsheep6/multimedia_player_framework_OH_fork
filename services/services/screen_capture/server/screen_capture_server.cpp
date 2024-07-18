@@ -1867,13 +1867,20 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     if (captureState_ == AVScreenCaptureState::STARTED) {
         Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(screenId_, contentFilter_.windowIDsVec);
     }
+    int32_t ret = MSERR_OK;
+    if (innerAudioCapture_ != nullptr) {
+        ret = innerAudioCapture_->UpdateAudioCapturerConfig(contentFilter_);
+    }
 
     // For the moment, not support:
     // For STREAM, should call AudioCapturer interface to make effect when start
     // For CAPTURE FILE, should call Recorder interface to make effect when start
-    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-        "ExcludeContent failed, capture is not CREATED");
-    return MSERR_OK;
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ScreenCaptureServer::ExcludeContent UpdateAudioCapturerConfig failed");
+        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
+            "ExcludeContent failed, UpdateAudioCapturerConfig failed");
+    }
+    return ret;
 }
 
 int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
