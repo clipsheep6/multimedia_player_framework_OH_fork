@@ -173,6 +173,7 @@ ohos_shared_library("media") {
     "hilog:libhilog",
     "image_framework:image",
     "image_framework:image_native",
+    "ipc:ipc_core",
     "ipc:ipc_single",
     "libuv:uv",
     "media_foundation:media_foundation",

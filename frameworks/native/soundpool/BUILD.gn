@@ -55,6 +55,7 @@ ohos_shared_library("soundpool_client") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_core",
     "qos_manager:qos",
   ]
 
