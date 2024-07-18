@@ -556,6 +556,9 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
                 case OHOS::Media::AudioCodecFormat::AUDIO_MPEG:
                     audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_MPEG);
                     break;
+                case OHOS::Media::AudioCodecFormat::AUDIO_G711MU:
+                    audioEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::AUDIO_G711MU);
+                    break;
                 default:
                     break;
             }

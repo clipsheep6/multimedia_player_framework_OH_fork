@@ -96,6 +96,8 @@ enum OutputFormatType : int32_t {
     FORMAT_M4A = 6,
     /** mp3 format */
     FORMAT_MP3 = 9,
+    /** WAV format */
+    FORMAT_WAV = 10,
     /** BUTT */
     FORMAT_BUTT,
 };
@@ -131,6 +133,8 @@ enum AudioCodecFormat : int32_t {
     AAC_LC = 3,
     /** mp3 format */
     AUDIO_MPEG = 4,
+    /** G711-mulaw format */
+    AUDIO_G711MU = 5,
     /** Invalid value */
     AUDIO_CODEC_FORMAT_BUTT,
 };

@@ -1284,6 +1284,7 @@ int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecF
     const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
         { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
         { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
+        { CodecMimeType::AUDIO_G711MU, AudioCodecFormat::AUDIO_G711MU },
         { "", AudioCodecFormat::AUDIO_DEFAULT },
     };
 
@@ -1320,6 +1321,7 @@ int32_t AVRecorderNapi::GetOutputFormat(const std::string &extension, OutputForm
         { "mp4", OutputFormatType::FORMAT_MPEG_4 },
         { "m4a", OutputFormatType::FORMAT_M4A },
         { "mp3", OutputFormatType::FORMAT_MP3 },
+        { "wav", OutputFormatType::FORMAT_WAV },
         { "", OutputFormatType::FORMAT_DEFAULT },
     };
 
@@ -1891,6 +1893,8 @@ int32_t MediaJsResultExtensionMethod::SetAudioCodecFormat(AudioCodecFormat &code
     MEDIA_LOGI("audioCodecFormat %{public}d", codecFormat);
     const std::map<AudioCodecFormat, std::string_view> codecFormatToMimeStr = {
         { AudioCodecFormat::AAC_LC, CodecMimeType::AUDIO_AAC },
+        { AudioCodecFormat::AUDIO_MPEG, CodecMimeType::AUDIO_MPEG },
+        { AudioCodecFormat::AUDIO_G711MU, CodecMimeType::AUDIO_G711MU },
         { AudioCodecFormat::AUDIO_DEFAULT, "" },
     };
 
@@ -1926,6 +1930,8 @@ int32_t MediaJsResultExtensionMethod::SetFileFormat(OutputFormatType &type, std:
     const std::map<OutputFormatType, std::string> outputFormatToextension = {
         { OutputFormatType::FORMAT_MPEG_4, "mp4" },
         { OutputFormatType::FORMAT_M4A, "m4a" },
+        { OutputFormatType::FORMAT_MP3, "mp3" },
+        { OutputFormatType::FORMAT_WAV, "wav" },
         { OutputFormatType::FORMAT_DEFAULT, "" },
     };
 

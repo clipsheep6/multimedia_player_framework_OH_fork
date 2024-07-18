@@ -433,6 +433,9 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.audioBitRate = bitRate;
     AudBitRate audBitRate(bitRate);
+    // 64000 audiobitrate from audioencorder
+    CHECK_AND_RETURN_RET_LOG(!(config_.audioCodec == AUDIO_G711MU && config_.audioBitRate != 64000),
+        MSERR_INVALID_VAL, "G711-mulaw only support samplerate 8000 and audiobitrate 64000");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, audBitRate);
     });

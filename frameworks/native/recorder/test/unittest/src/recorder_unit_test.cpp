@@ -744,6 +744,74 @@ HWTEST_F(RecorderUnitTest, recorder_configure_018, TestSize.Level2)
 }
 
 /**
+ * @tc.name: recorder_configure_019
+ * @tc.desc: record wav with samplerate 64000
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_019, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_G711MU;
+    videoRecorderConfig.outPutFormat = FORMAT_WAV;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 64000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_019.wav").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_020
+ * @tc.desc: record wav with BitRate 128000
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_020, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_G711MU;
+    videoRecorderConfig.outPutFormat = FORMAT_WAV;
+    videoRecorderConfig.audioEncodingBitRate = 128000;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 8000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_020.wav").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_021
+ * @tc.desc: record wav with channelCount 2
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_021, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_G711MU;
+    videoRecorderConfig.outPutFormat = FORMAT_WAV;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.channelCount = 2;
+    videoRecorderConfig.sampleRate = 8000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_021.wav").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_mp3_001
  * @tc.desc: record mp3
  * @tc.type: FUNC
@@ -756,6 +824,35 @@ HWTEST_F(RecorderUnitTest, recorder_mp3_001, TestSize.Level2)
     videoRecorderConfig.outPutFormat = FORMAT_MP3;
     videoRecorderConfig.audioEncodingBitRate = 64000;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_mp3_001.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_G711MU_001
+ * @tc.desc: record G711MU
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_G711MU_001, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_G711MU;
+    videoRecorderConfig.outPutFormat = FORMAT_WAV;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.channelCount = 1;
+    videoRecorderConfig.sampleRate = 8000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_WAV_001.wav").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));

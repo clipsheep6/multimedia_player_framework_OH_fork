@@ -95,6 +95,10 @@
             <option name="shell" value="touch /data/test/media/recorder_configure_016.mp3"/>
             <option name="shell" value="touch /data/test/media/recorder_configure_017.mp3"/>
             <option name="shell" value="touch /data/test/media/recorder_configure_018.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_019.wav"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_020.wav"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure_021.wav"/>
+            <option name="shell" value="touch /data/test/media/recorder_WAV_001.wav"/>
             <option name="shell" value="touch /data/test/media/recorder_mp3_001.mp3"/>
             <option name="shell" value="touch /data/test/media/recorder_prepare.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetCaptureRate_001.mp4"/>
