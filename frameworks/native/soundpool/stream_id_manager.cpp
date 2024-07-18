@@ -157,6 +157,7 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
         int32_t playingStreamID = playingStreamIDs_.back();
         std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
         CHECK_AND_RETURN_RET_LOG(freshCacheBuffer != nullptr, -1, "Invalid fresh cache buffer");
+        CHECK_AND_RETURN_RET_LOG(playingCacheBuffer != nullptr, -1, "Invalid playingCacheBuffer");
         MEDIA_LOGI("StreamIDManager fresh sound priority:%{public}d, playing stream priority:%{public}d",
             freshCacheBuffer->GetPriority(), playingCacheBuffer->GetPriority());
         if (freshCacheBuffer->GetPriority() >= playingCacheBuffer->GetPriority()) {
@@ -272,11 +273,26 @@ int32_t StreamIDManager::AddPlayTask(const int32_t streamID, const PlayParams pl
 
 int32_t StreamIDManager::DoPlay(const int32_t streamID)
 {
-    MEDIA_LOGI("StreamIDManager streamID:%{public}d", streamID);
+    MEDIA_LOGI("StreamIDManager::DoPlay start streamID:%{public}d", streamID);
     std::shared_ptr<CacheBuffer> cacheBuffer = FindCacheBuffer(streamID);
     CHECK_AND_RETURN_RET_LOG(cacheBuffer.get() != nullptr, MSERR_INVALID_VAL, "cachebuffer invalid.");
     if (cacheBuffer->DoPlay(streamID) == MSERR_OK) {
+        MEDIA_LOGI("StreamIDManager::DoPlay success streamID:%{public}d", streamID);
         return MSERR_OK;
+    }
+    MEDIA_LOGI("StreamIDManager::DoPlay failed streamID:%{public}d", streamID);
+    {
+        std::lock_guard lock(streamIDManagerLock_);
+        currentTaskNum_--;
+        for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
+            int32_t playingStreamID = playingStreamIDs_[i];
+            std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
+            if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
+                MEDIA_LOGI("StreamIDManager::DoPlay fail erase playingStreamID:%{public}d", playingStreamID);
+                playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
+                i--;
+            }
+        }
     }
     return MSERR_INVALID_VAL;
 }
@@ -307,7 +323,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
         for (int32_t j = 0; j < playingSize - 1 - i; ++j) {
             std::shared_ptr<CacheBuffer> left = FindCacheBuffer(playingStreamIDs_[j]);
             std::shared_ptr<CacheBuffer> right = FindCacheBuffer(playingStreamIDs_[j + 1]);
-            if (left->GetPriority() < right->GetPriority()) {
+            if (left != nullptr && right != nullptr && left->GetPriority() < right->GetPriority()) {
                 int32_t streamIdTemp = playingStreamIDs_[j];
                 playingStreamIDs_[j] = playingStreamIDs_[j + 1];
                 playingStreamIDs_[j + 1] = streamIdTemp;
@@ -324,7 +340,7 @@ int32_t StreamIDManager::ReorderStream(int32_t streamID, int32_t priority)
         for (int32_t j = 0; j < willPlaySize - 1 - i; ++j) {
             std::shared_ptr<CacheBuffer> left = FindCacheBuffer(willPlayStreamInfos_[j].streamID);
             std::shared_ptr<CacheBuffer> right = FindCacheBuffer(willPlayStreamInfos_[j + 1].streamID);
-            if (left->GetPriority() < right->GetPriority()) {
+            if (left != nullptr && right != nullptr && left->GetPriority() < right->GetPriority()) {
                 StreamIDAndPlayParamsInfo willPlayInfoTemp = willPlayStreamInfos_[j];
                 willPlayStreamInfos_[j] = willPlayStreamInfos_[j + 1];
                 willPlayStreamInfos_[j + 1] = willPlayInfoTemp;
@@ -367,7 +383,7 @@ void StreamIDManager::OnPlayFinished()
         for (int32_t i = 0; i < static_cast<int32_t>(playingStreamIDs_.size()); i++) {
             int32_t playingStreamID = playingStreamIDs_[i];
             std::shared_ptr<CacheBuffer> playingCacheBuffer = FindCacheBuffer(playingStreamID);
-            if (!playingCacheBuffer->IsRunning()) {
+            if (playingCacheBuffer != nullptr && !playingCacheBuffer->IsRunning()) {
                 MEDIA_LOGI("StreamIDManager::OnPlayFinished erase playingStreamID:%{public}d", playingStreamID);
                 playingStreamIDs_.erase(playingStreamIDs_.begin() + i);
                 i--;
