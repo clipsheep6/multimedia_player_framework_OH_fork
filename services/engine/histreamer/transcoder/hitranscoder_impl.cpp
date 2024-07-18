@@ -146,20 +146,8 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     return static_cast<int32_t>(ret);
 }
 
-Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
+Status HiTransCoderImpl::ConfigureVideoAudioFormat(const std::vector<std::shared_ptr<Meta>>& trackInfos)
 {
-    if (demuxerFilter_ == nullptr) {
-        MEDIA_LOG_E("demuxerFilter_ is nullptr");
-        return Status::ERROR_NULL_POINTER;
-    }
-    std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
-    size_t trackCount = trackInfos.size();
-    MEDIA_LOG_I("trackCount: %{public}d", trackCount);
-    if (trackCount == 0) {
-        MEDIA_LOG_E("No track found in the source");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
-        return Status::ERROR_INVALID_PARAMETER;
-    }
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime;
         if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
@@ -199,6 +187,24 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
             audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
+{
+    if (demuxerFilter_ == nullptr) {
+        MEDIA_LOG_E("demuxerFilter_ is nullptr");
+        return Status::ERROR_NULL_POINTER;
+    }
+    std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
+    size_t trackCount = trackInfos.size();
+    MEDIA_LOG_I("trackCount: %{public}d", trackCount);
+    if (trackCount == 0) {
+        MEDIA_LOG_E("No track found in the source");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
+        return Status::ERROR_INVALID_PARAMETER;
+    }
+    ConfigureVideoAudioFormat(trackInfos);
     return Status::OK;
 }
 
