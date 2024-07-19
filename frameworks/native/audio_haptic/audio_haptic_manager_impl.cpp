@@ -77,7 +77,7 @@ int32_t AudioHapticManagerImpl::RegisterSourceWithEffectId(const std::string &au
     int32_t sourceId = curPlayerIndex_;
     HapticSource sourceUri = {"", effectId};
     audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUri, sourceUri,
-        AUDIO_LATENCY_MODE_FAST, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC, nullptr);
+        AUDIO_LATENCY_MODE_FAST, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
     MEDIA_LOGI("Finish to RegisterSourceWithEffectId. effectId: %{public}s, sourceId: %{public}d",
         effectId.c_str(), sourceId);
@@ -99,7 +99,7 @@ int32_t AudioHapticManagerImpl::RegisterSource(const std::string &audioUri, cons
     int32_t sourceId = curPlayerIndex_;
     HapticSource sourceUri = {hapticUri, ""};
     audioHapticPlayerMap_[sourceId] = std::make_shared<AudioHapticPlayerInfo>(audioUri, sourceUri,
-        AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC, nullptr);
+        AUDIO_LATENCY_MODE_NORMAL, AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
     curPlayerCount_ += 1;
     return sourceId;
 }
@@ -112,11 +112,8 @@ int32_t AudioHapticManagerImpl::UnregisterSource(const int32_t &sourceID)
         MEDIA_LOGE("UnregisterSource failed sourceID: %{public}d", sourceID);
         return MSERR_INVALID_VAL;
     }
-    if (audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ != nullptr) {
-        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_->Release();
-        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ = nullptr;
-    }
     audioHapticPlayerMap_[sourceID] = nullptr;
+    audioHapticPlayerMap_.erase(sourceID);
     curPlayerCount_ -= 1;
 
     return MSERR_OK;
@@ -204,10 +201,6 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
         MEDIA_LOGE("CreatePlayer failed for sourceID: %{public}d", sourceID);
         return nullptr;
     }
-    if (audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ != nullptr) {
-        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_->Release();
-        audioHapticPlayerMap_[sourceID]->audioHapticPlayer_ = nullptr;
-    }
 
     std::shared_ptr<AudioHapticPlayerInfo> audioHapticPlayerInfo = audioHapticPlayerMap_[sourceID];
     AudioHapticPlayerParam param = AudioHapticPlayerParam(audioHapticPlayerOptions,
@@ -219,7 +212,6 @@ std::shared_ptr<AudioHapticPlayer> AudioHapticManagerImpl::CreatePlayer(const in
         MEDIA_LOGE("CreatePlayer failed for sourceID: %{public}d", sourceID);
         return nullptr;
     }
-    audioHapticPlayerInfo->audioHapticPlayer_ = audioHapticPlayer;
     return audioHapticPlayer;
 }
 } // namesapce AudioStandard

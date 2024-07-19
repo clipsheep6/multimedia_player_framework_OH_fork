@@ -46,6 +46,7 @@ public:
     void NotifyStartVibrate(const uint64_t &latency);
     void NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent);
     void NotifyEndOfStreamEvent();
+    void NotifyErrorEvent(int32_t errCode);
 
 private:
     // func for sound

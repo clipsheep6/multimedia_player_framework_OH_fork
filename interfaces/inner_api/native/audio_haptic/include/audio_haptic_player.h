@@ -121,6 +121,13 @@ public:
      * Called when reaching the end of stream.
      */
     virtual void OnEndOfStream(void) = 0;
+
+    /**
+     * Called when reaching errs from player.
+     *
+     * @param errorCode error code.
+     */
+    virtual void OnError(int32_t errorCode) = 0;
 };
 
 class __attribute__((visibility("default"))) AudioHapticPlayerFactory {

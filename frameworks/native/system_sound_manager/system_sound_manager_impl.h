@@ -130,9 +130,7 @@ private:
     std::string mimeType_ = "";
     std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
-    std::unordered_map<RingtoneType, std::shared_ptr<RingtonePlayer>> ringtonePlayerMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
-    std::unordered_map<SystemToneType, std::shared_ptr<SystemTonePlayer>> systemTonePlayerMap_;
     std::shared_ptr<ToneAttrs> ringtoneAttrs_;
     std::shared_ptr<ToneAttrs> systemtoneAttrs_;
     std::shared_ptr<ToneAttrs> alarmtoneAttrs_;
