@@ -69,7 +69,7 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
-    int32_t SelectTrack(int32_t index) override;
+    int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
     int32_t DumpInfo(int32_t fd);
