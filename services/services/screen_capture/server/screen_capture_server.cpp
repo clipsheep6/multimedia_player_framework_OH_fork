@@ -1937,7 +1937,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetSpeakerAliveStatus(bool speakerAliveStatus)
 {
     MediaTrace trace("ScreenCaptureServer::SetSpeakerAliveStatus");
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(cbMutex_);
     if (speakerAliveStatus_ != speakerAliveStatus) {
         speakerAliveStatus_ = speakerAliveStatus;
         return OnSpeakerAliveStatusChanged();
