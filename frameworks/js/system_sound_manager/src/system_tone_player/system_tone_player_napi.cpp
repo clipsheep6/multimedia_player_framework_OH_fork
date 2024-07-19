@@ -518,5 +518,329 @@ void SystemTonePlayerNapi::AsyncRelease(napi_env env, void *data)
         "NapiSystemTonePlayer->systemTonePlayer_ is nullptr");
     context->status = napiSystemTonePlayer->systemTonePlayer_->Release();
 }
+
+napi_value SystemTonePlayerNapi::SetAudioVolume(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("SetAudioVolume: Failed to retrieve details about the callback");
+        return result;
+    }
+
+    NAPI_ASSERT(env, argc == ARGS_ONE, "SetAudioVolume: requires 1 parameter");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[PARAM0], &valueType);
+        if (valueType == napi_number) {
+            double value;
+            napi_get_value_double(env, argv[PARAM0], &value);
+            asyncContext->volume  = static_cast<float>(value);
+            napi_create_promise(env, &asyncContext->deferred, &result);
+        } else {
+            NAPI_ASSERT(env, false, "SetAudioVolume: type mismatch");
+        }
+        napi_create_string_utf8(env, "SetAudioVolume", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->SetAudioVolume(context->volume);
+            },
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("SetAudioVolume: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
+
+static void GetAudioVolumeAsyncComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    napi_value result[2] = {};
+
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        napi_create_double(env, static_cast<double>(context->volume), &result[PARAM1]);
+    } else {
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "GetAudioVolume Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemTonePlayerNapi::GetAudioVolume(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetAudioVolume: napi_get_cb_info failed");
+
+    NAPI_ASSERT(env, argc < ARGS_ONE, "GetAudioVolume: requires 0 parameter maximum");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+        napi_create_string_utf8(env, "GetAudioVolume", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource,
+            [](napi_env env, void *data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->GetAudioVolume(context->volume);
+            },
+            GetAudioVolumeAsyncComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("GetAudioVolume: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
+
+static void GetSupportHapticsFeaturesComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    napi_value result[2] = {};
+    napi_status curStatus;
+
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        napi_create_double(env, static_cast<double>(context->volume), &result[PARAM1]);
+        napi_create_array_with_length(env, context->toneHapticsFeatures.size(), &result[PARAM1]);
+        napi_value value;
+        for (size_t i = 0; i < context->toneHapticsFeatures.size(); i++) {
+            value = nullptr;
+            curStatus = napi_create_int32(env, static_cast<int32_t>(context->toneHapticsFeatures[i]), &value);
+            if (curStatus != napi_ok || value == nullptr
+                || napi_set_element(env, result[PARAM1], i, value) != napi_ok) {
+                MEDIA_LOGE("GetSupportHapticsFeatures error : Failed to create number or add number to array");
+                napi_value message = nullptr;
+                napi_create_string_utf8(env,
+                    "GetSupportHapticsFeatures Error: Failed to create number or add number to array",
+                    NAPI_AUTO_LENGTH, &message);
+                napi_create_error(env, nullptr, message, &result[PARAM0]);
+                napi_get_undefined(env, &result[PARAM1]);
+                context->status = MSERR_NO_MEMORY;
+                break;
+            }
+        }
+    } else {
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "GetSupportHapticsFeatures Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemTonePlayerNapi::GetSupportHapticsFeatures(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetSupportHapticsFeatures: napi_get_cb_info failed");
+
+    NAPI_ASSERT(env, argc < ARGS_ONE, "GetSupportHapticsFeatures: requires 0 parameter maximum");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+        napi_create_string_utf8(env, "GetSupportHapticsFeatures", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource,
+            [](napi_env env, void *data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->GetSupportHapticsFeatures(
+                    context->toneHapticsFeatures);
+            },
+            GetSupportHapticsFeaturesComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("GetSupportHapticsFeatures: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
+
+napi_value SystemTonePlayerNapi::SetHapticsFeature(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    if (status != napi_ok || thisVar == nullptr) {
+        MEDIA_LOGE("SetHapticsFeature: Failed to retrieve details about the callback");
+        return result;
+    }
+
+    NAPI_ASSERT(env, argc == ARGS_ONE, "SetHapticsFeature: requires 1 parameter");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[PARAM0], &valueType);
+        if (valueType == napi_number) {
+            napi_get_value_int32(env, argv[PARAM0], reinterpret_cast<int32_t*>(&asyncContext->toneHapticsFeature));
+            napi_create_promise(env, &asyncContext->deferred, &result);
+        } else {
+            NAPI_ASSERT(env, false, "SetHapticsFeature: type mismatch");
+        }
+        napi_create_string_utf8(env, "SetHapticsFeature", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->SetHapticsFeature(
+                    context->toneHapticsFeature);
+            },
+            CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("SetHapticsFeature: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
+
+static void GetHapticsFeatureAsyncComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<SystemTonePlayerAsyncContext *>(data);
+    napi_value result[2] = {};
+
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        napi_create_double(env, context->toneHapticsFeature, &result[PARAM1]);
+    } else {
+        napi_value message = nullptr;
+        napi_create_string_utf8(env, "GetHapticsFeature Error: Operation is not supported or failed",
+            NAPI_AUTO_LENGTH, &message);
+        napi_create_error(env, nullptr, message, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+
+    delete context;
+    context = nullptr;
+}
+
+napi_value SystemTonePlayerNapi::GetHapticsFeature(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && thisVar != nullptr, result,
+        "GetHapticsFeature: napi_get_cb_info failed");
+
+    NAPI_ASSERT(env, argc < ARGS_ONE, "GetHapticsFeature: requires 0 parameter maximum");
+    std::unique_ptr<SystemTonePlayerAsyncContext> asyncContext = std::make_unique<SystemTonePlayerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        napi_create_promise(env, &asyncContext->deferred, &result);
+        napi_create_string_utf8(env, "GetHapticsFeature", NAPI_AUTO_LENGTH, &resource);
+        status = napi_create_async_work(env, nullptr, resource,
+            [](napi_env env, void *data) {
+                SystemTonePlayerAsyncContext *context = static_cast<SystemTonePlayerAsyncContext *>(data);
+                auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
+                ObjectRefMap objectGuard(obj);
+                auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                context->status = napiSystemTonePlayer->systemTonePlayer_->GetHapticsFeature(
+                    context->toneHapticsFeature);
+            },
+            GetHapticsFeatureAsyncComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_LOGE("GetHapticsFeature: Failed to get create async work");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+    return result;
+}
 } // namespace Media
 } // namespace OHOS

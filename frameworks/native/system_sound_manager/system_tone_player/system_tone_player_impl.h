@@ -41,6 +41,11 @@ public:
     int32_t Stop(const int32_t &streamID) override;
     int32_t Release() override;
     int32_t NotifyLoadCompleted();
+    int32_t SetAudioVolume(float volume) override;
+    int32_t GetAudioVolume(float &recvValue) override;
+    int32_t GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures) override;
+    int32_t SetHapticsFeature(ToneHapticsFeature feature) override;
+    int32_t GetHapticsFeature(ToneHapticsFeature &feature) override;
 
 private:
     void InitPlayer();
@@ -60,6 +65,8 @@ private:
     std::mutex systemTonePlayerMutex_;
     std::mutex loadUriMutex_;
     std::condition_variable condLoadUri_;
+    float volume_ = SYS_TONE_PLAYER_MAX_VOLUME;
+    ToneHapticsFeature hapticsFeature_ = ToneHapticsFeature::STANDARD;
 };
 
 class SystemTonePlayerCallback : public ISoundPoolCallback {

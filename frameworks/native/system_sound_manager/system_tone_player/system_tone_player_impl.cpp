@@ -217,8 +217,8 @@ int32_t SystemTonePlayerImpl::Start()
     PlayParams playParams {
         .loop = 0,
         .rate = 0, // default AudioRendererRate::RENDER_RATE_NORMAL
-        .leftVolume = 1.0,
-        .rightVolume = 1.0,
+        .leftVolume = volume_,
+        .rightVolume = volume_,
         .priority = 0,
         .parallelPlayFlag = false,
     };
@@ -243,8 +243,8 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         PlayParams playParams {
             .loop = 0,
             .rate = 0, // default AudioRendererRate::RENDER_RATE_NORMAL
-            .leftVolume = 1.0,
-            .rightVolume = 1.0,
+            .leftVolume = volume_,
+            .rightVolume = volume_,
             .priority = 0,
             .parallelPlayFlag = false,
         };
@@ -324,6 +324,43 @@ void SystemTonePlayerCallback::OnPlayFinished()
 void SystemTonePlayerCallback::OnError(int32_t errorCode)
 {
     MEDIA_LOGE("Error reported from sound pool: %{public}d", errorCode);
+}
+
+int32_t SystemTonePlayerImpl::SetAudioVolume(float volume)
+{
+    if (volume > SYS_TONE_PLAYER_MAX_VOLUME) {
+        MEDIA_LOGE("Error invalid value : %{public}f", volume);
+        return MSERR_INVALID_VAL;
+    }
+    volume_ = volume;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetAudioVolume(float &recvValue)
+{
+    recvValue = volume_;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetSupportHapticsFeatures(std::vector<ToneHapticsFeature> &recvFeatures)
+{
+    std::vector<ToneHapticsFeature> temp;
+    temp.push_back(ToneHapticsFeature::STANDARD);
+    temp.push_back(ToneHapticsFeature::GENTLE);
+    recvFeatures.swap(temp);
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::SetHapticsFeature(ToneHapticsFeature feature)
+{
+    hapticsFeature_ = feature;
+    return MSERR_OK;
+}
+
+int32_t SystemTonePlayerImpl::GetHapticsFeature(ToneHapticsFeature &feature)
+{
+    feature = hapticsFeature_;
+    return MSERR_OK;
 }
 } // namesapce AudioStandard
 } // namespace OHOS
