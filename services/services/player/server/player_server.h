@@ -115,7 +115,7 @@ public:
     virtual int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t BackGroundChangeState(PlayerStates state, bool isBackGroundCb);
-    int32_t SelectTrack(int32_t index) override;
+    int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
