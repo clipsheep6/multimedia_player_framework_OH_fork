@@ -198,6 +198,15 @@ bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
     if (!isSetPlayRange_ || (pipelineStates_ == PlayerStates::PLAYER_INITIALIZED)) {
         return true;
     }
+    if ((start == PLAY_RANGE_DEFAULT_VALUE) && (end == PLAY_RANGE_DEFAULT_VALUE)) {
+        return true;
+    }
+    if ((start == PLAY_RANGE_DEFAULT_VALUE) && ((end > 0) && (end <= durationMs_.load()))) {
+        return true;
+    }
+    if ((end == PLAY_RANGE_DEFAULT_VALUE) && ((start >= 0) && (start < durationMs_.load()))) {
+        return true;
+    }
     if (start >= end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
         return false;
     }
@@ -346,6 +355,11 @@ int32_t HiPlayerImpl::SetPlayRange(int64_t start, int64_t end)
     MEDIA_LOG_I("SetPlayRange success! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
                 playRangeStartTime_, playRangeEndTime_);
     return TransStatus(Status::OK);
+}
+
+int64_t HiPlayerImpl::GetPlayRangeEndTime()
+{
+    return playRangeEndTime_;
 }
 
 int32_t HiPlayerImpl::SetRenderFirstFrame(bool display)
@@ -1680,7 +1694,8 @@ void HiPlayerImpl::HandleCompleteEvent(const Event& event)
     Format format;
     int32_t curPosMs = 0;
     GetCurrentTime(curPosMs);
-    if (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY) {
+    if ((playRangeEndTime_ == PLAY_RANGE_DEFAULT_VALUE) &&
+        (durationMs_.load() > curPosMs && abs(durationMs_.load() - curPosMs) < AUDIO_SINK_MAX_LATENCY)) {
         MEDIA_LOG_I("OnComplete durationMs - curPosMs: " PUBLIC_LOG_D32, durationMs_.load() - curPosMs);
         OHOS::Media::SleepInJob(durationMs_.load() - curPosMs);
     }

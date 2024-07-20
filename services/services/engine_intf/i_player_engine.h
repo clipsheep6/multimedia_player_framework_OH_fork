@@ -192,6 +192,10 @@ public:
         (void)seekContinousBatchNo;
         return 0;
     }
+    virtual int64_t GetPlayRangeEndTime()
+    {
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -137,6 +137,7 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeEndTime() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
