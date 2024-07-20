@@ -111,8 +111,7 @@
           "libxml2",
           "libuv",
           "data_share",
-          "ringtone_library",
-          "os_account"
+          "ringtone_library"
         ],
         "third_party": [
           "bounds_checking_function"
