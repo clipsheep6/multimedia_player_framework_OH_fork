@@ -282,7 +282,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
         ret = playerEngine_->SetSource(url);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
-    MEDIA_LOGI("player engine SetSource success");
+    MEDIA_LOGD("player engine SetSource success");
     std::shared_ptr<IPlayerEngineObs> obs = shared_from_this();
     ret = playerEngine_->SetObs(obs);
 
@@ -559,7 +559,6 @@ int32_t PlayerServer::Pause()
 int32_t PlayerServer::OnPause()
 {
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnPause in", FAKE_POINTER(this));
 
     auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));

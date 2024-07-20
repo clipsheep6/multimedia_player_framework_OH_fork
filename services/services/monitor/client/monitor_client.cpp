@@ -33,7 +33,7 @@ constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
 
 MonitorClient::MonitorClient()
 {
-    MEDIA_LOGI("Instances create");
+    MEDIA_LOGI("create");
 }
 
 MonitorClient::~MonitorClient()

@@ -28,7 +28,7 @@ namespace Media {
 SoundPoolCallBackNapi::SoundPoolCallBackNapi(napi_env env)
 {
     env_ = env;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "create", FAKE_POINTER(this));
 }
 
 void SoundPoolCallBackNapi::OnLoadCompleted(int32_t soundId)

@@ -88,14 +88,6 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
     if (itFunc != playerFuncs_.end()) {
         funcName = itFunc->second;
     }
-
-    if (funcName.compare("Player::SetVolume") == 0) {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
-            FAKE_POINTER(this), funcName.c_str());
-    } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
-            FAKE_POINTER(this), funcName.c_str());
-    }
     int32_t error = -1;
     error = Remote()->SendRequest(code, data, reply, option);
     return error;
