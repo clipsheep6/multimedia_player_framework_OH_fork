@@ -214,6 +214,7 @@ ohos_shared_library("media_service") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
+    "i18n:intl_util",
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",

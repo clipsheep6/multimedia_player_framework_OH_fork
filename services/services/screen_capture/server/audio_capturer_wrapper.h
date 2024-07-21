@@ -56,6 +56,7 @@ public:
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer);
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
+    void SetIsInVoIPCall(bool isInVoIPCall);
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -83,6 +84,8 @@ private:
     std::mutex bufferMutex_;
     std::condition_variable bufferCond_;
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
+    std::string bundleName_;
+    std::atomic<bool> isInVoIPCall_ = false;
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;
