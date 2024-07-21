@@ -145,6 +145,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerCallback(data, reply); } };
     playerFuncs_[GET_VIDEO_TRACK_INFO] = { "Player::GetVideoTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoTrackInfo(data, reply); } };
+    playerFuncs_[GET_PLAYER_INFO] = { "Player::GetPlayerInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlayerInfo(data, reply); } };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { "Player::GetAudioTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "Player::GetSubtitleTrackInfo",
@@ -380,6 +382,13 @@ int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     MediaTrace trace("binder::GetVideoTrackInfo");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetVideoTrackInfo(videoTrack);
+}
+
+int32_t PlayerServiceStub::GetPlayerInfo(Format &playerInfo)
+{
+    MediaTrace trace("binder::GetPlayerInfo");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetPlayerInfo(playerInfo);
 }
 
 int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
@@ -723,6 +732,17 @@ int32_t PlayerServiceStub::GetVideoTrackInfo(MessageParcel &data, MessageParcel 
     for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
         (void)MediaParcel::Marshalling(reply, *iter);
     }
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetPlayerInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    Format playerInfo;
+    int32_t ret = GetPlayerInfo(playerInfo);
+    (void)MediaParcel::FormatMarshalling(reply, playerInfo);
     reply.WriteInt32(ret);
 
     return MSERR_OK;

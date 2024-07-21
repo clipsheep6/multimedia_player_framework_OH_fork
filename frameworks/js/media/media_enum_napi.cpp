@@ -285,6 +285,14 @@ static const std::vector<struct JsEnumString> g_avMimeTypes = {
     { "APPLICATION_M3U8", "application/m3u8" },
 };
 
+static const std::vector<struct JsEnumString> g_playerInfoKey = {
+    { "SERVER_IP_ADDRESS", "server_ip_address" },
+    { "AVERAGE_DOWNLOAD_RATE", "average_download_rate" },
+    { "DOWNLOAD_RATE", "download_rate" },
+    { "IS_DOWNLOADING", "is_downloading" },
+    { "BUFFER_DURATION", "buffer_duration" },
+};
+
 static const std::vector<struct JsEnumString> g_codecMimeType = {
     { "VIDEO_H263", OHOS::Media::Plugins::MimeType::VIDEO_H263 },
     { "VIDEO_AVC", OHOS::Media::Plugins::MimeType::VIDEO_AVC },
@@ -391,6 +399,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumString>&>
     { "ContainerFormatType", g_containerFormatType },
     { "CodecMimeType", g_codecMimeType },
     { "AVMimeTypes", g_avMimeTypes },
+    { "PlayerInfoKey", g_playerInfoKey },
 };
 
 napi_value MediaEnumNapi::JsEnumIntInit(napi_env env, napi_value exports)

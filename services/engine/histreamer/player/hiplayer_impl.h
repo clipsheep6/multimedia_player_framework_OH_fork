@@ -126,6 +126,7 @@ public:
     int32_t SelectTrack(int32_t trackId) override;
     int32_t DeselectTrack(int32_t trackId) override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
+    int32_t GetPlayerInfo(Format& playerInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
