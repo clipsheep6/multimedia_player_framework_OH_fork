@@ -167,6 +167,7 @@ private:
     void HandleBitrateStartEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
+    void NotifyCachedDuration(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
