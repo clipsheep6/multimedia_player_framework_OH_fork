@@ -126,9 +126,10 @@ public:
         return 0;
     }
     
-    virtual int32_t SelectTrack(int32_t index)
+    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SOOMTH)
     {
         (void)index;
+        (void)mode;
         return 0;
     }
     virtual int32_t DeselectTrack(int32_t index)

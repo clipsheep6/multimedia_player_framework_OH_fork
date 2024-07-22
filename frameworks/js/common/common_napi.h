@@ -155,6 +155,19 @@ private:
     std::vector<std::string> value_;
 };
 
+class MediaJsResultIntArray : public MediaJsResult {
+public:
+    explicit MediaJsResultIntArray(const std::vector<int32_t> &value)
+        : value_(value)
+    {
+    }
+    ~MediaJsResultIntArray() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    std::vector<int32_t> value_;
+};
+
 class MediaJsResultArray : public MediaJsResult {
 public:
     explicit MediaJsResultArray(const std::vector<Format> &value)

@@ -207,7 +207,12 @@ private:
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
     /**
-     * selectTrack(index: number): void;
+     * getCurrentSelections(callback:AsyncCallback<Array<number>>): void
+     * getCurrentSelections(): Promise<Array<number>>
+     */
+    static napi_value JsGetCurrentSelections(napi_env env, napi_callback_info info);
+    /**
+     * selectTrack(index: number, mode?: SwitchMode): void;
      */
     static napi_value JsSelectTrack(napi_env env, napi_callback_info info);
     /**
@@ -269,6 +274,7 @@ private:
         size_t &argc, napi_value *argv);
     static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     static void SeekEnqueueTask(AVPlayerNapi *jsPlayer, int32_t time, int32_t mode);
+    static void SelectTrackEnqueueTask(AVPlayerNapi *jsPlayer, int32_t index, int32_t mode);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -296,6 +302,7 @@ private:
     void EnqueueFdTask(const int32_t fd);
 
     PlayerSeekMode TransferSeekMode(int32_t mode);
+    PlayerSwitchMode TransferSwitchMode(int32_t mode);
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
