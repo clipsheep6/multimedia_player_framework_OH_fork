@@ -52,6 +52,8 @@ InCallObserver::~InCallObserver()
 
 bool InCallObserver::IsInCall()
 {
+    UnRegisterObserver();
+    RegisterObserver();
     return inCall_;
 }
 
@@ -78,7 +80,10 @@ void InCallObserver::UnRegisterInCallObserverCallBack()
 bool InCallObserver::OnCallStateUpdated(bool inCall)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    inCall_ = inCall;
+    if (inCall_.load() != inCall) {
+        MEDIA_LOGI("Update InCall Status %{public}d", static_cast<int32_t>(inCall));
+        inCall_.store(inCall);
+    }
     if (inCall) {
         auto callbackPtr = inCallObserverCallBack_.lock();
         if (callbackPtr) {

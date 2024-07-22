@@ -20,6 +20,7 @@
 #include <vector>
 #include <unordered_map>
 #include <chrono>
+#include <atomic>
 #include "media_telephony_listener.h"
 #include "screen_capture.h"
 
@@ -49,7 +50,7 @@ private:
     std::weak_ptr<InCallObserverCallBack> inCallObserverCallBack_;
     InCallObserver();
     ~InCallObserver();
-    bool inCall_{false};
+    std::atomic<bool> inCall_{false};
     std::mutex mutex_;
     bool Init();
     bool isTelephonyStateListenerDied_ = true;
