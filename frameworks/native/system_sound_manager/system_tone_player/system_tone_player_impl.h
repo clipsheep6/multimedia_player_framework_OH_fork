@@ -48,7 +48,7 @@ private:
     std::string GetHapticUriForAudioUri(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
     bool GetMuteHapticsValue();
-    std::string ChangeUri(const std::string &audioUri);
+    std::string ChangeUri(const std::string &uri);
 
     std::shared_ptr<AudioHapticManager> audioHapticManager_ = nullptr;
     std::unordered_map<int32_t, std::shared_ptr<AudioHapticPlayer>> playerMap_;
