@@ -707,6 +707,42 @@ void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &inf
     }
 }
 
+bool AVPlayerCallback::IsValidState(PlayerStates state, std::string &stateStr)
+{
+    switch (state) {
+        case PlayerStates::PLAYER_IDLE:
+            stateStr = AVPlayerState::STATE_IDLE;
+            break;
+        case PlayerStates::PLAYER_INITIALIZED:
+            stateStr = AVPlayerState::STATE_INITIALIZED;
+            break;
+        case PlayerStates::PLAYER_PREPARED:
+            stateStr = AVPlayerState::STATE_PREPARED;
+            break;
+        case PlayerStates::PLAYER_STARTED:
+            stateStr = AVPlayerState::STATE_PLAYING;
+            break;
+        case PlayerStates::PLAYER_PAUSED:
+            stateStr = AVPlayerState::STATE_PAUSED;
+            break;
+        case PlayerStates::PLAYER_STOPPED:
+            stateStr = AVPlayerState::STATE_STOPPED;
+            break;
+        case PlayerStates::PLAYER_PLAYBACK_COMPLETE:
+            stateStr = AVPlayerState::STATE_COMPLETED;
+            break;
+        case PlayerStates::PLAYER_RELEASED:
+            stateStr = AVPlayerState::STATE_RELEASED;
+            break;
+        case PlayerStates::PLAYER_STATE_ERROR:
+            stateStr = AVPlayerState::STATE_ERROR;
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
@@ -718,19 +754,8 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
 
     if (state_ != state) {
         state_ = state;
-        static std::map<PlayerStates, std::string> stateMap = {
-            { PLAYER_IDLE, AVPlayerState::STATE_IDLE },
-            { PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED },
-            { PLAYER_PREPARED, AVPlayerState::STATE_PREPARED },
-            { PLAYER_STARTED, AVPlayerState::STATE_PLAYING },
-            { PLAYER_PAUSED, AVPlayerState::STATE_PAUSED },
-            { PLAYER_STOPPED, AVPlayerState::STATE_STOPPED },
-            { PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED },
-            { PLAYER_RELEASED, AVPlayerState::STATE_RELEASED },
-            { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
-        };
-
-        if (stateMap.find(state) != stateMap.end()) {
+        std::string stateStr;
+        if (IsValidState(state, stateStr)) {
             if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
                 MEDIA_LOGW("no stateChange cb");
                 return;
@@ -744,7 +769,7 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
             }
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
-            cb->state = stateMap.at(state);
+            cb->state = stateStr;
             cb->reason = reason;
             NapiCallback::CompleteCallback(env_, cb);
         }

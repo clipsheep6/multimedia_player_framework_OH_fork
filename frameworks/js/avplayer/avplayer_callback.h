@@ -79,6 +79,7 @@ private:
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
+    bool IsValidState(PlayerStates state, std::string &stateStr);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
