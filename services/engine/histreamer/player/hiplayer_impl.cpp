@@ -1537,7 +1537,7 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         case EventType::BUFFERING_END : {
             MEDIA_LOG_I("BUFFERING_END PLAYING");
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
-            MEDIA_LOG_I("BUFFERING_START PAUSE END");
+            MEDIA_LOG_I("BUFFERING_END PAUSE END");
             break;
         }
         case EventType::BUFFERING_START : {
