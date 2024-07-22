@@ -1537,11 +1537,13 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         case EventType::BUFFERING_END : {
             MEDIA_LOG_I("BUFFERING_END PLAYING");
             NotifyBufferingEnd(AnyCast<int32_t>(event.param));
+            MEDIA_LOG_I("BUFFERING_START PAUSE END");
             break;
         }
         case EventType::BUFFERING_START : {
             MEDIA_LOG_I("BUFFERING_START PAUSE");
             NotifyBufferingStart(AnyCast<int32_t>(event.param));
+            MEDIA_LOG_I("BUFFERING_START PAUSE END");
             break;
         }
         case EventType::EVENT_SOURCE_BITRATE_START: {
@@ -1668,6 +1670,8 @@ void HiPlayerImpl::NotifyBufferingStart(int32_t param)
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
+    callbackLooper_.StopReportMediaProgress();
+    demuxer_->PauseDemuxerReadLoop();
 }
 
 void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
@@ -1676,6 +1680,8 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
+    callbackLooper_.StartReportMediaProgress(100);
+    demuxer_->ResumeDemuxerReadLoop();
 }
 
 void HiPlayerImpl::NotifyCachedDuration(int32_t param)
