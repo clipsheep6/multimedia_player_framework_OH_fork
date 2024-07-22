@@ -67,7 +67,11 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         if (region == "CN") {
             targetSources.push_back(SourceType::SOURCE_TYPE_VOICE_COMMUNICATION);
         }
-        audioCapturer->SetAudioSourceConcurrency(targetSources);
+        int32_t ret = audioCapturer->SetAudioSourceConcurrency(targetSources);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("SetAudioSourceConcurrency failed, ret:%{public}d, threadName:%{public}s", ret,
+                threadName_.c_str());
+        }
     }
     CHECK_AND_RETURN_RET_LOG(audioCapturer != nullptr, MSERR_UNKNOWN, "Start failed, create AudioCapturer failed");
     if (!audioCapturer->Start()) {
@@ -82,6 +86,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
     audioCapturer_ = audioCapturer;
+    captureState_.store(CAPTURER_RECORDING);
     return MSERR_OK;
 }
 
@@ -97,9 +102,21 @@ int32_t AudioCapturerWrapper::Pause()
             readAudioLoop_ = nullptr;
         }
         if (audioCapturer_ != nullptr) {
-            audioCapturer_->Pause();
+            if (!audioCapturer_->Pause()) {
+                MEDIA_LOGE("AudioCapturer Pause failed, threadName:%{public}s", threadName_.c_str());
+            }
         }
     }
+    std::unique_lock<std::mutex> bufferLock(bufferMutex_);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Pause pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    while (!availBuffers_.empty()) {
+        if (availBuffers_.front() != nullptr) {
+            free(availBuffers_.front()->buffer);
+            availBuffers_.front()->buffer = nullptr;
+        }
+        availBuffers_.pop();
+    }
+    captureState_.store(CAPTURER_PAUSED);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     return MSERR_OK;
 }
@@ -114,16 +131,18 @@ int32_t AudioCapturerWrapper::Resume()
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_UNKNOWN, "Resume failed, audioCapturer_ is nullptr");
 
     if (!audioCapturer_->Start()) {
-        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
         audioCapturer_->Release();
         audioCapturer_ = nullptr;
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN;
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Resume success, threadName:%{public}s", FAKE_POINTER(this),
+        threadName_.c_str());
 
     isRunning_.store(true);
     readAudioLoop_ = std::make_unique<std::thread>([this] { this->CaptureAudio(); });
+    captureState_.store(CAPTURER_RECORDING);
     return MSERR_OK;
 }
 
@@ -155,6 +174,7 @@ int32_t AudioCapturerWrapper::Stop()
         availBuffers_.pop();
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    captureState_.store(CAPTURER_STOPED);
     return MSERR_OK;
 }
 
@@ -190,6 +210,11 @@ int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilt
         "AudioCapturerWrapper::UpdateAudioCapturerConfig failed");
     MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig success");
     return MSERR_OK;
+}
+
+AudioCapturerWrapperState AudioCapturerWrapper::GetAudioCapturerState()
+{
+    return captureState_.load();
 }
 
 void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages)
@@ -233,8 +258,11 @@ std::shared_ptr<AudioCapturer> AudioCapturerWrapper::CreateAudioCapturer(const O
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
-        newInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
-        newInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
+        std::string region = Global::I18n::LocaleConfig::GetSystemRegion();
+        if (SCREEN_RECORDER_BUNDLE_NAME.compare(bundleName_) == 0 && region == "CN") {
+            newInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
+            newInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
+        }
     }
     if (contentFilter_.filteredAudioContents.find(
         AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
@@ -313,9 +341,13 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &a
     CHECK_AND_RETURN_RET_LOG(isRunning_.load(), MSERR_UNKNOWN, "AcquireAudioBuffer failed, not running");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
 
-    if (!bufferCond_.wait_for(
-        lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS), [this] { return !availBuffers_.empty(); })) {
+    if (!bufferCond_.wait_for(lock, std::chrono::milliseconds(OPERATION_TIMEOUT_IN_MS),
+        [this] { return !availBuffers_.empty() || captureState_.load() == CAPTURER_RELEASED; })) {
         MEDIA_LOGE("AcquireAudioBuffer timeout, threadName:%{public}s", threadName_.c_str());
+        return MSERR_UNKNOWN;
+    }
+    if (availBuffers_.empty()) {
+        MEDIA_LOGE("CAPTURER_RELEASED, threadName:%{public}s", threadName_.c_str());
         return MSERR_UNKNOWN;
     }
     audioBuffer = availBuffers_.front();
@@ -364,6 +396,8 @@ void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32
 AudioCapturerWrapper::~AudioCapturerWrapper()
 {
     Stop();
+    captureState_.store(CAPTURER_RELEASED);
+    bufferCond_.notify_all();
 }
 
 void MicAudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)

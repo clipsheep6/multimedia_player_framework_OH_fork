@@ -37,6 +37,14 @@ public:
     void OnStateChange(const CapturerState state) override;
 };
 
+enum AudioCapturerWrapperState : int32_t {
+    CAPTURER_UNKNOWN = -1,
+    CAPTURER_RECORDING = 0,
+    CAPTURER_PAUSED = 1,
+    CAPTURER_STOPED = 2,
+    CAPTURER_RELEASED = 3,
+};
+
 class AudioCapturerWrapper {
 public:
     explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
@@ -57,6 +65,7 @@ public:
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
     void SetIsInVoIPCall(bool isInVoIPCall);
+    AudioCapturerWrapperState GetAudioCapturerState();
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -86,6 +95,7 @@ private:
     std::queue<std::shared_ptr<AudioBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
+    std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */
     int32_t captureAudioLogCount_ = 0;

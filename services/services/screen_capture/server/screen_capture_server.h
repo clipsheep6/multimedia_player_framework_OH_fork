@@ -207,13 +207,16 @@ public:
     void SetAppPid(int32_t appid);
     void SetAppName(std::string appName);
     int32_t GetAppPid();
+    bool GetIsInVoIPCall();
+    bool GetSpeakerAliveStatus();
+
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem);
     int32_t appPid_ { 0 };
     std::string appName_;
     bool speakerAliveStatus_ = true;
-    bool isInVoIPCall_ = false;
+    std::atomic<bool> isInVoIPCall_ = false;
     std::mutex voipStatusChangeMutex_;
 
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
@@ -277,8 +280,8 @@ public:
     int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
-    int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
-    int32_t OnVoIPStateChanged(bool isInVoIPCall);
+    int32_t OnVoIPStatusChanged(bool isInVoIPCall);
+    int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -289,8 +292,10 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
-    int32_t StartInnerAudioCapture();
-    int32_t StartMicAudioCapture();
+    int32_t StartStreamInnerAudioCapture();
+    int32_t StartStreamMicAudioCapture();
+    int32_t StartFileInnerAudioCapture();
+    int32_t StartFileMicAudioCapture();
     int32_t StopMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
@@ -331,7 +336,6 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    int32_t OnSpeakerAliveStatusChanged();
 
 private:
     std::mutex mutex_;
@@ -341,8 +345,6 @@ private:
     bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
-    bool speakerAliveStatus_ = true;
-    bool isInVoIPCall_ = false;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -376,9 +378,7 @@ private:
     sptr<OHOS::Surface> surface_ = nullptr;
     bool isSurfaceMode_ = false;
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
-    bool isInnerAudioCaptureWorking_ = false;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
-    bool isMicAudioCaptureWorking_ = false;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
