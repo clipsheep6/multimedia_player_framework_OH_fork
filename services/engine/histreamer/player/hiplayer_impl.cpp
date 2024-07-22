@@ -1556,6 +1556,9 @@ void HiPlayerImpl::OnEventSub(const Event &event)
             NotifyCachedDuration(AnyCast<int32_t>(event.param));
             break;
         }
+        case EventType::EVENT_BUFFER_PROGRESS: {
+            NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_PERCENT, AnyCast<int32_t>(event.param));
+        }
         default:
             break;
     }
