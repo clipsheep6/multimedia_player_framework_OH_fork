@@ -42,6 +42,7 @@ const int32_t PLAYING_SEEK_WAIT_TIME = 200; // wait up to 200 ms for new frame a
 const int64_t PLAY_RANGE_DEFAULT_VALUE = -1; // play range default value.
 const double FRAME_RATE_DEFAULT = -1.0;
 const double FRAME_RATE_FOR_SEEK_PERFORMANCE = 2000.0;
+constexpr int REPORT_PROGRESS_END = 100;
 }
 
 namespace OHOS {
@@ -548,18 +549,18 @@ int32_t HiPlayerImpl::Play()
         } else {
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_END); // 100 ms
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
         if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_END); // 100 ms
         ret = TransStatus(Resume());
     } else {
         if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
-        callbackLooper_.StartReportMediaProgress(100); // 100 ms
+        callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_END); // 100 ms
         syncManager_->Resume();
         ret = TransStatus(pipeline_->Start());
         if (ret != MSERR_OK) {
@@ -1680,7 +1681,7 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
-    callbackLooper_.StartReportMediaProgress(100);
+    callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_END);
     demuxer_->ResumeDemuxerReadLoop();
 }
 
