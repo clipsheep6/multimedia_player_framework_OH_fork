@@ -43,11 +43,11 @@ namespace OHOS {
 
 #define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define MEDIA_LOG(func, fmt, args...)                                                            \
-    do {                                                                                         \
-        if (LABEL.tag != nullptr) {                                                              \
-            (void)func(LABEL, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \
-        }                                                                                        \
+#define MEDIA_LOG(func, fmt, args...)                                \
+    do {                                                             \
+        if (LABEL.tag != nullptr) {                                  \
+            (void)func(LABEL, "#%{public}d " fmt, __LINE__, ##args); \
+        }                                                            \
     } while (0)
 
 #ifdef OHOS_MEDIA_LOG_DFX
@@ -79,9 +79,9 @@ namespace OHOS {
 #define MEDIA_LOGF(fmt, ...) MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Fatal, fmt, ##__VA_ARGS__)
 #endif
 
-#define MEDIA_LOG_PRERELEASE(op, fmt, args...)                                                     \
-    do {                                                                                           \
-        op(LOG_ONLY_PRERELEASE, "{%{public}s():%{public}d} " fmt, __FUNCTION__, __LINE__, ##args); \
+#define MEDIA_LOG_PRERELEASE(op, fmt, args...)                         \
+    do {                                                               \
+        op(LOG_ONLY_PRERELEASE, "#%{public}d " fmt, __LINE__, ##args); \
     } while (0)
 
 #define MEDIA_LOGI_NO_RELEASE(fmt, ...) MEDIA_LOG_PRERELEASE(HILOG_INFO, fmt, ##__VA_ARGS__)

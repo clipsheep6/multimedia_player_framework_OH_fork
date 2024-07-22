@@ -58,7 +58,7 @@ public:
 
 int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::string& uri)
 {
-    MEDIA_LOG_E("Score in");
+    MEDIA_LOG_D("Score in");
     (void)scene;
     (void)uri;
 
@@ -71,7 +71,7 @@ int32_t HstEngineFactory::Score(Scene scene, const int32_t& appUid, const std::s
 std::unique_ptr<IRecorderEngine> HstEngineFactory::CreateRecorderEngine(
     int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
 {
-    MEDIA_LOG_E("CreateRecorderEngine enter.");
+    MEDIA_LOG_D("CreateRecorderEngine enter.");
     auto recorder = std::unique_ptr<HiRecorderImpl>(new (std::nothrow) HiRecorderImpl(
         appUid, appPid, appTokenId, appFullTokenId));
     if (recorder && recorder->Init() == 0) {
@@ -99,7 +99,7 @@ std::unique_ptr<ITransCoderEngine> HstEngineFactory::CreateTransCoderEngine(
 #ifdef SUPPORT_PLAYER
 std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid, uint32_t tokenId)
 {
-    MEDIA_LOG_I("Hst CreatePlayerEngine enter.");
+    MEDIA_LOG_D("Hst CreatePlayerEngine enter.");
     auto player = std::unique_ptr<HiPlayerImpl>(new (std::nothrow) HiPlayerImpl(
         uid, pid, tokenId, 0));
     if (player) {
@@ -113,7 +113,7 @@ std::unique_ptr<IPlayerEngine> HstEngineFactory::CreatePlayerEngine(int32_t uid,
 #ifdef SUPPORT_METADATA
 std::unique_ptr<IAVMetadataHelperEngine> HstEngineFactory::CreateAVMetadataHelperEngine()
 {
-    MEDIA_LOG_I("CreateAVMetadataHelperEngine enter.");
+    MEDIA_LOG_D("CreateAVMetadataHelperEngine enter.");
     auto helper = std::make_unique<AVMetadataHelperImpl>();
     if (helper == nullptr) {
         MEDIA_LOG_E("create AVMetadataHelperImpl failed");

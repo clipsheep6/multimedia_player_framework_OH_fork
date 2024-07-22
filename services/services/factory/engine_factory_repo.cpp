@@ -99,9 +99,6 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
         return MSERR_OK;
     }
 
-    std::string bundleName = GetClientBundleName(appUid);
-    (void) bundleName;
-
     MEDIA_LOGI("LoadHistreamerEngine succeed!");
     std::vector<std::string> allFiles;
     GetDirFiles(MEDIA_ENGINE_LIB_PATH, allFiles);
@@ -123,7 +120,6 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
     MEDIA_LOGD("GetEngineFactory entered.");
-    std::string bundleName = GetClientBundleName(appUid);
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {
