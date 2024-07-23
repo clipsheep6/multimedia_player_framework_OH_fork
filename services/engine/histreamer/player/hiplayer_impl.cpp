@@ -1671,7 +1671,9 @@ void HiPlayerImpl::NotifyBufferingStart(int32_t param)
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
     callbackLooper_.StopReportMediaProgress();
-    demuxer_->PauseDemuxerReadLoop();
+    if (demuxer_ != nullptr) {
+        demuxer_->PauseDemuxerReadLoop();
+    }
 }
 
 void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
@@ -1681,7 +1683,9 @@ void HiPlayerImpl::NotifyBufferingEnd(int32_t param)
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 1);
     callbackLooper_.OnInfo(INFO_TYPE_BUFFERING_UPDATE, param, format);
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_END);
-    demuxer_->ResumeDemuxerReadLoop();
+    if (demuxer_ != nullptr) {
+        demuxer_->ResumeDemuxerReadLoop();
+    }
 }
 
 void HiPlayerImpl::NotifyCachedDuration(int32_t param)
