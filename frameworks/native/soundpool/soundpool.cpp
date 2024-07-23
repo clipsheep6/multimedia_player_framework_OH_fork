@@ -128,7 +128,6 @@ int32_t SoundPool::Stop(int32_t streamID)
 int32_t SoundPool::SetLoop(int32_t streamID, int32_t loop)
 {
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_LOGI("SoundPool::SetLoop streamID:%{public}d, loop:%{public}d", streamID, loop);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
         return cacheBuffer->SetLoop(streamID, loop);
@@ -156,7 +155,6 @@ int32_t SoundPool::SetPriority(int32_t streamID, int32_t priority)
 int32_t SoundPool::SetRate(int32_t streamID, AudioStandard::AudioRendererRate renderRate)
 {
     std::lock_guard lock(soundPoolLock_);
-    MEDIA_LOGI("SoundPool::SetRate streamID:%{public}d, renderRate:%{public}d", streamID, renderRate);
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {
         return cacheBuffer->SetRate(streamID, renderRate);
@@ -169,8 +167,7 @@ int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolu
     if (!CheckVolumeVaild(&leftVolume, &rightVolume)) {
         return MSERR_INVALID_VAL;
     }
-    MEDIA_LOGI("SoundPool::SetVolume streamID:%{public}d, leftVolume:%{public}f, rightVolume:%{public}f",
-        streamID, leftVolume, rightVolume);
+
     CHECK_AND_RETURN_RET_LOG(streamIdManager_ != nullptr, MSERR_INVALID_VAL, "sound pool have released.");
     std::lock_guard lock(soundPoolLock_);
     if (std::shared_ptr<CacheBuffer> cacheBuffer = streamIdManager_->FindCacheBuffer(streamID)) {

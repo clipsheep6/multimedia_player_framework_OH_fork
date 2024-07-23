@@ -125,9 +125,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     if (audioRenderer_ != nullptr) {
         cacheDataFrameNum_ = 0;
         havePlayedCount_ = 0;
-        isRunning_.store(true);
         if (!audioRenderer_->Start()) {
-            isRunning_.store(false);
             OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
             if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
                 MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
@@ -141,6 +139,7 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
+        isRunning_.store(true);
         MEDIA_LOGI("CacheBuffer::DoPlay success");
         return MSERR_OK;
     }
