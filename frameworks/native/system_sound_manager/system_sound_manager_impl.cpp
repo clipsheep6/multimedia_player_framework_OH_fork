@@ -380,7 +380,12 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
     updatePredicates.SetWhereArgs({to_string(toneId)});
     updateValuesBucket.Put(RINGTONE_COLUMN_RING_TONE_TYPE, type);
     updateValuesBucket.Put(RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
-    return dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    auto [errCode, status] = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper update failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
+    return status;
 }
 
 int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &context, const string &uri,
@@ -555,7 +560,12 @@ int32_t SystemSoundManagerImpl::UpdateShotToneUri(std::shared_ptr<DataShare::Dat
     updatePredicates.SetWhereArgs({to_string(toneId)});
     updateValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_TYPE, type);
     updateValuesBucket.Put(RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
-    return dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    auto [errCode, status] = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper update failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
+    return status;
 }
 
 int32_t SystemSoundManagerImpl::UpdateNotificatioToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
@@ -576,7 +586,12 @@ int32_t SystemSoundManagerImpl::UpdateNotificatioToneUri(std::shared_ptr<DataSha
     updatePredicates.SetWhereArgs({to_string(toneId)});
     updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE);
     updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
-    return dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    auto [errCode, status] = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper update failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
+    return status;
 }
 
 int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &context, const string &uri,
@@ -893,10 +908,10 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
         updatePredicates.SetWhereArgs({to_string(ringtoneAsset->GetId())});
         updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_TYPE, ALARM_TONE_TYPE);
         updateValuesBucket.Put(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, SOURCE_TYPE_CUSTOMISED);
-        int32_t changedRows = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
+        auto [errCode, status] = dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
         resultSet == nullptr ? : resultSet->Close();
         dataShareHelper->Release();
-        return changedRows > 0 ? SUCCESS : ERROR;
+        return errCode == 0 ? SUCCESS : ERROR;
     }
     resultSet == nullptr ? : resultSet->Close();
     dataShareHelper->Release();
@@ -1109,7 +1124,12 @@ int32_t SystemSoundManagerImpl::AddCustomizedTone(const std::shared_ptr<DataShar
             break;
     }
     valuesBucket.Put(RINGTONE_COLUMN_DATA, static_cast<string>(toneAttrs->GetUri()));
-    return dataShareHelper->Insert(RINGTONEURI, valuesBucket);
+    auto [errCode, status] = dataShareHelper->Insert(RINGTONEURI, valuesBucket);
+    if (errCode != 0) {
+        MEDIA_LOGE("g_dataShareHelper Insert Failed, errCode = %{public}d", errCode);
+        return errCode;
+    }
+    return status;
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
@@ -1190,7 +1210,8 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
         DataShare::DataSharePredicates deletePredicates;
         deletePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
         deletePredicates.SetWhereArgs({to_string(ringtoneAsset->GetId())});
-        changedRows = dataShareHelper->Delete(RINGTONEURI, deletePredicates);
+        auto [errCode, status] = dataShareHelper->Delete(RINGTONEURI, deletePredicates);
+        changedRows = errCode == 0 ? status : errCode;
     } else {
         MEDIA_LOGE("RemoveCustomizedTone: the ringtone is not customized!");
     }
