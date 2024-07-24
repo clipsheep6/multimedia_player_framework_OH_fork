@@ -37,7 +37,7 @@
 using namespace OHOS::AudioStandard;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN, "AVPlayerNapi" };
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerNapi" };
     constexpr uint32_t MIN_ARG_COUNTS = 1;
     constexpr uint32_t MAX_ARG_COUNTS = 2;
     constexpr size_t ARRAY_ARG_COUNTS_TWO = 2;
@@ -51,12 +51,12 @@ const std::string CLASS_NAME = "AVPlayer";
 
 AVPlayerNapi::AVPlayerNapi()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " ctor", FAKE_POINTER(this));
 }
 
 AVPlayerNapi::~AVPlayerNapi()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " dtor", FAKE_POINTER(this));
 }
 
 napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
@@ -175,7 +175,7 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             delete jsPlayer;
         }).detach();
     }
-    MEDIA_LOGI("Destructor success");
+    MEDIA_LOGD("Destructor success");
 }
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
@@ -205,7 +205,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     napi_queue_async_work_with_qos(env, asyncContext->work, napi_qos_user_initiated);
     asyncContext.release();
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " JsCreateAVPlayer Out", FAKE_POINTER(jsThis));
     return result;
 }
 

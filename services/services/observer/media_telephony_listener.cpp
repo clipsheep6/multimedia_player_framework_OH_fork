@@ -23,7 +23,7 @@
 #include <codecvt>
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaTelephonyListener"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaTelephonyListener"};
 }
 
 using namespace OHOS::Telephony;

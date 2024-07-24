@@ -20,7 +20,7 @@
 #include "scope_guard.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN, "MonitorClient" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "MonitorClient" };
 }
 
 namespace OHOS {

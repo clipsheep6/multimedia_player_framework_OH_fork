@@ -25,7 +25,7 @@ const std::string REFERENCE_LIB_PATH = std::string(DRAGGING_PLAYER_PATH);
 const std::string FILESEPARATOR = "/";
 const std::string REFERENCE_LIB_NAME = "libvideo_dragging_player.z.so";
 const std::string REFENCE_LIB_ABSOLUTE_PATH = REFERENCE_LIB_PATH + FILESEPARATOR + REFERENCE_LIB_NAME;
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DraggingPlayerAgent"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "DraggingPlayerAgent"};
 }
  
 namespace OHOS {

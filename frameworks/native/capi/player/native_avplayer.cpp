@@ -24,7 +24,7 @@
 #include "native_drm_object.h"
 #endif
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeAVPlayer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "NativeAVPlayer"};
     constexpr uint32_t STATE_MAP_LENGTH = 9;
     constexpr uint32_t INFO_TYPE_LENGTH = 19;
 }

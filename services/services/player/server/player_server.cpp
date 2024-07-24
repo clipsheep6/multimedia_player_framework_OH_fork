@@ -38,7 +38,7 @@
 using namespace OHOS::QOS;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServer"};
     constexpr int32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 

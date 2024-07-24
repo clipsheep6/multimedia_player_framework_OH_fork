@@ -19,7 +19,7 @@
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVTransCoderCallback"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVTransCoderCallback"};
 }
 
 namespace OHOS {

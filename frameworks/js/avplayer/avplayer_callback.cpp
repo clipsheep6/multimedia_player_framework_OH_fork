@@ -26,7 +26,7 @@
 #include "avplayer_callback.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN, "AVPlayerCallback" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
 }
 
 namespace OHOS {

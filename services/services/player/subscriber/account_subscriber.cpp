@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AccountSubscriber"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountSubscriber"};
 std::shared_ptr<AccountSubscriber> AccountSubscriber::instance_ = nullptr;
 
 std::shared_ptr<AccountSubscriber> AccountSubscriber::GetInstance()

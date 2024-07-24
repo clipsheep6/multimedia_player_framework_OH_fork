@@ -20,7 +20,7 @@
 #include "ipc_skeleton.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorServiceStub"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MonitorServiceStub"};
 }
 
 namespace OHOS {

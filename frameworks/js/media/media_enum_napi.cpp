@@ -30,7 +30,7 @@
 #include "avscreen_capture_napi.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaEnumNapi"};
 }
 
 namespace OHOS {
