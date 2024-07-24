@@ -110,6 +110,8 @@ Status DraggingPlayerAgent::Init(const shared_ptr<DemuxerFilter> &demuxer,
     demuxer->RegisterVideoStreamReadyCallback(videoStreamReadyCb_);
     videoFrameReadyCb_ = std::make_shared<VideoFrameReadyCallbackImpl>(shared_from_this());
     decoder->RegisterVideoFrameReadyCallback(videoFrameReadyCb_);
+    // Drive the head node to start the video channel.
+    demuxer->ResumeDragging();
     return Status::OK;
 }
  

@@ -2159,7 +2159,7 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
     }
     seekContinousBatchNo_.store(seekContinousBatchNo);
     auto res = StartSeekContinous();
-    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(Status::ERROR_UNKNOWN),
+    FALSE_RETURN_V_MSG_E(res == Status::OK && draggingPlayerAgent_ != nullptr, TransStatus(res),
         "StartSeekContinous failed");
     lastSeekContinousPos_ = mSeconds;
     draggingPlayerAgent_->UpdateSeekPos(mSeconds);
@@ -2170,12 +2170,18 @@ int32_t HiPlayerImpl::SeekContinous(int32_t mSeconds, int64_t seekContinousBatch
 Status HiPlayerImpl::StartSeekContinous()
 {
     FALSE_RETURN_V(!draggingPlayerAgent_, Status::OK);
+    FALSE_RETURN_V(demuxer_ && videoDecoder_, Status::OK);
     draggingPlayerAgent_ = DraggingPlayerAgent::Create();
-    FALSE_RETURN_V(draggingPlayerAgent_ != nullptr, Status::OK);
+    FALSE_RETURN_V_MSG_E(draggingPlayerAgent_ != nullptr, Status::ERROR_INVALID_OPERATION, "failed to create agent");
     Status res = draggingPlayerAgent_->Init(demuxer_, videoDecoder_);
     if (res != Status::OK) {
         draggingPlayerAgent_ = nullptr;
+        return res;
     }
+    if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE) {
+        videoDecoder_->Flush();
+    }
+    SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     return res;
 }
 
@@ -2189,6 +2195,7 @@ int32_t HiPlayerImpl::ExitSeekContinous(bool align, int64_t seekContinousBatchNo
         draggingPlayerAgent_->Release();
         draggingPlayerAgent_ = nullptr;
     }
+    SetFrameRateForSeekPerformance(FRAME_RATE_DEFAULT);
     if (align) {
         Seek(lastSeekContinousPos_, PlayerSeekMode::SEEK_CLOSEST, false);
     }
