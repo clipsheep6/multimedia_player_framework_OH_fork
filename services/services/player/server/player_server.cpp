@@ -1457,7 +1457,6 @@ void PlayerServer::OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const
         OnNotifyBufferingEnd();
         return;
     }
-
 }
 void PlayerServer::OnNotifyBufferingStart()
 {
