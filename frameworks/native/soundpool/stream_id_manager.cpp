@@ -33,21 +33,6 @@ StreamIDManager::StreamIDManager(int32_t maxStreams,
     AudioStandard::AudioRendererInfo audioRenderInfo) : audioRendererInfo_(audioRenderInfo), maxStreams_(maxStreams)
 {
     MEDIA_LOGI("Construction StreamIDManager.");
-#ifdef SOUNDPOOL_SUPPORT_LOW_LATENCY
-    char hardwareName[10] = {0};
-    GetParameter("ohos.boot.hardware", "rk3568", hardwareName, sizeof(hardwareName));
-    if (strcmp(hardwareName, "baltimore") != 0) {
-        MEDIA_LOGI("Device unsupport low-latency, force set to normal play.");
-        audioRendererInfo_.rendererFlags = 0;
-    } else {
-        MEDIA_LOGI("Device support low-latency, set renderer by user.");
-    }
-#else
-    // Force all play to normal.
-    audioRendererInfo_.rendererFlags = 0;
-    MEDIA_LOGI("SoundPool unsupport low-latency.");
-#endif
-
     InitThreadPool();
 }
 
