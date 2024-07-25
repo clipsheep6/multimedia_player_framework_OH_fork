@@ -73,6 +73,7 @@ public:
     void TearDown(void);
     void AudioLoop(void);
     void AudioLoopWithoutRelease(void);
+    void BeforeScreenCaptureSpecifiedWindowCbCase07(void);
     int32_t SetConfig(AVScreenCaptureConfig &config);
     int32_t SetConfigFile(AVScreenCaptureConfig &config, RecorderInfo &recorderInfo);
     int32_t SetRecorderInfo(std::string name, RecorderInfo &recorderInfo);

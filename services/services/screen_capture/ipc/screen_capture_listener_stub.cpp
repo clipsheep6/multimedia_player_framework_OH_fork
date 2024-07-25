@@ -18,7 +18,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "RecorderListenerStub"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureListenerStub"};
 }
 
 namespace OHOS {
@@ -66,7 +66,7 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             return MSERR_OK;
         }
         default: {
-            MEDIA_LOGE("default case, need check RecorderListenerStub");
+            MEDIA_LOGE("default case, need check ScreenCaptureListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
     }

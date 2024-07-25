@@ -69,6 +69,8 @@ config("media_service_config") {
     "recorder_profiles/server",
     "screen_capture/server",
     "screen_capture/ipc",
+    "screen_capture_monitor/server",
+    "screen_capture_monitor/ipc",
     "transcoder/server",
     "transcoder/ipc",
     "observer",
@@ -170,6 +172,9 @@ ohos_shared_library("media_service") {
       "screen_capture/server/screen_capture_controller_server.cpp",
       "screen_capture/server/screen_capture_server.cpp",
       "screen_capture/server/ui_extension_ability_connection.cpp",
+      "screen_capture_monitor/ipc/screen_capture_monitor_listener_proxy.cpp",
+      "screen_capture_monitor/ipc/screen_capture_monitor_service_stub.cpp",
+      "screen_capture_monitor/server/screen_capture_monitor_server.cpp",
     ]
   }
 

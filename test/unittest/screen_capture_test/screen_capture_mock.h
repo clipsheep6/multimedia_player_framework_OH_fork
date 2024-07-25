@@ -31,6 +31,7 @@
 #include "display_manager.h"
 #include "screen_manager.h"
 #include "external_window.h"
+#include "screen_capture_monitor.h"
 
 namespace OHOS {
 namespace Media {
@@ -51,6 +52,16 @@ public:
     }
     virtual void OnBufferAvailable(const std::shared_ptr<AVBuffer> buffer,
         AVScreenCaptureBufferType bufferType, int64_t timestamp) = 0;
+};
+
+class ScreenCaptureMonitorListenerMock : public ScreenCaptureMonitor::ScreenCaptureMonitorListener {
+public:
+    ScreenCaptureMonitorListenerMock(std::string name):name_(name) {}
+    ~ScreenCaptureMonitorListenerMock() = default;
+    void OnScreenCaptureStarted(int32_t pid) override;
+    void OnScreenCaptureFinished(int32_t pid) override;
+    int stateFlag_ = 0;
+    std::string name_ = "ScreenCaptureMonitor";
 };
 
 class ScreenCaptureMock {

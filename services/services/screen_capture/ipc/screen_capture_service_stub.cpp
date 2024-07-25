@@ -201,7 +201,7 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &o
     std::shared_ptr<ScreenCaptureCallBack> callback = std::make_shared<ScreenCaptureListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new ScreenCaptureCallBack");
 
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY, "screen capture server is nullptr");
     (void)screenCaptureServer_->SetScreenCaptureCallback(callback);
     return MSERR_OK;
 }

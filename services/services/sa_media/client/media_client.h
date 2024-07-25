@@ -35,6 +35,7 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "screen_capture_client.h"
+#include "screen_capture_monitor_client.h"
 #include "screen_capture_controller_client.h"
 #endif
 #include "nocopyable.h"
@@ -66,6 +67,9 @@ public:
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
+    std::shared_ptr<IScreenCaptureMonitorService> CreateScreenCaptureMonitorService() override;
+    int32_t DestroyScreenCaptureMonitorService(
+        std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor) override;
     std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() override;
     int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture) override;
     std::shared_ptr<IScreenCaptureController> CreateScreenCaptureControllerClient() override;
@@ -97,6 +101,7 @@ private:
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
+    std::list<std::shared_ptr<IScreenCaptureMonitorService>> screenCaptureMonitorClientList_;
     std::list<std::shared_ptr<IScreenCaptureService>> screenCaptureClientList_;
     std::list<std::shared_ptr<IScreenCaptureController>> screenCaptureControllerList_;
 #endif

@@ -49,7 +49,8 @@ public:
         MONITOR,
         SCREEN_CAPTURE,
         SCREEN_CAPTURE_CONTROLLER,
-        TRANSCODER
+        TRANSCODER,
+        SCREEN_CAPTURE_MONITOR
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -75,6 +76,7 @@ private:
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     sptr<IRemoteObject> CreateScreenCaptureStubObject();
+    sptr<IRemoteObject> CreateScreenCaptureMonitorStubObject();
     sptr<IRemoteObject> CreateScreenCaptureControllerStubObject();
 #endif
     sptr<IRemoteObject> GetMonitorStubObject();
@@ -106,6 +108,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> screenCaptureMonitorStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureControllerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;

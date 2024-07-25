@@ -46,8 +46,10 @@ int32_t ScreenCaptureClient::CreateListenerObject()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     listenerStub_ = new(std::nothrow) ScreenCaptureListenerStub();
-    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "failed to new RecorderListenerStub object");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY,
+        "failed to new ScreenCaptureListenerStub object");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY,
+        "Screen Capture service does not exist.");
 
     sptr<IRemoteObject> object = listenerStub_->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr");

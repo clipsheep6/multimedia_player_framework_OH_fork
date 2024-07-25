@@ -44,6 +44,8 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/ipc",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/client",
     "$MEDIA_ROOT_DIR/services/services/transcoder/ipc",
     "$MEDIA_ROOT_DIR/services/services/transcoder/client",
   ]
@@ -68,7 +70,6 @@ config("media_client_base_config") {
     "-FS",
     "-O2",
     "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
@@ -144,11 +145,15 @@ ohos_shared_library("media_client") {
     sources += [
       "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_controller_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_monitor_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_controller_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_controller_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/client/screen_capture_monitor_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/ipc/screen_capture_monitor_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture_monitor/ipc/screen_capture_monitor_service_proxy.cpp",
     ]
   }
   if (player_framework_support_transcoder) {
