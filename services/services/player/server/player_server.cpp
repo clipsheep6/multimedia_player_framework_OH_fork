@@ -1445,7 +1445,6 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 
 void PlayerServer::OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    Format newInfo = infoBody;
     int info = -1;
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), info);
     if (info == 1) {
