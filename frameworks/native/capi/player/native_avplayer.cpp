@@ -85,6 +85,7 @@ struct PlayerObject : public OH_AVPlayer {
     const std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<NativeAVPlayerCallback> callback_ = nullptr;
     std::multimap<std::vector<uint8_t>, std::vector<uint8_t>> localDrmInfos_;
+    std::atomic<bool> isReleased_ = false;
 };
 
 class DrmSystemInfoCallback {
@@ -299,7 +300,9 @@ OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     int32_t ret = playerObj->player_->Release();
+    playerObj->isReleased_.store(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Release failed");
     return AV_ERR_OK;
 }
@@ -309,7 +312,9 @@ OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
     struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
     CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     int32_t ret = playerObj->player_->ReleaseSync();
+    playerObj->isReleased_.store(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player ReleaseSync failed");
     return AV_ERR_OK;
 }
@@ -472,6 +477,12 @@ OH_AVErrCode OH_AVPlayer_GetDuration(OH_AVPlayer *player, int32_t *duration)
 OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
 {
     CHECK_AND_RETURN_RET_LOG(player != nullptr, AV_ERR_INVALID_VAL, "input player is nullptr!");
+    struct PlayerObject *playerObj = reinterpret_cast<PlayerObject *>(player);
+    CHECK_AND_RETURN_RET_LOG(playerObj->player_ != nullptr, AV_ERR_INVALID_VAL, "player_ is null");
+    if (playerObj->isReleased_.load()) {
+        *state = AVPlayerState::AV_RELEASED;
+        return AV_ERR_OK;
+    }
     for (uint32_t i = 0; i < STATE_MAP_LENGTH; i++) {
         if (g_stateMap[i].playerStates == player->state_) {
             *state = g_stateMap[i].avPlayerState;
@@ -479,7 +490,7 @@ OH_AVErrCode OH_AVPlayer_GetState(OH_AVPlayer *player, AVPlayerState *state)
         }
     }
 
-    *state = static_cast<AVPlayerState>(player->state_);
+    *state = AV_ERROR;
     return AV_ERR_OK;
 }
 
