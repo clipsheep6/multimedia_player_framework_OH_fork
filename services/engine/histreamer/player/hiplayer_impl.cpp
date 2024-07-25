@@ -908,7 +908,7 @@ Status HiPlayerImpl::doSeek(int64_t seekPos, PlayerSeekMode mode)
         if (res != Status::OK) {
             MEDIA_LOG_E_SHORT("Seek closest failed");
         } else {
-            syncManager_->Seek(seekTimeUs);
+            syncManager_->Seek(seekTimeUs, true);
         }
         if (subtitleSink_ != nullptr) {
             subtitleSink_->NotifySeek();
