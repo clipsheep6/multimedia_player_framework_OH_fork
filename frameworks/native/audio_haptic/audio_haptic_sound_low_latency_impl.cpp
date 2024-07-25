@@ -29,8 +29,6 @@ namespace OHOS {
 namespace Media {
 const int32_t MAX_SOUND_POOL_STREAMS = 1; // ensure that only one stream for sound pool is playing.
 const int32_t LOAD_WAIT_SECONDS = 2;
-const uint32_t MAX_PATH_LENGTH = 2000;
-const uint32_t MAX_REAL_PATH_LENGTH = 2048;
 
 AudioHapticSoundLowLatencyImpl::AudioHapticSoundLowLatencyImpl(const std::string &audioUri, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage)
@@ -87,8 +85,8 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
     }
 
     MEDIA_LOGI("Set audio source to soundpool. audioUri [%{public}s]", audioUri_.c_str());
-    char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
-    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
+    char realPathRes[PATH_MAX + 1] = {'\0'};
+    CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < PATH_MAX) &&
         (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
     std::string realPathStr(realPathRes);
 

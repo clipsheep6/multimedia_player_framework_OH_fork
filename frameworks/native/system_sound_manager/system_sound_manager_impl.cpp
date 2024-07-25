@@ -1124,7 +1124,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     std::lock_guard<std::mutex> lock(uriMutex_);
     int32_t srcFd = fd;
     off_t lseekResult = lseek(srcFd, offset, SEEK_SET);
-    if (lseekResult == -1) {
+    if (srcFd < 0 || lseekResult == -1) {
         MEDIA_LOGE("fd is error");
         result.clear();
         return result;

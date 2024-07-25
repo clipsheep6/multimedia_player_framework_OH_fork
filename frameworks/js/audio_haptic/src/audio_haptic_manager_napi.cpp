@@ -27,7 +27,7 @@ const int32_t PARAM1 = 1;
 /* Constants for array size */
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
-const int32_t SIZE = 100;
+const int32_t SIZE = 1024;
 
 const int ERROR = -1;
 const int SUCCESS = 0;
