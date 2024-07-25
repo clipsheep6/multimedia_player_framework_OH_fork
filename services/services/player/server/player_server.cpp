@@ -1249,7 +1249,7 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     return MSERR_OK;
 }
 
-int32_t PlayerServer::SelectTrack(int32_t index)
+int32_t PlayerServer::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -1258,10 +1258,10 @@ int32_t PlayerServer::SelectTrack(int32_t index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    auto task = std::make_shared<TaskHandler<void>>([this, index]() {
+    auto task = std::make_shared<TaskHandler<void>>([this, index, mode]() {
         MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
         CHECK_AND_RETURN(IsEngineStarted());
-        int32_t ret = playerEngine_->SelectTrack(index);
+        int32_t ret = playerEngine_->SelectTrack(index, mode);
         taskMgr_.MarkTaskDone("SelectTrack done");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SelectTrack");
     });

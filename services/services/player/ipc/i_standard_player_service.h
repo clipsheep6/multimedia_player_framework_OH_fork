@@ -77,7 +77,7 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
-    virtual int32_t SelectTrack(int32_t index) = 0;
+    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SOOMTH) = 0;
     virtual int32_t DeselectTrack(int32_t index) = 0;
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
 

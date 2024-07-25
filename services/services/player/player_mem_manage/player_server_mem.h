@@ -65,7 +65,7 @@ public:
     bool IsLooping() override;
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
-    int32_t SelectTrack(int32_t index) override;
+    int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t DeselectTrack(int32_t index) override;

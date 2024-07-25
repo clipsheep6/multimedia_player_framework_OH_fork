@@ -553,11 +553,11 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::SelectTrack(int32_t index)
+int32_t PlayerServiceStub::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     MediaTrace trace("PlayerServiceStub::SelectTrack");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->SelectTrack(index);
+    return playerServer_->SelectTrack(index, mode);
 }
 
 int32_t PlayerServiceStub::DeselectTrack(int32_t index)
@@ -944,7 +944,8 @@ int32_t PlayerServiceStub::SetPlayerCallback(MessageParcel &data, MessageParcel 
 int32_t PlayerServiceStub::SelectTrack(MessageParcel &data, MessageParcel &reply)
 {
     int32_t index = data.ReadInt32();
-    reply.WriteInt32(SelectTrack(index));
+    int32_t mode = data.ReadInt32();
+    reply.WriteInt32(SelectTrack(index, static_cast<PlayerSwitchMode>(mode)));
     return MSERR_OK;
 }
 

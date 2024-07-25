@@ -1161,7 +1161,7 @@ void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoB
     infoBody.GetStringValue(PlayerKeys::SUBTITLE_TEXT, text);
     infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_PTS), pts);
     infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_DURATION), duration);
-    MEDIA_LOGI("OnTrackChangedCb pts %{public}d, duration = %{public}d", pts, duration);
+    MEDIA_LOGI("OnSubtitleInfoCb pts %{public}d, duration = %{public}d", pts, duration);
 
     CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) != refMap_.end(),
         "can not find Subtitle callback!");

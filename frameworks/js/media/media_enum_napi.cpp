@@ -159,6 +159,12 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_CONTINOUS", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
 };
 
+static const std::vector<struct JsEnumInt> g_switchMode = {
+    { "SWITCH_SOOMTH", PlayerSwitchMode::SWITCH_SOOMTH },
+    { "SWITCH_SEGMENT", PlayerSwitchMode::SWITCH_SEGMENT },
+    { "SWITCH_CLOSEST", PlayerSwitchMode::SWITCH_CLOSEST },
+};
+
 static const std::vector<struct JsEnumInt> g_AVCodecType = {
     { "AVCODEC_TYPE_VIDEO_ENCODER", AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER },
     { "AVCODEC_TYPE_VIDEO_DECODER", AVCodecType::AVCODEC_TYPE_VIDEO_DECODER },
@@ -369,6 +375,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "FrameFlags", g_frameFlags },
     { "HdrType", g_hdrType},
     { "SeekMode", g_seekMode },
+    { "SwitchMode", g_switchMode },
     { "AVCodecType", g_AVCodecType },
     { "AACProfile", g_AACProfile },
     { "VideoEncodeBitrateMode", g_videoEncodeBitrateMode },
