@@ -532,6 +532,9 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
     switch (type) {
+        case TRANSCODER:
+            DestroyAVTransCoderStub(type, object, pid);
+            break;
         case RECORDER:
         case RECORDERPROFILES:
             DestroyAVRecorderStub(type, object, pid);
@@ -586,6 +589,20 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
+}
+
+void MediaServerManager::DestroyAVTranscoderStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("AVTranscoder stub services(%{public}zu) pid(%{public}d).", transCoderStubMap_.size(), pid);
+    for (auto itTranscoder = transCoderStubMap_.begin(); itTranscoder != transCoderStubMap_.end();) {
+        if (itTranscoder->second == pid) {
+            executor_.Commit(itTranscoder->first);
+            itTranscoder = transCoderStubMap_.erase(itTranscoder);
+        } else {
+            itTranscoder++;
+        }
+    }
+    MEDIA_LOGD("AVTranscoder stub services(%{public}zu).", transCoderStubMap_.size());
 }
 
 void MediaServerManager::DestroyAVCodecStubForPid(pid_t pid)
@@ -670,6 +687,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVRecorderStubForPid(pid);
     DestroyAVPlayerStubForPid(pid);
     DestroyAVCodecStubForPid(pid);
+    DestroyAVTranscoderStubForPid(pid);
 
     MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
     for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {

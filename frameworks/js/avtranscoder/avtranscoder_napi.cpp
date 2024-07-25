@@ -80,7 +80,7 @@ AVTransCoderNapi::~AVTransCoderNapi()
 napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("createAVTransCoder", JsCreateAVTransCoder),
+        DECLARE_NAPI_STATIC_FUNCTION("createAVTranscoder", JsCreateAVTransCoder),
     };
 
     napi_property_descriptor properties[] = {
@@ -795,21 +795,15 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     ret = transCoder_->SetAudioEncoder(config->audioCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoder", "audioCodecFormat"));
     
-    CHECK_AND_RETURN_RET(config->audioBitrate > 0, GetReturnRet(MSERR_INVALID_VAL,
-        "SetAudioEncoderBitRate", "audioBitrate"));
     ret = transCoder_->SetAudioEncodingBitRate(config->audioBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoderBitRate", "audioBitrate"));
     
     ret = transCoder_->SetVideoEncoder(config->videoCodecFormat);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoder", "videoCodecFormat"));
     
-    CHECK_AND_RETURN_RET(config->videoBitrate > 0, GetReturnRet(MSERR_INVALID_VAL,
-        "SetVideoEncoderBitRate", "videoBitrate"));
     ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
-    CHECK_AND_RETURN_RET(config->videoFrameWidth > 0 && config->videoFrameHeight > 0,
-        GetReturnRet(MSERR_INVALID_VAL, "SetVideoSize", "videoSize"));
     ret = transCoder_->SetVideoSize(config->videoFrameWidth, config->videoFrameHeight);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSize", "videoSize"));
 
@@ -879,15 +873,9 @@ int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContex
     napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
-    int32_t ret = MSERR_OK;
     std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
-    ret = AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (asyncCtx->AVTransCoderSignError(ret, "GetAudioCodecFormat", "audioCodecFormat"), ret));
-
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate),
-        (asyncCtx->AVTransCoderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
-
+    (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate);
     return MSERR_OK;
 }
 
@@ -912,21 +900,11 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
-    int32_t ret = MSERR_OK;
     std::string videoCodec = CommonNapi::GetPropertyString(env, args, "videoCodec");
-    ret = AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoCodecFormat", "videoCodecFormat"), ret));
-
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoBitrate", "videoBitrate"), ret));
-    
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoFrameWidth", "videoFrameWidth"), ret));
-    
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoFrameHeight", "videoFrameHeight"), ret));
-
+    (void)AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     return MSERR_OK;
 }
 

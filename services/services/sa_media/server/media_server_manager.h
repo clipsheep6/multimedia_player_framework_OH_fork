@@ -88,6 +88,7 @@ private:
     void DestroyAVCodecStubForPid(pid_t pid);
     void DestroyAVPlayerStubForPid(pid_t pid);
     void DestroyAVRecorderStubForPid(pid_t pid);
+    void DestroyAVTranscoderStubForPid(pid_t pid);
 
     class AsyncExecutor {
     public:
