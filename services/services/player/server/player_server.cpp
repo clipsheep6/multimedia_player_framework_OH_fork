@@ -1419,6 +1419,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         playerCb_->OnInfo(type, extra, newInfo);
         return;
     }
+    
+    if (type == INFO_TYPE_BUFFERING_UPDATE) {
+        OnBufferingUpdate(type, extra, infoBody);
+    }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
@@ -1437,6 +1441,50 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         MEDIA_LOGD("0x%{public}06" PRIXPTR " playerCb_ != nullptr %{public}d, ret %{public}d",
             FAKE_POINTER(this), playerCb_ != nullptr, ret);
     }
+}
+
+void PlayerServer::OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    int info = -1;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), info);
+    if (info == 1) {
+        OnNotifyBufferingStart();
+        return;
+    }
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), info);
+    if (info == 1) {
+        OnNotifyBufferingEnd();
+        return;
+    }
+}
+void PlayerServer::OnNotifyBufferingStart()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer PauseBuffering in", FAKE_POINTER(this));
+    auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::PauseBuffering", FAKE_POINTER(this));
+        MEDIA_LOGI("PauseBuffering start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->Pause();
+        MEDIA_LOGI("PauseBuffering end");
+    });
+    taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer PauseBuffering out", FAKE_POINTER(this));
+    return;
+}
+
+void PlayerServer::OnNotifyBufferingEnd()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer PlayBuffering in", FAKE_POINTER(this));
+    auto playingTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::PlayBuffering", FAKE_POINTER(this));
+        MEDIA_LOGI("PlayBuffering start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->Play();
+        MEDIA_LOGI("PlayBuffering end");
+    });
+    taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::STATE_CHANGE, "play");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer PlayBuffering out", FAKE_POINTER(this));
+    return;
 }
 
 void PlayerServer::OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
