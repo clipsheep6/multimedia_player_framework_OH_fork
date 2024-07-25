@@ -92,6 +92,24 @@ typedef enum AVPlayerSeekMode {
 } AVPlayerSeekMode;
 
 /**
+ * @brief Player Switch Mode
+ * @syscap SystemCapability.Multimedia.Media.AVPlayer
+ * @since 12
+ * @version 1.0
+ */
+typedef enum AVPlayerSwitchMode {
+    /* sync to keyframes after the time point. */
+    AV_SWITCH_SOOMTH = 0,
+    /* sync to keyframes before the time point. */
+    AV_SWITCH_SEGMENT,
+    /**
+     * @brief sync to the closest frame of the given timestamp.
+     * @since 12
+     */
+    AV_SWITCH_CLOSEST = 2,
+} AVPlayerSwitchMode;
+
+/**
  * @brief Playback Speed
  * @syscap SystemCapability.Multimedia.Media.AVPlayer
  * @since 11

@@ -811,7 +811,7 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::SelectTrack(int32_t index)
+int32_t PlayerServiceProxy::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     MediaTrace trace("PlayerServiceProxy::SelectTrack");
     MessageParcel data;
@@ -822,6 +822,7 @@ int32_t PlayerServiceProxy::SelectTrack(int32_t index)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteInt32(index);
+    data.WriteInt32(mode);
     int32_t error = SendRequest(SELECT_TRACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SelectTrack failed, error: %{public}d", error);
