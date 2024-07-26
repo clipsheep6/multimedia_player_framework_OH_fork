@@ -748,5 +748,12 @@ int32_t PlayerMock::SetPlayRange(int64_t start, int64_t end)
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetPlayRange(start, end);
 }
+
+int32_t PlayerMock::SeekContinuous(int32_t mseconds)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->Seek(mseconds, PlayerSeekMode::SEEK_CONTINOUS);
+}
 } // namespace Media
 } // namespace OHOS

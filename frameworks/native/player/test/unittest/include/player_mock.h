@@ -157,6 +157,7 @@ public:
     sptr<Surface> GetVideoSurfaceNext();
     PlayerStates GetState();
     int32_t SetPlayRange(int64_t start, int64_t end);
+    int32_t SeekContinuous(int32_t mseconds);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
