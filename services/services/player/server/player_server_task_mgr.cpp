@@ -83,21 +83,22 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
     }
 
     (void)cancelTask;
-    if (type == PlayerServerTaskType::STATE_CHANGE) {
-        if (currTwoPhaseTask_ == nullptr) {
-            return EnqueueTask(task, type, taskName);
-        } else {
-            if (taskName.compare("volume") == 0) {
-                MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
-                    FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
-            } else {
-                MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
-                    FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
-            }
-
-            pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
-        }
+    if (type != PlayerServerTaskType::STATE_CHANGE && type != PlayerServerTaskType::LIGHT_TASK) {
+        return MSERR_OK;
     }
+    if (currTwoPhaseTask_ == nullptr) {
+        return EnqueueTask(task, type, taskName);
+    }
+    
+    if (taskName.compare("volume") == 0) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
+            FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    } else {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " task[%{public}s] is in processing, the new task[%{public}s]",
+            FAKE_POINTER(this), currTwoPhaseTaskName_.c_str(), taskName.c_str());
+    }
+    
+    pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
     return MSERR_OK;
 }
 

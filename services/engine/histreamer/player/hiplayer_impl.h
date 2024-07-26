@@ -150,6 +150,8 @@ public:
                     StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
+    int32_t PauseDemuxer() override;
+    int32_t ResumeDemuxer() override;
 
 private:
     enum HiplayerSvpMode : int32_t {

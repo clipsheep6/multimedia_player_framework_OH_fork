@@ -50,6 +50,18 @@ int32_t PlayerServer::BaseState::Pause()
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::PauseDemuxer()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
+int32_t PlayerServer::BaseState::ResumeDemuxer()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
 int32_t PlayerServer::BaseState::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     (void)mSeconds;
@@ -279,6 +291,16 @@ int32_t PlayerServer::PlayingState::Play()
 int32_t PlayerServer::PlayingState::Pause()
 {
     return server_.HandlePause();
+}
+
+int32_t PlayerServer::PlayingState::PauseDemuxer()
+{
+    return server_.HandlePauseDemuxer();
+}
+
+int32_t PlayerServer::PlayingState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
 }
 
 int32_t PlayerServer::PlayingState::Seek(int32_t mSeconds, PlayerSeekMode mode)
