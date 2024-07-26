@@ -156,7 +156,7 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
     { "SEEK_CLOSEST", 2 }, // 2 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
-    { "SEEK_CONTINOUS", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
+    { "SEEK_CONTINUOUS", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
 };
 
 static const std::vector<struct JsEnumInt> g_switchMode = {
