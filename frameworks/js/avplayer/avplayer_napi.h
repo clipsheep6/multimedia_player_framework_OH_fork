@@ -207,10 +207,10 @@ private:
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
     /**
-     * getCurrentSelections(callback:AsyncCallback<Array<number>>): void
-     * getCurrentSelections(): Promise<Array<number>>
+     * JsGetSelectedTracks(callback:AsyncCallback<Array<number>>): void
+     * JsGetSelectedTracks(): Promise<Array<number>>
      */
-    static napi_value JsGetCurrentSelections(napi_env env, napi_callback_info info);
+    static napi_value JsGetSelectedTracks(napi_env env, napi_callback_info info);
     /**
      * selectTrack(index: number, mode?: SwitchMode): void;
      */

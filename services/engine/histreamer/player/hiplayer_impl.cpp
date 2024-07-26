@@ -1378,11 +1378,11 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     if (IsAudioMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentAudioTrackId_ && currentAudioTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-        return SelectTrack(currentAudioTrackId_, PlayerSwitchMode::SWITCH_SOOMTH);
+        return SelectTrack(currentAudioTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
     } else if (IsVideoMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentVideoTrackId_ && currentVideoTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
-        return SelectTrack(currentVideoTrackId_, PlayerSwitchMode::SWITCH_SOOMTH);
+        return SelectTrack(currentVideoTrackId_, PlayerSwitchMode::SWITCH_SMOOTH);
     } else if (IsSubtitleMime(mime)) {
         FALSE_RETURN_V_MSG_W(trackId == currentSubtitleTrackId_ && currentSubtitleTrackId_ >= 0,
             MSERR_INVALID_VAL, "DeselectTrack trackId invalid");
@@ -1435,10 +1435,10 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
             trackInfo->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
             if (isHdr) {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_VIVID);
-                videoTrackInfo.PutIntValue("video_type", 1);
+                videoTrackInfo.PutIntValue("hdr_type", 1);
             } else {
                 playStatisticalInfo_.hdrType = static_cast<int8_t>(VideoHdrType::VIDEO_HDR_TYPE_NONE);
-                videoTrackInfo.PutIntValue("video_type", 0);
+                videoTrackInfo.PutIntValue("hdr_type", 0);
             }
             videoTrack.emplace_back(std::move(videoTrackInfo));
         }

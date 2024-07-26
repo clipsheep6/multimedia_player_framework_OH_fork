@@ -650,7 +650,7 @@ int32_t PlayerMock::SelectTrack(int32_t index, bool &trackChange)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     callback_->SetTrackDoneFlag(false);
-    int32_t ret = player_->SelectTrack(index, PlayerSwitchMode::SWITCH_SOOMTH);
+    int32_t ret = player_->SelectTrack(index, PlayerSwitchMode::SWITCH_SMOOTH);
     if (callback_->TrackSync(trackChange) != MSERR_OK) {
         return -1;
     }

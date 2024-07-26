@@ -126,7 +126,7 @@ public:
         return 0;
     }
     
-    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SOOMTH)
+    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH)
     {
         (void)index;
         (void)mode;

@@ -160,9 +160,9 @@ static const std::vector<struct JsEnumInt> g_seekMode = {
 };
 
 static const std::vector<struct JsEnumInt> g_switchMode = {
-    { "SWITCH_SOOMTH", PlayerSwitchMode::SWITCH_SOOMTH },
-    { "SWITCH_SEGMENT", PlayerSwitchMode::SWITCH_SEGMENT },
-    { "SWITCH_CLOSEST", PlayerSwitchMode::SWITCH_CLOSEST },
+    { "SMOOTH", PlayerSwitchMode::SWITCH_SMOOTH },
+    { "SEGMENT", PlayerSwitchMode::SWITCH_SEGMENT },
+    { "CLOSEST", PlayerSwitchMode::SWITCH_CLOSEST },
 };
 
 static const std::vector<struct JsEnumInt> g_AVCodecType = {

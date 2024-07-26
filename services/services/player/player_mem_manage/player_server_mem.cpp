@@ -189,7 +189,7 @@ int32_t PlayerServerMem::SetBehaviorInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SOOMTH);
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SMOOTH);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
 
@@ -206,7 +206,7 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SOOMTH);
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SMOOTH);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
     return MSERR_OK;

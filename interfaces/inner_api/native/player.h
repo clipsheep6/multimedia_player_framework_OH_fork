@@ -637,7 +637,7 @@ public:
      * @since 1.0
      * @version 1.0
     */
-    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SOOMTH) = 0;
+    virtual int32_t SelectTrack(int32_t index, PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH) = 0;
 
     /**
      * @brief Deselect the current audio or subtitle track.
