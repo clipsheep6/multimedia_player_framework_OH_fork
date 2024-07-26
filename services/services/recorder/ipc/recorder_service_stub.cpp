@@ -140,6 +140,10 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return GetAvailableEncoder(data, reply); };
     recFuncs_[GET_MAX_AMPLITUDE] =
         [this](MessageParcel &data, MessageParcel &reply) { return GetMaxAmplitude(data, reply); };
+    recFuncs_[IS_WATERMARK_SUPPORTED] =
+        [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
+    recFuncs_[SET_WATERMARK] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -426,6 +430,18 @@ int32_t RecorderServiceStub::GetMaxAmplitude()
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->GetMaxAmplitude();
+}
+
+int32_t RecorderServiceStub::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetWatermark(waterMarkBuffer);
 }
 
 int32_t RecorderServiceStub::DoIpcAbnormality()
@@ -780,6 +796,23 @@ int32_t RecorderServiceStub::GetMaxAmplitude(MessageParcel &data, MessageParcel 
     (void)data;
     reply.WriteInt32(GetMaxAmplitude());
 
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::IsWatermarkSupported(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    bool isWatermarkSupported = false;
+    int32_t ret = IsWatermarkSupported(isWatermarkSupported);
+    CHECK_AND_RETURN_RET_LOG(reply.WriteBool(isWatermarkSupported), MSERR_INVALID_OPERATION, "reply write failed");
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(ret), MSERR_INVALID_OPERATION, "reply write failed");
+    return MSERR_OK;
+}
+int32_t RecorderServiceStub::SetWatermark(MessageParcel &data, MessageParcel &reply)
+{
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET_LOG(buffer->ReadFromMessageParcel(data), MSERR_INVALID_OPERATION, "read buffer failed");
+    CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(SetWatermark(buffer)), MSERR_INVALID_OPERATION, "reply write failed");
     return MSERR_OK;
 }
 } // namespace Media

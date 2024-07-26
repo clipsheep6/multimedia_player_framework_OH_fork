@@ -945,6 +945,38 @@ int32_t RecorderServer::GetMaxAmplitude()
     return result.Value();
 }
 
+int32_t RecorderServer::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    MEDIA_LOGI("IsWatermarkSupported in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->IsWatermarkSupported(isWatermarkSupported);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    MEDIA_LOGI("SetWatermark in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("RecorderServer::SetWatermark");
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetWatermark(waterMarkBuffer);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 void RecorderServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();

@@ -199,6 +199,14 @@ public:
      * Set App calling info for recording.
      */
     virtual void SetCallingInfo(const std::string &bundleName, uint64_t instanceId) = 0;
+    /**
+     * check if the avrecorder has watermark capability.
+    */
+    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
+    /**
+     * Set watermark config
+    */
+    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 };
 } // namespace Media
 } // namespace OHOS
