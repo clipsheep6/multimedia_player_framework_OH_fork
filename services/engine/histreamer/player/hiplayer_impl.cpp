@@ -599,6 +599,30 @@ int32_t HiPlayerImpl::Pause()
     return TransStatus(ret);
 }
 
+int32_t HiPlayerImpl::PauseDemuxer()
+{
+    MediaTrace trace("HiPlayerImpl::PauseDemuxer");
+    MEDIA_LOG_I("PauseDemuxer in");
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
+        TransStatus(Status::OK), "no playing not allow PauseDemuxer");
+    Status ret = demuxer_->PauseDemuxerReadLoop();
+    callbackLooper_.StopReportMediaProgress();
+    callbackLooper_.ManualReportMediaProgressOnce();
+    return TransStatus(ret);
+}
+
+int32_t HiPlayerImpl::ResumeDemuxer()
+{
+    MediaTrace trace("HiPlayerImpl::ResumeDemuxer");
+    MEDIA_LOG_I("ResumeDemuxer in");
+    FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
+        TransStatus(Status::OK), "no playing not allow ResumeDemuxer");
+    Status ret = demuxer_->ResumeDemuxerReadLoop();
+    callbackLooper_.StartReportMediaProgress();
+    callbackLooper_.ManualReportMediaProgressOnce();
+    return TransStatus(ret);
+}
+
 int64_t HiPlayerImpl::GetCurrentMillisecond()
 {
     std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();

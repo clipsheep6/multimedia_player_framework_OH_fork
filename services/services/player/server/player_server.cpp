@@ -543,6 +543,28 @@ int32_t PlayerServer::HandlePause()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::HandlePauseDemuxer()
+{
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandlePauseDemuxer in");
+    MediaTrace::TraceBegin("PlayerServer::HandlePauseDemuxer", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->PauseDemuxer();
+    taskMgr_.MarkTaskDone("PauseDemuxer done");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine PauseDemuxer Failed!");
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::HandleResumeDemuxer()
+{
+    MEDIA_LOGI("KPI-TRACE: PlayerServer HandleResumeDemuxer in");
+    MediaTrace::TraceBegin("PlayerServer::HandleResumeDemuxer", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_INVALID_OPERATION, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->ResumeDemuxer();
+    taskMgr_.MarkTaskDone("ResumeDemuxer done");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine ResumeDemuxer Failed!");
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1419,6 +1441,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         playerCb_->OnInfo(type, extra, newInfo);
         return;
     }
+    if (type == INFO_TYPE_BUFFERING_UPDATE) {
+        OnBufferingUpdate(type, extra, infoBody);
+    }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
@@ -1438,6 +1463,53 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             FAKE_POINTER(this), playerCb_ != nullptr, ret);
     }
 }
+
+void PlayerServer::OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    Format newInfo = infoBody;
+    int info = -1;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), info);
+    if (info == 1) {
+        OnNotifyBufferingStart();
+        return;
+    }
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), info);
+    if (info == 1) {
+        OnNotifyBufferingEnd();
+        return;
+    }
+}
+
+void PlayerServer::OnNotifyBufferingStart()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingStart in", FAKE_POINTER(this));
+    auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::PauseDemuxer", FAKE_POINTER(this));
+        MEDIA_LOGI("PauseDemuxer start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->PauseDemuxer();
+        MEDIA_LOGI("PauseDemuxer end");
+    });
+    taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::LIGHT_TASK, "PauseDemuxer");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingStart out", FAKE_POINTER(this));
+    return;
+}
+
+void PlayerServer::OnNotifyBufferingEnd()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingEnd in", FAKE_POINTER(this));
+    auto playingTask = std::make_shared<TaskHandler<void>>([this]() {
+        MediaTrace::TraceBegin("PlayerServer::ResumeDemuxer", FAKE_POINTER(this));
+        MEDIA_LOGI("ResumeDemuxer start");
+        auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+        (void)currState->ResumeDemuxer();
+        MEDIA_LOGI("ResumeDemuxer end");
+    });
+    taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::LIGHT_TASK, "ResumeDemuxer");
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " PlayerServer OnNotifyBufferingEnd out", FAKE_POINTER(this));
+    return;
+}
+
 
 void PlayerServer::OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
