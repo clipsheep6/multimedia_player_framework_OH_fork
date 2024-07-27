@@ -1262,7 +1262,7 @@ napi_value AVPlayerNapi::JsGetPlayerInfo(napi_env env, napi_callback_info info)
             }
 
             Format &playerInfo = jsPlayer->playerInfo_;
-            if (jsPlayer->IsControllable()) {
+            if (jsPlayer->IsControllable() && jsPlayer->player_ != nullptr) {
                 (void)jsPlayer->player_->GetPlayerInfo(playerInfo);
             } else {
                 return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
