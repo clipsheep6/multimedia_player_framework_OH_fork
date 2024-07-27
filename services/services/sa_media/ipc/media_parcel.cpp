@@ -58,6 +58,11 @@ static bool DoMarshalling(MessageParcel &parcel, const Format &format)
     return true;
 }
 
+bool MediaParcel::FormatMarshalling(MessageParcel &parcel, const Format &format)
+{
+    return DoMarshalling(parcel, format);
+}
+
 bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
 {
     auto vecMap = format.GetFormatVectorMap();
@@ -126,6 +131,11 @@ static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
     }
 
     return true;
+}
+
+bool MediaParcel::FormatUnmarshalling(MessageParcel &parcel, Format &format)
+{
+    return DoUnmarshalling(parcel, format);
 }
 
 bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)

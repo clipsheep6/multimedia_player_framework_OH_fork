@@ -288,6 +288,13 @@ int32_t PlayerImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return playerService_->GetVideoTrackInfo(videoTrack);
 }
 
+int32_t PlayerImpl::GetPlayerInfo(Format &playerInfo)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetPlayerInfo in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetPlayerInfo(playerInfo);
+}
+
 int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetAudioTrackInfo in", FAKE_POINTER(this));
