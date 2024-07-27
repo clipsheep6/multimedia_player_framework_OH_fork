@@ -258,7 +258,8 @@ public:
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
 
     /**
-     * @brief Obtains playerInfo, contains server_ip_address, average_download_rate, download_rate, is_downloading, buffer_duration.
+     * @brief Obtains playerInfo, contains server_ip_address, average_download_rate,
+     * download_rate, is_downloading, buffer_duration.
      *
      * @param playerInfo.
      * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined

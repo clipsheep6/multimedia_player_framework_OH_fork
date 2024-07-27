@@ -114,7 +114,7 @@ public:
     static constexpr std::string_view PLAYER_AVAILABLE_BITRATES = "available_bitRates";
 };
 
-class PlayerInfoKey{
+class PlayerInfoKey {
 public:
     static constexpr std::string_view SERVER_IP_ADDRESS = "server_ip_address";
     static constexpr std::string_view AVERAGE_DOWNLOAD_RATE = "average_download_rate";
@@ -479,7 +479,8 @@ public:
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
 
     /**
-     * @brief Obtains the playerInfo, contains server_ip_address, average_download_rate, download_rate, is_downloading, buffer_duration.
+     * @brief Obtains the playerInfo, contains server_ip_address, average_download_rate,
+     * download_rate, is_downloading, buffer_duration.
      *
      * @param playerInfo.
      * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
