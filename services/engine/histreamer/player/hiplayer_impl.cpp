@@ -1486,6 +1486,22 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetPlayerInfo(Format& playerInfo)
+{
+    MEDIA_LOG_D("GetPlayerInfo in");
+
+    PlayerInfo playerInfoTmp;
+    auto ret = demuxer_->GetPlayerInfo(playerInfoTmp);
+    if (ret == Status::OK) {
+        playerInfo.PutStringValue("server_ip_address", playerInfoTmp.serverIpAddress);
+        playerInfo.PutLongValue("average_download_rate", playerInfoTmp.averageDownloadRate);
+        playerInfo.PutLongValue("download_rate", playerInfoTmp.downloadRate);
+        playerInfo.PutIntValue("is_downloading", playerInfoTmp.isDownloading);
+        playerInfo.PutLongValue("buffer_duration", playerInfoTmp.bufferDuration);
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 {
     MEDIA_LOG_I_SHORT("GetAudioTrackInfo in");

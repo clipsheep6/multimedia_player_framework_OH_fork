@@ -25,7 +25,9 @@ class MediaParcel {
 public:
     MediaParcel() = delete;
     ~MediaParcel() = delete;
+    static bool FormatMarshalling(MessageParcel &parcel, const Format &format);
     static bool Marshalling(MessageParcel &parcel, const Format &format);
+    static bool FormatUnmarshalling(MessageParcel &parcel, Format &format);
     static bool Unmarshalling(MessageParcel &parcel, Format &format);
 };
 } // namespace Media
