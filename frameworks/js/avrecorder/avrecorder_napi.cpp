@@ -1243,13 +1243,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
             RetInfo(MSERR_EXT_API9_OK, ""));
         bool isWatermarkSupported = false;
         int32_t ret = napi->IsWatermarkSupported(isWatermarkSupported);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_OPERATION, "SetWatermarkTask", ""),
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_UNKNOWN, "SetWatermarkTask", ""),
             "IsWatermarkSupported fail");
-        CHECK_AND_RETURN_RET_LOG(isWatermarkSupported, GetRetInfo(MSERR_INVALID_OPERATION, "SetWatermarkTask", ""),
+        CHECK_AND_RETURN_RET_LOG(isWatermarkSupported, GetRetInfo(MSERR_UNSUPPORT_WATER_MARK, "SetWatermarkTask", ""),
             "capability not supported");
 
         ret = napi->SetWatermark(pixelMap, watermarkConfig);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "SetWatermarkTask", ""),
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "SetWatermarkTask", ""),
             "SetWatermarkTask failed");
 
         MEDIA_LOGI("%{public}s End", option.c_str());

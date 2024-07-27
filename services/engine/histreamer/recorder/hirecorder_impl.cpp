@@ -292,9 +292,6 @@ int32_t HiRecorderImpl::Prepare()
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
         videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
         videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        FALSE_LOG_MSG(IsWatermarkSupported(isWatermarkSupported_) == static_cast<int32_t>(Status::OK),
-            "IsWatermarkSupported failed.");
-        videoEncFormat_->Set<Tag::VIDEO_ENCODER_ENABLE_WATERMARK>(isWatermarkSupported_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
@@ -849,6 +846,7 @@ void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t inst
 
 int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
+    MEDIA_LOG_D("IsWatermarkSupported enter, codecMimeType:" PUBLIC_LOG_S, codecMimeType_.c_str());
     if (isWatermarkSupported_) {
         isWatermarkSupported = isWatermarkSupported_;
         return (int32_t)Status::OK;
