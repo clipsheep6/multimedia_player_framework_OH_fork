@@ -454,7 +454,7 @@ int32_t PlayerServiceProxy::GetPlayerInfo(Format &playerInfo)
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int32_t error = SendRequest(GET_VIDEO_TRACK_INFO, data, reply, option);
+    int32_t error = SendRequest(GET_PLAYER_INFO, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetPlayerInfo failed, error: %{public}d", error);
     (void)MediaParcel::FormatUnmarshalling(reply, playerInfo);

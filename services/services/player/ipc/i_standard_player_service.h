@@ -133,6 +133,7 @@ public:
         GET_SUBTITLE_TRACK_INFO,
         SET_DECRYPT_CONFIG,
         MAX_IPC_ID,
+        GET_PLAYER_INFO,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
