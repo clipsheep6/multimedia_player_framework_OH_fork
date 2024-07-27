@@ -121,7 +121,7 @@ public:
     static constexpr std::string_view DOWNLOAD_RATE = "download_rate";
     static constexpr std::string_view IS_DOWNLOADING = "is_downloading";
     static constexpr std::string_view BUFFER_DURATION = "buffer_duration";
-}
+};
 
 enum PlayerErrorType : int32_t {
     /* Valid error, error code reference defined in media_errors.h */
