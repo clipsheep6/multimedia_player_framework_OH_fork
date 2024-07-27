@@ -38,6 +38,7 @@ namespace {
         {OHOS::Media::RecorderServer::REC_PAUSED, "paused"},
         {OHOS::Media::RecorderServer::REC_ERROR, "error"},
     };
+    const std::string VID_DEBUG_INFO_KEY = "com.openharmony.timed_metadata.vid_maker_info";
 }
 
 namespace OHOS {
@@ -290,6 +291,90 @@ int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
     return result.Value();
 }
 
+int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaSource in, source(%{public}d), "
+        "sourceId(%{public}d)", FAKE_POINTER(this), source, sourceId);
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    config_.metaSource = source;
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetMetaSource(source, sourceId);
+    });
+
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaMimeType in, sourceId(%{public}d), "
+        "MimeType(%{public}s)", FAKE_POINTER(this), sourceId, type.data());
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    config_.metaMimeType = type;
+    MetaMimeType metaMimeType(type);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, metaMimeType);
+    });
+
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaTimedKey in, sourceId(%{public}d), "
+        "MetaTimedKey(%{public}s)", FAKE_POINTER(this), sourceId, timedKey.data());
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    config_.metaTimedKey = timedKey;
+    MetaTimedKey metaTimedKey(timedKey);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, metaTimedKey);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+int32_t RecorderServer::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaSourceTrackMime in, sourceId(%{public}d), "
+        "sourceTrackMime(%{public}s)", FAKE_POINTER(this), sourceId, srcTrackMime.data());
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+
+    config_.metaSrcTrackMime = srcTrackMime;
+    MetaSourceTrackMime metaSrcTrackMime(srcTrackMime);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, metaSrcTrackMime);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
 {
     MEDIA_LOGI("SetCaptureRate sourceId(%{public}d), fps(%{public}lf)", sourceId, fps);
@@ -318,6 +403,24 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, nullptr, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<sptr<OHOS::Surface>>>([&, this] {
         return recorderEngine_->GetSurface(sourceId);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
+}
+
+sptr<OHOS::Surface> RecorderServer::GetMetaSurface(int32_t sourceId)
+{
+    MEDIA_LOGI("ecorderServer:0x%{public}06" PRIXPTR " GetMetaSurface in, sourceId(%{public}d)",
+        FAKE_POINTER(this), sourceId);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
+        nullptr);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, nullptr, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<sptr<OHOS::Surface>>>([&, this] {
+        return recorderEngine_->GetMetaSurface(sourceId);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
@@ -444,6 +547,24 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
 
     auto result = task->GetResult();
     return result.Value();
+}
+
+int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId(%{public}d)",
+        FAKE_POINTER(this), sourceId);
+    CHECK_AND_RETURN_RET_LOG(SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA) == MSERR_OK,
+        MSERR_EXT_OPERATE_NOT_PERMIT, "set meta mime type failed");
+    if (config_.metaSource == MetaSourceType::VIDEO_META_MAKER_INFO) {
+        CHECK_AND_RETURN_RET_LOG(
+            SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY) == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+            "set meta key failed");
+        auto sourceTrackMime = GetVideoMime(config_.videoCodec);
+        CHECK_AND_RETURN_RET_LOG(
+            SetMetaSourceTrackMime(sourceId, sourceTrackMime) == MSERR_OK,
+            MSERR_EXT_OPERATE_NOT_PERMIT, "set meta source track mime failed");
+    }
+    return MSERR_OK;
 }
 
 int32_t RecorderServer::SetDataSource(DataSourceType dataType, int32_t &sourceId)

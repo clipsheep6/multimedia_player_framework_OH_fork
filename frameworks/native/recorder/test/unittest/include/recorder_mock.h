@@ -82,6 +82,7 @@ namespace RecorderTestParam {
     struct VideoRecorderConfig {
         int32_t audioSourceId = 0;
         int32_t videoSourceId = 0;
+        int32_t metaSourceId = 0;
         int32_t audioEncodingBitRate = 48000;
         int32_t channelCount = 2;
         int32_t duration = 60;
@@ -97,6 +98,7 @@ namespace RecorderTestParam {
         OutputFormatType outPutFormat = FORMAT_MPEG_4;
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
         VideoCodecFormat videoFormat = H264;
+        MetaSourceType metaSourceType = MetaSourceType::VIDEO_META_SOURCE_INVALID;
         bool enableTemporalScale = false;
         float latitude = 30.0;
         float longitude = 60.0;
@@ -129,6 +131,7 @@ public:
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate);
     int32_t SetCaptureRate(int32_t sourceId, double fps);
     OHOS::sptr<OHOS::Surface> GetSurface(int32_t sourceId);
+    OHOS::sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId);
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder);
     int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate);
     int32_t SetAudioChannels(int32_t sourceId, int32_t num);
@@ -165,6 +168,8 @@ public:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
 
 private:
+    int32_t SetAudVidFormat(
+        const std::string &recorderType, RecorderTestParam::VideoRecorderConfig &recorderConfig) const;
     std::shared_ptr<Recorder> recorder_ = nullptr;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
     std::shared_ptr<std::ifstream> file_ = nullptr;

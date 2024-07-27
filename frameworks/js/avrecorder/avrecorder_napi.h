@@ -44,6 +44,7 @@ namespace AVRecordergOpt {
 const std::string PREPARE = "Prepare";
 const std::string SET_ORIENTATION_HINT = "SetOrientationHint";
 const std::string GETINPUTSURFACE = "GetInputSurface";
+const std::string GETINPUTMETASURFACE = "GetInputMetaSurface";
 const std::string START = "Start";
 const std::string PAUSE = "Pause";
 const std::string RESUME = "Resume";
@@ -80,6 +81,7 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::SET_ORIENTATION_HINT,
         AVRecordergOpt::GETINPUTSURFACE,
+        AVRecordergOpt::GETINPUTMETASURFACE,
         AVRecordergOpt::START,
         AVRecordergOpt::RESET,
         AVRecordergOpt::RELEASE,
@@ -164,6 +166,7 @@ struct AVRecorderProfile {
 struct AVRecorderConfig {
     AudioSourceType audioSourceType; // source type;
     VideoSourceType videoSourceType;
+    std::vector<MetaSourceType> metaSourceTypeVec;
     AVRecorderProfile profile;
     std::string url;
     int32_t rotation = 0; // Optional
@@ -214,6 +217,11 @@ private:
      * getInputSurface(): Promise<string>
      */
     static napi_value JsGetInputSurface(napi_env env, napi_callback_info info);
+    /**
+     * getInputMetaSurface(callback: AsyncCallback<string>): void
+     * getInputMetaSurface(): Promise<string>
+     */
+    static napi_value JsGetInputMetaSurface(napi_env env, napi_callback_info info);
     /**
      * start(callback: AsyncCallback<void>): void;
      * start(): Promise<void>;
@@ -301,6 +309,8 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetInputMetaSurface(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderProfileTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
@@ -325,6 +335,8 @@ private:
 
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
         bool &getValue);
+    static int32_t GetPropertyInt32Vec(napi_env env, napi_value configObj, const std::string &type,
+    std::vector<int32_t> &result, bool &getValue);
 
     static int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
         const int32_t sourceId, const int32_t qualityLevel);
@@ -366,6 +378,7 @@ private:
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value *args);
     int32_t GetWatermark(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
@@ -386,11 +399,15 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvRecorderTaskqFunc> taskQFuncs_;
+    std::map<MetaSourceType, int32_t> metaSourceIDMap_;
     sptr<Surface> surface_ = nullptr;
+    sptr<Surface> metaSurface_ = nullptr;
     int32_t videoSourceID_ = -1;
     int32_t audioSourceID_ = -1;
+    int32_t metaSourceID_ = -1;
     bool withVideo_ = false;
     bool getVideoInputSurface_ = false;
+    bool getMetaInputSurface_ = false;
     int32_t sourceId_ = -1;
     int32_t qualityLevel_ = -1;
     bool hasConfiged_ = false;
@@ -414,6 +431,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     AudioRecorderChangeInfo changeInfo_;
     int32_t maxAmplitude_ = 0;
     std::vector<EncoderCapabilityData> encoderInfo_;
+    MetaSourceType metaType_ = MetaSourceType::VIDEO_META_SOURCE_INVALID;
     std::shared_ptr<PixelMap> pixelMap_ = nullptr;
     std::shared_ptr<WatermarkConfig> watermarkConfig_ = nullptr;
     bool isWatermarkSupported_ = false;

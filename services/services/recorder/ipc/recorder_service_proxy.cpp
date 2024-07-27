@@ -179,6 +179,95 @@ int32_t RecorderServiceProxy::SetVideoEnableTemporalScale(int32_t sourceId, bool
     return reply.ReadInt32();
 }
 
+int32_t RecorderServiceProxy::SetMetaConfigs(int32_t sourceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    int error = Remote()->SendRequest(SET_META_CONFIGS, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMetaConfigs failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(source);
+    int error = Remote()->SendRequest(SET_META_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMetaSource failed, error: %{public}d", error);
+
+    sourceId = reply.ReadInt32();
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteCString(type.data());
+    int error = Remote()->SendRequest(SET_META_MIME_TYPE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMetaMimeType failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteCString(timedKey.data());
+    int error = Remote()->SendRequest(SET_META_TIMED_KEY, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMetaTimedKey failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    data.WriteCString(srcTrackMime.data());
+    int error = Remote()->SendRequest(SET_META_TRACK_SRC_MIME_TYPE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetMetaSourceTrackMime failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t RecorderServiceProxy::SetCaptureRate(int32_t sourceId, double fps)
 {
     MessageParcel data;
@@ -210,6 +299,29 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetSurface(int32_t sourceId)
     int error = Remote()->SendRequest(GET_SURFACE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "GetSurface failed, error: %{public}d", error);
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to read surface object");
+
+    sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, nullptr, "failed to convert object to producer");
+
+    return OHOS::Surface::CreateSurfaceAsProducer(producer);
+}
+
+sptr<OHOS::Surface> RecorderServiceProxy::GetMetaSurface(int32_t sourceId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
+
+    data.WriteInt32(sourceId);
+    int error = Remote()->SendRequest(GET_META_SURFACE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
+        "GetMetaSurface failed, error: %{public}d", error);
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to read surface object");

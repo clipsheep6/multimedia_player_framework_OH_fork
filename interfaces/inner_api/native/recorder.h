@@ -52,6 +52,21 @@ enum VideoSourceType : int32_t {
 };
 
 /**
+ * @brief Enumerates meta source types.
+ *
+ * @since 4.2
+ * @version 4.2
+ */
+enum MetaSourceType : int32_t {
+    /** Invalid metadata source */
+    VIDEO_META_SOURCE_INVALID = -1,
+    /** Video Maker info */
+    VIDEO_META_MAKER_INFO,
+    /** max enum */
+    VIDEO_META_SOURCE_BUTT
+};
+
+/**
  * @brief Enumerates audio source types.
  *
  * @since 1.0
@@ -503,6 +518,33 @@ public:
     virtual int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) = 0;
 
     /**
+     * @brief Sets a meta source for recording.
+     *
+     * If this function is not called, the output file does not contain the meta track.
+     *
+     * @param source Indicates the meta source type. For details, see {@link MetaSourceType}.
+     * @param sourceId Indicates the meta source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     *
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) = 0;
+
+    /**
+     * @brief Sets a meta track configurations for recording.
+     *
+     * If this function is not called, the output file does not contain the meta track.
+     *
+     * @param sourceId Indicates the data source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     *
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaConfigs(int32_t sourceId) = 0;
+
+    /**
      * @brief Sets the output file format.
      *
      * This function must be called before {@link Prepare} and after after all required sources have been set. After
@@ -620,6 +662,17 @@ public:
      * @version 1.0
      */
     virtual sptr<OHOS::Surface> GetSurface(int32_t sourceId) = 0;
+
+    /**
+     * @brief Obtains the surface of the video source. This function can only be called after {@link Prepare} and
+     * before {@link Stop}.
+     *
+     * @param sourceId Indicates the meta source ID, which can be obtained from {@link SetMetaSource}.
+     * @return Returns the pointer to the surface.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) = 0;
 
     /**
      * @brief Sets an audio encoder for recording.

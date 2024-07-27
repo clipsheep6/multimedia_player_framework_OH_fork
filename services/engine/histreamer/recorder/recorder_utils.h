@@ -31,6 +31,7 @@ struct SourceIdGenerator {
 static inline const uint32_t SOURCE_MASK = 0xF00;
 static inline const uint32_t VIDEO_MASK = 0x100;
 static inline const uint32_t AUDIO_MASK = 0x200;
+static inline const uint32_t META_MASK = 0x300;
 static inline const uint32_t INDEX_MASK = 0xFF;
 
 static inline int32_t GenerateAudioSourceId(uint32_t index)
@@ -43,6 +44,11 @@ static inline int32_t GenerateVideoSourceId(uint32_t index)
     return static_cast<int32_t>(VIDEO_MASK + (INDEX_MASK & index));
 }
 
+static inline int32_t GenerateMetaSourceId(uint32_t index)
+{
+    return static_cast<int32_t>(META_MASK + (INDEX_MASK & index));
+}
+
 static inline int32_t IsAudio(int32_t sourceId)
 {
     return ((sourceId > 0) &&
@@ -53,6 +59,12 @@ static inline int32_t IsVideo(int32_t sourceId)
 {
     return ((sourceId > 0) &&
             ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == VIDEO_MASK));
+}
+
+static inline int32_t IsMeta(int32_t sourceId)
+{
+    return ((sourceId > 0) &&
+            ((static_cast<uint32_t>(sourceId) & SOURCE_MASK) == META_MASK));
 }
 };
 } // Media

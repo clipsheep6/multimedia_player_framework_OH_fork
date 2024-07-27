@@ -75,8 +75,14 @@ public:
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) override;
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr) override;
     int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) override;
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) override;
+    int32_t SetMetaConfigs(int32_t sourceId) override;
+    int32_t SetMetaMimeType(int32_t sourceId, const std::string_view &type) override;
+    int32_t SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey) override;
+    int32_t SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime) override;
     int32_t SetCaptureRate(int32_t sourceId, double fps) override;
     sptr<OHOS::Surface> GetSurface(int32_t sourceId) override;
+    sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) override;
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override;
     int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId) override;
     int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) override;
@@ -139,6 +145,7 @@ private:
     struct ConfigInfo {
         VideoSourceType videoSource = VIDEO_SOURCE_BUTT;
         AudioSourceType audioSource = AUDIO_SOURCE_INVALID;
+        MetaSourceType metaSource = VIDEO_META_SOURCE_INVALID;
         VideoCodecFormat videoCodec = VIDEO_CODEC_FORMAT_BUTT;
         AudioCodecFormat audioCodec = AUDIO_CODEC_FORMAT_BUTT;
         int32_t width = 0;
@@ -158,8 +165,11 @@ private:
         float longitude = 0.0;
         int32_t rotation = 0;
         int32_t url = -1;
+        std::string metaSrcTrackMime;
         Meta customInfo;
         std::string genre;
+        std::string metaMimeType;
+        std::string metaTimedKey;
         bool withVideo = false;
         bool withAudio = false;
         bool withLocation = false;

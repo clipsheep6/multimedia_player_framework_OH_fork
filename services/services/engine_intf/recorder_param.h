@@ -52,6 +52,12 @@ enum RecorderPublicParamType : uint32_t {
     AUD_CHANNEL,
     AUD_BITRATE,
     AUD_PUBIC_PARAM_END,
+    // meta data
+    META_PARAM_BEGIN,
+    META_MIME_TYPE,
+    META_TIMED_KEY,
+    META_SOURCE_TRACK_MIME,
+    META_PARAM_END,
     // output begin,
     MAX_DURATION,
     MAX_SIZE,
@@ -75,6 +81,11 @@ struct RecorderParam {
     bool IsVideoParam() const
     {
         return (type > VID_PUBLIC_PARAM_BEGIN) && (type < VID_PUBLIC_PARAM_END);
+    }
+
+    bool IsMetaParam() const
+    {
+        return (type >= META_PARAM_BEGIN) && (type < META_PARAM_END);
     }
 
     bool IsAudioParam() const
@@ -191,6 +202,24 @@ struct GenreInfo : public RecorderParam {
     explicit GenreInfo(std::string genreInfo) : RecorderParam(RecorderPublicParamType::GENRE_INFO),
         genre(genreInfo) {}
     std::string genre;
+};
+
+struct MetaMimeType : public RecorderParam {
+    explicit MetaMimeType(const std::string_view &type) : RecorderParam(RecorderPublicParamType::META_MIME_TYPE),
+        mimeType(type) {}
+    std::string mimeType;
+};
+
+struct MetaTimedKey : public RecorderParam {
+    explicit MetaTimedKey(const std::string_view &key) : RecorderParam(RecorderPublicParamType::META_TIMED_KEY),
+        timedKey(key) {}
+    std::string timedKey;
+};
+
+struct MetaSourceTrackMime : public RecorderParam {
+    explicit MetaSourceTrackMime(std::string_view type)
+        : RecorderParam(RecorderPublicParamType::META_SOURCE_TRACK_MIME), sourceMime(type) {}
+    std::string sourceMime;
 };
 } // namespace Media
 } // namespace OHOS

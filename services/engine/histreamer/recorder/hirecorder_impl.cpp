@@ -77,6 +77,11 @@ private:
     HiRecorderImpl *hiRecorderImpl_;
 };
 
+static inline MetaSourceType GetMetaSourceType(int32_t sourceId)
+{
+    return static_cast<MetaSourceType>(sourceId - SourceIdGenerator::META_MASK);
+}
+
 HiRecorderImpl::HiRecorderImpl(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
     : appUid_(appUid), appPid_(appPid), appTokenId_(appTokenId), appFullTokenId_(appFullTokenId)
 {
@@ -144,6 +149,29 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
         videoCount_++;
         videoSourceId_ = tempSourceId;
         sourceId = videoSourceId_;
+        OnStateChanged(StateId::RECORDING_SETTING);
+    }
+    return (int32_t)ret;
+}
+
+int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    MediaTrace trace("HiRecorderImpl::SetMetaSource");
+    MEDIA_LOG_I("SetMetaSource enter, sourceType:" PUBLIC_LOG_D32, static_cast<int32_t>(source));
+    sourceId = INVALID_SOURCE_ID;
+    FALSE_RETURN_V(
+        source > MetaSourceType::VIDEO_META_SOURCE_INVALID && source < MetaSourceType::VIDEO_META_SOURCE_BUTT,
+        (int32_t)Status::ERROR_INVALID_PARAMETER
+    );
+    Status ret;
+    auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
+        ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
+    ret = pipeline_->AddHeadFilters({filter});
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
+    if (filter && ret == Status::OK) {
+        MEDIA_LOG_I("SetMetaSource success.");
+        sourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
+        metaDataFilters_.emplace(std::make_pair(sourceId, filter));
         OnStateChanged(StateId::RECORDING_SETTING);
     }
     return (int32_t)ret;
@@ -240,8 +268,17 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::CUSTOM_INFO:
             ConfigureMuxer(recParam);
             break;
+        case RecorderPublicParamType::META_MIME_TYPE:
+        case RecorderPublicParamType::META_TIMED_KEY:
+        case RecorderPublicParamType::META_SOURCE_TRACK_MIME:
+            ConfigureMeta(sourceId, recParam);
+            break;
         default:
             break;
+    }
+    if (metaDataFormats_.size() != 0 && muxerFilter_) {
+        muxerFormat_->SetData("use_timed_meta_track", 1);
+        muxerFilter_->SetParameter(muxerFormat_);
     }
     OnStateChanged(StateId::RECORDING_SETTING);
     return (int32_t)Status::OK;
@@ -257,6 +294,32 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
         producerSurface_ = videoCaptureFilter_->GetInputSurface();
     }
     return producerSurface_;
+}
+
+sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
+{
+    MEDIA_LOG_I("HiRecorderImpl GetMetaSurface enter.");
+    
+    if (SourceIdGenerator::IsMeta(sourceId) &&
+        (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
+        GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
+        producerMetaSurface_ = metaDataFilters_.at(sourceId)->GetInputMetaSurface();
+    }
+    return producerMetaSurface_;
+}
+
+int32_t HiRecorderImpl::PrepareMeta()
+{
+    MEDIA_LOG_I("HiRecorderImpl PrepareMeta enter.");
+    for (auto iter : metaDataFilters_) {
+        if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
+            FALSE_RETURN_V_MSG_E(iter.second->Configure(metaDataFormats_.at(iter.first)) == Status::OK,
+                ERR_UNKNOWN_REASON, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
+            iter.second->SetCodecFormat(metaDataFormats_.at(iter.first));
+        }
+        iter.second->Init(recorderEventReceiver_, recorderCallback_);
+    }
+    return (int32_t)Status::OK;
 }
 
 int32_t HiRecorderImpl::Prepare()
@@ -295,6 +358,11 @@ int32_t HiRecorderImpl::Prepare()
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
     }
+
+    if (metaDataFilters_.size()) {
+        FALSE_RETURN_V_MSG_E(PrepareMeta() == (int32_t)Status::OK, ERR_UNKNOWN_REASON, "prepare MetadataFilter fail");
+    }
+
     if (videoCaptureFilter_) {
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
@@ -380,6 +448,13 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     if (videoEncoderFilter_) {
         pipeline_->RemoveHeadFilter(videoEncoderFilter_);
     }
+    for (auto iter : metaDataFilters_) {
+        if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
+            metaDataFormats_.at(iter.first)->Clear();
+        }
+        pipeline_->RemoveHeadFilter(iter.second);
+    }
+    metaDataFilters_.clear();
     if (videoCaptureFilter_) {
         pipeline_->RemoveHeadFilter(videoCaptureFilter_);
     }
@@ -622,6 +697,36 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
     }
 }
 
+ 
+void HiRecorderImpl::ConfigureMeta(int32_t sourceId, const RecorderParam &recParam)
+{
+    MEDIA_LOG_I("HiRecorderImpl ConfigureMeta enter");
+    if (metaDataFormats_.find(sourceId) == metaDataFormats_.end()) {
+        auto format = std::make_shared<Meta>();
+        metaDataFormats_.emplace(std::make_pair(sourceId, format));
+    }
+    auto metaFormat = metaDataFormats_.at(sourceId);
+    switch (recParam.type) {
+        case RecorderPublicParamType::META_MIME_TYPE: {
+            MetaMimeType mimeType = static_cast<const MetaMimeType&>(recParam);
+            metaFormat->Set<Tag::MIME_TYPE>(mimeType.mimeType);
+            break;
+        }
+        case RecorderPublicParamType::META_TIMED_KEY: {
+            MetaTimedKey timedKey = static_cast<const MetaTimedKey&>(recParam);
+            metaFormat->Set<Tag::TIMED_METADATA_KEY>(timedKey.timedKey);
+            break;
+        }
+        case RecorderPublicParamType::META_SOURCE_TRACK_MIME: {
+            MetaSourceTrackMime sourceTrackMime = static_cast<const MetaSourceTrackMime&>(recParam);
+            metaFormat->Set<Tag::TIMED_METADATA_SRC_TRACK_MIME>(sourceTrackMime.sourceMime);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void HiRecorderImpl::ConfigureVideoEnableTemporalScale(const RecorderParam &recParam)
 {
     VidEnableTemporalScale vidEnableTemporalScale = static_cast<const VidEnableTemporalScale&>(recParam);
@@ -740,6 +845,9 @@ bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recPa
         static_cast<int32_t>(audioSourceId_) == sourceId) ||
         (SourceIdGenerator::IsVideo(sourceId) && recParam.IsVideoParam() &&
         static_cast<int32_t>(videoSourceId_) == sourceId) ||
+        (SourceIdGenerator::IsMeta(sourceId) && recParam.IsMetaParam() &&
+        (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
+        GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) ||
         ((sourceId == DUMMY_SOURCE_ID) && !(recParam.IsAudioParam() || recParam.IsVideoParam())), false);
     return true;
 }

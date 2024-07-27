@@ -144,6 +144,18 @@ void RecorderServiceStub::FillRecFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return IsWatermarkSupported(data, reply); };
     recFuncs_[SET_WATERMARK] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetWatermark(data, reply); };
+    recFuncs_[SET_META_CONFIGS] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMetaConfigs(data, reply); };
+    recFuncs_[SET_META_SOURCE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMetaSource(data, reply); };
+    recFuncs_[SET_META_MIME_TYPE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMetaMimeType(data, reply); };
+    recFuncs_[SET_META_TIMED_KEY] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMetaTimedKey(data, reply); };
+    recFuncs_[SET_META_TRACK_SRC_MIME_TYPE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetMetaSourceTrackMime(data, reply); };
+    recFuncs_[GET_META_SURFACE] =
+        [this](MessageParcel &data, MessageParcel &reply) { return GetMetaSurface(data, reply); };
 }
 
 int32_t RecorderServiceStub::DestroyStub()
@@ -268,10 +280,46 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool 
     return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
+int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetMetaConfigs(sourceId);
+}
+
+int32_t RecorderServiceStub::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetMetaSource(source, sourceId);
+}
+
+int32_t RecorderServiceStub::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetMetaMimeType(sourceId, type);
+}
+
+int32_t RecorderServiceStub::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetMetaTimedKey(sourceId, timedKey);
+}
+
+int32_t RecorderServiceStub::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->SetMetaSourceTrackMime(sourceId, srcTrackMime);
+}
+
 sptr<OHOS::Surface> RecorderServiceStub::GetSurface(int32_t sourceId)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, nullptr, "recorder server is nullptr");
     return recorderServer_->GetSurface(sourceId);
+}
+
+sptr<OHOS::Surface> RecorderServiceStub::GetMetaSurface(int32_t sourceId)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, nullptr, "recorder server is nullptr");
+    return recorderServer_->GetMetaSurface(sourceId);
 }
 
 int32_t RecorderServiceStub::SetAudioSource(AudioSourceType source, int32_t &sourceId)
@@ -526,10 +574,64 @@ int32_t RecorderServiceStub::SetVideoEnableTemporalScale(MessageParcel &data, Me
     return MSERR_OK;
 }
 
+int32_t RecorderServiceStub::SetMetaConfigs(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    int32_t ret = SetMetaConfigs(sourceId);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetMetaSource(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t source = data.ReadInt32();
+    MetaSourceType sourceType = static_cast<MetaSourceType>(source);
+    int32_t sourceId = 0;
+    int32_t ret = SetMetaSource(sourceType, sourceId);
+    reply.WriteInt32(sourceId);
+    reply.WriteInt32(ret);
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetMetaMimeType(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    std::string_view mimetype(data.ReadCString());
+    reply.WriteInt32(SetMetaMimeType(sourceId, mimetype));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetMetaTimedKey(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    std::string_view timedKey(data.ReadCString());
+    reply.WriteInt32(SetMetaTimedKey(sourceId, timedKey));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetMetaSourceTrackMime(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    std::string_view srcTrackMime(data.ReadCString());
+    reply.WriteInt32(SetMetaSourceTrackMime(sourceId, srcTrackMime));
+    return MSERR_OK;
+}
+
 int32_t RecorderServiceStub::GetSurface(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = data.ReadInt32();
     sptr<OHOS::Surface> surface = GetSurface(sourceId);
+    if (surface != nullptr && surface->GetProducer() != nullptr) {
+        sptr<IRemoteObject> object = surface->GetProducer()->AsObject();
+        (void)reply.WriteRemoteObject(object);
+    }
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::GetMetaSurface(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = data.ReadInt32();
+    sptr<OHOS::Surface> surface = GetMetaSurface(sourceId);
     if (surface != nullptr && surface->GetProducer() != nullptr) {
         sptr<IRemoteObject> object = surface->GetProducer()->AsObject();
         (void)reply.WriteRemoteObject(object);

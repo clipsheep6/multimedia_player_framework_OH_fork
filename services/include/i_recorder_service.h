@@ -44,6 +44,78 @@ public:
     virtual int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) = 0;
 
     /**
+     * @brief Sets a meta source for recording.
+     *
+     * If this function is not called, the output file does not contain the meta track.
+     *
+     * @param source Indicates the meta source type. For details, see {@link MetaSourceType}.
+     * @param sourceId Indicates the meta source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     *
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) = 0;
+
+    /**
+     * @brief Sets a meta configurations for recording.
+     *
+     * If this function is not called, the output file does not contain the meta track.
+     *
+     * @param source Indicates the meta source type. For details, see {@link MetaSourceType}.
+     * @param sourceId Indicates the meta source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     *
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaConfigs(int32_t sourceId) = 0;
+    
+    /**
+     * @brief Sets the meta mime type.
+     *
+     * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
+     *
+     * @param sourceId Indicates the meta source ID, which can be obtained from {@link SetVideoSource}.
+     * @param type mime type.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaMimeType(int32_t sourceId, const std::string_view &type) = 0;
+    
+    /**
+     * @brief Sets the meta timed key.
+     *
+     * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
+     *
+     * @param sourceId Indicates the meta source ID, which can be obtained from {@link SetVideoSource}.
+     * @param key meta data timed key.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey) = 0;
+    
+    /**
+     * @brief Sets the meta timed key.
+     *
+     * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
+     *
+     * @param sourceId Indicates the meta source ID, which can be obtained from {@link SetVideoSource}.
+     * @param type meta data source track mime type.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime) = 0;
+
+    /**
      * @brief Sets a video encoder for recording.
      *
      * If this function is not called, the output file does not contain the video track.
@@ -149,6 +221,16 @@ public:
      * @version 1.0
      */
     virtual sptr<OHOS::Surface> GetSurface(int32_t sourceId) = 0;
+
+    /**
+     * @brief Obtains the surface of the meta track.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetMetaSource}.
+     * @return Returns the pointer to the surface.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) = 0;
 
     /**
      * @brief Sets the audio source for recording.

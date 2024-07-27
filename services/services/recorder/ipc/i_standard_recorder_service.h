@@ -33,6 +33,11 @@ public:
     virtual int32_t SetVideoSize(int32_t sourceId, int32_t width, int32_t height) = 0;
     virtual int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate) = 0;
     virtual int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate) = 0;
+    virtual int32_t SetMetaConfigs(int32_t sourceId) = 0;
+    virtual int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) = 0;
+    virtual int32_t SetMetaMimeType(int32_t sourceId, const std::string_view &type) = 0;
+    virtual int32_t SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey) = 0;
+    virtual int32_t SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime) = 0;
     virtual int32_t SetCaptureRate(int32_t sourceId, double fps)
     {
         (void)sourceId;
@@ -40,6 +45,7 @@ public:
         return MSERR_UNSUPPORT;
     };
     virtual sptr<OHOS::Surface> GetSurface(int32_t sourceId) = 0;
+    virtual sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId) = 0;
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
     virtual int32_t SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder) = 0;
     virtual int32_t SetAudioSampleRate(int32_t sourceId, int32_t rate) = 0;
@@ -132,6 +138,12 @@ public:
         GET_MAX_AMPLITUDE,
         IS_WATERMARK_SUPPORTED,
         SET_WATERMARK,
+        SET_META_CONFIGS,
+        SET_META_SOURCE,
+        SET_META_MIME_TYPE,
+        SET_META_TIMED_KEY,
+        SET_META_TRACK_SRC_MIME_TYPE,
+        GET_META_SURFACE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

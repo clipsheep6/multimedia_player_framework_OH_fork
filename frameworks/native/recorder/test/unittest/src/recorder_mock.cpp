@@ -160,6 +160,12 @@ OHOS::sptr<OHOS::Surface> RecorderMock::GetSurface(int32_t sourceId)
     return recorder_->GetSurface(sourceId);
 }
 
+OHOS::sptr<OHOS::Surface> RecorderMock::GetMetaSurface(int32_t sourceId)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, nullptr, "recorder_ == nullptr");
+    return recorder_->GetMetaSurface(sourceId);
+}
+
 int32_t RecorderMock::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
@@ -550,6 +556,34 @@ int32_t RecorderMock::CameraServicesForAudio(VideoRecorderConfig &recorderConfig
     return MSERR_OK;
 }
 
+int32_t RecorderMock::SetAudVidFormat(const std::string &recorderType, VideoRecorderConfig &recorderConfig) const
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    int32_t ret = 0;
+    ret = recorder_->SetVideoSource(recorderConfig.vSource, recorderConfig.videoSourceId);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSource failed ");
+    ret = recorder_->SetAudioSource(recorderConfig.aSource, recorderConfig.audioSourceId);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudioSource failed ");
+    if (recorderConfig.metaSourceType == MetaSourceType::VIDEO_META_MAKER_INFO) {
+        ret = recorder_->SetMetaSource(recorderConfig.metaSourceType, recorderConfig.metaSourceId);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetMetaSource failed ");
+    }
+    ret = recorder_->SetOutputFormat(recorderConfig.outPutFormat);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
+    ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoEnableTemporalScale failed ");
+    ret = CameraServicesForVideo(recorderConfig);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
+    ret = CameraServicesForAudio(recorderConfig);
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForAudio failed ");
+    if (recorderConfig.metaSourceType == MetaSourceType::VIDEO_META_MAKER_INFO) {
+        ret = recorder_->SetMetaConfigs(recorderConfig.metaSourceId);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetMetaConfigs failed ");
+    }
+    return ret;
+}
+
 int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderConfig &recorderConfig) const
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
@@ -572,19 +606,8 @@ int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderCo
         ret = CameraServicesForAudio(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForAudio failed ");
     } else if (recorderType == AUDIO_VIDEO) {
-        ret = recorder_->SetVideoSource(recorderConfig.vSource, recorderConfig.videoSourceId);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSource failed ");
-        ret = recorder_->SetAudioSource(recorderConfig.aSource, recorderConfig.audioSourceId);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudioSource failed ");
-        ret = recorder_->SetOutputFormat(recorderConfig.outPutFormat);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
-        ret = recorder_->SetVideoEnableTemporalScale(recorderConfig.videoSourceId, recorderConfig.enableTemporalScale);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "SetVideoEnableTemporalScale failed ");
-        ret = CameraServicesForVideo(recorderConfig);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
-        ret = CameraServicesForAudio(recorderConfig);
-        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForAudio failed ");
+        ret = SetAudVidFormat(recorderType, recorderConfig);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudVidFormat failed ");
     }
 
     ret = recorder_->SetMaxDuration(recorderConfig.duration);

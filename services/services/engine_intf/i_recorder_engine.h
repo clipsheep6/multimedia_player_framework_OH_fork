@@ -94,6 +94,14 @@ public:
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
 
     /**
+     * Sets the meta source for recording. The sourceId can be used to identify the meta source when configure
+     * the meta track's any properties. When the setting is failed, the sourceId is -1.
+     * This interface must be called before SetOutputFormat.
+     * Return MSERR_OK indicates success, or others indicate failed.
+     */
+    virtual int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) = 0;
+
+    /**
      * Sets the audio data source for recording. The sourceId can be used to identify the audio data source
      * when configure the audio track's any properties. When the setting is failed, the sourceId is -1.
      * This interface must be called before SetOutputFormat.
@@ -132,6 +140,12 @@ public:
      * from SetVideoSource.
      */
     virtual sptr<Surface> GetSurface(int32_t sourceId) = 0;
+
+    /**
+     * Obtains the surface of the meta source. The sourceId indicates the meta source ID, which can be obtained
+     * from SetMetaSource.
+     */
+    virtual sptr<Surface> GetMetaSurface(int32_t sourceId) = 0;
 
     /**
      * Prepares for recording. This function must be called before Start. Ensure all required recorder parameter

@@ -71,6 +71,7 @@ napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("SetOrientationHint", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("updateRotation", JsSetOrientationHint),
         DECLARE_NAPI_FUNCTION("getInputSurface", JsGetInputSurface),
+        DECLARE_NAPI_FUNCTION("getInputMetaSurface", JsGetInputMetaSurface),
         DECLARE_NAPI_FUNCTION("start", JsStart),
         DECLARE_NAPI_FUNCTION("pause", JsPause),
         DECLARE_NAPI_FUNCTION("resume", JsResume),
@@ -432,6 +433,59 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
     MediaTrace trace("AVRecorder::JsGetInputSurface");
     MEDIA_LOGI("Js GetInputSurface Enter");
     return ExecuteByPromise(env, info, AVRecordergOpt::GETINPUTSURFACE);
+}
+
+napi_value AVRecorderNapi::JsGetInputMetaSurface(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVRecorder::JsGetInputMetaSurface");
+    const std::string &opt = AVRecordergOpt::GETINPUTMETASURFACE;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetMetaType(asyncCtx, env, args[0]) == MSERR_OK) {
+            asyncCtx->task_ = AVRecorderNapi::GetInputMetaSurface(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of getInputMetaSurface finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
 }
 
 napi_value AVRecorderNapi::JsStart(napi_env env, napi_callback_info info)
@@ -1277,6 +1331,41 @@ RetInfo AVRecorderNapi::GetInputSurface()
     return RetInfo(MSERR_EXT_API9_OK, surfaceId);
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetInputMetaSurface(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>(
+        [napi = asyncCtx->napi, config = asyncCtx->config_, type = asyncCtx->metaType_]() {
+        const std::string &option = AVRecordergOpt::GETINPUTMETASURFACE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr && config != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        CHECK_AND_RETURN_RET_LOG(napi->metaSourceIDMap_.find(type) != napi->metaSourceIDMap_.end(),
+            GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
+            "failed to find meta type");
+        if (napi->metaSurface_ == nullptr) {
+            MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
+            napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
+            CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
+
+            SurfaceError error =
+                SurfaceUtils::GetInstance()->Add(napi->metaSurface_->GetUniqueId(), napi->metaSurface_);
+            CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
+                GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "add surface failed"),
+                "failed to AddSurface");
+        }
+
+        auto surfaceId = std::to_string(napi->metaSurface_->GetUniqueId());
+        MEDIA_LOGI("surfaceId:%{public}s", surfaceId.c_str());
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, surfaceId);
+    });
+}
+
 RetInfo AVRecorderNapi::Start()
 {
     if (withVideo_ && !getVideoInputSurface_) {
@@ -1594,6 +1683,7 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
     std::shared_ptr<AVRecorderConfig> config = asyncCtx->config_;
     int32_t audioSource = AUDIO_SOURCE_INVALID;
     int32_t videoSource = VIDEO_SOURCE_BUTT;
+    std::vector<int32_t> metaSource {};
 
     bool getValue = false;
     int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource, getValue);
@@ -1612,6 +1702,15 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
         config->videoSourceType = static_cast<VideoSourceType>(videoSource);
         config->withVideo = true;
         MEDIA_LOGI("videoSource Type %{public}d!", videoSource);
+    }
+
+    ret = AVRecorderNapi::GetPropertyInt32Vec(env, args, "metaSourceTypes", metaSource, getValue);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVRecorderSignError(ret, "getMetaSourceTypes", "metaSourceTypes"), ret));
+    if (getValue) {
+        for (auto item : metaSource) {
+            config->metaSourceTypeVec.push_back(static_cast<MetaSourceType>(item));
+        }
     }
 
     CHECK_AND_RETURN_RET(config->withAudio || config->withVideo,
@@ -1796,6 +1895,31 @@ int32_t AVRecorderNapi::GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asy
     return MSERR_OK;
 }
 
+int32_t AVRecorderNapi::GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok ||
+        (valueType != napi_object && valueType != napi_number)) {
+        asyncCtx->AVRecorderSignError(MSERR_INCORRECT_PARAMETER_TYPE, "GetConfig", "AVRecorderConfig",
+            "meta type should be number.");
+        return MSERR_INCORRECT_PARAMETER_TYPE;
+    }
+
+    asyncCtx->config_ = std::make_shared<AVRecorderConfig>();
+    CHECK_AND_RETURN_RET(asyncCtx->config_,
+        (asyncCtx->AVRecorderSignError(MSERR_NO_MEMORY, "AVRecorderConfig", "AVRecorderConfig"), MSERR_NO_MEMORY));
+
+    int32_t metaSourceType = VIDEO_META_SOURCE_INVALID;
+    if (napi_get_value_int32(env, args, &metaSourceType) != napi_ok) {
+        std::string string = CommonNapi::GetStringArgument(env, args);
+        CHECK_AND_RETURN_RET(string == "",
+            (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getMetaType", "metaSourceType"), MSERR_INVALID_VAL));
+    }
+    asyncCtx->metaType_ = static_cast<MetaSourceType>(metaSourceType);
+    MEDIA_LOGI("metaSource Type %{public}d!", metaSourceType);
+    return MSERR_OK;
+}
+
 int32_t AVRecorderNapi::GetAVMetaData(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
     napi_value args)
 {
@@ -1945,6 +2069,13 @@ RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableTemporalScale", "enableTemporalScale"));
     }
 
+    if (config->metaSourceTypeVec.size() != 0 &&
+        std::find(config->metaSourceTypeVec.cbegin(), config->metaSourceTypeVec.cend(),
+        MetaSourceType::VIDEO_META_MAKER_INFO) != config->metaSourceTypeVec.cend()) {
+        ret = recorder_->SetMetaConfigs(metaSourceID_);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetMetaConfigs", "metaSourceType"));
+    }
+
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -1967,6 +2098,14 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
     if (config->withVideo) {
         ret = recorder_->SetVideoSource(config->videoSourceType, videoSourceID_);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSource", "videoSourceType"));
+    }
+
+    if (config->metaSourceTypeVec.size() != 0 &&
+        std::find(config->metaSourceTypeVec.cbegin(), config->metaSourceTypeVec.cend(),
+        MetaSourceType::VIDEO_META_MAKER_INFO) != config->metaSourceTypeVec.cend()) {
+        ret = recorder_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, metaSourceID_);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetMetaSource", "metaSourceType"));
+        metaSourceIDMap_.emplace(std::make_pair(MetaSourceType::VIDEO_META_MAKER_INFO, metaSourceID_));
     }
 
     RetInfo retInfo = SetProfile(config);
@@ -2136,6 +2275,49 @@ int32_t AVRecorderNapi::GetPropertyInt32(napi_env env, napi_value configObj, con
     }
 
     MEDIA_LOGI("get %{public}s : %{public}d!", type.c_str(), result);
+    getValue = true;
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::GetPropertyInt32Vec(napi_env env, napi_value configObj, const std::string &type,
+    std::vector<int32_t> &result, bool &getValue)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    getValue = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGI("can not find %{public}s property", type.c_str());
+        return MSERR_OK;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGI("get %{public}s property fail", type.c_str());
+        return MSERR_UNKNOWN;
+    }
+    bool isArray = false;
+    status = napi_is_array(env, item, &isArray);
+    if (status != napi_ok || !isArray) {
+        MEDIA_LOGE("get property fail: not array");
+    }
+    uint32_t arrayLen = 0;
+    napi_get_array_length(env, item, &arrayLen);
+    for (uint32_t i = 0; i < arrayLen; i++) {
+        napi_value element = nullptr;
+        napi_get_element(env, item, i, &element);
+
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, element, &valueType);
+        if (valueType != napi_number) {
+            MEDIA_LOGE("get int32 vector failed, not number!");
+            return MSERR_UNKNOWN;
+        }
+
+        int32_t int32Value = 0;
+        napi_get_value_int32(env, element, &int32Value);
+        result.push_back(int32Value);
+    }
+
     getValue = true;
     return MSERR_OK;
 }

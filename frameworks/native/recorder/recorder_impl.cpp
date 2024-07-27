@@ -145,6 +145,15 @@ sptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
     return surface_;
 }
 
+sptr<OHOS::Surface> RecorderImpl::GetMetaSurface(int32_t sourceId)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetMetaSurface in, sourceId is %{public}d",
+        FAKE_POINTER(this), sourceId);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist..");
+    metaSurface_ = recorderService_->GetMetaSurface(sourceId);
+    return metaSurface_;
+}
+
 int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioSource in, source is %{public}d, sourceId is %{public}d",
@@ -183,6 +192,22 @@ int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
         "bitRate is %{public}d", FAKE_POINTER(this), sourceId, bitRate);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetAudioEncodingBitRate(sourceId, bitRate);
+}
+
+int32_t RecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMetaSource in, source is %{public}d, sourceId is %{public}d",
+        FAKE_POINTER(this), source, sourceId);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetMetaSource(source, sourceId);
+}
+
+int32_t RecorderImpl::SetMetaConfigs(int32_t sourceId)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId is %{public}d",
+        FAKE_POINTER(this), sourceId);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
+    return recorderService_->SetMetaConfigs(sourceId);
 }
 
 int32_t RecorderImpl::SetDataSource(DataSourceType dataType, int32_t &sourceId)

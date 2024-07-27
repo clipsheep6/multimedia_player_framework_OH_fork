@@ -26,6 +26,7 @@
 #include "audio_capture_filter.h"
 #include "audio_data_source_filter.h"
 #include "audio_encoder_filter.h"
+#include "metadata_filter.h"
 #include "media_errors.h"
 #include "muxer_filter.h"
 #include "osal/task/task.h"
@@ -57,11 +58,13 @@ public:
     int32_t Init();
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId);
     int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId);
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId);
     int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId);
     int32_t SetOutputFormat(OutputFormatType format);
     int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs);
     int32_t Configure(int32_t sourceId, const RecorderParam &recParam);
     sptr<Surface> GetSurface(int32_t sourceId);
+    sptr<Surface> GetMetaSurface(int32_t sourceId);
     int32_t Prepare();
     int32_t Start();
     int32_t Pause();
@@ -84,6 +87,7 @@ private:
     void ConfigureAudioCapture();
     void ConfigureAudio(const RecorderParam &recParam);
     void ConfigureVideo(const RecorderParam &recParam);
+    void ConfigureMeta(int32_t sourceId, const RecorderParam &recParam);
     void ConfigureMuxer(const RecorderParam &recParam);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam);
     void OnStateChanged(StateId state);
@@ -91,6 +95,7 @@ private:
     void ConfigureVideoEnableTemporalScale(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
+    int32_t PrepareMeta();
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
@@ -123,6 +128,9 @@ private:
     std::shared_ptr<Meta> userMeta_ = std::make_shared<Meta>();
     std::atomic<StateId> curState_;
 
+    std::map<int32_t, std::shared_ptr<Pipeline::MetaDataFilter>> metaDataFilters_;
+    std::map<int32_t, std::shared_ptr<Meta>> metaDataFormats_;
+
     std::shared_ptr<AudioStandard::AudioCapturerInfoChangeCallback> CapturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
@@ -138,6 +146,7 @@ private:
     ConditionVariable cond_ {};
 
     sptr<Surface> producerSurface_{nullptr};
+    sptr<Surface> producerMetaSurface_{nullptr};
     sptr<Surface> consumerSurface_{nullptr};
 
     static constexpr uint32_t ENCODE_USAGE = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE |
