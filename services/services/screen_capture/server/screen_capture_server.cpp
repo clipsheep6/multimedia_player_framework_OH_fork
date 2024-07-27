@@ -317,10 +317,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
     if (MP4.compare(recorderInfo.fileFormat) == 0) {
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
     } else if (M4A.compare(recorderInfo.fileFormat) == 0) {
-        MEDIA_LOGI("only recorder audio, still not support");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "only recorder audio, still not support");
-        return MSERR_UNSUPPORT;
+        fileFormat_ = OutputFormatType::FORMAT_M4A;
     } else {
         MEDIA_LOGE("invalid fileFormat type");
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_,
@@ -687,9 +684,11 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
     // 2. micCapInfo should not be invalid
     CheckAudioCapInfo(captureConfig_.audioInfo.micCapInfo);
     CheckAudioCapInfo(captureConfig_.audioInfo.innerCapInfo);
-    CheckVideoCapInfo(captureConfig_.videoInfo.videoCapInfo);
     CheckAudioEncInfo(captureConfig_.audioInfo.audioEncInfo);
-    CheckVideoEncInfo(captureConfig_.videoInfo.videoEncInfo);
+    CheckVideoCapInfo(captureConfig_.videoInfo.videoCapInfo);
+    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        CheckVideoEncInfo(captureConfig_.videoInfo.videoEncInfo);
+    }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "CheckCaptureFileParams start, "
         "innerCapInfo.state:%{public}d, videoCapInfo.state:%{public}d, audioEncInfo.state:%{public}d, "
         "videoEncInfo.state:%{public}d, micCapInfo.state:%{public}d.", FAKE_POINTER(this),
@@ -1125,7 +1124,11 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
 int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo)
 {
     int32_t ret = MSERR_OK;
-    ret = recorder->SetOutputFormat(fileFormat_);
+    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
+    }
+    ret = recorder->SetOutputFormat(fileFormat_); // Change to REC_CONFIGURED
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFormat failed");
     ret = recorder->SetAudioEncoder(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioCodecformat);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncoder failed");
@@ -1135,15 +1138,17 @@ int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> 
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioChannels failed");
     ret = recorder->SetAudioEncodingBitRate(audioSourceId_, captureConfig_.audioInfo.audioEncInfo.audioBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetAudioEncodingBitRate failed");
-    ret = recorder->SetVideoEncoder(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoCodec);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
-    ret = recorder->SetVideoSize(videoSourceId_, captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
-        captureConfig_.videoInfo.videoCapInfo.videoFrameHeight);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
-    ret = recorder->SetVideoFrameRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoFrameRate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
-    ret = recorder->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        ret = recorder->SetVideoEncoder(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoCodec);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
+        ret = recorder->SetVideoSize(videoSourceId_, captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
+            captureConfig_.videoInfo.videoCapInfo.videoFrameHeight);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
+        ret = recorder->SetVideoFrameRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoFrameRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoFrameRate failed");
+        ret = recorder->SetVideoEncodingBitRate(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncodingBitRate failed");
+    }
     return MSERR_OK;
 }
 
@@ -1189,17 +1194,16 @@ int32_t ScreenCaptureServer::InitRecorder()
         return MSERR_UNKNOWN;
     }
     MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
-    ret = recorder_->SetVideoSource(captureConfig_.videoInfo.videoCapInfo.videoSource, videoSourceId_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSource failed");
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "InitRecorderInfo failed");
-
     ret = recorder_->SetOutputFile(outputFd_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetOutputFile failed");
     ret = recorder_->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder Prepare failed");
-    consumer_ = recorder_->GetSurface(videoSourceId_);
-    CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
+    if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
+        consumer_ = recorder_->GetSurface(videoSourceId_);
+        CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "recorder GetSurface failed");
+    }
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("InitRecorder success");
     return MSERR_OK;
