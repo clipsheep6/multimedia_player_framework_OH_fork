@@ -135,6 +135,7 @@ public:
     int32_t SetLooping(bool loop);
     int32_t GetCurrentTime(int32_t &currentTime);
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
+    int32_t GetPlayerInfo(Format &playerInfo);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
     int32_t GetVideoWidth();
     int32_t GetVideoHeight();
