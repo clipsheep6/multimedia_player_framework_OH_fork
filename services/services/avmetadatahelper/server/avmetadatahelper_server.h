@@ -40,6 +40,8 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
+        int32_t option, const OutputConfiguration &param) override;
     void Release() override;
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
     int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;

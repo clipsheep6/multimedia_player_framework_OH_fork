@@ -179,6 +179,17 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     return result;
 }
 
+std::shared_ptr<AVBuffer> AVMetadataHelperServer::FetchFrameYuv(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime");
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr, nullptr, "avMetadataHelperEngine_ is nullptr");
+    auto result = avMetadataHelperEngine_->FetchFrameYuv(timeUs, option, param);
+    ChangeState(HelperStates::HELPER_CALL_DONE);
+    return result;
+}
+
 void AVMetadataHelperServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);

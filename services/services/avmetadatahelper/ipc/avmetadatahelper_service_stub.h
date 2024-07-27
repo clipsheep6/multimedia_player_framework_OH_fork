@@ -41,6 +41,8 @@ public:
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
+        int32_t option, const OutputConfiguration &param) override;
     void Release() override;
     int32_t DestroyStub() override;
     int32_t SetHelperCallback() override;
@@ -58,6 +60,7 @@ private:
     int32_t GetAVMetadata(MessageParcel &data, MessageParcel &reply);
     int32_t FetchArtPicture(MessageParcel &data, MessageParcel &reply);
     int32_t FetchFrameAtTime(MessageParcel &data, MessageParcel &reply);
+    int32_t FetchFrameYuv(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t SetHelperCallback(MessageParcel &data, MessageParcel &reply);

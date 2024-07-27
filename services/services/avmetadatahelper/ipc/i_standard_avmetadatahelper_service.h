@@ -37,6 +37,8 @@ public:
     virtual std::shared_ptr<AVSharedMemory> FetchArtPicture() = 0;
     virtual std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
+    virtual std::shared_ptr<AVBuffer> FetchFrameYuv(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param) = 0;
     virtual void Release() = 0;
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetHelperCallback() = 0;
@@ -55,6 +57,7 @@ public:
         RESOLVE_METADATA_MAP,
         FETCH_ALBUM_COVER,
         FETCH_FRAME_AT_TIME,
+        FETCH_FRAME_YUV,
         RELEASE,
         DESTROY,
         SET_CALLBACK,

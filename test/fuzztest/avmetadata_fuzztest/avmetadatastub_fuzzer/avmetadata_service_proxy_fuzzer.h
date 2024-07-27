@@ -61,6 +61,11 @@ public:
     {
         return nullptr;
     }
+    std::shared_ptr<AVBuffer> FetchFrameYuv(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param) override
+    {
+        return nullptr;
+    }
     void Release() override
     {
         return;

@@ -144,6 +144,15 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
     return thumbnailGenerator_->FetchFrameAtTime(timeUs, option, param);
 }
 
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
+    int64_t timeUs, int32_t option, const OutputConfiguration &param)
+{
+    MEDIA_LOGD("enter FetchFrameAtTime");
+    auto res = InitThumbnailGenerator();
+    CHECK_AND_RETURN_RET(res == Status::OK, nullptr);
+    return thumbnailGenerator_->FetchFrameYuv(timeUs, option, param);
+}
+
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, int64_t &time)
 {
     auto res = InitMetadataCollector();

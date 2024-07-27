@@ -36,6 +36,7 @@ public:
     explicit AVThumbnailGenerator(std::shared_ptr<MediaDemuxer> &mediaDemuxer);
     ~AVThumbnailGenerator();
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs, int32_t option, const OutputConfiguration &param);
+    std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
 
     void Reset();
@@ -65,6 +66,7 @@ private:
     std::shared_ptr<AVBuffer> avBuffer_;
     sptr<SurfaceBuffer> surfaceBuffer_;
     std::shared_ptr<AVSharedMemoryBase> fetchedFrameAtTime_;
+    std::shared_ptr<AVBuffer> frameBuffer_;
     std::shared_ptr<OHOS::Media::MediaDemuxer> mediaDemuxer_;
     std::shared_ptr<MediaAVCodec::AVCodecVideoDecoder> videoDecoder_;
     bool isSoftDecoder_ = false;
@@ -79,6 +81,15 @@ private:
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     int32_t width_ = 0;
     int32_t height_ = 0;
+
+    std::shared_ptr<AVBuffer> GenerateAlignmentAvBuffer(std::shared_ptr<AVBuffer> &avBuffer);
+    std::shared_ptr<AVBuffer> GenerateAvBufferFromFCodec(std::shared_ptr<AVBuffer> &avBuffer);
+    int32_t CopySurfaceBufferPixels(const sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<AVBuffer> &avBuffer);
+    void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
+    bool GetSbStaticMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
+    bool GetSbDynamicMetadata(const sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
+    bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
+    bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
 };
 }  // namespace Media
 }  // namespace OHOS

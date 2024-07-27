@@ -140,6 +140,14 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperClient::FetchFrameAtTime(int64_t
     return avMetadataHelperProxy_->FetchFrameAtTime(timeUs, option, param);
 }
 
+std::shared_ptr<AVBuffer> AVMetadataHelperClient::FetchFrameYuv(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->FetchFrameYuv(timeUs, option, param);
+}
+
 int32_t AVMetadataHelperClient::GetTimeByFrameIndex(uint32_t index, int64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, 0, "avmetadatahelper service does not exist.");

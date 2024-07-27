@@ -18,6 +18,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "v1_0/cm_color_space.h"
+#include "v1_0/hdr_static_metadata.h"
+#include "v1_0/buffer_handle_meta_key_type.h"
+
 #include "securec.h"
 #include "image_source.h"
 #include "i_media_service.h"
@@ -25,6 +29,8 @@
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "hisysevent.h"
+#include "image_format_convert.h"
+#include "color_space.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadatahelperImpl" };
@@ -36,6 +42,8 @@ static constexpr uint8_t HIGH_CONCRENT_WORK_NUM = 4;
 
 namespace OHOS {
 namespace Media {
+using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
+static constexpr uint8_t PIXEL_SIZE_HDR_YUV = 3;
 static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 },
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
@@ -152,6 +160,129 @@ static std::shared_ptr<PixelMap> CreatePixelMap(const std::shared_ptr<AVSharedMe
     pixelMap->SetPixelsAddr(holder->heap, holder, static_cast<uint32_t>(pixelMap->GetByteCount()),
         AllocatorType::CUSTOM_ALLOC, FreePixelMapData);
     return pixelMap;
+}
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                                  PixelMapInfo &pixelMapInfo)
+{
+    bool isValid = frameBuffer != nullptr && frameBuffer->meta_ != nullptr && frameBuffer->memory_ != nullptr;
+    CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
+
+    auto bufferMeta = frameBuffer->meta_;
+
+    int32_t width = 0;
+    auto hasProperty = bufferMeta->Get<Tag::VIDEO_WIDTH>(width);
+    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid width");
+
+    int32_t height = 0;
+    hasProperty = bufferMeta->Get<Tag::VIDEO_HEIGHT>(height);
+    CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid height");
+
+    Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
+    bufferMeta->Get<Tag::VIDEO_ROTATION>(rotation);
+    pixelMapInfo.rotation = static_cast<int32_t>(rotation);
+
+    bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
+    pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
+    if (pixelMapInfo.isHdr) {
+        auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
+        sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
+        InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
+                                                    .height = mySurfaceBuffer->GetHeight() },
+                                          .srcPixelFormat = PixelFormat::YCBCR_P010,
+                                          .pixelFormat = PixelFormat::YCBCR_P010 };
+        uint32_t colorLength = mySurfaceBuffer->GetWidth() * mySurfaceBuffer->GetHeight() * PIXEL_SIZE_HDR_YUV;
+        auto pixelMap =
+            PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
+        pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
+        pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
+                                AllocatorType::DMA_ALLOC, nullptr);
+        mySurfaceBuffer.ForceSetRefPtr(nullptr);
+        surfaceBuffer_ = mySurfaceBuffer;
+        pixelMap->IncStrongRef(mySurfaceBuffer);
+        return pixelMap;
+    }
+
+    InitializationOptions options = { .size = { .width = width, .height = height }, .pixelFormat = PixelFormat::NV12 };
+    auto pixelMap = PixelMap::Create(options);
+    uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
+    pixelMap->SetPixelsAddr(pixelAddr, nullptr, pixelMap->GetByteCount(), AllocatorType::HEAP_ALLOC, nullptr);
+    return pixelMap;
+}
+
+sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> srcSurfaceBuffer)
+{
+    sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig requestConfig = {
+        .width = srcSurfaceBuffer->GetWidth(),
+        .height = srcSurfaceBuffer->GetHeight(),
+        .strideAlignment = 0x2,
+        .format = srcSurfaceBuffer->GetFormat(),  // always yuv
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_MMZ_CACHE,
+        .timeout = 0,
+    };
+    GSError allocRes = dstSurfaceBuffer->Alloc(requestConfig);
+    CHECK_AND_RETURN_RET_LOG(allocRes == 0, nullptr, "Alloc surfaceBuffer failed, ecode %{public}d", allocRes);
+
+    MEDIA_LOGI("winddraw %{public}d %{public}d", dstSurfaceBuffer->GetSize(), srcSurfaceBuffer->GetSize());
+
+    CopySurfaceBufferInfo(srcSurfaceBuffer, dstSurfaceBuffer);
+    CopySurfaceBufferPixels(srcSurfaceBuffer, dstSurfaceBuffer);
+    return dstSurfaceBuffer;
+}
+
+void AVMetadataHelperImpl::CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst)
+{
+    if (source == nullptr || dst == nullptr) {
+        MEDIA_LOGI("CopySurfaceBufferInfo failed, source or dst is nullptr");
+        return;
+    }
+    std::vector<uint8_t> hdrMetadataTypeVec;
+    std::vector<uint8_t> colorSpaceInfoVec;
+    std::vector<uint8_t> staticData;
+    std::vector<uint8_t> dynamicData;
+
+    if (source->GetMetadata(ATTRKEY_HDR_METADATA_TYPE, hdrMetadataTypeVec) == GSERROR_OK) {
+        dst->SetMetadata(ATTRKEY_HDR_METADATA_TYPE, hdrMetadataTypeVec);
+    }
+    if (source->GetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec) == GSERROR_OK) {
+        dst->SetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec);
+    }
+    if (GetSbStaticMetadata(source, staticData) && (staticData.size() > 0)) {
+        SetSbStaticMetadata(dst, staticData);
+    }
+    if (GetSbDynamicMetadata(source, dynamicData) && (dynamicData.size()) > 0) {
+        SetSbDynamicMetadata(dst, dynamicData);
+    }
+}
+
+bool AVMetadataHelperImpl::GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata)
+{
+    return buffer->GetMetadata(ATTRKEY_HDR_STATIC_METADATA, staticMetadata) == GSERROR_OK;
+}
+
+bool AVMetadataHelperImpl::GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata)
+{
+    return buffer->GetMetadata(ATTRKEY_HDR_DYNAMIC_METADATA, dynamicMetadata) == GSERROR_OK;
+}
+
+bool AVMetadataHelperImpl::SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata)
+{
+    return buffer->SetMetadata(ATTRKEY_HDR_STATIC_METADATA, staticMetadata) == GSERROR_OK;
+}
+
+bool AVMetadataHelperImpl::SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer,
+                                                const std::vector<uint8_t> &dynamicMetadata)
+{
+    return buffer->SetMetadata(ATTRKEY_HDR_DYNAMIC_METADATA, dynamicMetadata) == GSERROR_OK;
+}
+
+int32_t AVMetadataHelperImpl::CopySurfaceBufferPixels(sptr<SurfaceBuffer> &srcSurfaceBuffer,
+                                                      sptr<SurfaceBuffer> &dstSurfaceBuffer)
+{
+    auto res = memcpy_s(dstSurfaceBuffer->GetVirAddr(), dstSurfaceBuffer->GetSize(), srcSurfaceBuffer->GetVirAddr(),
+        srcSurfaceBuffer->GetSize());
+    return res == EOK ? MSERR_OK : MSERR_NO_MEMORY;
 }
 
 std::shared_ptr<AVMetadataHelper> AVMetadataHelperFactory::CreateAVMetadataHelper()
@@ -340,6 +471,50 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
+
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
+                                                              const PixelMapParams &param)
+{
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr, "avmetadatahelper service does not exist.");
+
+    concurrentWorkCount_++;
+    ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+    OutputConfiguration config = { .colorFormat = param.colorFormat,
+                                   .dstHeight = param.dstHeight,
+                                   .dstWidth = param.dstWidth };
+    auto frameBuffer = avMetadataHelperService_->FetchFrameYuv(timeUs, option, config);
+    CHECK_AND_RETURN_RET(frameBuffer != nullptr, nullptr);
+    concurrentWorkCount_--;
+
+    PixelMapInfo pixelMapInfo;
+    auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "winddraw convert to pixelMap failed");
+
+    int32_t srcWidth = pixelMap->GetWidth();
+    int32_t srcHeight = pixelMap->GetHeight();
+
+    YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
+                                .yHeight = srcHeight,
+                                .uvWidth = srcWidth / 2,
+                                .uvHeight = srcHeight / 2,
+                                .yStride = srcWidth,
+                                .uvStride = srcWidth,
+                                .uvOffset = srcWidth * srcHeight };
+    pixelMap->SetImageYUVInfo(yuvDataInfo);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
+    bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
+                     (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
+                     (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
+    if (needScale) {
+        pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
+        pixelMap->SetAllocatorType(AllocatorType::HEAP_ALLOC);
+    }
+    if (pixelMapInfo.rotation > 0) {
+        pixelMap->rotate(pixelMapInfo.rotation);
+        pixelMap->SetAllocatorType(AllocatorType::HEAP_ALLOC);
+    }
+    return pixelMap;
+}
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, int64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");

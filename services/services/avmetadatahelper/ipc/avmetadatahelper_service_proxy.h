@@ -32,6 +32,8 @@ public:
     std::shared_ptr<Meta> GetAVMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
+    std::shared_ptr<AVBuffer> FetchFrameYuv(int64_t timeUs,
+        int32_t option, const OutputConfiguration &param) override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     int32_t DestroyStub() override;
     void Release() override;

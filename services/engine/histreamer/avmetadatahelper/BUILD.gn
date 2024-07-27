@@ -72,6 +72,7 @@ ohos_static_library("media_engine_histreamer_avmetadatahelper") {
     "av_codec:av_codec_media_engine_filters",
     "av_codec:av_codec_media_engine_modules",
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",

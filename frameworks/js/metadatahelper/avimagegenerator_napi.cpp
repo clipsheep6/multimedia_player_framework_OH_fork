@@ -182,7 +182,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVImageGeneratorNapi::FetchFrameAtTimeTask
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state == AVMetadataHelperState::STATE_PREPARED || state == AVMetadataHelperState::STATE_CALL_DONE) {
-            auto map = helper_->FetchFrameAtTime(napi->timeUs_, napi->option_, napi->param_);
+            auto map = helper_->FetchFrameYuv(napi->timeUs_, napi->option_, napi->param_);
             if (map == nullptr) {
                 MEDIA_LOGE("FetchFrameAtTime Task pixelMap is nullptr");
                 return TaskRet(MSERR_EXT_API9_UNSUPPORT_FORMAT,

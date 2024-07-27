@@ -18,6 +18,7 @@
 #include "avmetadatahelper.h"
 #include "nocopyable.h"
 #include "i_avmetadatahelper_service.h"
+#include "surface_buffer.h"
 
 namespace OHOS {
 namespace Media {
@@ -34,6 +35,7 @@ public:
     std::shared_ptr<Meta> GetAVMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
+    std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     void Release() override;
     int32_t Init();
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
@@ -41,11 +43,28 @@ public:
     int32_t GetTimeByFrameIndex(uint32_t index, int64_t &time) override;
     int32_t GetFrameIndexByTime(int64_t time, uint32_t &index) override;
 private:
+    struct PixelMapInfo {
+        int32_t rotation = 0;
+        PixelFormat pixelFormat = PixelFormat::NV12;
+        bool isHdr = false;
+    };
+
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
     int32_t rotation_ = 0;
     static std::chrono::milliseconds cloneTimestamp;
     static std::chrono::milliseconds batchHandleTimestamp;
     void ReportSceneCode(Scene scene);
+
+    sptr<SurfaceBuffer> surfaceBuffer_;
+    sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> srcSurfaceBuffer);
+    std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
+                                                PixelMapInfo &pixelMapInfo);
+    void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);
+    bool GetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &staticMetadata);
+    bool GetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, std::vector<uint8_t> &dynamicMetadata);
+    bool SetSbStaticMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &staticMetadata);
+    bool SetSbDynamicMetadata(sptr<SurfaceBuffer> &buffer, const std::vector<uint8_t> &dynamicMetadata);
+    int32_t CopySurfaceBufferPixels(sptr<SurfaceBuffer> &srcSurfaceBuffer, sptr<SurfaceBuffer> &dstSurfaceBuffer);
 };
 } // namespace Media
 } // namespace OHOS

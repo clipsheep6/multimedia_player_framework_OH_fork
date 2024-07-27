@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
+#include "surface_buffer.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA,
@@ -221,6 +222,30 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchArtPicture()
         "FetchArtPicture failed, error: %{public}d", error);
 
     return ReadAVSharedMemoryFromParcel(reply);
+}
+
+std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t timeUs, int32_t option,
+                                                                      const OutputConfiguration &param)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption opt;
+
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
+
+    (void)data.WriteInt64(timeUs);
+    (void)data.WriteInt32(option);
+    (void)data.WriteInt32(param.dstWidth);
+    (void)data.WriteInt32(param.dstHeight);
+    (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
+
+    int error = Remote()->SendRequest(FETCH_FRAME_YUV, data, reply, opt);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr, "FetchFrameYuv failed, error: %{public}d", error);
+
+    auto avBuffer = AVBuffer::CreateAVBuffer();
+    auto ret = avBuffer->ReadFromMessageParcel(reply);
+    return ret ? avBuffer : nullptr;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(int64_t timeUs,

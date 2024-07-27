@@ -22,7 +22,7 @@ config("media_public_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
   ]
 
-  defines = []
+  defines = [ "IMAGE_COLORSPACE_FLAG" ]
   defines += player_framework_defines
 }
 
@@ -177,6 +177,7 @@ ohos_shared_library("media_client") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers",
     "graphic_surface:surface",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -184,11 +185,14 @@ ohos_shared_library("media_client") {
     "hitrace:libhitracechain",
     "image_framework:image_native",
     "ipc:ipc_single",
-    "media_foundation:media_foundation",
     "qos_manager:qos",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [ "media_foundation:media_foundation" ]
+
+  public_external_deps = [
+    "graphic_2d:color_manager",
+    "media_foundation:media_foundation",
+  ]
 
   if (player_framework_support_video) {
     external_deps += [ "graphic_surface:surface" ]

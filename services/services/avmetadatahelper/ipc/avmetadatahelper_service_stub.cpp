@@ -20,6 +20,7 @@
 #include "avsharedmemory_ipc.h"
 #include "media_data_source_proxy.h"
 #include "media_dfx.h"
+#include "surface_buffer.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVMetadataHelperServiceStub"};
@@ -70,6 +71,8 @@ int32_t AVMetadataHelperServiceStub::Init()
             [this](MessageParcel &data, MessageParcel &reply) { return FetchArtPicture(data, reply); } },
         { FETCH_FRAME_AT_TIME,
             [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameAtTime(data, reply); } },
+        { FETCH_FRAME_YUV,
+            [this](MessageParcel &data, MessageParcel &reply) { return FetchFrameYuv(data, reply); } },
         { RELEASE,
             [this](MessageParcel &data, MessageParcel &reply) { return Release(data, reply); } },
         { DESTROY,
@@ -188,6 +191,14 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchFrameAtTime(in
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->FetchFrameAtTime(timeUs, option, param);
+}
+
+std::shared_ptr<AVBuffer> AVMetadataHelperServiceStub::FetchFrameYuv(int64_t timeUs,
+    int32_t option, const OutputConfiguration &param)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
+    return avMetadateHelperServer_->FetchFrameYuv(timeUs, option, param);
 }
 
 void AVMetadataHelperServiceStub::Release()
@@ -331,6 +342,17 @@ int32_t AVMetadataHelperServiceStub::FetchFrameAtTime(MessageParcel &data, Messa
     std::shared_ptr<AVSharedMemory> ashMem = FetchFrameAtTime(timeUs, option, param);
 
     return WriteAVSharedMemoryToParcel(ashMem, reply);
+}
+
+int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t timeUs = data.ReadInt64();
+    int32_t option = data.ReadInt32();
+    OutputConfiguration param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32())};
+    std::shared_ptr<AVBuffer> avBuffer = FetchFrameYuv(timeUs, option, param);
+    CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_INVALID_VAL);
+    avBuffer->WriteToMessageParcel(reply);
+    return MSERR_OK;
 }
 
 int32_t AVMetadataHelperServiceStub::Release(MessageParcel &data, MessageParcel &reply)

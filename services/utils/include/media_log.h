@@ -161,6 +161,14 @@ namespace OHOS {
     } else                                     \
         void(0)
 
+#define TRUE_LOG(cond, func, fmt, ...)         \
+    if (1) {                                   \
+        if ((cond)) {                          \
+            func(fmt, ##__VA_ARGS__);          \
+        }                                      \
+    } else                                     \
+        void(0)
+
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 }  // namespace OHOS
