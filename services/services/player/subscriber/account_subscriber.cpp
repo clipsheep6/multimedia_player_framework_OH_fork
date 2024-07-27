@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Media {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AccountSubscriber"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AccountSubscriber"};
 std::shared_ptr<AccountSubscriber> AccountSubscriber::instance_ = nullptr;
 
 std::shared_ptr<AccountSubscriber> AccountSubscriber::GetInstance()
@@ -85,14 +85,14 @@ void AccountSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventDat
 void AccountSubscriber::RegisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
-    MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
+    MEDIA_LOGD("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
     if (userId < 0 || receiver == nullptr) {
         return;
     }
     std::lock_guard<std::mutex> lock(userMutex_);
     if (userMap_.empty()) {
         EventFwk::CommonEventManager::NewSubscribeCommonEvent(instance_);
-        MEDIA_LOGI("first register receiver, SubscribeCommonEvent");
+        MEDIA_LOGD("first register receiver, SubscribeCommonEvent");
     }
     auto mapIt = userMap_.find(userId);
     if (mapIt == userMap_.end()) {
@@ -113,7 +113,7 @@ void AccountSubscriber::RegisterCommonEventReceiver(int32_t userId,
 void AccountSubscriber::UnregisterCommonEventReceiver(int32_t userId,
     const std::shared_ptr<CommonEventReceiver> &receiver)
 {
-    MEDIA_LOGI("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
+    MEDIA_LOGD("receiver is 0x%{public}06" PRIXPTR ", userId %{public}d", FAKE_POINTER(receiver.get()), userId);
     if (userId < 0 || receiver == nullptr) {
         return;
     }
@@ -137,7 +137,7 @@ void AccountSubscriber::UnregisterCommonEventReceiver(int32_t userId,
     }
     if (userMap_.empty()) {
         EventFwk::CommonEventManager::NewUnSubscribeCommonEvent(instance_);
-        MEDIA_LOGI("user map empty, UnSubscribeCommonEvent");
+        MEDIA_LOGD("user map empty, UnSubscribeCommonEvent");
     }
 }
 } // namespace Media

@@ -20,7 +20,7 @@
 #include "scope_guard.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerCallbackNapi"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerCallbackNapi"};
 const std::string PLAY_CALLBACK_NAME = "play";
 const std::string PAUSE_CALLBACK_NAME = "pause";
 const std::string STOP_CALLBACK_NAME = "stop";

@@ -20,7 +20,7 @@
 #include "scope_guard.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorClient"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "MonitorClient" };
 }
 
 namespace OHOS {
@@ -33,7 +33,7 @@ constexpr uint8_t TIME_INTERVAL = 1; // Heartbeat once per second
 
 MonitorClient::MonitorClient()
 {
-    MEDIA_LOGI("Instances create");
+    MEDIA_LOGI("create");
 }
 
 MonitorClient::~MonitorClient()

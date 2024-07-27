@@ -18,7 +18,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerClient"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerClient"};
 }
 
 namespace OHOS {
@@ -368,11 +368,11 @@ int32_t PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     return playerProxy_->SetPlayerCallback();
 }
 
-int32_t PlayerClient::SelectTrack(int32_t index)
+int32_t PlayerClient::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->SelectTrack(index);
+    return playerProxy_->SelectTrack(index, mode);
 }
 
 int32_t PlayerClient::DeselectTrack(int32_t index)

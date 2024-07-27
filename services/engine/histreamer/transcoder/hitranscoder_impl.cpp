@@ -29,6 +29,7 @@ constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
 constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
 constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
+constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -162,36 +163,53 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
-    return ConfigureMetaData(trackInfos);
+    (void)ConfigureMetaData(trackInfos);
+    (void)SetTrackMime(trackInfos);
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos,
+    const size_t &index)
+{
+    MEDIA_LOG_I("InputVideo contains videoTrack");
+    isExistVideoTrack_ = true;
+    Plugins::VideoRotation rotation = Plugins::VideoRotation::VIDEO_ROTATION_0;
+    if (muxerFormat_ && trackInfos[index]->Get<Tag::VIDEO_ROTATION>(rotation)) {
+        muxerFormat_->Set<Tag::VIDEO_ROTATION>(rotation);
+    }
+    if (trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_) &&
+        trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
+        MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
+            inputVideoWidth_, inputVideoHeight_);
+        videoEncFormat_->Set<Tag::VIDEO_WIDTH>(inputVideoWidth_);
+        videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(inputVideoHeight_);
+    } else {
+        MEDIA_LOG_W("Get input video width or height failed");
+    }
+    bool isHdr = false;
+    trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
+    if (isHdr) {
+        videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
+    } else {
+        videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
+    }
+    return Status::OK;
 }
 
 Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos)
 {
     for (size_t index = 0; index < trackInfos.size(); index++) {
-        std::string trackMime;
-        if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
-            MEDIA_LOG_E("trackInfos index: %{public}d, get trackMime failed", index);
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNKNOWN});
-            return Status::ERROR_UNKNOWN;
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        FALSE_RETURN_V_MSG_E(meta != nullptr, Status::ERROR_INVALID_PARAMETER,
+            "meta is invalid, index: %zu", index);
+        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
+        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
+            MEDIA_LOG_W("mediaType not found, index: %zu", index);
+            continue;
         }
-        if (trackMime.find("video/") == 0) {
-            MEDIA_LOG_I("SetInputFile contain video");
-            if (trackInfos[index]->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_) &&
-                trackInfos[index]->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_)) {
-                MEDIA_LOG_D("inputVideoWidth_: %{public}d, inputVideoHeight_: %{public}d",
-                    inputVideoWidth_, inputVideoHeight_);
-            } else {
-                MEDIA_LOG_W("Get input video width or height failed");
-            }
-            bool isHdr = false;
-            trackInfos[index]->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdr);
-            if (isHdr) {
-                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_VIVID);
-            } else {
-                videoEncFormat_->SetData(Tag::VIDEO_IS_HDR_VIVID, VIDEO_HDR_TYPE_NONE);
-            }
-        } else if (trackMime.find("audio/") == 0) {
-            MEDIA_LOG_I("SetInputFile contain audio");
+        if (mediaType == Plugins::MediaType::VIDEO) {
+            (void)ConfigureInputVideoMetaData(trackInfos, index);
+        } else if (mediaType == Plugins::MediaType::AUDIO) {
             int32_t channels = 0;
             if (trackInfos[index]->GetData(Tag::AUDIO_CHANNEL_COUNT, channels)) {
                 MEDIA_LOG_D("Audio channel count: %{public}d", channels);
@@ -207,6 +225,22 @@ Status HiTransCoderImpl::ConfigureMetaData(const std::vector<std::shared_ptr<Met
                 MEDIA_LOG_W("Get audio channel count failed");
             }
             audioEncFormat_->Set<Tag::AUDIO_SAMPLE_RATE>(sampleRate);
+        }
+    }
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    for (size_t index = 0; index < trackInfos.size(); index++) {
+        std::string trackMime;
+        if (!trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime)) {
+            continue;
+        }
+        if (trackMime.find("video/") == 0) {
+            videoEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
+        } else if (trackMime.find("audio/" == 0)) {
+            audioEncFormat_->Set<Tag::MIME_TYPE>(trackMime);
         }
     }
     return Status::OK;
@@ -251,9 +285,7 @@ Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &tran
             videoEncFormat_->Set<Tag::MIME_TYPE>(Plugins::MimeType::VIDEO_HEVC);
             break;
         default:
-            MEDIA_LOG_I("ConfigureVideo %{public}d not supported", videoEnc.encFmt);
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-            return Status::ERROR_INVALID_PARAMETER;
+            break;
     }
     return Status::OK;
 }
@@ -261,16 +293,12 @@ Status HiTransCoderImpl::ConfigureVideoEncoderFormat(const TransCoderParam &tran
 Status HiTransCoderImpl::ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam)
 {
     VideoRectangle videoRectangle = static_cast<const VideoRectangle&>(transCoderParam);
-    if (videoRectangle.width <= 0 || videoRectangle.height <= 0) {
-        MEDIA_LOG_E("Invalid videoRectangle.width %{public}d, videoRectangle.height %{public}d",
-            videoRectangle.width, videoRectangle.height);
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-        return Status::ERROR_INVALID_PARAMETER;
-    }
-    MEDIA_LOG_I("videoRectangle.width %{public}d, videoRectangle.height %{public}d",
-        videoRectangle.width, videoRectangle.height);
-    videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
-    videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+    if (videoRectangle.width != -1) {
+        videoEncFormat_->Set<Tag::VIDEO_WIDTH>(videoRectangle.width);
+        }
+    if (videoRectangle.height != -1) {
+        videoEncFormat_->Set<Tag::VIDEO_HEIGHT>(videoRectangle.height);
+        }
     return Status::OK;
 }
 
@@ -326,15 +354,22 @@ int32_t HiTransCoderImpl::Prepare()
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
     int32_t width = 0;
     int32_t height = 0;
-    if (videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width) &&
-        videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height)) {
-        MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
-    } else {
-        MEDIA_LOG_E("Output video width or height not set");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
-        return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+    if (isExistVideoTrack_) {
+        if (videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width) &&
+            videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height)) {
+            MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
+        } else {
+            MEDIA_LOG_E("Output video width or height not set");
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+        }
+        if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
+            MEDIA_LOG_E("Output video width or height is invalid");
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            return static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER);
+        }
+        isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     }
-    isNeedVideoResizeFilter_ = width != inputVideoWidth_ || height != inputVideoHeight_;
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
@@ -503,6 +538,9 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
         "videoEncoderFilter is nullptr");
+    FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, Status::ERROR_NULL_POINTER,
+        "videoEncFormat is nullptr");
+    videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetCodecFormat(videoEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);

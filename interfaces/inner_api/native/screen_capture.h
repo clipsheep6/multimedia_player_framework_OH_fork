@@ -220,9 +220,9 @@ public:
     virtual ~ScreenCaptureCallBack() = default;
 
     /**
-     * @brief Called when an error occurs during recording. This callback is used to report recording errors.
+     * @brief Called when an error occurs during screen capture. This callback is used to report errors.
      *
-     * @param errorType Indicates the error type. For details, see {@link RecorderErrorType}.
+     * @param errorType Indicates the error type. For details, see {@link ScreenCaptureErrorType}.
      * @param errorCode Indicates the error code.
      * @since 1.0
      * @version 1.0

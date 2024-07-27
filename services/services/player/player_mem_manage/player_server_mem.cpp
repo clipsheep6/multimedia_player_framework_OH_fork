@@ -26,7 +26,7 @@
 #include "av_common.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerMem"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServerMem"};
 }
 
 namespace OHOS {
@@ -189,7 +189,7 @@ int32_t PlayerServerMem::SetBehaviorInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SMOOTH);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
 
@@ -206,7 +206,7 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex, PlayerSwitchMode::SWITCH_SMOOTH);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
     return MSERR_OK;
@@ -589,13 +589,13 @@ int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
     return PlayerServer::SelectBitRate(bitRate);
 }
 
-int32_t PlayerServerMem::SelectTrack(int32_t index)
+int32_t PlayerServerMem::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    return PlayerServer::SelectTrack(index);
+    return PlayerServer::SelectTrack(index, mode);
 }
 
 int32_t PlayerServerMem::DeselectTrack(int32_t index)

@@ -24,7 +24,7 @@
 #include "media_dfx.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TransCoderServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServer"};
     const std::map<OHOS::Media::TransCoderServer::RecStatus, std::string> TRANSCODER_STATE_MAP = {
         {OHOS::Media::TransCoderServer::REC_INITIALIZED, "initialized"},
         {OHOS::Media::TransCoderServer::REC_CONFIGURED, "configured"},

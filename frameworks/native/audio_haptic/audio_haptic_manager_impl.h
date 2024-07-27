@@ -26,17 +26,14 @@ struct AudioHapticPlayerInfo {
     HapticSource hapticSource_;
     AudioLatencyMode latencyMode_;
     AudioStandard::StreamUsage streamUsage_;
-    std::shared_ptr<AudioHapticPlayer> audioHapticPlayer_;
 
     AudioHapticPlayerInfo() {};
     AudioHapticPlayerInfo(const std::string &audioUri, const HapticSource &hapticSource,
-        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage,
-        const std::shared_ptr<AudioHapticPlayer> &audioHapticPlayer)
+        const AudioLatencyMode &latencyMode, const AudioStandard::StreamUsage &streamUsage)
         : audioUri_(audioUri),
           hapticSource_(hapticSource),
           latencyMode_(latencyMode),
-          streamUsage_(streamUsage),
-          audioHapticPlayer_(audioHapticPlayer) {};
+          streamUsage_(streamUsage) {};
 };
 
 class AudioHapticManagerImpl : public AudioHapticManager {

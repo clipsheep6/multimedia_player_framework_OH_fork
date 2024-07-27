@@ -20,7 +20,7 @@
 #include "media_errors.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CommonNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "CommonNapi"};
 }
 
 namespace OHOS {
@@ -65,7 +65,7 @@ bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     napi_value item = nullptr;
     bool exist = false;
     napi_status napiStatus = napi_has_named_property(env, configObj, type.c_str(), &exist);
-    CHECK_AND_RETURN_RET_LOG(napiStatus == napi_ok && exist, false, "can not find %{public}s property", type.c_str());
+    CHECK_AND_RETURN_RET_LOG(napiStatus == napi_ok && exist, false, "no %{public}s property", type.c_str());
     CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false,
         "get %{public}s property fail", type.c_str());
     CHECK_AND_RETURN_RET_LOG(napi_get_value_int32(env, item, &result) == napi_ok, false,
@@ -78,7 +78,7 @@ bool CommonNapi::GetPropertyUint32(napi_env env, napi_value configObj, const std
     napi_value item = nullptr;
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && exist, false, "can not find %{public}s property", type.c_str());
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && exist, false, "no %{public}s property", type.c_str());
     CHECK_AND_RETURN_RET_LOG(napi_get_named_property(env, configObj, type.c_str(), &item) == napi_ok, false,
         "get %{public}s property fail", type.c_str());
 
@@ -93,7 +93,7 @@ bool CommonNapi::GetPropertyInt64(napi_env env, napi_value configObj, const std:
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("no %{public}s property", type.c_str());
         return false;
     }
 
@@ -115,7 +115,7 @@ bool CommonNapi::GetPropertyDouble(napi_env env, napi_value configObj, const std
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("no %{public}s property", type.c_str());
         return false;
     }
 
@@ -137,7 +137,7 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("no %{public}s property", type.c_str());
         return invalid;
     }
 
@@ -157,7 +157,7 @@ napi_status CommonNapi::GetPropertyRecord(napi_env env, napi_value configObj, Me
     napi_valuetype valueType = napi_undefined;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("no %{public}s property", type.c_str());
         return napi_invalid_arg;
     }
     if (napi_get_named_property(env, configObj, type.c_str(), &in) != napi_ok) {
@@ -672,6 +672,24 @@ napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &res
     return napi_ok;
 }
 
+napi_status MediaJsResultIntArray::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status status;
+    size_t size = value_.size();
+    napi_create_array_with_length(env, size, &result);
+    for (unsigned int i = 0; i < size; ++i) {
+        int32_t index = value_[i];
+        napi_value value = nullptr;
+        status = napi_create_int32(env, index, &value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_create_int32, with element %{public}u", i);
+        status = napi_set_element(env, result, i, value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_set_element, with element %{public}u", i);
+    }
+    return napi_ok;
+}
+
 napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
 {
     // create Description
@@ -817,7 +835,7 @@ bool CommonNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("no %{public}s property", type.c_str());
         return false;
     }
     napi_value item = nullptr;

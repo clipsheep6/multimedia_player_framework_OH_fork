@@ -371,7 +371,7 @@ void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptE
 {
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyInterruptEvent for napi object");
+        MEDIA_LOGI("NotifyInterruptEvent for napi object or caller");
         cb->OnInterrupt(interruptEvent);
     } else {
         MEDIA_LOGE("NotifyInterruptEvent: audioHapticPlayerCallback_ is nullptr");
@@ -385,10 +385,21 @@ void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
     playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyEndOfStreamEvent for napi object");
+        MEDIA_LOGI("NotifyEndOfStreamEvent for napi object or caller");
         cb->OnEndOfStream();
     } else {
         MEDIA_LOGE("NotifyEndOfStreamEvent: audioHapticPlayerCallback_ is nullptr");
+    }
+}
+
+void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
+{
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
+    if (cb != nullptr) {
+        MEDIA_LOGI("NotifyErrorEvent for napi object or caller. errCode: %{public}d", errCode);
+        cb->OnError(errCode);
+    } else {
+        MEDIA_LOGE("NotifyErrorEvent: audioHapticPlayerCallback_ is nullptr");
     }
 }
 
@@ -418,6 +429,12 @@ void AudioHapticSoundCallbackImpl::OnEndOfStream()
 void AudioHapticSoundCallbackImpl::OnError(int32_t errorCode)
 {
     MEDIA_LOGE("OnError reported from audio haptic sound: %{public}d", errorCode);
+    std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
+    if (player == nullptr) {
+        MEDIA_LOGE("The audio haptic player has been released.");
+        return;
+    }
+    player->NotifyEndOfStreamEvent();
 }
 
 void AudioHapticSoundCallbackImpl::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)

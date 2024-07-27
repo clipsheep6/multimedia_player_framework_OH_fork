@@ -30,7 +30,7 @@
 #include "avtranscoder_napi.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVTransCoderNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVTransCoderNapi"};
 }
 
 namespace OHOS {
@@ -80,7 +80,7 @@ AVTransCoderNapi::~AVTransCoderNapi()
 napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor staticProperty[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("createAVTransCoder", JsCreateAVTransCoder),
+        DECLARE_NAPI_STATIC_FUNCTION("createAVTranscoder", JsCreateAVTransCoder),
     };
 
     napi_property_descriptor properties[] = {
@@ -93,9 +93,8 @@ napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
         DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
 
-        DECLARE_NAPI_GETTER_SETTER("srcUrl", JsGetSrcUrl, JsSetSrcUrl),
-        DECLARE_NAPI_GETTER_SETTER("srcFd", JsGetSrcFd, JsSetSrcFd),
-        DECLARE_NAPI_GETTER_SETTER("dstFd", JsGetDstFd, JsSetDstFd),
+        DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetSrcFd, JsSetSrcFd),
+        DECLARE_NAPI_GETTER_SETTER("fdDst", JsGetDstFd, JsSetDstFd),
     };
 
     napi_value constructor = nullptr;
@@ -874,15 +873,9 @@ int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContex
     napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
-    int32_t ret = MSERR_OK;
     std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
-    ret = AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (asyncCtx->AVTransCoderSignError(ret, "GetAudioCodecFormat", "audioCodecFormat"), ret));
-
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate),
-        (asyncCtx->AVTransCoderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
-
+    (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate);
     return MSERR_OK;
 }
 
@@ -907,21 +900,11 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     napi_env env, napi_value args)
 {
     std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
-    int32_t ret = MSERR_OK;
     std::string videoCodec = CommonNapi::GetPropertyString(env, args, "videoCodec");
-    ret = AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK,
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoCodecFormat", "videoCodecFormat"), ret));
-
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoBitrate", "videoBitrate"), ret));
-    
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoFrameWidth", "videoFrameWidth"), ret));
-    
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight),
-        (asyncCtx->AVTransCoderSignError(ret, "GetVideoFrameHeight", "videoFrameHeight"), ret));
-
+    (void)AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     return MSERR_OK;
 }
 

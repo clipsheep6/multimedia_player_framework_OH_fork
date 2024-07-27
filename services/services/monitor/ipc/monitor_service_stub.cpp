@@ -20,7 +20,7 @@
 #include "ipc_skeleton.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorServiceStub"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MonitorServiceStub"};
 }
 
 namespace OHOS {
@@ -39,7 +39,7 @@ sptr<MonitorServiceStub> MonitorServiceStub::GetInstance()
 {
     static sptr<MonitorServiceStub> monitor = nullptr;
     if (monitor == nullptr) {
-        monitor = new(std::nothrow) MonitorServiceStub();
+        monitor = new MonitorServiceStub();
         (void)monitor->Init();
     }
     return monitor;

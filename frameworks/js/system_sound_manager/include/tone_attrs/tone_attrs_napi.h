@@ -51,7 +51,7 @@ private:
 
     napi_env env_;
     std::shared_ptr<ToneAttrs> toneAttrs_;
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static std::shared_ptr<ToneAttrs> sToneAttrs_;
 };
 } // namespace Media

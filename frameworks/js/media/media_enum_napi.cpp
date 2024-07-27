@@ -30,7 +30,7 @@
 #include "avscreen_capture_napi.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaEnumNapi"};
 }
 
 namespace OHOS {
@@ -155,9 +155,14 @@ static const std::vector<struct JsEnumInt> g_hdrType = {
 static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
-    { "SEEK_CLOSEST_SYNC", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
     { "SEEK_CLOSEST", 2 }, // 2 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
-    { "SEEK_CONTINOUS", PlayerSeekMode::SEEK_CONTINOUS },
+    { "SEEK_CONTINUOUS", 3 }, // 3 is consistent with the SeekMode defination in ohos.multimedia.media.d.ts.
+};
+
+static const std::vector<struct JsEnumInt> g_switchMode = {
+    { "SMOOTH", PlayerSwitchMode::SWITCH_SMOOTH },
+    { "SEGMENT", PlayerSwitchMode::SWITCH_SEGMENT },
+    { "CLOSEST", PlayerSwitchMode::SWITCH_CLOSEST },
 };
 
 static const std::vector<struct JsEnumInt> g_AVCodecType = {
@@ -378,6 +383,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "FrameFlags", g_frameFlags },
     { "HdrType", g_hdrType},
     { "SeekMode", g_seekMode },
+    { "SwitchMode", g_switchMode },
     { "AVCodecType", g_AVCodecType },
     { "AACProfile", g_AACProfile },
     { "VideoEncodeBitrateMode", g_videoEncodeBitrateMode },

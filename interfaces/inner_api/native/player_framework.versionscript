@@ -24,6 +24,7 @@
       *OHOS::Media::AVMetadataHelperFactory::Create*;
       *OHOS::Media::RecorderProfilesFactory::Create*;
       *OHOS::Media::ScreenCaptureFactory::CreateScreenCapture*;
+      *OHOS::Media::ScreenCaptureFactory::CreateScreenCaptureMonitor*;
       *OHOS::Media::ScreenCaptureControllerFactory::CreateScreenCaptureController*;
       *OHOS::Media::Format::*;
       *OHOS::Media::VideoCaps::*;
@@ -31,6 +32,10 @@
       *OHOS::Media::AVCodecInfo::*;
       *OHOS::Media::AVCodecListFactory::Create*;
       *OHOS::Media::SoundPoolFactory::CreateSoundPool*;
+      *OHOS::Media::ScreenCaptureMonitor::GetInstance*;
+      *OHOS::Media::ScreenCaptureMonitor::IsScreenCaptureWorking*;
+      *OHOS::Media::ScreenCaptureMonitor::RegisterScreenCaptureMonitorListener*;
+      *OHOS::Media::ScreenCaptureMonitor::UnregisterScreenCaptureMonitorListener*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";

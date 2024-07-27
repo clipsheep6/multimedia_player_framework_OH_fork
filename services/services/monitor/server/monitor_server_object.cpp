@@ -18,7 +18,7 @@
 #include "media_errors.h"
 #include "monitor_server.h"
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorServerObject"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MonitorServerObject"};
 }
 
 namespace OHOS {

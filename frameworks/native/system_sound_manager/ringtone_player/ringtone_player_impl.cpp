@@ -304,5 +304,10 @@ void RingtonePlayerCallback::OnEndOfStream(void)
     MEDIA_LOGI("RingtonePlayerCallback::OnEndOfStream");
     ringtonePlayerImpl_.NotifyEndofStreamEvent();
 }
+
+void RingtonePlayerCallback::OnError(int32_t errorCode)
+{
+    MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
+}
 } // namesapce AudioStandard
 } // namespace OHOS

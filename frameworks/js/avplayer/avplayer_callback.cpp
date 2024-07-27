@@ -26,7 +26,7 @@
 #include "avplayer_callback.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCallback"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_PLAYER, "AVPlayerCallback" };
 }
 
 namespace OHOS {
@@ -568,7 +568,7 @@ public:
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instance create", FAKE_POINTER(this));
     onInfoFuncs_ = {
         { INFO_TYPE_STATE_CHANGE,
             [this](const int32_t extra, const Format &infoBody) { OnStateChangeCb(extra, infoBody); } },
@@ -649,7 +649,7 @@ void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &
 
 AVPlayerCallback::~AVPlayerCallback()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance destroy", FAKE_POINTER(this));
 }
 
 void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -689,7 +689,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("OnInfo is called, PlayerOnInfoType: %{public}d", type);
+    MEDIA_LOGD("OnInfo %{public}d", type);
     if (onInfoFuncs_.count(type) > 0) {
         onInfoFuncs_[type](extra, infoBody);
     } else {
@@ -707,11 +707,46 @@ void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &inf
     }
 }
 
+bool AVPlayerCallback::IsValidState(PlayerStates state, std::string &stateStr)
+{
+    switch (state) {
+        case PlayerStates::PLAYER_IDLE:
+            stateStr = AVPlayerState::STATE_IDLE;
+            break;
+        case PlayerStates::PLAYER_INITIALIZED:
+            stateStr = AVPlayerState::STATE_INITIALIZED;
+            break;
+        case PlayerStates::PLAYER_PREPARED:
+            stateStr = AVPlayerState::STATE_PREPARED;
+            break;
+        case PlayerStates::PLAYER_STARTED:
+            stateStr = AVPlayerState::STATE_PLAYING;
+            break;
+        case PlayerStates::PLAYER_PAUSED:
+            stateStr = AVPlayerState::STATE_PAUSED;
+            break;
+        case PlayerStates::PLAYER_STOPPED:
+            stateStr = AVPlayerState::STATE_STOPPED;
+            break;
+        case PlayerStates::PLAYER_PLAYBACK_COMPLETE:
+            stateStr = AVPlayerState::STATE_COMPLETED;
+            break;
+        case PlayerStates::PLAYER_RELEASED:
+            stateStr = AVPlayerState::STATE_RELEASED;
+            break;
+        case PlayerStates::PLAYER_STATE_ERROR:
+            stateStr = AVPlayerState::STATE_ERROR;
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
+
 void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instance OnStateChanged is called, current state: %{public}d",
-        FAKE_POINTER(this), state);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " > %{public}d", FAKE_POINTER(this), state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);
@@ -719,21 +754,10 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
 
     if (state_ != state) {
         state_ = state;
-        static std::map<PlayerStates, std::string> stateMap = {
-            { PLAYER_IDLE, AVPlayerState::STATE_IDLE },
-            { PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED },
-            { PLAYER_PREPARED, AVPlayerState::STATE_PREPARED },
-            { PLAYER_STARTED, AVPlayerState::STATE_PLAYING },
-            { PLAYER_PAUSED, AVPlayerState::STATE_PAUSED },
-            { PLAYER_STOPPED, AVPlayerState::STATE_STOPPED },
-            { PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED },
-            { PLAYER_RELEASED, AVPlayerState::STATE_RELEASED },
-            { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
-        };
-
-        if (stateMap.find(state) != stateMap.end()) {
+        std::string stateStr;
+        if (IsValidState(state, stateStr)) {
             if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
-                MEDIA_LOGW("can not find state change callback!");
+                MEDIA_LOGW("no stateChange cb");
                 return;
             }
             NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
@@ -745,7 +769,7 @@ void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBo
             }
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
-            cb->state = stateMap.at(state);
+            cb->state = stateStr;
             cb->reason = reason;
             NapiCallback::CompleteCallback(env_, cb);
         }
@@ -779,8 +803,7 @@ void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t currentPositon = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnSeekDone is called, currentPositon: %{public}d",
-        FAKE_POINTER(this), currentPositon);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " seekDone %{public}d", FAKE_POINTER(this), currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find seekdone callback!", FAKE_POINTER(this));
         return;
@@ -799,7 +822,7 @@ void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t speedMode = extra;
-    MEDIA_LOGI("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
+    MEDIA_LOGI("SpeedDone %{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find speeddone callback!");
         return;
@@ -819,7 +842,7 @@ void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBo
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t bitRate = extra;
-    MEDIA_LOGI("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
+    MEDIA_LOGI("Bitrate done %{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate callback!");
         return;
@@ -863,8 +886,7 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t duration = extra;
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnDurationUpdateCb is called, duration: %{public}d",
-        FAKE_POINTER(this), duration);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " duration update %{public}d", FAKE_POINTER(this), duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
@@ -974,8 +996,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &i
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d",
-        FAKE_POINTER(this), width, height);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " sizeChange w %{public}d h %{public}d", FAKE_POINTER(this), width, height);
 
     if (listener_ != nullptr) {
         listener_->NotifyVideoSize(width, height);
@@ -1140,7 +1161,7 @@ void AVPlayerCallback::OnSubtitleInfoCb(const int32_t extra, const Format &infoB
     infoBody.GetStringValue(PlayerKeys::SUBTITLE_TEXT, text);
     infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_PTS), pts);
     infoBody.GetIntValue(std::string(PlayerKeys::SUBTITLE_DURATION), duration);
-    MEDIA_LOGI("OnTrackChangedCb pts %{public}d, duration = %{public}d", pts, duration);
+    MEDIA_LOGI("OnSubtitleInfoCb pts %{public}d, duration = %{public}d", pts, duration);
 
     CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) != refMap_.end(),
         "can not find Subtitle callback!");

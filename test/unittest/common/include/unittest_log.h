@@ -19,7 +19,7 @@
 #include <cstdio>
 #include "media_log.h"
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaUnitTest"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaUnitTest"};
 }
 namespace OHOS {
 #define LOG_MAX_SIZE 200
@@ -56,7 +56,7 @@ namespace OHOS {
             (void)sprintf_s(ch, LOG_MAX_SIZE, fmt, ##__VA_ARGS__);         \
             (void)printf("%s", ch);                                        \
             (void)printf("\n");                                            \
-            MEDIA_LOG(::OHOS::HiviewDFX::HiLog::Info, "%{public}s", ch);   \
+            MEDIA_LOG(HILOG_INFO, "%{public}s", ch);                       \
         } while (0)
 }
 

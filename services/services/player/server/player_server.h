@@ -116,7 +116,7 @@ public:
     virtual int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t BackGroundChangeState(PlayerStates state, bool isBackGroundCb);
-    int32_t SelectTrack(int32_t index) override;
+    int32_t SelectTrack(int32_t index, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
@@ -124,6 +124,9 @@ public:
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnBufferingUpdate(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void OnNotifyBufferingStart();
+    void OnNotifyBufferingEnd();
 
     void OnCommonEventReceived(const std::string &event);
     int32_t GetUserId();
@@ -191,6 +194,8 @@ private:
     int32_t HandlePrepare();
     int32_t HandlePlay();
     int32_t HandlePause();
+    int32_t HandlePauseDemuxer();
+    int32_t HandleResumeDemuxer();
     int32_t HandleStop();
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);

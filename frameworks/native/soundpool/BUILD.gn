@@ -55,6 +55,7 @@ ohos_shared_library("soundpool_client") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_core",
     "qos_manager:qos",
   ]
 
@@ -67,8 +68,6 @@ ohos_shared_library("soundpool_client") {
 
   defines = []
 
-  #Soundpool low latency playback switch
-  defines += [ "SOUNDPOOL_SUPPORT_LOW_LATENCY" ]
   defines += player_framework_defines
 
   innerapi_tags = [ "platformsdk" ]

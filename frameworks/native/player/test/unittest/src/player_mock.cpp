@@ -650,7 +650,7 @@ int32_t PlayerMock::SelectTrack(int32_t index, bool &trackChange)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     callback_->SetTrackDoneFlag(false);
-    int32_t ret = player_->SelectTrack(index);
+    int32_t ret = player_->SelectTrack(index, PlayerSwitchMode::SWITCH_SMOOTH);
     if (callback_->TrackSync(trackChange) != MSERR_OK) {
         return -1;
     }
@@ -747,6 +747,13 @@ int32_t PlayerMock::SetPlayRange(int64_t start, int64_t end)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetPlayRange(start, end);
+}
+
+int32_t PlayerMock::SeekContinuous(int32_t mseconds)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->Seek(mseconds, PlayerSeekMode::SEEK_CONTINOUS);
 }
 } // namespace Media
 } // namespace OHOS

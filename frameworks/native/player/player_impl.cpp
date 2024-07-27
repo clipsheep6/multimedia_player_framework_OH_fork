@@ -19,7 +19,7 @@
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
 }
 
 namespace OHOS {
@@ -414,11 +414,11 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     return playerService_->SetParameter(param);
 }
 
-int32_t PlayerImpl::SelectTrack(int32_t index)
+int32_t PlayerImpl::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SelectTrack in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerService_->SelectTrack(index);
+    return playerService_->SelectTrack(index, mode);
 }
 
 int32_t PlayerImpl::DeselectTrack(int32_t index)

@@ -61,6 +61,8 @@ struct PlayStatisticalInfo {
     int32_t audioSampleRate {0};
     int32_t audioChannelCount {0};
     int32_t audioBitrate {0};
+    std::string subtitleMime {};
+    std::string subtitleLang {};
     bool isDrmProtected {false};
     int32_t startLatency {0};
     int32_t avgDownloadSpeed {0};
@@ -123,11 +125,12 @@ public:
     int32_t SetAudioEffectMode(int32_t effectMode) override;
 
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
-    int32_t SelectTrack(int32_t trackId) override;
+    int32_t SelectTrack(int32_t trackId, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t trackId) override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
     int32_t GetPlayerInfo(Format& playerInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
+    int32_t GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
@@ -138,6 +141,7 @@ public:
     void SetInterruptState(bool isInterruptNeeded) override;
     void OnDumpInfo(int32_t fd) override;
     void SetInstancdId(uint64_t instanceId) override;
+    int64_t GetPlayRangeEndTime() override;
 
     // internal interfaces
     void OnEvent(const Event &event);
@@ -147,6 +151,8 @@ public:
                     StreamType outType);
     int32_t SeekContinous(int32_t mSeconds, int64_t seekContinousBatchNo) override;
     int32_t ExitSeekContinous(bool align, int64_t seekContinousBatchNo) override;
+    int32_t PauseDemuxer() override;
+    int32_t ResumeDemuxer() override;
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -165,8 +171,12 @@ private:
     void HandleErrorEvent(int32_t errorCode);
     void HandleResolutionChangeEvent(const Event& event);
     void HandleBitrateStartEvent(const Event& event);
+    void HandleAudioTrackChangeEvent(const Event& event);
+    void HandleVideoTrackChangeEvent(const Event& event);
+    void HandleSubtitleTrackChangeEvent(const Event& event);
     void NotifyBufferingStart(int32_t param);
     void NotifyBufferingEnd(int32_t param);
+    void NotifyCachedDuration(int32_t param);
     void UpdateStateNoLock(PlayerStates newState, bool notifyUpward = true);
     void NotifyBufferingUpdate(const std::string_view& type, int32_t param);
     void NotifyDurationUpdate(const std::string_view& type, int32_t param);
@@ -197,6 +207,8 @@ private:
     Status LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFilter, StreamType type);
     bool IsVideoMime(const std::string& mime);
 #endif
+    bool IsAudioMime(const std::string& mime);
+    bool IsSubtitleMime(const std::string& mime);
     Status Seek(int64_t mSeconds, PlayerSeekMode mode, bool notifySeekDone);
     
     Status doPreparedSeek(int64_t seekPos, PlayerSeekMode mode);
@@ -212,11 +224,16 @@ private:
     int32_t SetFrameRateForSeekPerformance(double frameRate);
     void SetBundleName(std::string bundleName);
     Status InitAudioDefaultTrackIndex();
+    Status InitVideoDefaultTrackIndex();
+    Status InitSubtitleDefaultTrackIndex();
     bool BreakIfInterruptted();
     bool IsSeekInSitu(int64_t mSeconds);
     void CollectionErrorInfo(int32_t errCode, const std::string& errMsg);
+    void NotifyUpdateTrackInfo();
+    Status SelectSeekType(int64_t seekPos, PlayerSeekMode mode);
     Status DoSetPlayRange();
     Status StartSeekContinous();
+    int32_t InnerSelectTrack(std::string mime, int32_t trackId, PlayerSwitchMode mode);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -288,6 +305,10 @@ private:
     std::string playerId_;
     int32_t currentAudioTrackId_ = -1;
     int32_t defaultAudioTrackId_ = -1;
+    int32_t currentVideoTrackId_ = -1;
+    int32_t defaultVideoTrackId_ = -1;
+    int32_t currentSubtitleTrackId_ = -1;
+    int32_t defaultSubtitleTrackId_ = -1;
     PlayStatisticalInfo playStatisticalInfo_;
     int64_t startTime_ = 0;
     int64_t maxSeekLatency_ = 0;
@@ -307,6 +328,7 @@ private:
     std::atomic<int64_t> seekContinousBatchNo_ {-1};
     std::shared_ptr<DraggingPlayerAgent> draggingPlayerAgent_ {nullptr};
     int64_t lastSeekContinousPos_ {-1};
+    std::atomic<bool> needUpdateSubtitle_ {true};
 };
 } // namespace Media
 } // namespace OHOS

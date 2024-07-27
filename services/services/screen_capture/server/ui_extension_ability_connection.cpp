@@ -20,7 +20,7 @@
 constexpr int32_t SIGNAL_NUM = 3;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "UIExtensionAbilityConnection"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "UIExtensionAbilityConnection"};
 }
 
 namespace OHOS {

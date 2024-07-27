@@ -732,5 +732,40 @@ int32_t RecorderServiceProxy::GetMaxAmplitude()
     MEDIA_LOGI("GetMaxAmplitude amplitude result: %d", amplitude);
     return amplitude;
 }
+
+int32_t RecorderServiceProxy::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(IS_WATERMARK_SUPPORTED, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "IsWatermarkSupported failed, error: %{public}d", error);
+    isWatermarkSupported = reply.ReadBool();
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+    
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer->WriteToMessageParcel(data),
+        MSERR_INVALID_OPERATION, "Failed to write waterMarkBuffer!");
+
+    int error = Remote()->SendRequest(SET_WATERMARK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetWatermark failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

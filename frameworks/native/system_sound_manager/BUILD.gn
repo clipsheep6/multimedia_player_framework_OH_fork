@@ -58,6 +58,7 @@ ohos_shared_library("system_sound_client") {
   ]
 
   external_deps = [
+    "ability_base:session_info",
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
@@ -74,6 +75,7 @@ ohos_shared_library("system_sound_client") {
     "data_share:datashare_consumer",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "qos_manager:qos",
     "relational_store:native_dataability",
     "relational_store:native_rdb",

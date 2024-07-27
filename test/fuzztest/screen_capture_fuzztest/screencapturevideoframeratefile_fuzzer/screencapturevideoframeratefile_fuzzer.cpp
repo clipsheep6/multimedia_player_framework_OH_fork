@@ -28,7 +28,8 @@ using namespace OHOS;
 using namespace Media;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureVideoFrameRateFileFuzzer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE,
+                                               "ScreenCaptureVideoFrameRateFileFuzzer"};
 }
 
 namespace OHOS {

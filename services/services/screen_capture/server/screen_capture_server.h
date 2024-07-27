@@ -53,6 +53,7 @@
 #include "media_data_source.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
+#include "screen_capture_monitor_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -202,13 +203,22 @@ public:
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     bool HasSpeakerStream(
         const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
+    void VoIPStateUpdate(
+        const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAppPid(int32_t appid);
+    void SetAppName(std::string appName);
     int32_t GetAppPid();
+    bool GetIsInVoIPCall();
+    bool GetSpeakerAliveStatus();
+
 private:
     int32_t MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer, std::shared_ptr<AVMemory> &bufferMem);
     int32_t appPid_ { 0 };
+    std::string appName_;
     bool speakerAliveStatus_ = true;
+    std::atomic<bool> isInVoIPCall_ = false;
+    std::mutex voipStatusChangeMutex_;
 
     void MixAudio(char** srcData, char* mixData, int channels, int bufferSize);
 
@@ -222,8 +232,10 @@ class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCa
 public:
     void OnRendererStateChange(const std::vector<std::unique_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
+    void SetAppName(std::string appName);
 private:
     std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
+    std::string appName_;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
@@ -231,6 +243,7 @@ class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureSer
 public:
     static std::shared_ptr<IScreenCaptureService> Create();
     static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &choice);
+    static int32_t GetRunningScreenCaptureInstancePid(int32_t &pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -269,7 +282,8 @@ public:
     int32_t ReleaseInnerAudioBuffer();
     int32_t GetInnerAudioCaptureBufferSize(size_t &size);
     int32_t GetMicAudioCaptureBufferSize(size_t &size);
-    int32_t SetSpeakerAliveStatus(bool speakerAliveStatus);
+    int32_t OnVoIPStatusChanged(bool isInVoIPCall);
+    int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
 
 private:
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
@@ -280,8 +294,11 @@ private:
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
     int32_t StartAudioCapture();
-    int32_t StartInnerAudioCapture();
-    int32_t StartMicAudioCapture();
+    int32_t StartStreamInnerAudioCapture();
+    int32_t StartStreamMicAudioCapture();
+    int32_t StartFileInnerAudioCapture();
+    int32_t StartFileMicAudioCapture();
+    int32_t StopMicAudioCapture();
     int32_t StartVideoCapture();
     int32_t StartHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
@@ -321,7 +338,6 @@ private:
     int64_t GetCurrentMillisecond();
     void SetMetaDataReport();
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    int32_t OnSpeakerAliveStatusChanged();
 
 private:
     std::mutex mutex_;
@@ -331,7 +347,6 @@ private:
     bool canvasRotation_ = false;
     bool isMicrophoneOn_ = true;
     bool isPrivacyAuthorityEnabled_ = false;
-    bool speakerAliveStatus_ = true;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
@@ -365,9 +380,7 @@ private:
     sptr<OHOS::Surface> surface_ = nullptr;
     bool isSurfaceMode_ = false;
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
-    bool isInnerAudioCaptureWorking_ = false;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
-    bool isMicAudioCaptureWorking_ = false;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;

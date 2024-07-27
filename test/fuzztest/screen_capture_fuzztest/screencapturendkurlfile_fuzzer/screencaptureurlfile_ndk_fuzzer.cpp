@@ -27,7 +27,7 @@ using namespace OHOS;
 using namespace Media;
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ScreenCaptureUrlFileNdkFuzzer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureUrlFileNdkFuzzer"};
 }
 
 namespace OHOS {

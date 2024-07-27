@@ -24,7 +24,7 @@
 #include "mem_mgr_client.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStubMem"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStubMem"};
 }
 
 namespace OHOS {
@@ -58,7 +58,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 
 PlayerServiceStubMem::PlayerServiceStubMem()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 PlayerServiceStubMem::~PlayerServiceStubMem()
@@ -87,7 +87,7 @@ int32_t PlayerServiceStubMem::Init()
             [this] { this->RecoverByMemManageRecall(); },
             &playerServer_,
         };
-        MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);
+        MEDIA_LOGI_NO_RELEASE("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid_, appPid_, memRecallStruct_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");

@@ -28,8 +28,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, 
 namespace OHOS {
 namespace Media {
 const int32_t LOAD_WAIT_SECONDS = 2;
-const uint32_t MAX_PATH_LENGTH = 2000;
-const uint32_t MAX_REAL_PATH_LENGTH = 2048;
 
 AudioHapticSoundNormalImpl::AudioHapticSoundNormalImpl(const std::string &audioUri, const bool &muteAudio,
     const AudioStandard::StreamUsage &streamUsage)
@@ -86,8 +84,8 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
         fileDes_ = std::stoi(audioUri_.substr(fdHead.size()));
         MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
     } else {
-        char realPathRes[MAX_REAL_PATH_LENGTH] = {'\0'};
-        CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < MAX_PATH_LENGTH) &&
+        char realPathRes[PATH_MAX + 1] = {'\0'};
+        CHECK_AND_RETURN_RET_LOG((strlen(audioUri_.c_str()) < PATH_MAX) &&
             (realpath(audioUri_.c_str(), realPathRes) != nullptr), MSERR_UNSUPPORT_FILE, "Invalid file path length");
         std::string realPathStr(realPathRes);
         if (fileDes_ != -1) {

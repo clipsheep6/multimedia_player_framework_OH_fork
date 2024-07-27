@@ -76,6 +76,7 @@ public:
 
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
     void OnEndOfStream(void) override;
+    void OnError(int32_t errorCode) override;
 
 private:
     RingtonePlayerImpl &ringtonePlayerImpl_;

@@ -176,6 +176,11 @@ void AudioHapticPlayerCallbackNapi::OnEndOfStream(void)
     return OnEndOfStreamJsCallback(cb);
 }
 
+void AudioHapticPlayerCallbackNapi::OnError(int32_t errorCode)
+{
+    MEDIA_LOGI("OnError from audio haptic player. errorCode %{public}d", errorCode);
+}
+
 void AudioHapticPlayerCallbackNapi::OnEndOfStreamJsCallback(std::unique_ptr<AudioHapticPlayerJsCallback> &jsCb)
 {
     uv_loop_s *loop = nullptr;

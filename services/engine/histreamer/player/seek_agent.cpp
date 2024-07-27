@@ -220,7 +220,7 @@ Status SeekAgent::OnVideoBufferFilled(std::shared_ptr<AVBuffer>& buffer,
         MEDIA_LOG_I("video arrive target");
         demuxer_->PauseTaskByTrackId(trackId);
         targetArrivedCond_.NotifyAll();
-        producer->ReturnBuffer(buffer, true);
+        producer->ReturnBuffer(buffer, false);
         return Status::OK;
     }
     bool canDrop = false;

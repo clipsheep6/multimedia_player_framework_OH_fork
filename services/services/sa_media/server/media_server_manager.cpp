@@ -33,6 +33,7 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "screen_capture_service_stub.h"
+#include "screen_capture_monitor_service_stub.h"
 #include "screen_capture_controller_stub.h"
 #endif
 #include "monitor_service_stub.h"
@@ -43,7 +44,7 @@
 #include "player_xcollie.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServerManager"};
 }
 
 namespace OHOS {
@@ -180,6 +181,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 #ifdef SUPPORT_SCREEN_CAPTURE
         case SCREEN_CAPTURE:
             return CreateScreenCaptureStubObject();
+        case SCREEN_CAPTURE_MONITOR:
+            return CreateScreenCaptureMonitorStubObject();
         case SCREEN_CAPTURE_CONTROLLER:
             return CreateScreenCaptureControllerStubObject();
 #endif
@@ -350,6 +353,32 @@ sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
     return object;
 }
 
+sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureMonitorStubObject()
+{
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStubMap_.size() < SERVER_MAX_NUMBER,
+        nullptr, "The number of screen capture monitor services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", screenCaptureMonitorStubMap_.size());
+
+    sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorStub = ScreenCaptureMonitorServiceStub::Create();
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStub != nullptr, nullptr,
+        "failed to create ScreenCaptureMonitorServiceStub");
+
+    sptr<IRemoteObject> object = screenCaptureMonitorStub->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to create ScreenCaptureMonitorServiceStub");
+
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    screenCaptureMonitorStubMap_[object] = pid;
+
+    Dumper dumper;
+    dumper.pid_ = pid;
+    dumper.uid_ = IPCSkeleton::GetCallingUid();
+    dumper.remoteObject_ = object;
+    dumperTbl_[StubType::SCREEN_CAPTURE_MONITOR].emplace_back(dumper);
+    MEDIA_LOGD("The number of screen capture monitor services(%{public}zu).", screenCaptureMonitorStubMap_.size());
+    (void)Dump(-1, std::vector<std::u16string>());
+    return object;
+}
+
 sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureControllerStubObject()
 {
     MEDIA_LOGI("MediaServerManager::CreateScreenCaptureControllerStubObject() start");
@@ -503,6 +532,9 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
     switch (type) {
+        case TRANSCODER:
+            DestroyAVTransCoderStub(type, object, pid);
+            break;
         case RECORDER:
         case RECORDERPROFILES:
             DestroyAVRecorderStub(type, object, pid);
@@ -527,6 +559,18 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
             break;
         }
+        case SCREEN_CAPTURE_MONITOR: {
+            for (auto it = screenCaptureMonitorStubMap_.begin(); it != screenCaptureMonitorStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture monitor stub services(%{public}zu) pid(%{public}d).",
+                               screenCaptureMonitorStubMap_.size(), pid);
+                    (void)screenCaptureMonitorStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture monitor object failed, pid(%{public}d).", pid);
+            break;
+        }
         case SCREEN_CAPTURE_CONTROLLER: {
             for (auto it = screenCaptureControllerStubMap_.begin();
                 it != screenCaptureControllerStubMap_.end(); it++) {
@@ -545,6 +589,20 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             break;
         }
     }
+}
+
+void MediaServerManager::DestroyAVTranscoderStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("AVTranscoder stub services(%{public}zu) pid(%{public}d).", transCoderStubMap_.size(), pid);
+    for (auto itTranscoder = transCoderStubMap_.begin(); itTranscoder != transCoderStubMap_.end();) {
+        if (itTranscoder->second == pid) {
+            executor_.Commit(itTranscoder->first);
+            itTranscoder = transCoderStubMap_.erase(itTranscoder);
+        } else {
+            itTranscoder++;
+        }
+    }
+    MEDIA_LOGD("AVTranscoder stub services(%{public}zu).", transCoderStubMap_.size());
 }
 
 void MediaServerManager::DestroyAVCodecStubForPid(pid_t pid)
@@ -629,6 +687,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyAVRecorderStubForPid(pid);
     DestroyAVPlayerStubForPid(pid);
     DestroyAVCodecStubForPid(pid);
+    DestroyAVTranscoderStubForPid(pid);
 
     MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
     for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {

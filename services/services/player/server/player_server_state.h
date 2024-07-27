@@ -32,7 +32,8 @@ public:
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t Stop();
     virtual int32_t SeekContinous(int32_t mSeconds, int64_t batchNo);
-
+    virtual int32_t PauseDemuxer();
+    virtual int32_t ResumeDemuxer();
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     virtual void HandleStateChange(int32_t newState)
@@ -111,6 +112,8 @@ public:
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SeekContinous(int32_t mSeconds, int64_t batchNo) override;
+    int32_t PauseDemuxer() override;
+    int32_t ResumeDemuxer() override;
 
 protected:
     void HandleStateChange(int32_t newState) override;

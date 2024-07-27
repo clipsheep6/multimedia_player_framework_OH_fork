@@ -71,7 +71,9 @@ private:
     void HandleErrorEvent(int32_t errorCode);
     Status ConfigureVideoAudioMetaData();
     Status ConfigureMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos);
+    Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
+    Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -105,8 +107,8 @@ private:
     std::string transCoderId_;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
+    bool isExistVideoTrack_ = false;
     bool isNeedVideoResizeFilter_ = false;
-
     std::atomic<int32_t> durationMs_{-1};
 };
 } // namespace MEDIA

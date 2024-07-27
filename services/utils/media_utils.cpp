@@ -56,7 +56,7 @@ const std::array<std::pair<PlaybackRateMode, float>, 9> PLAY_RATE_REFS = {
 };
 }  // namespace
 
-std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid)
+std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid, bool shouldLog)
 {
     if (uid == 1003) { // 1003 is bootanimation uid
         return "bootanimation";

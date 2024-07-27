@@ -443,5 +443,23 @@ int32_t RecorderClient::GetMaxAmplitude()
     MEDIA_LOGD("GetMaxAmplitude");
     return recorderProxy_->GetMaxAmplitude();
 }
+
+int32_t RecorderClient::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("IsWatermarkSupported");
+    return recorderProxy_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderClient::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetWatermark");
+    return recorderProxy_->SetWatermark(waterMarkBuffer);
+}
 } // namespace Media
 } // namespace OHOS

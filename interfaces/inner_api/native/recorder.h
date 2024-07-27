@@ -23,6 +23,7 @@
 #include <parcel.h>
 #include "meta/format.h"
 #include "meta/meta.h"
+#include "buffer/avbuffer.h"
 #include "surface.h"
 #include "av_common.h"
 #include "codec_capability.h"
@@ -96,6 +97,8 @@ enum OutputFormatType : int32_t {
     FORMAT_M4A = 6,
     /** mp3 format */
     FORMAT_MP3 = 9,
+    /** WAV format */
+    FORMAT_WAV = 10,
     /** BUTT */
     FORMAT_BUTT,
 };
@@ -131,6 +134,8 @@ enum AudioCodecFormat : int32_t {
     AAC_LC = 3,
     /** mp3 format */
     AUDIO_MPEG = 4,
+    /** G711-mulaw format */
+    AUDIO_G711MU = 5,
     /** Invalid value */
     AUDIO_CODEC_FORMAT_BUTT,
 };
@@ -903,6 +908,24 @@ public:
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
 
     virtual int32_t GetMaxAmplitude() = 0;
+    /**
+     * @brief Check if the avrecorder has watermark capability.
+     *
+     * @param isWatermarkSupported isWatermarkSupported true or false.
+     * @return Returns {@link MSERR_OK} If the query succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t IsWatermarkSupported(bool &isWatermarkSupported) = 0;
+    /**
+     * @brief Set watermarkBuffer to avrecorder.
+     *
+     * @param waterMarkBuffer watermark image and config
+     * @return Returns {@link MSERR_OK} If the SetWatermark succeeds; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {

@@ -123,11 +123,15 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
     std::lock_guard lock(cacheBufferLock_);
     if (audioRenderer_ != nullptr) {
-        isRunning_.store(true);
         cacheDataFrameNum_ = 0;
         havePlayedCount_ = 0;
         if (!audioRenderer_->Start()) {
-            MEDIA_LOGE("audioRenderer Start failed");
+            OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
+            if (state == OHOS::AudioStandard::RendererState::RENDERER_RUNNING) {
+                MEDIA_LOGI("CacheBuffer::DoPlay audioRenderer has started");
+            } else {
+                MEDIA_LOGE("CacheBuffer::DoPlay audioRenderer start failed");
+            }
             if (callback_ != nullptr) {
                 MEDIA_LOGI("CacheBuffer::DoPlay failed, call callback");
                 callback_->OnError(MSERR_INVALID_VAL);
@@ -135,6 +139,8 @@ int32_t CacheBuffer::DoPlay(const int32_t streamID)
             if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
+        isRunning_.store(true);
+        MEDIA_LOGI("CacheBuffer::DoPlay success");
         return MSERR_OK;
     }
     MEDIA_LOGE("Invalid audioRenderer.");

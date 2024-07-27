@@ -26,7 +26,7 @@
 #include "player_xcollie.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceProxy"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceProxy"};
 }
 
 namespace OHOS {
@@ -90,13 +90,6 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
         funcName = itFunc->second;
     }
 
-    if (funcName.compare("Player::SetVolume") == 0) {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
-            FAKE_POINTER(this), funcName.c_str());
-    } else {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Proxy: SendRequest task: %{public}s is received",
-            FAKE_POINTER(this), funcName.c_str());
-    }
     int32_t error = -1;
     error = Remote()->SendRequest(code, data, reply, option);
     return error;
@@ -837,7 +830,7 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::SelectTrack(int32_t index)
+int32_t PlayerServiceProxy::SelectTrack(int32_t index, PlayerSwitchMode mode)
 {
     MediaTrace trace("PlayerServiceProxy::SelectTrack");
     MessageParcel data;
@@ -848,6 +841,7 @@ int32_t PlayerServiceProxy::SelectTrack(int32_t index)
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteInt32(index);
+    data.WriteInt32(mode);
     int32_t error = SendRequest(SELECT_TRACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SelectTrack failed, error: %{public}d", error);

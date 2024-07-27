@@ -28,7 +28,7 @@ using namespace OHOS::Media;
 using namespace OHOS::Media::RecorderTestParam;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderFuzzTest"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "RecorderFuzzTest"};
 }
 
 constexpr uint32_t STUB_STREAM_SIZE = 602;

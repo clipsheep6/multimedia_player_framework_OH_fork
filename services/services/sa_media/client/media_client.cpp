@@ -34,13 +34,14 @@
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
 #include "i_standard_screen_capture_service.h"
+#include "i_standard_screen_capture_monitor_service.h"
 #endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "player_xcollie.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaClient"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaClient"};
 }
 
 namespace OHOS {
@@ -215,6 +216,36 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 #endif
 
 #ifdef SUPPORT_SCREEN_CAPTURE
+std::shared_ptr<IScreenCaptureMonitorService> MediaClient::CreateScreenCaptureMonitorService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE_MONITOR, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCaptureMonitor proxy object is nullptr.");
+
+    sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy =
+        iface_cast<IStandardScreenCaptureMonitorService>(object);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy != nullptr, nullptr, "screenCaptureMonitor proxy is nullptr.");
+
+    std::shared_ptr<ScreenCaptureMonitorClient> screenCaptureMonitor =
+        ScreenCaptureMonitorClient::Create(screenCaptureMonitorProxy);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, nullptr, "failed to create screenCaptureMonitor client.");
+    screenCaptureMonitorClientList_.push_back(screenCaptureMonitor);
+    return screenCaptureMonitor;
+}
+
+int32_t MediaClient::DestroyScreenCaptureMonitorService(
+    std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitor != nullptr, MSERR_NO_MEMORY,
+        "input screenCapture is nullptr.");
+    screenCaptureMonitorClientList_.remove(screenCaptureMonitor);
+    return MSERR_OK;
+}
+
 std::shared_ptr<IScreenCaptureService> MediaClient::CreateScreenCaptureService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -381,6 +412,18 @@ void MediaClient::DoMediaServerDied()
         auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
         if (screenCaptureClient != nullptr) {
             screenCaptureClient->MediaServerDied();
+        }
+    }
+    for (auto &it : screenCaptureMonitorClientList_) {
+        auto screenCaptureMonitorClient = std::static_pointer_cast<ScreenCaptureMonitorClient>(it);
+        if (screenCaptureMonitorClient != nullptr) {
+            screenCaptureMonitorClient->MediaServerDied();
+        }
+    }
+    for (auto &it : screenCaptureControllerList_) {
+        auto screenCaptureControllerClient = std::static_pointer_cast<ScreenCaptureControllerClient>(it);
+        if (screenCaptureControllerClient != nullptr) {
+            screenCaptureControllerClient->MediaServerDied();
         }
     }
 #endif

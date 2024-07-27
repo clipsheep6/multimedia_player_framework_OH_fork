@@ -21,7 +21,7 @@
 #include "os_account_manager.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerState"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServerState"};
 }
 
 namespace OHOS {
@@ -45,6 +45,18 @@ int32_t PlayerServer::BaseState::Play()
 }
 
 int32_t PlayerServer::BaseState::Pause()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
+int32_t PlayerServer::BaseState::PauseDemuxer()
+{
+    ReportInvalidOperation();
+    return MSERR_INVALID_STATE;
+}
+
+int32_t PlayerServer::BaseState::ResumeDemuxer()
 {
     ReportInvalidOperation();
     return MSERR_INVALID_STATE;
@@ -124,12 +136,12 @@ int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
     } else {
         HandleStateChange(extra);
         BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change, currentState is %{public}s",
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " > %{public}s",
             FAKE_POINTER(this), server_.GetStatusDescription(extra).c_str());
     }
 
     if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
-        MEDIA_LOGI("0x%{public}06" PRIXPTR " Callback State change disable StoppedCb", FAKE_POINTER(this));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " disable StoppedCb", FAKE_POINTER(this));
         server_.disableStoppedCb_ = false;
         return MSERR_UNSUPPORT;
     }
@@ -281,6 +293,16 @@ int32_t PlayerServer::PlayingState::Pause()
     return server_.HandlePause();
 }
 
+int32_t PlayerServer::PlayingState::PauseDemuxer()
+{
+    return server_.HandlePauseDemuxer();
+}
+
+int32_t PlayerServer::PlayingState::ResumeDemuxer()
+{
+    return server_.HandleResumeDemuxer();
+}
+
 int32_t PlayerServer::PlayingState::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     return server_.HandleSeek(mSeconds, mode);
@@ -336,14 +358,13 @@ void PlayerServer::PlayingState::StateEnter()
     int32_t userId = server_.GetUserId();
     bool isBootCompleted = server_.IsBootCompleted();
     if (userId <= 0 || !isBootCompleted) {
-        MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d, isBootCompleted = %{public}d, return",
-            userId, isBootCompleted);
+        MEDIA_LOGI("PlayingState userId %{public}d, isBootCompleted %{public}d", userId, isBootCompleted);
         return;
     }
 
     bool isForeground = true;
     AccountSA::OsAccountManager::IsOsAccountForeground(userId, isForeground);
-    MEDIA_LOGI("PlayingState::StateEnter userId = %{public}d isForeground = %{public}d isBootCompleted = %{public}d",
+    MEDIA_LOGI("PlayingState userId %{public}d isForeground %{public}d isBootCompleted %{public}d",
         userId, isForeground, isBootCompleted);
     if (!isForeground) {
         server_.Pause();
