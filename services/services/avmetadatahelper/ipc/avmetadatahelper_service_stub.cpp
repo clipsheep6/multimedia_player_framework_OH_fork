@@ -350,7 +350,8 @@ int32_t AVMetadataHelperServiceStub::FetchFrameYuv(MessageParcel &data, MessageP
     int32_t option = data.ReadInt32();
     OutputConfiguration param = {data.ReadInt32(), data.ReadInt32(), static_cast<PixelFormat>(data.ReadInt32())};
     std::shared_ptr<AVBuffer> avBuffer = FetchFrameYuv(timeUs, option, param);
-    CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_INVALID_VAL);
+    reply.WriteInt32(avBuffer != nullptr ? MSERR_OK : MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(avBuffer != nullptr, MSERR_OK);
     avBuffer->WriteToMessageParcel(reply);
     return MSERR_OK;
 }

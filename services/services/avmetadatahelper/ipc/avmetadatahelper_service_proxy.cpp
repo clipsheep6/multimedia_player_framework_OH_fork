@@ -242,8 +242,9 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t ti
 
     int error = Remote()->SendRequest(FETCH_FRAME_YUV, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr, "FetchFrameYuv failed, error: %{public}d", error);
-
+    CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, nullptr);
     auto avBuffer = AVBuffer::CreateAVBuffer();
+    CHECK_AND_RETURN_RET(avBuffer != nullptr, nullptr);
     auto ret = avBuffer->ReadFromMessageParcel(reply);
     return ret ? avBuffer : nullptr;
 }

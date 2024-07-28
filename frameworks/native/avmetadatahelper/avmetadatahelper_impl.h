@@ -55,8 +55,7 @@ private:
     static std::chrono::milliseconds batchHandleTimestamp;
     void ReportSceneCode(Scene scene);
 
-    sptr<SurfaceBuffer> surfaceBuffer_;
-    sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> srcSurfaceBuffer);
+    sptr<SurfaceBuffer> CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer);
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
                                                 PixelMapInfo &pixelMapInfo);
     void CopySurfaceBufferInfo(sptr<SurfaceBuffer> &source, sptr<SurfaceBuffer> &dst);

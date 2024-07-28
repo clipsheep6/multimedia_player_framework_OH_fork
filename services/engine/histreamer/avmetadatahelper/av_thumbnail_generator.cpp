@@ -274,9 +274,11 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Fetch frame OK width:%{public}d, height:%{public}d",
                        FAKE_POINTER(this), outputConfig_.dstWidth, outputConfig_.dstHeight);
             frameBuffer_ = GenerateAlignmentAvBuffer(frameBuffer_);
-            frameBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
-            frameBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
-            frameBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
+            if (frameBuffer_ != nullptr) {
+                frameBuffer_->meta_->Set<Tag::VIDEO_WIDTH>(width_);
+                frameBuffer_->meta_->Set<Tag::VIDEO_HEIGHT>(height_);
+                frameBuffer_->meta_->Set<Tag::VIDEO_ROTATION>(rotation_);
+            }
             videoDecoder_->ReleaseOutputBuffer(bufferIndex_, false);
         } else {
             hasFetchedFrame_ = true;
@@ -424,6 +426,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec(std::
     avBufferConfig.memoryType = MemoryType::SHARED_MEMORY;
     avBufferConfig.memoryFlag = MemoryFlag::MEMORY_READ_WRITE;
     std::shared_ptr<AVBuffer> targetAvBuffer = AVBuffer::CreateAVBuffer(avBufferConfig);
+    CHECK_AND_RETURN_RET_LOG(targetAvBuffer != nullptr, nullptr, "Create avBuffer failed");
     targetAvBuffer->memory_->Write(avBuffer->memory_->GetAddr(), avBuffer->memory_->GetSize(), 0);
     return targetAvBuffer;
 }
@@ -501,7 +504,6 @@ int32_t AVThumbnailGenerator::CopySurfaceBufferPixels(const sptr<SurfaceBuffer> 
     uint8_t *dstPtr = nullptr;
     if (avBuffer->memory_->GetSurfaceBuffer() != nullptr) {
         dstPtr = static_cast<uint8_t *>(avBuffer->memory_->GetSurfaceBuffer()->GetVirAddr());
-        MEDIA_LOGI("winddraw new surfaceBuffer size %{public}d", avBuffer->memory_->GetSurfaceBuffer()->GetSize());
     } else {
         dstPtr = avBuffer->memory_->GetAddr();
     }

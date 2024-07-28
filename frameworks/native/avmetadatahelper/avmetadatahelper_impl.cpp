@@ -55,6 +55,10 @@ struct PixelMapMemHolder {
     uint8_t *heap;
 };
 
+struct AVBufferHolder {
+    std::shared_ptr<AVBuffer> buffer;
+};
+
 static void FreePixelMapData(void *addr, void *context, uint32_t size)
 {
     (void)size;
@@ -78,6 +82,25 @@ static void FreePixelMapData(void *addr, void *context, uint32_t size)
         }
     }
     delete holder;
+}
+
+static void FreeAvBufferData(void *addr, void *context, uint32_t size)
+{
+    (void)addr;
+    (void)size;
+    CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
+    AVBufferHolder *holder = reinterpret_cast<AVBufferHolder *>(context);
+    delete holder;
+}
+
+static void FreeSurfaceBuffer(void *addr, void *context, uint32_t size)
+{
+    (void)addr;
+    (void)size;
+    CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
+    void* nativeBuffer = context;
+    RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
+    ref->DecStrongRef(ref);
 }
 
 static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemory> &mem, const OutputFrame &frame)
@@ -127,6 +150,15 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
+    return holder;
+}
+
+static AVBufferHolder *CreateAVBufferHolder(const std::shared_ptr<AVBuffer> &avBuffer)
+{
+    CHECK_AND_RETURN_RET(avBuffer != nullptr && avBuffer->memory_ != nullptr, nullptr);
+    AVBufferHolder *holder = new (std::nothrow) AVBufferHolder;
+    CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "alloc avBuffer holder failed");
+    holder->buffer = avBuffer;
     return holder;
 }
 
@@ -187,6 +219,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     if (pixelMapInfo.isHdr) {
         auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
         sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
+        CHECK_AND_RETURN_RET_LOG(mySurfaceBuffer != nullptr, nullptr, "Create SurfaceBuffer failed");
         InitializationOptions options = { .size = { .width = mySurfaceBuffer->GetWidth(),
                                                     .height = mySurfaceBuffer->GetHeight() },
                                           .srcPixelFormat = PixelFormat::YCBCR_P010,
@@ -196,21 +229,25 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
             PixelMap::Create(reinterpret_cast<const uint32_t *>(mySurfaceBuffer->GetVirAddr()), colorLength, options);
         pixelMap->InnerSetColorSpace(OHOS::ColorManager::ColorSpace(ColorManager::ColorSpaceName::BT2020_HLG));
         pixelMap->SetPixelsAddr(mySurfaceBuffer->GetVirAddr(), mySurfaceBuffer.GetRefPtr(), mySurfaceBuffer->GetSize(),
-                                AllocatorType::DMA_ALLOC, nullptr);
-        mySurfaceBuffer.ForceSetRefPtr(nullptr);
-        surfaceBuffer_ = mySurfaceBuffer;
-        pixelMap->IncStrongRef(mySurfaceBuffer);
+                                AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
+        void* nativeBuffer = mySurfaceBuffer.GetRefPtr();
+        RefBase *ref = reinterpret_cast<RefBase *>(nativeBuffer);
+        ref->IncStrongRef(ref);
         return pixelMap;
     }
 
     InitializationOptions options = { .size = { .width = width, .height = height }, .pixelFormat = PixelFormat::NV12 };
     auto pixelMap = PixelMap::Create(options);
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
+ 
+    AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
+    CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
     uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
-    pixelMap->SetPixelsAddr(pixelAddr, nullptr, pixelMap->GetByteCount(), AllocatorType::HEAP_ALLOC, nullptr);
+    pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(), AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
     return pixelMap;
 }
 
-sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> srcSurfaceBuffer)
+sptr<SurfaceBuffer> AVMetadataHelperImpl::CopySurfaceBuffer(sptr<SurfaceBuffer> &srcSurfaceBuffer)
 {
     sptr<SurfaceBuffer> dstSurfaceBuffer = SurfaceBuffer::Create();
     BufferRequestConfig requestConfig = {
@@ -488,11 +525,10 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
 
     PixelMapInfo pixelMapInfo;
     auto pixelMap = CreatePixelMapYuv(frameBuffer, pixelMapInfo);
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "winddraw convert to pixelMap failed");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "convert to pixelMap failed");
 
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
-
     YUVDataInfo yuvDataInfo = { .yWidth = srcWidth,
                                 .yHeight = srcHeight,
                                 .uvWidth = srcWidth / 2,
@@ -501,20 +537,21 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                                 .uvStride = srcWidth,
                                 .uvOffset = srcWidth * srcHeight };
     pixelMap->SetImageYUVInfo(yuvDataInfo);
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "pixelMap does not exist.");
     bool needScale = (param.dstWidth > 0 && param.dstHeight > 0) &&
                      (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
-        pixelMap->SetAllocatorType(AllocatorType::HEAP_ALLOC);
     }
     if (pixelMapInfo.rotation > 0) {
         pixelMap->rotate(pixelMapInfo.rotation);
-        pixelMap->SetAllocatorType(AllocatorType::HEAP_ALLOC);
+    }
+    if ((needScale || pixelMapInfo.rotation > 0) && pixelMapInfo.isHdr) {
+        pixelMap->SetAllocatorType(AllocatorType::CUSTOM_ALLOC);
     }
     return pixelMap;
 }
+
 int32_t AVMetadataHelperImpl::GetTimeByFrameIndex(uint32_t index, int64_t &time)
 {
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, 0, "avmetadatahelper service does not exist.");
