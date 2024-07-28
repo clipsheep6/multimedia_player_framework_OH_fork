@@ -235,6 +235,11 @@ napi_value SystemTonePlayerNapi::GetTitle(napi_env env, napi_callback_info info)
                 auto obj = reinterpret_cast<SystemTonePlayerNapi*>(context->objectInfo);
                 ObjectRefMap objectGuard(obj);
                 auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                if (napiSystemTonePlayer == nullptr || napiSystemTonePlayer->systemTonePlayer_ == nullptr) {
+                    MEDIA_LOGE("The system tone player is nullptr!");
+                    context->status = MSERR_INVALID_STATE;
+                    return;
+                }
                 context->title = napiSystemTonePlayer->systemTonePlayer_->GetTitle();
                 context->status = MSERR_OK;
             },
@@ -287,6 +292,11 @@ napi_value SystemTonePlayerNapi::Prepare(napi_env env, napi_callback_info info)
                 auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
                 ObjectRefMap objectGuard(obj);
                 auto *napiSystemTonePlayer = objectGuard.GetPtr();
+                if (napiSystemTonePlayer == nullptr || napiSystemTonePlayer->systemTonePlayer_ == nullptr) {
+                    MEDIA_LOGE("The system tone player is nullptr!");
+                    context->status = MSERR_INVALID_STATE;
+                    return;
+                }
                 context->status = napiSystemTonePlayer->systemTonePlayer_->Prepare();
             },
             CommonAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -396,6 +406,11 @@ void SystemTonePlayerNapi::AsyncStart(napi_env env, void *data)
     auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
     ObjectRefMap objectGuard(obj);
     auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    if (napiSystemTonePlayer == nullptr || napiSystemTonePlayer->systemTonePlayer_ == nullptr) {
+        MEDIA_LOGE("The system tone player is nullptr!");
+        context->status = MSERR_INVALID_STATE;
+        return;
+    }
     context->streamID = napiSystemTonePlayer->systemTonePlayer_->Start(context->systemToneOptions);
     context->status = MSERR_OK;
 }
@@ -458,6 +473,11 @@ void SystemTonePlayerNapi::AsyncStop(napi_env env, void *data)
     auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
     ObjectRefMap objectGuard(obj);
     auto *napiSystemTonePlayer = objectGuard.GetPtr();
+    if (napiSystemTonePlayer == nullptr || napiSystemTonePlayer->systemTonePlayer_ == nullptr) {
+        MEDIA_LOGE("The system tone player is nullptr!");
+        context->status = MSERR_INVALID_STATE;
+        return;
+    }
     context->status = napiSystemTonePlayer->systemTonePlayer_->Stop(context->streamID);
 }
 
@@ -513,9 +533,11 @@ void SystemTonePlayerNapi::AsyncRelease(napi_env env, void *data)
     auto obj = reinterpret_cast<SystemTonePlayerNapi *>(context->objectInfo);
     ObjectRefMap objectGuard(obj);
     auto *napiSystemTonePlayer = objectGuard.GetPtr();
-    CHECK_AND_RETURN_LOG(napiSystemTonePlayer != nullptr, "NapiSystemTonePlayer is nullptr");
-    CHECK_AND_RETURN_LOG(napiSystemTonePlayer->systemTonePlayer_ != nullptr,
-        "NapiSystemTonePlayer->systemTonePlayer_ is nullptr");
+    if (napiSystemTonePlayer == nullptr || napiSystemTonePlayer->systemTonePlayer_ == nullptr) {
+        MEDIA_LOGE("The system tone player is nullptr!");
+        context->status = MSERR_INVALID_STATE;
+        return;
+    }
     context->status = napiSystemTonePlayer->systemTonePlayer_->Release();
 }
 } // namespace Media
