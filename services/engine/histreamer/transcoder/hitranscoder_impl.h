@@ -74,6 +74,9 @@ private:
     Status SetTrackMime(const std::vector<std::shared_ptr<Meta>> &trackInfos);
     Status ConfigureVideoWidthHeight(const TransCoderParam &transCoderParam);
     Status ConfigureInputVideoMetaData(const std::vector<std::shared_ptr<Meta>> &trackInfos, const size_t &index);
+    bool SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta);
+    void ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
+        const std::vector<std::shared_ptr<Meta>> &trackInfos);
 
     int32_t appUid_{0};
     int32_t appPid_{0};
@@ -93,6 +96,7 @@ private:
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
 
     std::shared_ptr<Task> cancelTask_{nullptr};
+    std::shared_ptr<Task> pauseTask_{nullptr};
 
     std::shared_ptr<Meta> audioEncFormat_ = std::make_shared<Meta>();
     std::shared_ptr<Meta> videoEncFormat_ = std::make_shared<Meta>();

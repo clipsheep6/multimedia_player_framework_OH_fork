@@ -18,6 +18,9 @@
 #include "directory_ex.h"
 #include "osal/task/jobutils.h"
 #include "media_utils.h"
+#include "meta/video_types.h"
+#include "meta/any.h"
+#include "common/log.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
@@ -30,6 +33,29 @@ constexpr int32_t TRANSCODER_COMPLETE_PROGRESS = 100;
 constexpr int8_t VIDEO_HDR_TYPE_NONE = 0; // This option is used to mark none HDR type.
 constexpr int8_t VIDEO_HDR_TYPE_VIVID = 1; // This option is used to mark HDR Vivid type.
 constexpr int32_t MINIMUM_WIDTH_HEIGHT = 240;
+
+static const std::unordered_set<std::string> AVMETA_KEY = {
+    { Tag::MEDIA_ALBUM },
+    { Tag::MEDIA_ALBUM_ARTIST },
+    { Tag::MEDIA_ARTIST },
+    { Tag::MEDIA_AUTHOR },
+    { Tag::MEDIA_COMPOSER },
+    { Tag::MEDIA_DATE },
+    { Tag::MEDIA_CREATION_TIME },
+    { Tag::MEDIA_DURATION },
+    { Tag::MEDIA_GENRE },
+    { Tag::MIME_TYPE },
+    { Tag::AUDIO_SAMPLE_RATE },
+    { Tag::MEDIA_TITLE },
+    { Tag::VIDEO_HEIGHT },
+    { Tag::VIDEO_WIDTH },
+    { Tag::VIDEO_ROTATION },
+    { Tag::VIDEO_IS_HDR_VIVID },
+    { Tag::MEDIA_LONGITUDE },
+    { Tag::MEDIA_LATITUDE },
+    { "customInfo" },
+};
+
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl)
@@ -149,12 +175,88 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     return static_cast<int32_t>(ret);
 }
 
+void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta> &globalInfo,
+    const std::vector<std::shared_ptr<Meta>> &trackInfos)
+{
+    FALSE_RETURN_MSG(
+        globalInfo != nullptr && trackInfos.size() != 0, "globalInfo or trackInfos are invalid.");
+    
+    (void)SetValueByType(globalInfo, muxerFormat_);
+
+    for (size_t index = 0; index < trackInfos.size(); index++) {
+        MEDIA_LOG_I("trackInfos index: %{public}zu", index);
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        FALSE_RETURN_MSG(meta != nullptr, "meta is invalid, index: %zu", index);
+        Plugins::MediaType mediaType = Plugins::MediaType::UNKNOWN;
+        if (!meta->GetData(Tag::MEDIA_TYPE, mediaType)) {
+            MEDIA_LOG_W("mediaType not found, index: %zu", index);
+            continue;
+        }
+        (void)SetValueByType(meta, muxerFormat_);
+        if (mediaType == Plugins::MediaType::VIDEO) {
+            (void)SetValueByType(meta, videoEncFormat_);
+        } else if (mediaType == Plugins::MediaType::AUDIO) {
+            (void)SetValueByType(meta, audioEncFormat_);
+        }
+    }
+}
+
+bool HiTransCoderImpl::SetValueByType(const std::shared_ptr<Meta> &innerMeta, std::shared_ptr<Meta> &outputMeta)
+{
+    if (innerMeta == nullptr || outputMeta == nullptr) {
+        return false;
+    }
+    for (const auto &metaKey : AVMETA_KEY) {
+        bool isSetData = false;
+        Any type = OHOS::Media::GetDefaultAnyValue(metaKey);
+        if (Any::IsSameTypeWith<int32_t>(type)) {
+            int32_t intVal;
+            isSetData = !outputMeta->GetData(metaKey, intVal) && innerMeta->GetData(metaKey, intVal);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, intVal);
+            }
+        } else if (Any::IsSameTypeWith<std::string>(type)) {
+            std::string strVal;
+            isSetData = !outputMeta->GetData(metaKey, strVal) && innerMeta->GetData(metaKey, strVal);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, strVal);
+            }
+        } else if (Any::IsSameTypeWith<Plugins::VideoRotation>(type)) {
+            Plugins::VideoRotation rotation;
+            isSetData = !outputMeta->GetData(metaKey, rotation) && innerMeta->GetData(metaKey, rotation);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, rotation);
+            }
+        } else if (Any::IsSameTypeWith<int64_t>(type)) {
+            int64_t duration;
+            isSetData = !outputMeta->GetData(metaKey, duration) && innerMeta->GetData(metaKey, duration);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, duration);
+            }
+        } else if (Any::IsSameTypeWith<bool>(type)) {
+            bool isTrue;
+            isSetData = !outputMeta->GetData(metaKey, isTrue) && innerMeta->GetData(metaKey, isTrue);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, isTrue);
+            }
+        } else if (Any::IsSameTypeWith<float>(type)) {
+            float value;
+            isSetData = !outputMeta->GetData(metaKey, value) && innerMeta->GetData(metaKey, value);
+            if (isSetData) {
+                outputMeta->SetData(metaKey, value);
+            }
+        }
+    }
+    return true;
+}
+
 Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
 {
     if (demuxerFilter_ == nullptr) {
         MEDIA_LOG_E("demuxerFilter_ is nullptr");
         return Status::ERROR_NULL_POINTER;
     }
+    std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
     std::vector<std::shared_ptr<Meta>> trackInfos = demuxerFilter_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
     MEDIA_LOG_I("trackCount: %{public}d", trackCount);
@@ -163,6 +265,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_DEMUXER_FAILED});
         return Status::ERROR_INVALID_PARAMETER;
     }
+    ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
     (void)ConfigureMetaData(trackInfos);
     (void)SetTrackMime(trackInfos);
     return Status::OK;
@@ -455,6 +558,11 @@ void HiTransCoderImpl::OnEvent(const Event &event)
     switch (event.type) {
         case EventType::EVENT_ERROR: {
             HandleErrorEvent(AnyCast<int32_t>(event.param));
+            pauseTask_ = std::make_shared<Task>("PauseTransCoder", "",
+                TaskType::SINGLETON, TaskPriority::NORMAL, false);
+            pauseTask_->SubmitJobOnce([this]() {
+                Pause();
+            });
             break;
         }
         case EventType::EVENT_COMPLETE: {
