@@ -1388,8 +1388,9 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
 {
-    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO) {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage IO Error in", FAKE_POINTER(this));
+    if (static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_IO ||
+        static_cast<MediaServiceExtErrCodeAPI9>(errorCode) == MSERR_EXT_API9_NO_MEMORY) {
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " PlayerServer OnErrorMessage Error in", FAKE_POINTER(this));
         auto pauseTask = std::make_shared<TaskHandler<void>>([this, errorCode, errorMsg]() {
             MediaTrace::TraceBegin("PlayerServer::PauseIoError", FAKE_POINTER(this));
             MEDIA_LOGI("PauseIoError start");
