@@ -587,6 +587,7 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
 bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result)
 {
     int32_t intValue = 0;
+    int64_t longValue = 0;
     std::string strValue = "";
     napi_status status = napi_create_object(env, &result);
     CHECK_AND_RETURN_RET(status == napi_ok, false);
@@ -596,6 +597,11 @@ bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_valu
             case FORMAT_TYPE_INT32:
                 if (format.GetIntValue(iter.first, intValue)) {
                     (void)SetPropertyInt32(env, result, iter.first, intValue);
+                }
+                break;
+            case FORMAT_TYPE_INT64:
+                if (format.GetLongValue(iter.first, longValue)) {
+                    (void)SetPropertyDouble(env, result, iter.first, longValue);
                 }
                 break;
             case FORMAT_TYPE_STRING:
