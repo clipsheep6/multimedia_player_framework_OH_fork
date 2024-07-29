@@ -167,7 +167,6 @@ private:
     /**
      * srcUrl: string
      */
-    static napi_value JsSetSrcUrl(napi_env env, napi_callback_info info);
     static napi_value JsGetSrcUrl(napi_env env, napi_callback_info info);
 
     static napi_value JsSetSrcFd(napi_env env, napi_callback_info info);
@@ -195,7 +194,6 @@ private:
     RetInfo Cancel();
     RetInfo Release();
 
-    RetInfo SetInputFile(std::string srcUrl);
     RetInfo SetInputFile(int32_t fd, int64_t offset, int64_t size);
     RetInfo SetOutputFile(int32_t fd);
 

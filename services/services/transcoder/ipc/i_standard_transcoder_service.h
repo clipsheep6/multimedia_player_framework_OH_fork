@@ -34,7 +34,6 @@ public:
     virtual int32_t SetAudioEncoder(AudioCodecFormat encoder) = 0;
     virtual int32_t SetAudioEncodingBitRate(int32_t bitRate) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
-    virtual int32_t SetInputFile(std::string url) = 0;
     virtual int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size) = 0;
     virtual int32_t SetOutputFile(int32_t fd) = 0;
     virtual int32_t Prepare() = 0;

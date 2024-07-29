@@ -120,9 +120,8 @@ void TransCoderServer::OnError(TransCoderErrorType errorType, int32_t errorCode)
 void TransCoderServer::OnInfo(TransCoderOnInfoType type, int32_t extra)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
-    if (transCoderCb_ != nullptr) {
-        transCoderCb_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(transCoderCb_ != nullptr);
+    transCoderCb_->OnInfo(type, extra);
 }
 
 int32_t TransCoderServer::SetVideoEncoder(VideoCodecFormat encoder)
@@ -235,23 +234,6 @@ int32_t TransCoderServer::SetOutputFormat(OutputFormatType format)
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
     BehaviorEventWrite(GetStatusDescription(status_), "TransCoder");
     return ret;
-}
-
-int32_t TransCoderServer::SetInputFile(std::string url)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(status_ == REC_INITIALIZED, MSERR_INVALID_OPERATION,
-        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
-    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    config_.srcUrl = url;
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return transCoderEngine_->SetInputFile(url);
-    });
-    int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
-
-    auto result = task->GetResult();
-    return result.Value();
 }
 
 int32_t TransCoderServer::SetInputFile(int32_t fd, int64_t offset, int64_t size)

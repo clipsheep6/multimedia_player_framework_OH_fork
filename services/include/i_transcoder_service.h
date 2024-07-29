@@ -108,19 +108,6 @@ public:
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
 
     /**
-     * @brief Sets the file url of the input file.
-     *
-     * This function must be called before {@link Prepare}.
-     *
-     * @param fd Indicates the FD of the file.
-     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t SetInputFile(std::string url) = 0;
-
-    /**
      * @brief Sets the file descriptor (FD) of the input file.
      *
      * This function must be called before {@link Prepare}.

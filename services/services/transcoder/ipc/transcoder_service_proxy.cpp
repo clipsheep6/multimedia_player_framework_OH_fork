@@ -155,23 +155,6 @@ int32_t TransCoderServiceProxy::SetOutputFormat(OutputFormatType format)
     return reply.ReadInt32();
 }
 
-int32_t TransCoderServiceProxy::SetInputFile(std::string url)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    (void)data.WriteString(url);
-    int error = Remote()->SendRequest(SET_INPUT_FILE_URL, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "SetInputFile failed, error: %{public}d", error);
-
-    return reply.ReadInt32();
-}
-
 int32_t TransCoderServiceProxy::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
     MessageParcel data;

@@ -83,12 +83,6 @@ int32_t TranscoderMock::SetAudioEncodingBitRate(int32_t bitRate)
     return transcoder_->SetAudioEncodingBitRate(bitRate);
 }
 
-int32_t TranscoderMock::SetInputFile(std::string url)
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");
-    return transcoder_->SetInputFile(url);
-}
-
 int32_t TranscoderMock::SetInputFile(int32_t fd, int64_t offset, int64_t size)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(transcoder_ != nullptr, MSERR_INVALID_OPERATION, "transcoder_ == nullptr");

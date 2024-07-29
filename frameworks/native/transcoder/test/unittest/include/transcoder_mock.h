@@ -50,7 +50,6 @@ public:
     int32_t SetVideoSize(int32_t videoFrameWidth, int32_t videoFrameHeight);
     int32_t SetAudioEncoder(AudioCodecFormat encoder);
     int32_t SetAudioEncodingBitRate(int32_t bitRate);
-    int32_t SetInputFile(std::string url);
     int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size);
     int32_t SetOutputFile(int32_t fd);
     int32_t SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback);

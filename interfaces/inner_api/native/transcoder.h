@@ -168,16 +168,6 @@ public:
     virtual int32_t SetAudioEncodingBitRate(int32_t bitRate) = 0;
 
     /**
-     * @brief Sets the file url of the input file.
-     *
-     * @param url Indicates the url of the file.
-     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t SetInputFile(std::string url) = 0;
-
-    /**
      * @brief Sets the file descriptor (FD) of the input file.
      *
      * @param fd Indicates the FD of the file.

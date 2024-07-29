@@ -77,16 +77,14 @@ TransCoderListenerCallback::~TransCoderListenerCallback()
 
 void TransCoderListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    if (listener_ != nullptr) {
-        listener_->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnError(errorCode, errorMsg);
 }
 
 void TransCoderListenerCallback::OnInfo(int32_t type, int32_t extra)
 {
-    if (listener_ != nullptr) {
-        listener_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnInfo(type, extra);
 }
 } // namespace Media
 } // namespace OHOS

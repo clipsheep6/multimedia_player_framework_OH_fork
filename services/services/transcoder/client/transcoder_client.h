@@ -36,7 +36,6 @@ public:
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
-    int32_t SetInputFile(std::string url) override;
     int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size) override;
     int32_t SetOutputFile(int32_t fd) override;
     int32_t SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback) override;

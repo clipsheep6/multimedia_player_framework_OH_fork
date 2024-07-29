@@ -481,52 +481,6 @@ napi_value AVTransCoderNapi::ExecuteByPromise(napi_env env, napi_callback_info i
     return result;
 }
 
-napi_value AVTransCoderNapi::JsSetSrcUrl(napi_env env, napi_callback_info info)
-{
-    MediaTrace trace("AVTransCoderNapi::set url");
-    const std::string &opt = AVTransCoderOpt::PREPARE;
-    size_t argCount = 1;
-    napi_value args[1] = { nullptr };
-
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
-    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
-
-    // get url from js
-    asyncCtx->napi->srcUrl_ = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGI("JsSetUrl url: %{public}s", asyncCtx->napi->srcUrl_.c_str());
-
-    auto task = std::make_shared<TaskHandler<void>>([napi = asyncCtx->napi]() {
-        MEDIA_LOGI("JsSetSrcUrl Task");
-        napi->SetInputFile(napi->srcUrl_);
-    });
-    (void)asyncCtx->napi->taskQue_->EnqueueTask(task);
-
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-
-    MEDIA_LOGI("JsSetSrcUrl Out");
-    return result;
-}
-
 napi_value AVTransCoderNapi::JsGetSrcUrl(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVTransCoderNapi::get url");
@@ -724,13 +678,6 @@ RetInfo AVTransCoderNapi::Release()
     StateCallback(AVTransCoderState::STATE_RELEASED);
     CancelCallback();
     hasConfiged_ = false;
-    return RetInfo(MSERR_EXT_API9_OK, "");
-}
-
-RetInfo AVTransCoderNapi::SetInputFile(std::string url)
-{
-    int32_t ret = transCoder_->SetInputFile(url);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetInputFile", ""));
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 

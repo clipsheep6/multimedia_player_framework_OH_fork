@@ -52,10 +52,9 @@ bool HiTransCoderCallbackLooper::IsStarted()
 
 void HiTransCoderCallbackLooper::Stop()
 {
-    if (taskStarted_) {
-        task_->Stop();
-        taskStarted_ = false;
-    }
+    FALSE_RETURN(taskStarted_);
+    task_->Stop();
+    taskStarted_ = false;
 }
 
 void HiTransCoderCallbackLooper::StartWithTransCoderEngineObs(const std::weak_ptr<ITransCoderEngineObs>& obs)
@@ -63,11 +62,10 @@ void HiTransCoderCallbackLooper::StartWithTransCoderEngineObs(const std::weak_pt
     MEDIA_LOG_I("StartWithTransCoderEngineObs");
     OHOS::Media::AutoLock lock(loopMutex_);
     obs_ = obs;
-    if (!taskStarted_) {
-        task_->Start();
-        taskStarted_ = true;
-        MEDIA_LOG_I("start callback looper");
-    }
+    FALSE_RETURN(!taskStarted_);
+    task_->Start();
+    taskStarted_ = true;
+    MEDIA_LOG_I("start callback looper");
 }
 void HiTransCoderCallbackLooper::SetTransCoderEngine(ITransCoderEngine* engine, std::string transCoderId)
 {
@@ -80,9 +78,7 @@ void HiTransCoderCallbackLooper::StartReportMediaProgress(int64_t updateInterval
 {
     MEDIA_LOG_I("StartReportMediaProgress");
     reportProgressIntervalMs_ = updateIntervalMs;
-    if (reportMediaProgress_) { // already set
-        return;
-    }
+    FALSE_RETURN(!reportMediaProgress_);
     reportMediaProgress_ = true;
     Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS, SteadyClock::GetCurrentTimeMs(), Any()));
 }
@@ -135,10 +131,9 @@ void HiTransCoderCallbackLooper::DoReportMediaProgress()
         }
     }
     isDropMediaProgress_ = false;
-    if (reportMediaProgress_) {
-        Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
-            SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
-    }
+    FALSE_RETURN(reportMediaProgress_);
+    Enqueue(std::make_shared<Event>(WHAT_MEDIA_PROGRESS,
+        SteadyClock::GetCurrentTimeMs() + reportProgressIntervalMs_, Any()));
 }
 
 void HiTransCoderCallbackLooper::OnError(TransCoderErrorType errorType, int32_t errorCode)
@@ -151,12 +146,11 @@ void HiTransCoderCallbackLooper::DoReportError(const Any &error)
 {
     OHOS::Media::AutoLock lock(loopMutex_);
     auto obs = obs_.lock();
-    if (obs != nullptr) {
-        auto ptr = AnyCast<std::pair<TransCoderErrorType, int32_t>>(&error);
-        MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
-            static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
-        obs->OnError(ptr->first, ptr->second);
-    }
+    FALSE_RETURN(obs != nullptr);
+    auto ptr = AnyCast<std::pair<TransCoderErrorType, int32_t>>(&error);
+    MEDIA_LOG_E("Report error, error type: " PUBLIC_LOG_D32 " error value: " PUBLIC_LOG_D32,
+        static_cast<int32_t>(ptr->first), static_cast<int32_t>(ptr->second));
+    obs->OnError(ptr->first, ptr->second);
 }
 
 void HiTransCoderCallbackLooper::OnInfo(TransCoderOnInfoType type, int32_t extra)
@@ -168,12 +162,11 @@ void HiTransCoderCallbackLooper::OnInfo(TransCoderOnInfoType type, int32_t extra
 void HiTransCoderCallbackLooper::DoReportInfo(const Any& info)
 {
     auto obs = obs_.lock();
-    if (obs != nullptr) {
-        auto ptr = AnyCast<std::tuple<TransCoderOnInfoType, int32_t>>(&info);
-        MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
-            static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
-        obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr));
-    }
+    FALSE_RETURN(obs != nullptr);
+    auto ptr = AnyCast<std::tuple<TransCoderOnInfoType, int32_t>>(&info);
+    MEDIA_LOG_I("Report info, info type: " PUBLIC_LOG_D32 " info value: " PUBLIC_LOG_D32,
+        static_cast<int32_t>(std::get<TUPLE_POS_0>(*ptr)), static_cast<int32_t>(std::get<TUPLE_POS_1>(*ptr)));
+    obs->OnInfo(std::get<TUPLE_POS_0>(*ptr), std::get<TUPLE_POS_1>(*ptr));
 }
 
 void HiTransCoderCallbackLooper::LoopOnce(const std::shared_ptr<HiTransCoderCallbackLooper::Event>& item)

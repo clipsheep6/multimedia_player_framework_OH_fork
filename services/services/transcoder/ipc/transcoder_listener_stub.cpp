@@ -37,10 +37,8 @@ int TransCoderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     MessageOption &option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (TransCoderListenerStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(TransCoderListenerStub::GetDescriptor() == remoteDescriptor, MSERR_INVALID_OPERATION,
+        "Invalid descriptor");
 
     switch (code) {
         case TransCoderListenerMsg::ON_ERROR: {
@@ -75,9 +73,8 @@ void TransCoderListenerStub::OnError(int32_t errorCode, const std::string &error
 
 void TransCoderListenerStub::OnInfo(int32_t type, int32_t extra)
 {
-    if (callback_ != nullptr) {
-        callback_->OnInfo(type, extra);
-    }
+    CHECK_AND_RETURN(callback_ != nullptr);
+    callback_->OnInfo(type, extra);
 }
 
 void TransCoderListenerStub::SetTransCoderCallback(const std::shared_ptr<TransCoderCallback> &callback)
