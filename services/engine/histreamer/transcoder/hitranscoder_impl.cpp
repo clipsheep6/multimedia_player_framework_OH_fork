@@ -21,6 +21,7 @@
 #include "meta/video_types.h"
 #include "meta/any.h"
 #include "common/log.h"
+#include "osal/task/pipeline_threadpool.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
@@ -100,6 +101,7 @@ HiTransCoderImpl::HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appT
 
 HiTransCoderImpl::~HiTransCoderImpl()
 {
+    PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
     MEDIA_LOG_I("~HiTransCoderImpl");
 }
 
