@@ -1398,10 +1398,6 @@ int32_t HiPlayerImpl::SelectTrack(int32_t trackId, PlayerSwitchMode mode)
         MEDIA_LOG_E("SelectTrack invalid mimeType. trackId is " PUBLIC_LOG_D32, trackId);
         return MSERR_UNKNOWN;
     }
-    if (Status::OK != demuxer_->SelectTrack(trackId)) {
-        MEDIA_LOG_E_SHORT("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
-        return MSERR_UNKNOWN;
-    }
     return InnerSelectTrack(mime, trackId, mode);
 }
 
