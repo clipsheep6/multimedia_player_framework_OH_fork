@@ -44,6 +44,7 @@ namespace OHOS {
 namespace Media {
 using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 static constexpr uint8_t PIXEL_SIZE_HDR_YUV = 3;
+static constexpr float PIXEL_SIZE_SDR_YUV = 1.5;
 static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 },
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
@@ -199,13 +200,11 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
 {
     bool isValid = frameBuffer != nullptr && frameBuffer->meta_ != nullptr && frameBuffer->memory_ != nullptr;
     CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
-
     auto bufferMeta = frameBuffer->meta_;
 
     int32_t width = 0;
     auto hasProperty = bufferMeta->Get<Tag::VIDEO_WIDTH>(width);
     CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid width");
-
     int32_t height = 0;
     hasProperty = bufferMeta->Get<Tag::VIDEO_HEIGHT>(height);
     CHECK_AND_RETURN_RET_LOG(hasProperty, nullptr, "invalid height");
@@ -216,6 +215,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
 
     bufferMeta->Get<Tag::VIDEO_IS_HDR_VIVID>(pixelMapInfo.isHdr);
     pixelMapInfo.isHdr &= frameBuffer->memory_->GetSurfaceBuffer() != nullptr;
+
     if (pixelMapInfo.isHdr) {
         auto surfaceBuffer = frameBuffer->memory_->GetSurfaceBuffer();
         sptr<SurfaceBuffer> mySurfaceBuffer = CopySurfaceBuffer(surfaceBuffer);
@@ -236,11 +236,12 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
         return pixelMap;
     }
 
-    InitializationOptions options = { .size = { .width = width, .height = height }, .pixelFormat = PixelFormat::NV12 };
-    auto pixelMap = PixelMap::Create(options);
-    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap failed");
- 
     AVBufferHolder *holder = CreateAVBufferHolder(frameBuffer);
+    InitializationOptions options = { .size = { .width = width, .height = height }, .srcPixelFormat = PixelFormat::NV12,
+                                      .pixelFormat = PixelFormat::NV12 };
+    uint32_t colorLength = width * height * PIXEL_SIZE_SDR_YUV;
+    auto pixelMap =
+        PixelMap::Create(reinterpret_cast<const uint32_t *>(frameBuffer->memory_->GetAddr()), colorLength, options);
     CHECK_AND_RETURN_RET_LOG(holder != nullptr, nullptr, "Create buffer holder failed");
     uint8_t *pixelAddr = frameBuffer->memory_->GetAddr();
     pixelMap->SetPixelsAddr(pixelAddr, holder, pixelMap->GetByteCount(), AllocatorType::CUSTOM_ALLOC, FreeAvBufferData);
@@ -541,6 +542,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, in
                      (param.dstWidth <= srcWidth && param.dstHeight <= srcHeight) &&
                      (param.dstWidth < srcWidth || param.dstHeight < srcHeight) && srcWidth > 0 && srcHeight > 0;
     if (needScale) {
+        if (!pixelMapInfo.isHdr) {
+            pixelMap->SetAllocatorType(AllocatorType::SHARE_MEM_ALLOC);
+        }
         pixelMap->scale((1.0f * param.dstWidth) / srcWidth, (1.0f * param.dstHeight) / srcHeight);
     }
     if (pixelMapInfo.rotation > 0) {
