@@ -144,3 +144,6 @@ msync;all
 process_vm_readv;all
 shutdown;all
 fgetxattr;all
+epoll_pwait;all
+timerfd_create;all
+timerfd_settime;all
