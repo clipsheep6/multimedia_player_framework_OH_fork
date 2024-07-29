@@ -90,6 +90,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("addSubtitleFromFd", JsAddSubtitleAVFileDescriptor),
         DECLARE_NAPI_FUNCTION("setDecryptionConfig", JsSetDecryptConfig),
         DECLARE_NAPI_FUNCTION("getMediaKeySystemInfos", JsGetMediaKeySystemInfos),
+        DECLARE_NAPI_FUNCTION("getPlaybackInfo", JsGetPlaybackInfo),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -1231,6 +1232,49 @@ napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_in
     }
 
     return napiMap;
+}
+
+napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetPlaybackInfo");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("GetPlaybackInfo In");
+
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetPlaybackInfo", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("GetPlaybackInfo Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+            auto jsPlayer = promiseCtx->napi;
+            if (jsPlayer == nullptr) {
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
+            }
+
+            Format &playbackInfo = jsPlayer->playbackInfo_;
+            if (jsPlayer->IsControllable() && jsPlayer->player_ != nullptr) {
+                (void)jsPlayer->player_->GetPlaybackInfo(playbackInfo);
+            } else {
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state unsupport get track description");
+            }
+            promiseCtx->JsResult = std::make_unique<AVCodecJsResultFormat>(playbackInfo);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
+    promiseCtx.release();
+    MEDIA_LOGI("GetPlaybackInfo Out");
+    return result;
 }
 
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)

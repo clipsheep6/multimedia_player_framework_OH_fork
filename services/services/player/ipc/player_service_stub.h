@@ -58,6 +58,7 @@ public:
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetVideoHeight() override;
@@ -114,6 +115,7 @@ private:
     int32_t Seek(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTime(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t GetPlaybackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetSubtitleTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoWidth(MessageParcel &data, MessageParcel &reply);
