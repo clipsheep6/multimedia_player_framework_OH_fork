@@ -1234,7 +1234,7 @@ napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_in
     return napiMap;
 }
 
-napi_value AVPlayerNapi::JsgetPlaybackInfo(napi_env env, napi_callback_info info)
+napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVPlayerNapi::getPlaybackInfo");
     napi_value result = nullptr;
@@ -1249,7 +1249,7 @@ napi_value AVPlayerNapi::JsgetPlaybackInfo(napi_env env, napi_callback_info info
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     // async work
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsgetPlaybackInfo", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "JsGetPlaybackInfo", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void *data) {
             MEDIA_LOGI("getPlaybackInfo Task");
