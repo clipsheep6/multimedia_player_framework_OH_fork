@@ -64,7 +64,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[DESTROY] = "Player::DestroyStub";
     playerFuncs_[SET_CALLBACK] = "Player::SetPlayerCallback";
     playerFuncs_[GET_VIDEO_TRACK_INFO] = "Player::GetVideoTrackInfo";
-    playerFuncs_[GET_PLAYER_INFO] = "Player::GetPlayerInfo";
+    playerFuncs_[GET_PLAYBACK_INFO] = "Player::GetPlaybackInfo";
     playerFuncs_[GET_AUDIO_TRACK_INFO] = "Player::GetAudioTrackInfo";
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = "Player::GetSubtitleTrackInfo";
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
@@ -444,9 +444,9 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return reply.ReadInt32();
 }
 
-int32_t PlayerServiceProxy::GetPlayerInfo(Format &playerInfo)
+int32_t PlayerServiceProxy::GetPlaybackInfo(Format &playbackInfo)
 {
-    MediaTrace trace("PlayerServiceProxy::GetPlayerInfo");
+    MediaTrace trace("PlayerServiceProxy::GetPlaybackInfo");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -454,10 +454,10 @@ int32_t PlayerServiceProxy::GetPlayerInfo(Format &playerInfo)
     bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int32_t error = SendRequest(GET_PLAYER_INFO, data, reply, option);
+    int32_t error = SendRequest(GET_PLAYBACK_INFO, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "GetPlayerInfo failed, error: %{public}d", error);
-    (void)MediaParcel::FormatUnmarshalling(reply, playerInfo);
+        "GetPlaybackInfo failed, error: %{public}d", error);
+    (void)MediaParcel::FormatUnmarshalling(reply, playbackInfo);
 
     return reply.ReadInt32();
 }

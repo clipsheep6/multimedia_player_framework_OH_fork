@@ -145,8 +145,8 @@ void PlayerServiceStub::FillPlayerFuncPart2()
         [this](MessageParcel &data, MessageParcel &reply) { return SetPlayerCallback(data, reply); } };
     playerFuncs_[GET_VIDEO_TRACK_INFO] = { "GetVideoTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetVideoTrackInfo(data, reply); } };
-    playerFuncs_[GET_PLAYER_INFO] = { "GetPlayerInfo",
-        [this](MessageParcel &data, MessageParcel &reply) { return GetPlayerInfo(data, reply); } };
+    playerFuncs_[GET_PLAYBACK_INFO] = { "GetPlaybackInfo",
+        [this](MessageParcel &data, MessageParcel &reply) { return GetPlaybackInfo(data, reply); } };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { "GetAudioTrackInfo",
         [this](MessageParcel &data, MessageParcel &reply) { return GetAudioTrackInfo(data, reply); } };
     playerFuncs_[GET_SUBTITLE_TRACK_INFO] = { "GetSubtitleTrackInfo",
@@ -382,11 +382,11 @@ int32_t PlayerServiceStub::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return playerServer_->GetVideoTrackInfo(videoTrack);
 }
 
-int32_t PlayerServiceStub::GetPlayerInfo(Format &playerInfo)
+int32_t PlayerServiceStub::GetPlaybackInfo(Format &playbackInfo)
 {
-    MediaTrace trace("PlayerServiceStub::GetPlayerInfo");
+    MediaTrace trace("PlayerServiceStub::GetPlaybackInfo");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->GetPlayerInfo(playerInfo);
+    return playerServer_->GetPlaybackInfo(playbackInfo);
 }
 
 int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
@@ -735,12 +735,12 @@ int32_t PlayerServiceStub::GetVideoTrackInfo(MessageParcel &data, MessageParcel 
     return MSERR_OK;
 }
 
-int32_t PlayerServiceStub::GetPlayerInfo(MessageParcel &data, MessageParcel &reply)
+int32_t PlayerServiceStub::GetPlaybackInfo(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
-    Format playerInfo;
-    int32_t ret = GetPlayerInfo(playerInfo);
-    (void)MediaParcel::FormatMarshalling(reply, playerInfo);
+    Format playbackInfo;
+    int32_t ret = GetPlaybackInfo(playbackInfo);
+    (void)MediaParcel::FormatMarshalling(reply, playbackInfo);
     reply.WriteInt32(ret);
 
     return MSERR_OK;

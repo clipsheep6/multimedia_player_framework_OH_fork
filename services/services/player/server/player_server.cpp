@@ -838,7 +838,7 @@ int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return MSERR_OK;
 }
 
-int32_t PlayerServer::GetPlayerInfo(Format &playerInfo)
+int32_t PlayerServer::GetPlaybackInfo(Format &playbackInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
@@ -848,9 +848,9 @@ int32_t PlayerServer::GetPlayerInfo(Format &playerInfo)
         MEDIA_LOGE("Can not get track info, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGD("PlayerServer GetPlayerInfo in");
-    int32_t ret = playerEngine_->GetPlayerInfo(playerInfo);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlayerInfo Failed!");
+    MEDIA_LOGD("PlayerServer GetPlaybackInfo in");
+    int32_t ret = playerEngine_->GetPlaybackInfo(playbackInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetPlaybackInfo Failed!");
     return MSERR_OK;
 }
 

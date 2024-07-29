@@ -236,9 +236,9 @@ private:
     static napi_value JsGetMediaKeySystemInfos(napi_env env, napi_callback_info info);
 
     /**
-     * getPlayerInfo(): PlayerInfo;
+     * getPlaybackInfo(): playbackInfo;
      */
-    static napi_value JsGetPlayerInfo(napi_env env, napi_callback_info info);
+    static napi_value JsGetPlaybackInfo(napi_env env, napi_callback_info info);
 
     /**
      * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
@@ -373,7 +373,7 @@ private:
     bool isLiveStream_ = false;
     std::shared_mutex drmMutex_{};
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
-    Format playerInfo_;
+    Format playbackInfo_;
 };
 } // namespace Media
 } // namespace OHOS

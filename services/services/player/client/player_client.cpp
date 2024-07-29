@@ -245,11 +245,11 @@ int32_t PlayerClient::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     return playerProxy_->GetVideoTrackInfo(videoTrack);
 }
 
-int32_t PlayerClient::GetPlayerInfo(Format &playerInfo)
+int32_t PlayerClient::GetPlaybackInfo(Format &playbackInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->GetPlayerInfo(playerInfo);
+    return playerProxy_->GetPlaybackInfo(playbackInfo);
 }
 
 int32_t PlayerClient::GetAudioTrackInfo(std::vector<Format> &audioTrack)

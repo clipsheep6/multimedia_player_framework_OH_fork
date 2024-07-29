@@ -613,7 +613,7 @@ int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t s
 }
 
 
-int32_t PlayerServiceProxyFuzzer::GetPlayerInfo(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::GetPlaybackInfo(uint8_t *inputData, size_t size, bool isFuzz)
 {
     (void)size;
     (void)isFuzz;
@@ -623,12 +623,12 @@ int32_t PlayerServiceProxyFuzzer::GetPlayerInfo(uint8_t *inputData, size_t size,
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "GetPlayerInfo:Failed to write descriptor!" << std::endl;
+        std::cout << "GetPlaybackInfo:Failed to write descriptor!" << std::endl;
         return false;
     }
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_PLAYER_INFO, data, reply, option);
+    return SendRequest(GET_PLAYBACK_INFO, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)

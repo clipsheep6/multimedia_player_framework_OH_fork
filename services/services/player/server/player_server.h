@@ -91,7 +91,7 @@ public:
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
-    int32_t GetPlayerInfo(Format &playerInfo) override;
+    int32_t GetPlaybackInfo(Format &playbackInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t GetDuration(int32_t &duration) override;
