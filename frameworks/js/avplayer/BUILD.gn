@@ -76,6 +76,7 @@ ohos_shared_library("media_avplayer") {
     "av_codec:av_codec_client",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
+    "ets_runtime:libark_jsruntime",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

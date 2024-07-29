@@ -63,6 +63,7 @@
       "deps": {
         "components": [
           "av_session",
+          "ets_runtime",
           "safwk",
           "hilog",
           "window_manager",
