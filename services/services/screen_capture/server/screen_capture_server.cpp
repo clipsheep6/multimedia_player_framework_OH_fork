@@ -2585,6 +2585,7 @@ int32_t AudioDataSource::MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerA
         bufferMem->Write(reinterpret_cast<uint8_t*>(micAudioBuffer->buffer), micAudioBuffer->length, 0);
     } else {
         MEDIA_LOGE("without buffer write");
+        return MSERR_UNKNOWN;
     }
     if (innerAudioBuffer) {
         if (screenCaptureServer_->ReleaseInnerAudioBuffer() != MSERR_OK) {
