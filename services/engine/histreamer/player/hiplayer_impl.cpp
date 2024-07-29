@@ -1490,14 +1490,14 @@ int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
 {
     MEDIA_LOG_D("GetPlaybackInfo in");
 
-    playbackInfo PlaybackInfoTmp;
-    auto ret = demuxer_->GetPlaybackInfo(PlaybackInfoTmp);
+    PlaybackInfo playbackInfoTmp;
+    auto ret = demuxer_->GetPlaybackInfo(playbackInfoTmp);
     if (ret == Status::OK) {
-        playbackInfo.PutStringValue("server_ip_address", PlaybackInfoTmp.serverIpAddress);
-        playbackInfo.PutLongValue("average_download_rate", PlaybackInfoTmp.averageDownloadRate);
-        playbackInfo.PutLongValue("download_rate", PlaybackInfoTmp.downloadRate);
-        playbackInfo.PutIntValue("is_downloading", PlaybackInfoTmp.isDownloading);
-        playbackInfo.PutLongValue("buffer_duration", PlaybackInfoTmp.bufferDuration);
+        playbackInfo.PutStringValue("server_ip_address", playbackInfoTmp.serverIpAddress);
+        playbackInfo.PutLongValue("average_download_rate", playbackInfoTmp.averageDownloadRate);
+        playbackInfo.PutLongValue("download_rate", playbackInfoTmp.downloadRate);
+        playbackInfo.PutIntValue("is_downloading", playbackInfoTmp.isDownloading);
+        playbackInfo.PutLongValue("buffer_duration", playbackInfoTmp.bufferDuration);
     }
     return TransStatus(Status::OK);
 }
