@@ -21,6 +21,7 @@
 #include "meta/video_types.h"
 #include "meta/any.h"
 #include "common/log.h"
+#include "osal/task/pipeline_threadpool.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_ONLY_PRERELEASE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
@@ -100,6 +101,7 @@ HiTransCoderImpl::HiTransCoderImpl(int32_t appUid, int32_t appPid, uint32_t appT
 
 HiTransCoderImpl::~HiTransCoderImpl()
 {
+    PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
     MEDIA_LOG_I("~HiTransCoderImpl");
 }
 
@@ -652,10 +654,10 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetCodecFormat(videoEncFormat_) == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-        Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
     FALSE_RETURN_V_MSG_E(videoEncoderFilter_->SetTransCoderMode() == Status::OK,
         Status::ERROR_UNKNOWN, "videoEncoderFilter SetTransCoderMode fail");
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+        Status::ERROR_UNKNOWN, "videoEncoderFilter Configure fail");
     FALSE_RETURN_V_MSG_E(pipeline_->LinkFilters(preFilter, {videoEncoderFilter_}, type) == Status::OK,
         Status::ERROR_UNKNOWN, "Add videoEncoderFilter to pipeline fail");
     return Status::OK;
