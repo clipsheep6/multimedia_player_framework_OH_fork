@@ -1236,10 +1236,10 @@ napi_value AVPlayerNapi::JsGetMediaKeySystemInfos(napi_env env, napi_callback_in
 
 napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info)
 {
-    MediaTrace trace("AVPlayerNapi::getPlaybackInfo");
+    MediaTrace trace("AVPlayerNapi::JsGetPlaybackInfo");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("getPlaybackInfo In");
+    MEDIA_LOGI("GetPlaybackInfo In");
 
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     napi_value args[1] = { nullptr };
@@ -1252,7 +1252,7 @@ napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info
     napi_create_string_utf8(env, "JsGetPlaybackInfo", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void *data) {
-            MEDIA_LOGI("getPlaybackInfo Task");
+            MEDIA_LOGI("GetPlaybackInfo Task");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
@@ -1263,7 +1263,7 @@ napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info
 
             Format &playbackInfo = jsPlayer->playbackInfo_;
             if (jsPlayer->IsControllable() && jsPlayer->player_ != nullptr) {
-                (void)jsPlayer->player_->getPlaybackInfo(playbackInfo);
+                (void)jsPlayer->player_->GetPlaybackInfo(playbackInfo);
             } else {
                 return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "current state unsupport get track description");
@@ -1273,7 +1273,7 @@ napi_value AVPlayerNapi::JsGetPlaybackInfo(napi_env env, napi_callback_info info
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
-    MEDIA_LOGI("getPlaybackInfo Out");
+    MEDIA_LOGI("GetPlaybackInfo Out");
     return result;
 }
 
