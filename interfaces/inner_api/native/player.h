@@ -117,7 +117,7 @@ public:
 class PlaybackInfoKey {
 public:
     static constexpr std::string_view SERVER_IP_ADDRESS = "server_ip_address";
-    static constexpr std::string_view AVERAGE_DOWNLOAD_RATE = "average_download_rate";
+    static constexpr std::string_view AVG_DOWNLOAD_RATE = "average_download_rate";
     static constexpr std::string_view DOWNLOAD_RATE = "download_rate";
     static constexpr std::string_view IS_DOWNLOADING = "is_downloading";
     static constexpr std::string_view BUFFER_DURATION = "buffer_duration";

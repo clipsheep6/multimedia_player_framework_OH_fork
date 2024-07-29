@@ -292,7 +292,7 @@ static const std::vector<struct JsEnumString> g_avMimeTypes = {
 
 static const std::vector<struct JsEnumString> g_playbackInfoKey = {
     { "SERVER_IP_ADDRESS", "server_ip_address" },
-    { "AVERAGE_DOWNLOAD_RATE", "average_download_rate" },
+    { "AVG_DOWNLOAD_RATE", "average_download_rate" },
     { "DOWNLOAD_RATE", "download_rate" },
     { "IS_DOWNLOADING", "is_downloading" },
     { "BUFFER_DURATION", "buffer_duration" },
