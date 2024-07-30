@@ -338,6 +338,7 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_AUD_SAMPLE_RATE", "sample_rate" },
     { "MD_KEY_CUSTOM", "vendor.custom" },
     { "MD_KEY_LANGUAGE", "language" },
+    { "MD_KEY_AUD_SAMPLE_DEPTH", "sample_depth" },
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
