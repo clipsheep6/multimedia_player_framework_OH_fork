@@ -108,9 +108,7 @@ int TransCoderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             std::lock_guard<std::mutex> lock(mutex_);
             (void)IpcRecovery(false);
             int32_t ret = (this->*memberFunc)(data, reply);
-            if (ret != MSERR_OK) {
-                MEDIA_LOGE("calling memberFunc is failed.");
-            }
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "calling memberFunc is failed.");
             return MSERR_OK;
         }
     }

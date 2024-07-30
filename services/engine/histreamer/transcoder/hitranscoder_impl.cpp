@@ -126,18 +126,12 @@ int32_t HiTransCoderImpl::GetRealPath(const std::string &url, std::string &realU
     } else {
         tempUrlPath = url;
     }
-    if (tempUrlPath.find("..") != std::string::npos) {
-        MEDIA_LOG_E("invalid url. The Url (%{private}s) path may be invalid.", tempUrlPath.c_str());
-        return MSERR_FILE_ACCESS_FAILED;
-    }
+    FALSE_RETURN_V_MSG_E(tempUrlPath.find("..") == std::string::npos, MSERR_FILE_ACCESS_FAILED,
+        "invalid url. The Url (%{private}s) path may be invalid.", tempUrlPath.c_str());
     bool ret = PathToRealPath(tempUrlPath, realUrlPath);
-    if (!ret) {
-        MEDIA_LOG_E("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
-        return MSERR_OPEN_FILE_FAILED;
-    }
-    if (access(realUrlPath.c_str(), R_OK) != 0) {
-        return MSERR_FILE_ACCESS_FAILED;
-    }
+    FALSE_RETURN_V_MSG_E(ret, MSERR_OPEN_FILE_FAILED, "invalid url. The Url (%{private}s) path may be invalid.",
+        url.c_str());
+    FALSE_RETURN_V(access(realUrlPath.c_str(), R_OK) == 0, MSERR_FILE_ACCESS_FAILED);
     return MSERR_OK;
 }
 
@@ -147,10 +141,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     if (url.find("://") == std::string::npos || url.find("file://") == 0) {
         std::string realUriPath;
         int32_t result = GetRealPath(url, realUriPath);
-        if (result != MSERR_OK) {
-            MEDIA_LOG_E("SetInputFile error: GetRealPath error");
-            return result;
-        }
+        FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "SetInputFile error: GetRealPath error");
         inputFile_ = "file://" + realUriPath;
     }
     std::shared_ptr<MediaSource> mediaSource = std::make_shared<MediaSource>(inputFile_);
@@ -170,9 +161,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         MEDIA_LOG_E("Get media duration failed");
     }
     ret = ConfigureVideoAudioMetaData();
-    if (ret != Status::OK) {
-        return static_cast<int32_t>(ret);
-    }
+    FALSE_RETURN_V(ret == Status::OK, static_cast<int32_t>(ret));
     pipeline_->AddHeadFilters({demuxerFilter_});
     return static_cast<int32_t>(ret);
 }

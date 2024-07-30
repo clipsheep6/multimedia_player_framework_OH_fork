@@ -47,10 +47,10 @@ TransCoderClient::~TransCoderClient()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         (void)DisableMonitor();
-        if (transCoderProxy_ != nullptr) {
-            (void)transCoderProxy_->DestroyStub();
-            transCoderProxy_ = nullptr;
-        }
+        CHECK_AND_RETURN_LOG(transCoderProxy_ != nullptr,
+            "0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+        (void)transCoderProxy_->DestroyStub();
+        transCoderProxy_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
