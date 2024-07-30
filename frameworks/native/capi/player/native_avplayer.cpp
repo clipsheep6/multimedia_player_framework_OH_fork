@@ -148,6 +148,14 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override
     {
         std::unique_lock<std::mutex> lock(mutex_);
+        if (isReleased_.load()) {
+            MEDIA_LOGI("OnInfo() is called, type %{public}d, extra %{public}d, isReleased %{public}d",
+                static_cast<int32_t>(type), extra, isReleased_.load());
+            return;
+        }
+        if (type == INFO_TYPE_STATE_CHANGE && extra == static_cast<int32_t>(PLAYER_RELEASED)) {
+            isReleased_.store(true);
+        }
         if (type == INFO_TYPE_STATE_CHANGE && callback_.onInfo != nullptr) {
             PlayerStates state = static_cast<PlayerStates>(extra);
             player_->state_ = state;
@@ -182,9 +190,12 @@ public:
 
     void OnError(int32_t errorCode, const std::string &errorMsg) override
     {
-        MEDIA_LOGI("OnError() is called, errorCode %{public}d", errorCode);
+        MEDIA_LOGI("OnError() is called, errorCode %{public}d, isReleased %{public}d", errorCode, isReleased_.load());
         std::unique_lock<std::mutex> lock(mutex_);
 
+        if (isReleased_.load()) {
+            return;
+        }
         if (player_ != nullptr && callback_.onError != nullptr) {
             callback_.onError(player_, errorCode, errorMsg.c_str());
         }
@@ -209,6 +220,7 @@ private:
     struct AVPlayerCallback callback_;
     Player_MediaKeySystemInfoCallback drmsysteminfocallback_ = nullptr;
     std::mutex mutex_;
+    std::atomic<bool> isReleased_ = false;
 };
 
 
@@ -304,6 +316,10 @@ OH_AVErrCode OH_AVPlayer_Release(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     int32_t ret = playerObj->player_->Release();
     playerObj->isReleased_.store(true);
+    if (playerObj->callback_ != nullptr) {
+        Format format;
+        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player Release failed");
     return AV_ERR_OK;
 }
@@ -316,6 +332,10 @@ OH_AVErrCode OH_AVPlayer_ReleaseSync(OH_AVPlayer *player)
     CHECK_AND_RETURN_RET_LOG(!playerObj->isReleased_.load(), AV_ERR_OK, "player alreay isReleased");
     int32_t ret = playerObj->player_->ReleaseSync();
     playerObj->isReleased_.store(true);
+    if (playerObj->callback_ != nullptr) {
+        Format format;
+        playerObj->callback_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_RELEASED, format);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "player ReleaseSync failed");
     return AV_ERR_OK;
 }
