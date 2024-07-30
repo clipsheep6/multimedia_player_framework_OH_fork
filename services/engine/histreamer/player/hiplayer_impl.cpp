@@ -604,9 +604,9 @@ int32_t HiPlayerImpl::PauseDemuxer()
     MEDIA_LOG_I("PauseDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
         TransStatus(Status::OK), "no playing not allow PauseDemuxer");
-    Status ret = demuxer_->PauseDemuxerReadLoop();
     callbackLooper_.StopReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
+    Status ret = demuxer_->PauseDemuxerReadLoop();
     return TransStatus(ret);
 }
 
@@ -616,9 +616,9 @@ int32_t HiPlayerImpl::ResumeDemuxer()
     MEDIA_LOG_I("ResumeDemuxer in");
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_STARTED,
         TransStatus(Status::OK), "no playing not allow ResumeDemuxer");
-    Status ret = demuxer_->ResumeDemuxerReadLoop();
     callbackLooper_.StartReportMediaProgress();
     callbackLooper_.ManualReportMediaProgressOnce();
+    Status ret = demuxer_->ResumeDemuxerReadLoop();
     return TransStatus(ret);
 }
 
