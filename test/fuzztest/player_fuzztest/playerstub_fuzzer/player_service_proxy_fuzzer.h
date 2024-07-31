@@ -103,6 +103,10 @@ public:
     {
         return 0;
     }
+    int32_t GetPlaybackInfo(Format& playbackInfo) override
+    {
+        return 0;
+    }
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override
     {
         return 0;
@@ -209,6 +213,7 @@ private:
     int32_t DestroyStub(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetPlaybackInfo(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetSubtitleTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz);

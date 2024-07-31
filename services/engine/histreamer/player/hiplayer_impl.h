@@ -128,6 +128,7 @@ public:
     int32_t SelectTrack(int32_t trackId, PlayerSwitchMode mode) override;
     int32_t DeselectTrack(int32_t trackId) override;
     int32_t GetVideoTrackInfo(std::vector<Format>& videoTrack) override;
+    int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetAudioTrackInfo(std::vector<Format>& audioTrack) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack) override;
     int32_t GetVideoWidth() override;
