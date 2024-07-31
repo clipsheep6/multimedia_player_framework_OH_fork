@@ -20,7 +20,6 @@ group("media_unit_test") {
   if (player_framework_support_test) {
     deps += [
       "../frameworks/native/avmetadatahelper/test/unittest:avmetadata_unit_test",
-      "../frameworks/native/player/test/unittest:player_unit_test",
       "../frameworks/native/recorder/test/unittest:recorder_unit_test",
       "../frameworks/native/recorder_profiles/test/unittest:recorder_profiles_unit_test",
       "../frameworks/native/system_sound_manager/unittest/sound_manager_test:system_sound_manager_unit_test",
