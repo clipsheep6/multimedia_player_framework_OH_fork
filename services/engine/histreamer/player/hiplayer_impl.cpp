@@ -194,19 +194,16 @@ bool HiPlayerImpl::IsFileUrl(const std::string &url) const
 
 bool HiPlayerImpl::IsValidPlayRange(int64_t start, int64_t end) const
 {
-    if (!isSetPlayRange_ || (pipelineStates_ == PlayerStates::PLAYER_INITIALIZED)) {
+    if (start < PLAY_RANGE_DEFAULT_VALUE || end < PLAY_RANGE_DEFAULT_VALUE || end == 0) {
+        return false;
+    }
+    if (pipelineStates_ == PlayerStates::PLAYER_INITIALIZED) {
         return true;
     }
-    if ((start == PLAY_RANGE_DEFAULT_VALUE) && (end == PLAY_RANGE_DEFAULT_VALUE)) {
+    if ((end == PLAY_RANGE_DEFAULT_VALUE) && (start < durationMs_.load())) {
         return true;
     }
-    if ((start == PLAY_RANGE_DEFAULT_VALUE) && ((end > 0) && (end <= durationMs_.load()))) {
-        return true;
-    }
-    if ((end == PLAY_RANGE_DEFAULT_VALUE) && ((start >= 0) && (start < durationMs_.load()))) {
-        return true;
-    }
-    if (start >= end || start < 0 || end <= 0 || start >= durationMs_.load() || end > durationMs_.load()) {
+    if (start >= end || start >= durationMs_.load() || end > durationMs_.load()) {
         return false;
     }
     return true;
@@ -343,7 +340,6 @@ int32_t HiPlayerImpl::SetPlayRange(int64_t start, int64_t end)
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
         return TransStatus(Status::ERROR_INVALID_OPERATION);
     }
-    isSetPlayRange_ = true;
     playRangeStartTime_ = start;
     playRangeEndTime_ = end;
 
@@ -389,6 +385,7 @@ int32_t HiPlayerImpl::PrepareAsync()
         OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE});
         return errCode;
     }
+    InitDuration();
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
     MEDIA_LOG_I_SHORT("PrepareAsync pipeline state " PUBLIC_LOG_S, StringnessPlayerState(pipelineStates_).c_str());
@@ -440,15 +437,22 @@ void HiPlayerImpl::DoSetMediaSource(Status& ret)
 
 Status HiPlayerImpl::DoSetPlayRange()
 {
+    if (playRangeStartTime_ >= durationMs_.load() || playRangeEndTime_ > durationMs_.load()) {
+        MEDIA_LOG_E_SHORT("DoSetPlayRange failed! start: " PUBLIC_LOG_D64 ", end: " PUBLIC_LOG_D64,
+                    playRangeStartTime_, playRangeEndTime_);
+        UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
+        return Status::ERROR_INVALID_OPERATION;
+    }
     if (pipeline_ != nullptr) {
         pipeline_->SetPlayRange(playRangeStartTime_, playRangeEndTime_);
     }
-    if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
+    if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
         MEDIA_LOG_I_SHORT("seek to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
         int64_t realSeekTime = playRangeStartTime_;
         Status ret = demuxer_->SeekTo(playRangeStartTime_,
             Transform2SeekMode(PlayerSeekMode::SEEK_PREVIOUS_SYNC), realSeekTime);
         if (ret != Status::OK) {
+            UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
             MEDIA_LOG_E_SHORT("seek failed to start time: " PUBLIC_LOG_D64, playRangeStartTime_);
             return ret;
         }
@@ -459,7 +463,6 @@ Status HiPlayerImpl::DoSetPlayRange()
 void HiPlayerImpl::UpdatePlayerStateAndNotify()
 {
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_END, 0);
-    InitDuration();
     if (durationMs_ <= 0) {
         HandleIsLiveStreamEvent(true);
     }
@@ -541,20 +544,20 @@ int32_t HiPlayerImpl::Play()
     }
     if (pipelineStates_ == PlayerStates::PLAYER_PLAYBACK_COMPLETE || pipelineStates_ == PlayerStates::PLAYER_STOPPED) {
         isStreaming_ = true;
-        if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
+        if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         } else {
             ret = TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
-        if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
+        if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms
         ret = TransStatus(Resume());
     } else {
-        if (playRangeStartTime_ != PLAY_RANGE_DEFAULT_VALUE) {
+        if (playRangeStartTime_ > PLAY_RANGE_DEFAULT_VALUE) {
             ret = TransStatus(Seek(playRangeStartTime_, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false));
         }
         callbackLooper_.StartReportMediaProgress(100); // 100 ms

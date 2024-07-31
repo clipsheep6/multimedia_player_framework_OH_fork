@@ -317,7 +317,6 @@ private:
     int64_t playTotalDuration_ = 0;
     bool inEosSeek_ = false;
     std::string mimeType_;
-    bool isSetPlayRange_ = false;
     int64_t playRangeStartTime_ = -1;
     int64_t playRangeEndTime_ = -1;
     std::atomic<bool> isDoCompletedSeek_{false};
