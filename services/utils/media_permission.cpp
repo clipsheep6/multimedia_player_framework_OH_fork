@@ -26,25 +26,15 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "Med
 
 namespace OHOS {
 namespace Media {
-const int32_t ROOT_UID = 0;
 
 int32_t MediaPermission::CheckMicPermission()
 {
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    if (callerUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return Security::AccessToken::PERMISSION_GRANTED;
-    }
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
 }
 
 int32_t MediaPermission::CheckNetWorkPermission(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
-    if (appUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return Security::AccessToken::PERMISSION_GRANTED;
-    }
     MEDIA_LOGD("enter and check appUid: %{public}d", appUid);
     Security::AccessToken::AccessTokenID tokenCaller = appTokenId;
     return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.INTERNET");
