@@ -214,7 +214,7 @@ int32_t TransCoderClient::Cancel()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
 
-    MEDIA_LOGD("Cancel");
+    MEDIA_LOGD("TransCoderClient::Cancel");
     return ExecuteWhen(transCoderProxy_->Cancel(), true);
 }
 
