@@ -103,6 +103,12 @@ std::unordered_map<int32_t, std::string> AVMetadataMock::ResolveMetadata()
     return avMetadataHelper_->ResolveMetadata();
 }
 
+std::shared_ptr<Meta> AVMetadataMock::GetAVMetadata()
+{
+    UNITTEST_INFO_LOG("%s", __FUNCTION__);
+    return avMetadataHelper_->GetAVMetadata();
+}
+
 std::string AVMetadataMock::ResolveMetadata(int32_t key)
 {
     UNITTEST_INFO_LOG("%s(%d)", __FUNCTION__, key);
@@ -339,6 +345,21 @@ bool AVMetadataTestBase::CompareMetadata(const std::unordered_map<int32_t, std::
         success = success && CompareMetadata(key, resultValue, expectedValue);
     }
 
+    return success;
+}
+
+bool AVMetadataTestBase::CheckGetAVMeta(const std::shared_ptr<Meta> &result,
+    const std::unordered_map<int32_t, std::string> &expected)
+{
+    std::string keyStr;
+    std::string resultValue = "";
+    bool success = true;
+    for (const auto &[key, expectedValue] : expected) {
+        keyStr = (AVMETA_KEY_TO_STRING_MAP.count(key) == 0) ?
+            std::string(AVMETA_KEY_TO_STRING_MAP.at(key)) : std::to_string(key);
+        result->GetData(keyStr, resultValue);
+        success = success && CompareMetadata(key, resultValue, expectedValue);
+    }
     return success;
 }
 

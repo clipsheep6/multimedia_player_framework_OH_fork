@@ -164,15 +164,13 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     std::string key = reply.ReadString();
     if (key.compare("customInfo") == 0) {
         ret = customInfo->FromParcel(reply);
-    }
-    CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "customInfo FromParcel failed");
-
-    key = reply.ReadString();
-    if (key.compare("AVMetadata") == 0) {
+        CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "customInfo FromParcel failed");
         ret = metadata->FromParcel(reply);
+        CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "metadata FromParcel failed");
+    } else {
+        ret = metadata->FromParcel(reply);
+        CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "metadata FromParcel failed");
     }
-    CHECK_AND_RETURN_RET_LOG(ret == true, metadata, "metadata FromParcel failed");
-
     metadata->SetData("customInfo", customInfo);
     return metadata;
 }

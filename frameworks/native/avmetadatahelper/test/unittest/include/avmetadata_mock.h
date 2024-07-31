@@ -94,6 +94,7 @@ public:
     void PrintMetadata();
     std::string ResolveMetadata(int32_t key);
     std::unordered_map<int32_t, std::string> ResolveMetadata();
+    std::shared_ptr<Meta> GetAVMetadata();
     std::shared_ptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<PixelMap> FetchFrameYuv(int64_t timeUs, int32_t option, PixelMapParams param);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
@@ -126,6 +127,8 @@ public:
     bool CompareMetadata(int32_t key, const std::string &result, const std::string &expected);
     bool CompareMetadata(const std::unordered_map<int32_t, std::string> &result,
                          const std::unordered_map<int32_t, std::string> &expected);
+    bool CheckGetAVMeta(const std::shared_ptr<Meta> &result,
+        const std::unordered_map<int32_t, std::string> &expected);
 private:
     AVMetadataTestBase();
     ~AVMetadataTestBase();
